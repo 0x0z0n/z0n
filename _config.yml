@@ -1,0 +1,21 @@
+title: "0xfd's Blog"
+description: "Security Research, HTB Writeups, CVEs and more."
+url: "https://yourusername.github.io"
+baseurl: ""
+theme: minimal-mistakes-jekyll
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-archives
+  - jekyll-paginate-v2
+  - jekyll-toc
+
+
+# Include custom styles
+minimal_mistakes_skin: dark
+sass:
+  style: compressed
+include:
+  - assets/css/custom.css
