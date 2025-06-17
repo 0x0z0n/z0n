@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <head>
   <meta charset="UTF-8" />
   <title>Tags</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <style>
     :root {
       --bg-color: #111;
@@ -13,7 +13,6 @@
       --tag-bg: #007bff;
       --tag-hover: #0056b3;
     }
-
     body {
       margin: 0;
       font-family: sans-serif;
@@ -21,7 +20,6 @@
       color: var(--text-color);
       display: flex;
     }
-
     aside {
       width: 250px;
       background: #1a1a1a;
@@ -31,26 +29,22 @@
       position: sticky;
       top: 0;
     }
-
     aside img {
       width: 100px;
       border-radius: 50%;
       display: block;
       margin: 0 auto;
     }
-
     .site-title {
       text-align: center;
       margin: 1rem 0 0.25rem;
       font-size: 1.2rem;
     }
-
     .site-subtitle {
       text-align: center;
       color: #aaa;
       font-size: 0.9rem;
     }
-
     nav a {
       display: block;
       color: white;
@@ -60,28 +54,23 @@
       margin: 0.3rem 0;
       background: #2a2a2a;
     }
-
     nav a:hover {
       background: var(--accent);
     }
-
     main {
       flex: 1;
       padding: 2rem;
       max-width: 900px;
       margin: auto;
     }
-
     h1 {
       color: var(--accent);
       text-align: center;
     }
-
     .search-box {
       text-align: center;
       margin: 1.5rem;
     }
-
     input {
       padding: 0.5rem;
       width: 250px;
@@ -89,12 +78,10 @@
       color: var(--text-color);
       border: 1px solid #444;
     }
-
     .tag-list {
       text-align: center;
       padding: 1rem;
     }
-
     .tag {
       background-color: var(--tag-bg);
       color: white;
@@ -104,13 +91,8 @@
       border-radius: 4px;
       text-decoration: none;
     }
-
     .tag:hover {
       background-color: var(--tag-hover);
-    }
-
-    .hidden-posts {
-      display: none;
     }
   </style>
 </head>
@@ -127,19 +109,19 @@
       <a href="about.html">ℹ️ About</a>
     </nav>
     <div class="social-icons" style="text-align: center; margin-top: 2rem;">
-    <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-linkedin fa-lg"></i>
-    </a>
-    <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
-      <i class="fas fa-envelope fa-lg"></i>
-    </a>
-    <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-youtube fa-lg"></i>
-    </a>
-    <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-x-twitter fa-lg"></i>
-    </a>
-  </div>
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
+        <i class="fab fa-linkedin fa-lg"></i>
+      </a>
+      <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
+        <i class="fas fa-envelope fa-lg"></i>
+      </a>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
+        <i class="fab fa-youtube fa-lg"></i>
+      </a>
+      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
+        <i class="fab fa-x-twitter fa-lg"></i>
+      </a>
+    </div>
   </aside>
 
   <main>
@@ -148,67 +130,41 @@
       <input type="text" id="searchTagInput" placeholder="Search tags..." oninput="filterTags()" />
     </div>
     <div class="tag-list" id="tagList"></div>
-    <div class="hidden-posts">
-      <article class="post-card" data-tags="Web, OSINT"></article>
-      <article class="post-card" data-tags="Reverse"></article>
-      <article class="post-card" data-tags="CTF, Web"></article>
-      <article class="post-card" data-tags="HackTheBox, Linux, PHP"></article>
-      <article class="post-card" data-tags="SQL, Web"></article>
-    </div>
   </main>
 
   <script>
-    let tagCounts = {};
-    let posts = document.querySelectorAll(".post-card");
+    const tagList = document.getElementById("tagList");
 
-    for (let i = 0; i < posts.length; i++) {
-      let tags = posts[i].getAttribute("data-tags");
-      if (tags) {
-        let tagList = tags.split(",").map(t => t.trim());
-        for (let j = 0; j < tagList.length; j++) {
-          let tag = tagList[j];
-          if (tagCounts[tag]) {
-            tagCounts[tag]++;
-          } else {
-            tagCounts[tag] = 1;
+    fetch("data/posts.json")
+      .then(res => res.json())
+      .then(posts => {
+        const tagMap = {};
+
+        posts.forEach(post => {
+          if (post.tags && Array.isArray(post.tags)) {
+            post.tags.forEach(tag => {
+              if (!tagMap[tag]) tagMap[tag] = 0;
+              tagMap[tag]++;
+            });
           }
-        }
-      }
-    }
+        });
 
-    function renderTags() {
-      let tagListEl = document.getElementById("tagList");
-      tagListEl.innerHTML = "";
-
-      for (let tag in tagCounts) {
-        if (tagCounts.hasOwnProperty(tag)) {
-          let tagEl = document.createElement("a");
+        Object.entries(tagMap).sort().forEach(([tag, count]) => {
+          const tagEl = document.createElement("a");
           tagEl.className = "tag";
-          tagEl.href = "index.html?tag=" + tag;
-          tagEl.textContent = tag + " (" + tagCounts[tag] + ")";
-          tagListEl.appendChild(tagEl);
-        }
-      }
-    }
+          tagEl.href = `index.html?tag=${encodeURIComponent(tag)}`;
+          tagEl.textContent = `${tag} (${count})`;
+          tagList.appendChild(tagEl);
+        });
+      });
 
     function filterTags() {
-      let input = document.getElementById("searchTagInput").value.toLowerCase();
-      let tags = document.querySelectorAll(".tag");
-      for (let i = 0; i < tags.length; i++) {
-        let text = tags[i].textContent.toLowerCase();
-        tags[i].style.display = text.includes(input) ? "inline-block" : "none";
-      }
+      const input = document.getElementById("searchTagInput").value.toLowerCase();
+      const tags = document.querySelectorAll(".tag");
+      tags.forEach(tag => {
+        tag.style.display = tag.textContent.toLowerCase().includes(input) ? "inline-block" : "none";
+      });
     }
-
-    document.addEventListener("DOMContentLoaded", function () {
-      renderTags();
-    });
-
-    document.documentElement.setAttribute("data-theme", "dark"); // Default dark theme
-    document.getElementById("themeToggle")?.addEventListener("click", function () {
-      let current = document.documentElement.getAttribute("data-theme");
-      document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
-    });
   </script>
 </body>
 </html>
