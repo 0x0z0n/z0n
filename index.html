@@ -2,39 +2,141 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>My Blog Portfolio</title>
+  <title>0x0z0n Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Navigation styled as buttons */
+    :root {
+      --bg-color: #111;
+      --card-bg: #1e1e1e;
+      --text-color: #eee;
+      --accent: #4caf50;
+      --tag-bg: #007bff;
+      --tag-hover: #0056b3;
+    }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+    }
+
+    aside {
+      width: 250px;
+      background: #1a1a1a;
+      padding: 1rem;
+      height: 100vh;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
+    }
+
+    aside img {
+      width: 100px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .site-title {
+      text-align: center;
+      margin: 1rem 0 0.25rem;
+      font-size: 1.2rem;
+    }
+
+    .site-subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
     nav a {
-      display: inline-block;
-      background: var(--tag-bg);
+      display: block;
       color: white;
-      padding: 0.5rem 1rem;
-      margin: 0 0.5rem;
-      border-radius: 4px;
       text-decoration: none;
-      transition: background-color 0.3s;
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin: 0.3rem 0;
+      background: #2a2a2a;
     }
 
     nav a:hover {
-      background-color: var(--tag-hover);
+      background: var(--accent);
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .post-card {
+      background: var(--card-bg);
+      padding: 1.2rem;
+      border-left: 4px solid var(--accent);
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+    }
+
+    .post-card h2 {
+      margin-top: 0;
+    }
+
+    .post-card a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .search-box {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .search-box input {
+      padding: 0.5rem;
+      width: 250px;
+      background: #1e1e1e;
+      color: white;
+      border: 1px solid #444;
+    }
+
+    .tag-link {
+      background: var(--tag-bg);
+      padding: 4px 8px;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-right: 4px;
+    }
+
+    .tag-link:hover {
+      background: var(--tag-hover);
+    }
+
+    footer {
+      text-align: center;
+      color: #888;
+      font-size: 0.8rem;
+      margin-top: 3rem;
     }
 
     #themeToggle {
-      margin: 1rem;
-      padding: 0.5rem 1rem;
-      background: var(--tag-bg);
-      color: white;
+      margin-top: 1rem;
+      padding: 0.4rem 1rem;
+      background: var(--accent);
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      color: #fff;
     }
 
-    #themeToggle:hover {
-      background: var(--tag-hover);
+    .pagination {
+      text-align: center;
+      margin-top: 2rem;
     }
 
     .pagination button {
@@ -54,43 +156,54 @@
   </style>
 </head>
 <body>
-  <header>
-    <h1>0x0z0n Blog</h1>
+
+  <!-- Sidebar -->
+  <aside>
+    <img src="assets/avatar.png" alt="Profile" />
+    <div class="site-title">Niraj Neupane</div>
+    <div class="site-subtitle">Offensive Security</div>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="tags.html">All Tags</a>
-      <a href="about.html">About</a>
+      <a href="index.html">🏠 Home</a>
+      <a href="categories.html">📚 Categories</a>
+      <a href="tags.html">🏷️ Tags</a>
+      <a href="archives.html">🗃️ Archives</a>
+      <a href="about.html">ℹ️ About</a>
     </nav>
     <button id="themeToggle">Toggle Theme</button>
-  </header>
+  </aside>
 
+  <!-- Main Content -->
   <main>
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Search posts..." oninput="filterPosts()" />
     </div>
 
     <section id="posts">
-  <article class="post-card" data-tags="Web, OSINT">
-    <h2><a href="posts/htb_example.html">Hack the Box: Example Writeup</a></h2>
-    <p>Tags: <a href="tags.html#Web" class="tag-link">Web</a>, <a href="tags.html#OSINT" class="tag-link">OSINT</a></p>
-  </article>
+      <article class="post-card" data-tags="Web, OSINT">
+        <h2><a href="posts/htb_example.html">Hack the Box: Example Writeup</a></h2>
+        <p>Tags: 
+          <a href="tags.html#Web" class="tag-link">Web</a> 
+          <a href="tags.html#OSINT" class="tag-link">OSINT</a>
+        </p>
+      </article>
 
-  <article class="post-card" data-tags="Reverse">
-    <h2><a href="posts/vuln_dark.html">Writeup: VulnHub Machine</a></h2>
-    <p>Tags: <a href="tags.html#Reverse" class="tag-link">Reverse</a></p>
-  </article>
-</section>
-
+      <article class="post-card" data-tags="Reverse">
+        <h2><a href="posts/vuln_dark.html">Writeup: VulnHub Machine</a></h2>
+        <p>Tags: 
+          <a href="tags.html#Reverse" class="tag-link">Reverse</a>
+        </p>
+      </article>
+    </section>
 
     <div class="pagination">
       <button>Previous Page</button>
       <button>Next Page</button>
     </div>
-  </main>
 
-  <footer>
-    <p>&copy; 2025 0x0z0n</p>
-  </footer>
+    <footer>
+      <p>&copy; 2025 0x0z0n</p>
+    </footer>
+  </main>
 
   <script src="script.js"></script>
 </body>
