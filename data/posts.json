@@ -36,5 +36,16 @@
       "Linux",
       "Web"
     ]
+  },
+  {
+    "title": "HackTheBox: DarkVortex",
+    "href": "posts/git_branching.html",
+    "date": "2024-09-09",
+    "category": "Git",
+    "tags": [
+      "Linux",
+      "Web",
+      "Nmap"
+    ]
   }
 ]
