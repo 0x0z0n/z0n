@@ -2,38 +2,85 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>HTB Example | Writeup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="HTB Admirer | Writeup">
+  <meta property="og:title" content="HTB Admirer Writeup">
+  <meta property="og:description" content="Hack The Box Admirer Writeup - Tags: FTP, ShellUpload, Recon">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="0x0z0n">
+  <title>HTB Admirer | Writeup</title>
   <link rel="stylesheet" href="../style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     body {
+      font-family: sans-serif;
       background: #111;
       color: #eee;
-      font-family: sans-serif;
       margin: 0;
-      padding: 2rem;
-      max-width: 800px;
-      margin: auto;
+      padding: 0;
     }
-    a { color: #4caf50; }
-    h1, h2, h3 { color: #4caf50; }
+    header {
+      background: #222;
+      padding: 1rem;
+      text-align: center;
+    }
+    header a {
+      color: #4caf50;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    h1, h2, h3 {
+      color: #4caf50;
+      margin-top: 2rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 0.3rem;
+    }
+    a {
+      color: #4caf50;
+    }
     pre {
       background: #1e1e1e;
       padding: 1rem;
       border-left: 3px solid #4caf50;
       overflow-x: auto;
+      border-radius: 4px;
     }
     code {
       background: #222;
       padding: 0.2rem 0.4rem;
       border-radius: 4px;
+      font-family: monospace;
+    }
+    figure {
+      text-align: center;
+      margin: 2rem 0;
+    }
+    figcaption {
+      color: #aaa;
+      font-size: 0.9em;
+    }
+    blockquote {
+      border-left: 4px solid #4caf50;
+      background: #1a1a1a;
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      font-style: italic;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
-  <a href="../index.html" style="color:#4caf50;text-decoration:none;">← Back to Home</a>
-  <div id="content">Loading writeup...</div>
+  <header>
+    <a href="../index.html">← Back to Home</a>
+  </header>
+  <main>
+    <div id="content">Loading writeup...</div>
+  </main>
 
   <script>
     fetch("Admirer.md")
