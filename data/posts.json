@@ -1,6 +1,6 @@
 [
   {
-    "title": "Hack the Box: Example Writeup",
+    "title": "HackTheBox: Example Writeup",
     "href": "posts/htb_example.html",
     "date": "2024-06-10",
     "category": "HackTheBox",
@@ -25,6 +25,16 @@
     "category": "Git",
     "tags": [
       "Git"
+    ]
+  },
+  {
+    "title": "HackTheBox: DarkVortex",
+    "href": "posts/git_branching.html",
+    "date": "2024-09-09",
+    "category": "Git",
+    "tags": [
+      "Linux",
+      "Web"
     ]
   }
 ]
