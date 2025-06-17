@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tags</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Explore Tags</h1>
+    <a href="index.html">Back to Home</a>
+    <button id="themeToggle">Toggle Theme</button>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchTagInput" placeholder="Search tags..." oninput="filterTags()" />
+  </div>
+
+  <div class="tag-list" id="tagList"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

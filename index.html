@@ -1,165 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>My Blog</title>
-  <link rel="stylesheet" href="assets/css/style.css">
-  <style>
-  :root {
-    --bg-color: #f9f9f9;
-    --text-color: #111;
-    --tag-bg: #007bff;
-    --tag-hover: #0056b3;
-  }
-
-  [data-theme="dark"] {
-    --bg-color: #121212;
-    --text-color: #f0f0f0;
-    --tag-bg: #0d6efd;
-    --tag-hover: #3391ff;
-  }
-
-  body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: background-color 0.3s, color 0.3s;
-  }
-
-  .tag {
-    background-color: var(--tag-bg);
-  }
-
-  .tag:hover {
-    background-color: var(--tag-hover);
-  }
-
-  .tag-section,
-  .search-box input,
-  .add-tag-form input,
-  .add-tag-form button {
-    background: var(--bg-color);
-    color: var(--text-color);
-  }
-
-  input, button {
-    border: 1px solid #ccc;
-  }
-
-  .add-tag-form button {
-    border: none;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>My Blog Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>My Blog</h1>
     <nav>
       <a href="index.html">Home</a>
-      <a href="about.html">About</a>
+      <a href="tags.html">All Tags</a>
     </nav>
+    <button id="themeToggle">Toggle Theme</button>
   </header>
 
   <main>
-    <article class="post-card">
-      <h2><a href="posts/post1.html">Hack the Box: Example Writeup</a></h2>
-      <p class="meta">Posted on June 10, 2025 | Tags: <a href="tags/web.html">Web</a>, <a href="tags/osint.html">OSINT</a></p>
-      <p>This post walks through the solution to the HTB machine...</p>
-    </article>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search posts..." oninput="filterPosts()" />
+    </div>
 
-    <article class="post-card">
-      <h2><a href="posts/post2.html">Writeup: VulnHub Machine</a></h2>
-      <p class="meta">Posted on June 8, 2025 | Tags: <a href="tags/reverse.html">Reverse</a></p>
-      <p>Detailed reverse engineering challenge solution from VulnHub...</p>
-    </article>
-
-    <!-- Tag Section Starts -->
-    <section class="tag-section">
-      <h2>Explore Tags</h2>
-
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search tags..." oninput="filterTags()">
-      </div>
-
-      <form class="add-tag-form" onsubmit="addTag(event)">
-        <input type="text" id="newTagName" placeholder="New tag name" required>
-        <button type="submit">Add Tag</button>
-      </form>
-
-      <div class="tag-list" id="tagList"></div>
+    <section id="posts">
+      <article class="post-card" data-tags="Web, OSINT">
+        <h2><a href="#">Hack the Box: Example Writeup</a></h2>
+        <p>Tags: <a href="tags.html#Web" class="tag-link">Web</a>, <a href="tags.html#OSINT" class="tag-link">OSINT</a></p>
+      </article>
+      <article class="post-card" data-tags="Reverse">
+        <h2><a href="#">Writeup: VulnHub Machine</a></h2>
+        <p>Tags: <a href="tags.html#Reverse" class="tag-link">Reverse</a></p>
+      </article>
     </section>
-    <!-- Tag Section Ends -->
+
+    <div class="pagination">
+      <button onclick="alert('Previous Page')">Previous</button>
+      <button onclick="alert('Next Page')">Next</button>
+    </div>
   </main>
 
   <footer>
     <p>&copy; 2025 Your Name</p>
   </footer>
-  <script>
-  // Dark mode toggle
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
 
-  const tagCounts = {};
-
-  // Extract tags dynamically from all posts (using class "meta" structure)
-  document.querySelectorAll(".meta a").forEach(tagLink => {
-    const tagName = tagLink.textContent.trim();
-    if (tagCounts[tagName]) {
-      tagCounts[tagName]++;
-    } else {
-      tagCounts[tagName] = 1;
-    }
-  });
-
-  const tagListElement = document.getElementById("tagList");
-
-  function renderTags() {
-    tagListElement.innerHTML = "";
-    const sortedTags = Object.entries(tagCounts)
-      .filter(([_, count]) => count >= 1)
-      .sort((a, b) => b[1] - a[1]);
-
-    sortedTags.forEach(([tag, count]) => {
-      const tagElement = document.createElement("a");
-      tagElement.href = "#";
-      tagElement.className = "tag";
-      tagElement.textContent = `${tag} (${count})`;
-      tagListElement.appendChild(tagElement);
-    });
-  }
-
-  function filterTags() {
-    const input = document.getElementById("searchInput").value.toLowerCase();
-    const tagElements = document.querySelectorAll(".tag");
-
-    tagElements.forEach(tag => {
-      const tagText = tag.textContent.toLowerCase();
-      tag.classList.toggle("hidden", !tagText.includes(input));
-    });
-  }
-
-  function addTag(event) {
-    event.preventDefault();
-    const input = document.getElementById("newTagName");
-    const newTag = input.value.trim();
-    if (!newTag) return;
-
-    tagCounts[newTag] = (tagCounts[newTag] || 0) + 1;
-    input.value = "";
-    renderTags();
-  }
-
-  renderTags();
-
-  // Theme Toggle Button
-  const themeToggleBtn = document.createElement("button");
-  themeToggleBtn.textContent = "Toggle Theme";
-  themeToggleBtn.style = "position: fixed; top: 20px; right: 20px; padding: 10px; z-index: 1000;";
-  themeToggleBtn.onclick = () => {
-    const current = document.documentElement.getAttribute("data-theme");
-    const next = current === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-  };
-  document.body.appendChild(themeToggleBtn);
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
