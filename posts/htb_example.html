@@ -2,109 +2,45 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="HTB Example | Writeup">
-  <meta property="og:title" content="HTB Example Writeup">
-  <meta property="og:description" content="Hack The Box Example Writeup - Tags: Web, OSINT">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="0x0z0n">
   <title>HTB Example | Writeup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="../style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     body {
-      font-family: sans-serif;
       background: #111;
       color: #eee;
+      font-family: sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
     }
-    header {
-      background: #222;
-      padding: 1rem;
-      text-align: center;
-    }
-    header a {
-      color: #4caf50;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    main {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-    h1, h2, h3 {
-      color: #4caf50;
-    }
+    a { color: #4caf50; }
+    h1, h2, h3 { color: #4caf50; }
     pre {
       background: #1e1e1e;
       padding: 1rem;
-      overflow-x: auto;
       border-left: 3px solid #4caf50;
+      overflow-x: auto;
     }
     code {
       background: #222;
       padding: 0.2rem 0.4rem;
       border-radius: 4px;
     }
-    figure {
-      text-align: center;
-      margin: 2rem 0;
-    }
-    figcaption {
-      color: #aaa;
-      font-size: 0.9em;
-    }
   </style>
 </head>
 <body>
-  <header>
-    <a href="../index.html">← Back to Home</a>
-  </header>
-  <main>
-    <h1>HTB Machine: Example</h1>
-    <p><strong>Tags:</strong> Web, OSINT</p>
-    <hr>
+  <a href="../index.html" style="color:#4caf50;text-decoration:none;">← Back to Home</a>
+  <div id="content">Loading writeup...</div>
 
-    <h2>Initial Enumeration</h2>
-    <p>Performed full TCP scan using Nmap:</p>
-    <pre><code>nmap -p- 10.10.10.10 -T4</code></pre>
-
-    <p>Found open ports:</p>
-    <ul>
-      <li>22/tcp - SSH</li>
-      <li>80/tcp - HTTP</li>
-    </ul>
-
-    <h2>Service Enumeration</h2>
-    <p>Version detection scan:</p>
-    <pre><code>nmap -sCV -p 22,80 10.10.10.10</code></pre>
-
-    <p>Results showed OpenSSH 8.2 and Apache HTTP Server on port 80.</p>
-
-    <h2>Web Exploration</h2>
-    <p>LaTeX rendering feature identified. Attempted LaTeX injection using:</p>
-    <pre><code>$\lstinputlisting{/etc/passwd}$</code></pre>
-
-    <figure>
-      <img src="" alt="Latex injection output placeholder" />
-      <figcaption>Figure 1: Output of LaTeX Injection</figcaption>
-    </figure>
-
-    <h2>PrivEsc and Flags</h2>
-    <p>Gained access to user <code>vdaisley</code> via SSH using cracked password.</p>
-    <pre><code>ssh vdaisley@10.10.10.10</code></pre>
-
-    <p>Found <code>user.txt</code>: <code>e35a06e09244b1b0e44e17c110ca32a7</code></p>
-
-    <p>Later escalated privileges and obtained <code>root.txt</code>: <code>918c9f3d15b534b5967aac3c0274c59c</code></p>
-
-    <figure>
-      <img src="" alt="Root shell placeholder" />
-      <figcaption>Figure 2: Root shell gained</figcaption>
-    </figure>
-
-    <p><strong>End of Writeup</strong></p>
-  </main>
+  <script>
+    fetch("htb_example.md")
+      .then(res => res.text())
+      .then(md => {
+        document.getElementById("content").innerHTML = marked.parse(md);
+      });
+  </script>
 </body>
 </html>
