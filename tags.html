@@ -4,46 +4,76 @@
   <meta charset="UTF-8" />
   <title>Tags</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
   <style>
-    header {
-      text-align: center;
-      padding: 1rem;
-      background-color: var(--header-bg, #222);
+    :root {
+      --bg-color: #111;
+      --text-color: #eee;
+      --accent: #4caf50;
+      --tag-bg: #007bff;
+      --tag-hover: #0056b3;
     }
 
-    header h1 {
-      margin: 0 0 1rem 0;
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+    }
+
+    aside {
+      width: 250px;
+      background: #1a1a1a;
+      padding: 1rem;
+      height: 100vh;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
+    }
+
+    aside img {
+      width: 100px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .site-title {
+      text-align: center;
+      margin: 1rem 0 0.25rem;
+      font-size: 1.2rem;
+    }
+
+    .site-subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9rem;
     }
 
     nav a {
-      display: inline-block;
-      background: var(--tag-bg);
+      display: block;
       color: white;
-      padding: 0.5rem 1rem;
-      margin: 0 0.5rem;
-      border-radius: 4px;
       text-decoration: none;
-      transition: background-color 0.3s;
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin: 0.3rem 0;
+      background: #2a2a2a;
     }
 
     nav a:hover {
-      background-color: var(--tag-hover);
+      background: var(--accent);
     }
 
-    #themeToggle {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      background: var(--tag-bg);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
     }
 
-    #themeToggle:hover {
-      background-color: var(--tag-hover);
+    h1 {
+      color: var(--accent);
+      text-align: center;
     }
 
     .search-box {
@@ -54,7 +84,7 @@
     input {
       padding: 0.5rem;
       width: 250px;
-      background-color: var(--post-bg, #1e1e1e);
+      background-color: #1e1e1e;
       color: var(--text-color);
       border: 1px solid #444;
     }
@@ -78,36 +108,39 @@
       background-color: var(--tag-hover);
     }
 
-    /* Optional: hidden post container */
     .hidden-posts {
       display: none;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Explore Tags</h1>
+  <aside>
+    <img src="assets/avatar.png" alt="Profile" />
+    <div class="site-title">Kshitij Raut</div>
+    <div class="site-subtitle">Offensive Security</div>
     <nav>
-      <a href="index.html">Home</a>
-      <a href="about.html">About</a>
+      <a href="index.html">🏠 Home</a>
+      <a href="categories.html">📚 Categories</a>
+      <a href="tags.html">🏷️ Tags</a>
+      <a href="archives.html">🗃️ Archives</a>
+      <a href="about.html">ℹ️ About</a>
     </nav>
-    <button id="themeToggle">Toggle Theme</button>
-  </header>
+  </aside>
 
-  <div class="search-box">
-    <input type="text" id="searchTagInput" placeholder="Search tags..." oninput="filterTags()" />
-  </div>
-
-  <div class="tag-list" id="tagList"></div>
-
-  <!-- Invisible dummy posts copied from index.html to extract tags -->
-  <div class="hidden-posts">
-    <article class="post-card" data-tags="Web, OSINT"></article>
-    <article class="post-card" data-tags="Reverse"></article>
-    <article class="post-card" data-tags="CTF, Web"></article>
-    <article class="post-card" data-tags="HackTheBox, Linux, PHP"></article>
-    <article class="post-card" data-tags="SQL, Web"></article>
-  </div>
+  <main>
+    <h1>Explore Tags</h1>
+    <div class="search-box">
+      <input type="text" id="searchTagInput" placeholder="Search tags..." oninput="filterTags()" />
+    </div>
+    <div class="tag-list" id="tagList"></div>
+    <div class="hidden-posts">
+      <article class="post-card" data-tags="Web, OSINT"></article>
+      <article class="post-card" data-tags="Reverse"></article>
+      <article class="post-card" data-tags="CTF, Web"></article>
+      <article class="post-card" data-tags="HackTheBox, Linux, PHP"></article>
+      <article class="post-card" data-tags="SQL, Web"></article>
+    </div>
+  </main>
 
   <script>
     let tagCounts = {};
@@ -152,12 +185,15 @@
       }
     }
 
-    document.getElementById("themeToggle").addEventListener("click", function () {
+    document.addEventListener("DOMContentLoaded", function () {
+      renderTags();
+    });
+
+    document.documentElement.setAttribute("data-theme", "dark"); // Default dark theme
+    document.getElementById("themeToggle")?.addEventListener("click", function () {
       let current = document.documentElement.getAttribute("data-theme");
       document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
     });
-
-    renderTags();
   </script>
 </body>
 </html>
