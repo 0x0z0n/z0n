@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <title>Archives</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-p6xY1e7XazgQx5L3MZxF1BoOaWqkn61C1q3+fYO9vbK5gPp+qYuwhu7YyU1lHQAtdfOqMpKvRz2/aq1UVY5TIg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
       margin: 0;
@@ -14,6 +14,7 @@
       color: #eee;
       display: flex;
     }
+
     aside {
       width: 250px;
       background: #1a1a1a;
@@ -23,22 +24,26 @@
       position: sticky;
       top: 0;
     }
+
     aside img {
       width: 100px;
       border-radius: 50%;
       display: block;
       margin: 0 auto;
     }
+
     .site-title {
       text-align: center;
       margin: 1rem 0 0.25rem;
       font-size: 1.2rem;
     }
+
     .site-subtitle {
       text-align: center;
       color: #aaa;
       font-size: 0.9rem;
     }
+
     nav a {
       display: block;
       color: white;
@@ -48,33 +53,55 @@
       margin: 0.3rem 0;
       background: #2a2a2a;
     }
+
     nav a:hover {
       background: #4caf50;
     }
+
+    .social-icons {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .social-icons a {
+      margin: 0 0.5rem;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .social-icons a:hover {
+      color: #4caf50;
+    }
+
     main {
       flex: 1;
       padding: 2rem;
       max-width: 900px;
       margin: auto;
     }
+
     h1 {
       color: #4caf50;
     }
+
     .timeline {
       border-left: 2px solid #4caf50;
       margin-left: 1rem;
       padding-left: 1rem;
     }
+
     .month {
       margin-top: 2rem;
       font-size: 1.3rem;
       color: #4caf50;
     }
+
     .entry {
       margin: 1rem 0;
       padding-left: 1rem;
       position: relative;
     }
+
     .entry::before {
       content: '';
       position: absolute;
@@ -85,10 +112,12 @@
       background: #4caf50;
       border-radius: 50%;
     }
+
     .entry a {
       color: #82b1ff;
       text-decoration: none;
     }
+
     .entry span {
       display: inline-block;
       width: 5rem;
@@ -108,18 +137,18 @@
       <a href="archives.html">🗃️ Archives</a>
       <a href="about.html">ℹ️ About</a>
     </nav>
-    <div class="social-icons" style="text-align: center; margin-top: 2rem;">
-      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
-        <i class="fab fa-linkedin fa-lg"></i>
+    <div class="social-icons">
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
+        <i class="fab fa-linkedin"></i>
       </a>
-      <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
-        <i class="fas fa-envelope fa-lg"></i>
+      <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
+        <i class="fas fa-envelope"></i>
       </a>
-      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
-        <i class="fab fa-youtube fa-lg"></i>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
+        <i class="fab fa-youtube"></i>
       </a>
-      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
-        <i class="fab fa-x-twitter fa-lg"></i>
+      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
+        <i class="fab fa-x-twitter"></i>
       </a>
     </div>
   </aside>

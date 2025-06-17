@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 <head>
   <meta charset="UTF-8" />
   <title>Categories</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-p6xY1e7XazgQx5L3MZxF1BoOaWqkn61C1q3+fYO9vbK5gPp+qYuwhu7YyU1lHQAtdfOqMpKvRz2/aq1UVY5TIg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     :root {
       --bg-color: #111;
       --card-bg: #1e1e1e;
       --text-color: #eee;
       --accent: #4caf50;
-      --tag-bg: #007bff;
-      --tag-hover: #0056b3;
     }
 
     body {
@@ -66,6 +65,21 @@
       background: var(--accent);
     }
 
+    .social-icons {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .social-icons a {
+      margin: 0 0.5rem;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    .social-icons a:hover {
+      color: var(--accent);
+    }
+
     main {
       flex: 1;
       padding: 2rem;
@@ -93,7 +107,7 @@
       border-radius: 6px;
       width: 250px;
       text-align: center;
-      transition: 0.3s ease;
+      transition: background 0.3s ease;
     }
 
     .category-card:hover {
@@ -125,18 +139,18 @@
       <a href="archives.html">🗃️ Archives</a>
       <a href="about.html">ℹ️ About</a>
     </nav>
-    <div class="social-icons" style="text-align: center; margin-top: 2rem;">
-      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
-        <i class="fab fa-linkedin fa-lg"></i>
+    <div class="social-icons">
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
+        <i class="fab fa-linkedin"></i>
       </a>
-      <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
-        <i class="fas fa-envelope fa-lg"></i>
+      <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
+        <i class="fas fa-envelope"></i>
       </a>
-      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
-        <i class="fab fa-youtube fa-lg"></i>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
+        <i class="fab fa-youtube"></i>
       </a>
-      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
-        <i class="fab fa-x-twitter fa-lg"></i>
+      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
+        <i class="fab fa-x-twitter"></i>
       </a>
     </div>
   </aside>
@@ -152,20 +166,24 @@
       .then(posts => {
         const categories = {};
         posts.forEach(post => {
-          const category = post.category || "Uncategorized";
-          categories[category] = (categories[category] || 0) + 1;
+          const cat = post.category || "Uncategorized";
+          categories[cat] = (categories[cat] || 0) + 1;
         });
 
         const container = document.getElementById("categoryList");
         Object.entries(categories).forEach(([cat, count]) => {
-          const card = document.createElement("div");
-          card.className = "category-card";
-          card.innerHTML = `
+          const div = document.createElement("div");
+          div.className = "category-card";
+          div.innerHTML = `
             <a href="index.html?category=${encodeURIComponent(cat)}">${cat}</a>
             <small>${count} post${count > 1 ? "s" : ""}</small>
           `;
-          container.appendChild(card);
+          container.appendChild(div);
         });
+      })
+      .catch(err => {
+        console.error("Error loading categories:", err);
+        document.getElementById("categoryList").innerHTML = "<p style='color:red;'>Failed to load categories.</p>";
       });
   </script>
 </body>
