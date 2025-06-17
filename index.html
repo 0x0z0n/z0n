@@ -159,57 +159,75 @@
       <p>&copy; 2025 0x0z0n</p>
     </footer>
   </main>
-
   <script>
-    const searchInput = document.getElementById("searchInput");
-    const postsContainer = document.getElementById("posts");
-    let allPosts = [];
+  const searchInput = document.getElementById("searchInput");
+  const postsContainer = document.getElementById("posts");
+  let allPosts = [];
 
-    function renderPosts(posts) {
-      postsContainer.innerHTML = "";
-      posts.forEach(post => {
-        const article = document.createElement("article");
-        article.className = "post-card";
-        article.setAttribute("data-tags", post.tags.join(", "));
+  function renderPosts(posts) {
+    postsContainer.innerHTML = "";
+    posts.forEach(post => {
+      const article = document.createElement("article");
+      article.className = "post-card";
+      article.setAttribute("data-tags", post.tags.join(", "));
 
-        article.innerHTML = `
-          <h2><a href="${post.url}">${post.title}</a></h2>
-          <p>Tags: ${post.tags.map(tag =>
-            `<a href="tags.html#${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-          ).join(" ")}</p>
-        `;
-        postsContainer.appendChild(article);
-      });
-    }
+      article.innerHTML = `
+        <h2><a href="${post.url}">${post.title}</a></h2>
+        <p>Tags: ${post.tags.map(tag =>
+          `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+        ).join(" ")}</p>
+      `;
 
-    function filterPosts() {
-      const query = searchInput.value.toLowerCase();
-      const filtered = allPosts.filter(post =>
-        post.title.toLowerCase().includes(query) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query))
-      );
+      postsContainer.appendChild(article);
+    });
+  }
+
+  function filterPosts() {
+    const query = searchInput.value.toLowerCase();
+    const filtered = allPosts.filter(post =>
+      post.title.toLowerCase().includes(query) ||
+      post.tags.some(tag => tag.toLowerCase().includes(query))
+    );
+    renderPosts(filtered);
+  }
+
+  function getParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+  }
+
+  fetch("data/posts.json")
+    .then(res => res.json())
+    .then(data => {
+      allPosts = data;
+
+      const tagParam = getParam("tag");
+      const catParam = getParam("category");
+      const dateParam = getParam("date");
+
+      let filtered = allPosts;
+
+      if (tagParam) {
+        searchInput.value = tagParam;
+        filtered = allPosts.filter(post =>
+          post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
+        );
+      } else if (catParam) {
+        searchInput.value = catParam;
+        filtered = allPosts.filter(post =>
+          post.category && post.category.toLowerCase() === catParam.toLowerCase()
+        );
+      } else if (dateParam) {
+        searchInput.value = dateParam;
+        filtered = allPosts.filter(post =>
+          post.date && post.date.startsWith(dateParam)
+        );
+      }
+
       renderPosts(filtered);
-    }
+    });
 
-    fetch("data/posts.json")
-      .then(res => res.json())
-      .then(data => {
-        allPosts = data;
-
-        const hashTag = decodeURIComponent(location.hash.replace("#", "").toLowerCase());
-
-        if (hashTag) {
-          searchInput.value = hashTag;
-          filterPosts();
-
-          // Clean URL by removing the hash
-          history.replaceState(null, null, location.pathname);
-        } else {
-          renderPosts(allPosts);
-        }
-      });
-
-    searchInput.addEventListener("input", filterPosts);
-  </script>
+  searchInput.addEventListener("input", filterPosts);
+</script>
 </body>
 </html>
