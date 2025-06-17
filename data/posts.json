@@ -12,9 +12,9 @@
   },
   {
     "title": "HackTheBox: Armageddon",
-    "href": "posts/git_branching.html",
+    "href": "posts/htb_armageddon.html",
     "date": "2025-06-17",
-    "category": "HackTheBOX",
+    "category": "HackTheBox",
     "tags": [
       "Linux",
       "Web",
