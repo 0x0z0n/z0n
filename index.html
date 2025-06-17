@@ -5,82 +5,50 @@
   <title>My Blog</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Tag styling */
-    .tag-section {
-      margin: 40px auto;
-      max-width: 1000px;
-      padding: 20px;
-      background: #f9f9f9;
-      border-radius: 8px;
-    }
+  :root {
+    --bg-color: #f9f9f9;
+    --text-color: #111;
+    --tag-bg: #007bff;
+    --tag-hover: #0056b3;
+  }
 
-    .tag-section h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  [data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #f0f0f0;
+    --tag-bg: #0d6efd;
+    --tag-hover: #3391ff;
+  }
 
-    .search-box {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+  }
 
-    .search-box input {
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-    }
+  .tag {
+    background-color: var(--tag-bg);
+  }
 
-    .add-tag-form {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 30px;
-      flex-wrap: wrap;
-    }
+  .tag:hover {
+    background-color: var(--tag-hover);
+  }
 
-    .add-tag-form input {
-      padding: 8px;
-      font-size: 14px;
-    }
+  .tag-section,
+  .search-box input,
+  .add-tag-form input,
+  .add-tag-form button {
+    background: var(--bg-color);
+    color: var(--text-color);
+  }
 
-    .add-tag-form button {
-      padding: 8px 16px;
-      font-size: 14px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+  input, button {
+    border: 1px solid #ccc;
+  }
 
-    .add-tag-form button:hover {
-      background-color: #0056b3;
-    }
-
-    .tag-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .tag {
-      background-color: #007bff;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 14px;
-      text-decoration: none;
-      transition: background-color 0.3s ease;
-    }
-
-    .tag:hover {
-      background-color: #0056b3;
-    }
-
-    .hidden {
-      display: none;
-    }
-  </style>
+  .add-tag-form button {
+    border: none;
+  }
+</style>
 </head>
 <body>
   <header>
@@ -125,71 +93,73 @@
   <footer>
     <p>&copy; 2025 Your Name</p>
   </footer>
-
   <script>
-    // Tags without count initially
-    const tagCounts = {};
-    const initialTags = [
-      "Easy", "Linux Host", "SSH", "RCE", "SUID Exploitation", "PHP",
-      "Password Cracking", "Windows Host", "Steganography", "Python", "LFI",
-      "ssh2john", "Apache", "Internal", "Sudo Exploitation", "FTP", "Encryption",
-      "Decryption", "CTF", "Enumeration", "PCAP Analysis", "Web Analysis",
-      "IDOR Exploitation", "Clear Text Credentials", "PCAP", "Wireshark",
-      "Wappalyzer", "Cookie-Editor", "FoxyProxy", "SMTP", "IoT", "Pi-Hole",
-      "OS Command Injection", "Internal Web Server", "www-data", "id_rsa",
-      "File Transfer", "Netcat", "Telnet", "SNMP", "Printer", "CUPS",
-      "Command Injection", "Subdomain", "OS Injection", "Laravel", "Nostromo",
-      "JohnTheRipper", "Backdoor", "Python Exploit", "Tomcat", "JSP", "LXD/LXC",
-      "Perl", "Shellshock", "Wordpress", "Java", "SQL", "phpMyAdmin",
-      "Hard-coded Credentials", "SAMBA", "Jobs", "Interview"
-    ];
+  // Dark mode toggle
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
 
-    // Initialize tagCounts with 1
-    initialTags.forEach(tag => tagCounts[tag] = 1);
+  const tagCounts = {};
 
-    const tagListElement = document.getElementById("tagList");
-
-    function renderTags() {
-      tagListElement.innerHTML = "";
-      const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-
-      sortedTags.forEach(([tag, count]) => {
-        const tagElement = document.createElement("a");
-        tagElement.href = "#";
-        tagElement.className = "tag";
-        tagElement.textContent = `${tag} (${count})`;
-        tagListElement.appendChild(tagElement);
-      });
+  // Extract tags dynamically from all posts (using class "meta" structure)
+  document.querySelectorAll(".meta a").forEach(tagLink => {
+    const tagName = tagLink.textContent.trim();
+    if (tagCounts[tagName]) {
+      tagCounts[tagName]++;
+    } else {
+      tagCounts[tagName] = 1;
     }
+  });
 
-    function filterTags() {
-      const input = document.getElementById("searchInput").value.toLowerCase();
-      const tagElements = document.querySelectorAll(".tag");
+  const tagListElement = document.getElementById("tagList");
 
-      tagElements.forEach(tag => {
-        const tagText = tag.textContent.toLowerCase();
-        tag.classList.toggle("hidden", !tagText.includes(input));
-      });
-    }
+  function renderTags() {
+    tagListElement.innerHTML = "";
+    const sortedTags = Object.entries(tagCounts)
+      .filter(([_, count]) => count >= 1)
+      .sort((a, b) => b[1] - a[1]);
 
-    function addTag(event) {
-      event.preventDefault();
-      const input = document.getElementById("newTagName");
-      const newTag = input.value.trim();
+    sortedTags.forEach(([tag, count]) => {
+      const tagElement = document.createElement("a");
+      tagElement.href = "#";
+      tagElement.className = "tag";
+      tagElement.textContent = `${tag} (${count})`;
+      tagListElement.appendChild(tagElement);
+    });
+  }
 
-      if (!newTag) return;
+  function filterTags() {
+    const input = document.getElementById("searchInput").value.toLowerCase();
+    const tagElements = document.querySelectorAll(".tag");
 
-      if (tagCounts[newTag]) {
-        tagCounts[newTag]++;
-      } else {
-        tagCounts[newTag] = 1;
-      }
+    tagElements.forEach(tag => {
+      const tagText = tag.textContent.toLowerCase();
+      tag.classList.toggle("hidden", !tagText.includes(input));
+    });
+  }
 
-      input.value = "";
-      renderTags();
-    }
+  function addTag(event) {
+    event.preventDefault();
+    const input = document.getElementById("newTagName");
+    const newTag = input.value.trim();
+    if (!newTag) return;
 
-    renderTags(); // Initial load
-  </script>
+    tagCounts[newTag] = (tagCounts[newTag] || 0) + 1;
+    input.value = "";
+    renderTags();
+  }
+
+  renderTags();
+
+  // Theme Toggle Button
+  const themeToggleBtn = document.createElement("button");
+  themeToggleBtn.textContent = "Toggle Theme";
+  themeToggleBtn.style = "position: fixed; top: 20px; right: 20px; padding: 10px; z-index: 1000;";
+  themeToggleBtn.onclick = () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    const next = current === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+  };
+  document.body.appendChild(themeToggleBtn);
+</script>
 </body>
 </html>
