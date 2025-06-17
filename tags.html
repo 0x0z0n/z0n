@@ -43,7 +43,7 @@
     }
 
     #themeToggle:hover {
-      background: var(--tag-hover);
+      background-color: var(--tag-hover);
     }
 
     .search-box {
@@ -77,6 +77,11 @@
     .tag:hover {
       background-color: var(--tag-hover);
     }
+
+    /* Optional: hidden post container */
+    .hidden-posts {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -95,6 +100,64 @@
 
   <div class="tag-list" id="tagList"></div>
 
-  <script src="script.js"></script>
+  <!-- Invisible dummy posts copied from index.html to extract tags -->
+  <div class="hidden-posts">
+    <article class="post-card" data-tags="Web, OSINT"></article>
+    <article class="post-card" data-tags="Reverse"></article>
+    <article class="post-card" data-tags="CTF, Web"></article>
+    <article class="post-card" data-tags="HackTheBox, Linux, PHP"></article>
+    <article class="post-card" data-tags="SQL, Web"></article>
+  </div>
+
+  <script>
+    let tagCounts = {};
+    let posts = document.querySelectorAll(".post-card");
+
+    for (let i = 0; i < posts.length; i++) {
+      let tags = posts[i].getAttribute("data-tags");
+      if (tags) {
+        let tagList = tags.split(",").map(t => t.trim());
+        for (let j = 0; j < tagList.length; j++) {
+          let tag = tagList[j];
+          if (tagCounts[tag]) {
+            tagCounts[tag]++;
+          } else {
+            tagCounts[tag] = 1;
+          }
+        }
+      }
+    }
+
+    function renderTags() {
+      let tagListEl = document.getElementById("tagList");
+      tagListEl.innerHTML = "";
+
+      for (let tag in tagCounts) {
+        if (tagCounts.hasOwnProperty(tag)) {
+          let tagEl = document.createElement("a");
+          tagEl.className = "tag";
+          tagEl.href = "index.html#" + tag;
+          tagEl.textContent = tag + " (" + tagCounts[tag] + ")";
+          tagListEl.appendChild(tagEl);
+        }
+      }
+    }
+
+    function filterTags() {
+      let input = document.getElementById("searchTagInput").value.toLowerCase();
+      let tags = document.querySelectorAll(".tag");
+      for (let i = 0; i < tags.length; i++) {
+        let text = tags[i].textContent.toLowerCase();
+        tags[i].style.display = text.includes(input) ? "inline-block" : "none";
+      }
+    }
+
+    document.getElementById("themeToggle").addEventListener("click", function () {
+      let current = document.documentElement.getAttribute("data-theme");
+      document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+    });
+
+    renderTags();
+  </script>
 </body>
 </html>
