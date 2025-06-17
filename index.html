@@ -159,75 +159,85 @@
       <p>&copy; 2025 0x0z0n</p>
     </footer>
   </main>
+
   <script>
-  const searchInput = document.getElementById("searchInput");
-  const postsContainer = document.getElementById("posts");
-  let allPosts = [];
+    const searchInput = document.getElementById("searchInput");
+    const postsContainer = document.getElementById("posts");
+    let allPosts = [];
 
-  function renderPosts(posts) {
-    postsContainer.innerHTML = "";
-    posts.forEach(post => {
-      const article = document.createElement("article");
-      article.className = "post-card";
-      article.setAttribute("data-tags", post.tags.join(", "));
-
-      article.innerHTML = `
-        <h2><a href="${post.url}">${post.title}</a></h2>
-        <p>Tags: ${post.tags.map(tag =>
-          `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-        ).join(" ")}</p>
-      `;
-
-      postsContainer.appendChild(article);
-    });
-  }
-
-  function filterPosts() {
-    const query = searchInput.value.toLowerCase();
-    const filtered = allPosts.filter(post =>
-      post.title.toLowerCase().includes(query) ||
-      post.tags.some(tag => tag.toLowerCase().includes(query))
-    );
-    renderPosts(filtered);
-  }
-
-  function getParam(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-  }
-
-  fetch("data/posts.json")
-    .then(res => res.json())
-    .then(data => {
-      allPosts = data;
-
-      const tagParam = getParam("tag");
-      const catParam = getParam("category");
-      const dateParam = getParam("date");
-
-      let filtered = allPosts;
-
-      if (tagParam) {
-        searchInput.value = tagParam;
-        filtered = allPosts.filter(post =>
-          post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
-        );
-      } else if (catParam) {
-        searchInput.value = catParam;
-        filtered = allPosts.filter(post =>
-          post.category && post.category.toLowerCase() === catParam.toLowerCase()
-        );
-      } else if (dateParam) {
-        searchInput.value = dateParam;
-        filtered = allPosts.filter(post =>
-          post.date && post.date.startsWith(dateParam)
-        );
+    function renderPosts(posts) {
+      postsContainer.innerHTML = "";
+      if (posts.length === 0) {
+        postsContainer.innerHTML = "<p>No posts found.</p>";
+        return;
       }
 
-      renderPosts(filtered);
-    });
+      posts.forEach(post => {
+        const article = document.createElement("article");
+        article.className = "post-card";
+        article.setAttribute("data-tags", post.tags.join(", "));
 
-  searchInput.addEventListener("input", filterPosts);
-</script>
+        article.innerHTML = `
+          <h2><a href="${post.url}">${post.title}</a></h2>
+          <p><strong>Category:</strong> ${post.category || "Uncategorized"}</p>
+          <p><strong>Date:</strong> ${post.date}</p>
+          <p><strong>Tags:</strong> ${post.tags.map(tag =>
+            `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+          ).join(" ")}</p>
+        `;
+
+        postsContainer.appendChild(article);
+      });
+    }
+
+    function filterPosts() {
+      const query = searchInput.value.trim().toLowerCase();
+      const filtered = allPosts.filter(post =>
+        post.title.toLowerCase().includes(query) ||
+        (post.category && post.category.toLowerCase().includes(query)) ||
+        post.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        (post.date && post.date.startsWith(query))
+      );
+      renderPosts(filtered);
+    }
+
+    function getParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    fetch("data/posts.json")
+      .then(res => res.json())
+      .then(data => {
+        allPosts = data;
+
+        const tagParam = getParam("tag");
+        const catParam = getParam("category");
+        const dateParam = getParam("date");
+
+        let filtered = allPosts;
+
+        if (tagParam) {
+          searchInput.value = tagParam;
+          filtered = allPosts.filter(post =>
+            post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
+          );
+        } else if (catParam) {
+          searchInput.value = catParam;
+          filtered = allPosts.filter(post =>
+            post.category && post.category.toLowerCase() === catParam.toLowerCase()
+          );
+        } else if (dateParam) {
+          searchInput.value = dateParam;
+          filtered = allPosts.filter(post =>
+            post.date && post.date.startsWith(dateParam)
+          );
+        }
+
+        renderPosts(filtered);
+      });
+
+    searchInput.addEventListener("input", filterPosts);
+  </script>
 </body>
 </html>
