@@ -1,23 +1,40 @@
-
 fetch("data/posts.json")
-  .then(res => res.json())
-  .then(data => {
+  .then(response => {
+    if (!response.ok) throw new Error("Failed to fetch posts.json");
+    return response.json();
+  })
+  .then(posts => {
     const categories = {};
-    data.forEach(post => {
-      const cat = post.category || "Uncategorized";
-      categories[cat] = categories[cat] ? categories[cat] + 1 : 1;
+
+    posts.forEach(post => {
+      const category = (post.category || "Uncategorized").trim();
+      if (categories[category]) {
+        categories[category]++;
+      } else {
+        categories[category] = 1;
+      }
     });
 
     const container = document.getElementById("categoryList");
+    if (!container) return;
+
+    // Sort categories alphabetically
+    const sorted = Object.entries(categories).sort(([a], [b]) => a.localeCompare(b));
+
+    sorted.forEach(([cat, count]) => {
+      const card = document.createElement("div");
+      card.className = "category-card";
+      card.innerHTML = `
+        <a href="tags.html#${encodeURIComponent(cat)}">${cat}</a>
+        <small>${count} post${count !== 1 ? "s" : ""}</small>
+      `;
+      container.appendChild(card);
+    });
+  })
+  .catch(err => {
+    console.error("Error loading categories:", err);
+    const container = document.getElementById("categoryList");
     if (container) {
-      Object.entries(categories).forEach(([cat, count]) => {
-        const card = document.createElement("div");
-        card.className = "category-card";
-        card.innerHTML = `
-          <a href="tags.html#${encodeURIComponent(cat)}">${cat}</a>
-          <span>${count} post${count > 1 ? "s" : ""}</span>
-        `;
-        container.appendChild(card);
-      });
+      container.innerHTML = `<p style="color:#f66;">Unable to load categories.</p>`;
     }
   });
