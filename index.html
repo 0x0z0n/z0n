@@ -4,6 +4,83 @@
   <meta charset="UTF-8">
   <title>My Blog</title>
   <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    /* Tag styling */
+    .tag-section {
+      margin: 40px auto;
+      max-width: 1000px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .tag-section h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .search-box {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+    }
+
+    .add-tag-form {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .add-tag-form input {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .add-tag-form button {
+      padding: 8px 16px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .add-tag-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .tag {
+      background-color: #007bff;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .tag:hover {
+      background-color: #0056b3;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -26,10 +103,93 @@
       <p class="meta">Posted on June 8, 2025 | Tags: <a href="tags/reverse.html">Reverse</a></p>
       <p>Detailed reverse engineering challenge solution from VulnHub...</p>
     </article>
+
+    <!-- Tag Section Starts -->
+    <section class="tag-section">
+      <h2>Explore Tags</h2>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search tags..." oninput="filterTags()">
+      </div>
+
+      <form class="add-tag-form" onsubmit="addTag(event)">
+        <input type="text" id="newTagName" placeholder="New tag name" required>
+        <button type="submit">Add Tag</button>
+      </form>
+
+      <div class="tag-list" id="tagList"></div>
+    </section>
+    <!-- Tag Section Ends -->
   </main>
 
   <footer>
     <p>&copy; 2025 Your Name</p>
   </footer>
+
+  <script>
+    // Tags without count initially
+    const tagCounts = {};
+    const initialTags = [
+      "Easy", "Linux Host", "SSH", "RCE", "SUID Exploitation", "PHP",
+      "Password Cracking", "Windows Host", "Steganography", "Python", "LFI",
+      "ssh2john", "Apache", "Internal", "Sudo Exploitation", "FTP", "Encryption",
+      "Decryption", "CTF", "Enumeration", "PCAP Analysis", "Web Analysis",
+      "IDOR Exploitation", "Clear Text Credentials", "PCAP", "Wireshark",
+      "Wappalyzer", "Cookie-Editor", "FoxyProxy", "SMTP", "IoT", "Pi-Hole",
+      "OS Command Injection", "Internal Web Server", "www-data", "id_rsa",
+      "File Transfer", "Netcat", "Telnet", "SNMP", "Printer", "CUPS",
+      "Command Injection", "Subdomain", "OS Injection", "Laravel", "Nostromo",
+      "JohnTheRipper", "Backdoor", "Python Exploit", "Tomcat", "JSP", "LXD/LXC",
+      "Perl", "Shellshock", "Wordpress", "Java", "SQL", "phpMyAdmin",
+      "Hard-coded Credentials", "SAMBA", "Jobs", "Interview"
+    ];
+
+    // Initialize tagCounts with 1
+    initialTags.forEach(tag => tagCounts[tag] = 1);
+
+    const tagListElement = document.getElementById("tagList");
+
+    function renderTags() {
+      tagListElement.innerHTML = "";
+      const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+
+      sortedTags.forEach(([tag, count]) => {
+        const tagElement = document.createElement("a");
+        tagElement.href = "#";
+        tagElement.className = "tag";
+        tagElement.textContent = `${tag} (${count})`;
+        tagListElement.appendChild(tagElement);
+      });
+    }
+
+    function filterTags() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const tagElements = document.querySelectorAll(".tag");
+
+      tagElements.forEach(tag => {
+        const tagText = tag.textContent.toLowerCase();
+        tag.classList.toggle("hidden", !tagText.includes(input));
+      });
+    }
+
+    function addTag(event) {
+      event.preventDefault();
+      const input = document.getElementById("newTagName");
+      const newTag = input.value.trim();
+
+      if (!newTag) return;
+
+      if (tagCounts[newTag]) {
+        tagCounts[newTag]++;
+      } else {
+        tagCounts[newTag] = 1;
+      }
+
+      input.value = "";
+      renderTags();
+    }
+
+    renderTags(); // Initial load
+  </script>
 </body>
 </html>
