@@ -126,19 +126,19 @@
       <a href="about.html">ℹ️ About</a>
     </nav>
     <div class="social-icons" style="text-align: center; margin-top: 2rem;">
-    <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-linkedin fa-lg"></i>
-    </a>
-    <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
-      <i class="fas fa-envelope fa-lg"></i>
-    </a>
-    <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-youtube fa-lg"></i>
-    </a>
-    <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-x-twitter fa-lg"></i>
-    </a>
-  </div>
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
+        <i class="fab fa-linkedin fa-lg"></i>
+      </a>
+      <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
+        <i class="fas fa-envelope fa-lg"></i>
+      </a>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
+        <i class="fab fa-youtube fa-lg"></i>
+      </a>
+      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
+        <i class="fab fa-x-twitter fa-lg"></i>
+      </a>
+    </div>
   </aside>
 
   <main>
@@ -146,6 +146,27 @@
     <div id="categoryList" class="category-list"></div>
   </main>
 
-  <script src="script.js"></script>
+  <script>
+    fetch("data/posts.json")
+      .then(res => res.json())
+      .then(posts => {
+        const categories = {};
+        posts.forEach(post => {
+          const category = post.category || "Uncategorized";
+          categories[category] = (categories[category] || 0) + 1;
+        });
+
+        const container = document.getElementById("categoryList");
+        Object.entries(categories).forEach(([cat, count]) => {
+          const card = document.createElement("div");
+          card.className = "category-card";
+          card.innerHTML = `
+            <a href="index.html?category=${encodeURIComponent(cat)}">${cat}</a>
+            <small>${count} post${count > 1 ? "s" : ""}</small>
+          `;
+          container.appendChild(card);
+        });
+      });
+  </script>
 </body>
 </html>
