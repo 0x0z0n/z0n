@@ -184,7 +184,7 @@
         if (tagCounts.hasOwnProperty(tag)) {
           let tagEl = document.createElement("a");
           tagEl.className = "tag";
-          tagEl.href = "index.html#" + tag;
+          tagEl.href = "index.html?tag=" + tag;
           tagEl.textContent = tag + " (" + tagCounts[tag] + ")";
           tagListEl.appendChild(tagEl);
         }
