@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Hack the Box: Example Writeup",
+    "href": "posts/htb_example.html",
+    "date": "2024-06-10",
+    "category": "HackTheBox",
+    "tags": [
+      "Web",
+      "OSINT"
+    ]
+  },
+  {
+    "title": "Writeup: VulnHub Machine",
+    "href": "posts/vuln_dark.html",
+    "date": "2024-06-08",
+    "category": "HackTheBox",
+    "tags": [
+      "Reverse"
+    ]
+  },
+  {
+    "title": "Git Branching with Learn Git Branching",
+    "href": "posts/git_branching.html",
+    "date": "2024-09-09",
+    "category": "Git",
+    "tags": [
+      "Git"
+    ]
+  }
+]
