@@ -14,7 +14,6 @@
       --tag-bg: #007bff;
       --tag-hover: #0056b3;
     }
-
     body {
       margin: 0;
       font-family: sans-serif;
@@ -22,7 +21,6 @@
       color: var(--text-color);
       display: flex;
     }
-
     aside {
       width: 250px;
       background: #1a1a1a;
@@ -32,26 +30,22 @@
       position: sticky;
       top: 0;
     }
-
     aside img {
       width: 100px;
       border-radius: 50%;
       display: block;
       margin: 0 auto;
     }
-
     .site-title {
       text-align: center;
       margin: 1rem 0 0.25rem;
       font-size: 1.2rem;
     }
-
     .site-subtitle {
       text-align: center;
       color: #aaa;
       font-size: 0.9rem;
     }
-
     nav a {
       display: block;
       color: white;
@@ -61,18 +55,15 @@
       margin: 0.3rem 0;
       background: #2a2a2a;
     }
-
     nav a:hover {
       background: var(--accent);
     }
-
     main {
       flex: 1;
       padding: 2rem;
       max-width: 900px;
       margin: auto;
     }
-
     .post-card {
       background: var(--card-bg);
       padding: 1.2rem;
@@ -80,21 +71,17 @@
       margin-bottom: 1.5rem;
       border-radius: 6px;
     }
-
     .post-card h2 {
       margin-top: 0;
     }
-
     .post-card a {
       color: var(--accent);
       text-decoration: none;
     }
-
     .search-box {
       margin-bottom: 2rem;
       text-align: center;
     }
-
     .search-box input {
       padding: 0.5rem;
       width: 250px;
@@ -102,7 +89,6 @@
       color: white;
       border: 1px solid #444;
     }
-
     .tag-link {
       background: var(--tag-bg);
       padding: 4px 8px;
@@ -112,23 +98,19 @@
       font-size: 0.9rem;
       margin-right: 4px;
     }
-
     .tag-link:hover {
       background: var(--tag-hover);
     }
-
     footer {
       text-align: center;
       color: #888;
       font-size: 0.8rem;
       margin-top: 3rem;
     }
-
     .pagination {
       text-align: center;
       margin-top: 2rem;
     }
-
     .pagination button {
       padding: 0.5rem 1.2rem;
       margin: 0.5rem;
@@ -139,7 +121,6 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     .pagination button:hover {
       background: var(--tag-hover);
     }
@@ -164,29 +145,14 @@
   <!-- Main Content -->
   <main>
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search posts..." oninput="filterPosts()" />
+      <input type="text" id="searchInput" placeholder="Search posts..." />
     </div>
 
-    <section id="posts">
-      <article class="post-card" data-tags="Web, OSINT">
-        <h2><a href="posts/htb_example.html">Hack the Box: Example Writeup</a></h2>
-        <p>Tags: 
-          <a href="tags.html#Web" class="tag-link">Web</a> 
-          <a href="tags.html#OSINT" class="tag-link">OSINT</a>
-        </p>
-      </article>
-
-      <article class="post-card" data-tags="Reverse">
-        <h2><a href="posts/vuln_dark.html">Writeup: VulnHub Machine</a></h2>
-        <p>Tags: 
-          <a href="tags.html#Reverse" class="tag-link">Reverse</a>
-        </p>
-      </article>
-    </section>
+    <section id="posts"></section>
 
     <div class="pagination">
-      <button>Previous Page</button>
-      <button>Next Page</button>
+      <button disabled>Previous Page</button>
+      <button disabled>Next Page</button>
     </div>
 
     <footer>
@@ -194,6 +160,46 @@
     </footer>
   </main>
 
-  <script src="script.js"></script>
+  <script>
+    const searchInput = document.getElementById("searchInput");
+    const postsContainer = document.getElementById("posts");
+    let allPosts = [];
+
+    function renderPosts(posts) {
+      postsContainer.innerHTML = "";
+      posts.forEach(post => {
+        const article = document.createElement("article");
+        article.className = "post-card";
+        article.setAttribute("data-tags", post.tags.join(", "));
+
+        article.innerHTML = `
+          <h2><a href="${post.url}">${post.title}</a></h2>
+          <p>Tags: ${post.tags.map(tag =>
+            `<a href="tags.html#${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+          ).join(" ")}</p>
+        `;
+
+        postsContainer.appendChild(article);
+      });
+    }
+
+    function filterPosts() {
+      const query = searchInput.value.toLowerCase();
+      const filtered = allPosts.filter(post =>
+        post.title.toLowerCase().includes(query) ||
+        post.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+      renderPosts(filtered);
+    }
+
+    fetch("data/posts.json")
+      .then(res => res.json())
+      .then(data => {
+        allPosts = data;
+        renderPosts(allPosts);
+      });
+
+    searchInput.addEventListener("input", filterPosts);
+  </script>
 </body>
 </html>
