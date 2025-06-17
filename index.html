@@ -178,7 +178,6 @@
             `<a href="tags.html#${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
           ).join(" ")}</p>
         `;
-
         postsContainer.appendChild(article);
       });
     }
@@ -196,7 +195,18 @@
       .then(res => res.json())
       .then(data => {
         allPosts = data;
-        renderPosts(allPosts);
+
+        const hashTag = decodeURIComponent(location.hash.replace("#", "").toLowerCase());
+
+        if (hashTag) {
+          searchInput.value = hashTag;
+          filterPosts();
+
+          // Clean URL by removing the hash
+          history.replaceState(null, null, location.pathname);
+        } else {
+          renderPosts(allPosts);
+        }
       });
 
     searchInput.addEventListener("input", filterPosts);
