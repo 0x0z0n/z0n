@@ -218,7 +218,7 @@
   },
   {
     "title": "HackTheBox: ScriptKiddie",
-    "href": "posts/htb_scriptkiddie.html",
+    "href": "posts/htb_ScriptKiddie.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["Easy", "CommandInjection", "Flask", "Misconfiguration", "FileMonitor"]
