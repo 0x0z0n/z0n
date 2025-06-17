@@ -1,42 +1,84 @@
+
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <title>Archives</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
+      margin: 0;
       font-family: sans-serif;
       background: #111;
       color: #eee;
-      margin: 0;
-      padding: 0;
+      display: flex;
     }
-    header {
-      background: #222;
+    aside {
+      width: 250px;
+      background: #1a1a1a;
       padding: 1rem;
-      text-align: center;
+      height: 100vh;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
     }
-    header a {
-      color: #4caf50;
+    aside img {
+      width: 100px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto;
+    }
+    .site-title {
+      text-align: center;
+      margin: 1rem 0 0.25rem;
+      font-size: 1.2rem;
+    }
+    .site-subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    nav a {
+      display: block;
+      color: white;
       text-decoration: none;
+      padding: 0.5rem;
+      border-radius: 5px;
+      margin: 0.3rem 0;
+      background: #2a2a2a;
+    }
+    nav a:hover {
+      background: #4caf50;
     }
     main {
-      max-width: 800px;
-      margin: 2rem auto;
-      padding: 1rem;
+      flex: 1;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
     }
     h1 {
       color: #4caf50;
+    }
+    .filters {
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    select {
+      background: #1e1e1e;
+      color: white;
+      padding: 0.5rem;
+      border: 1px solid #444;
+      margin: 0.5rem;
     }
     .timeline {
       border-left: 2px solid #4caf50;
       margin-left: 1rem;
       padding-left: 1rem;
     }
-    .year {
+    .month {
       margin-top: 2rem;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: #4caf50;
     }
     .entry {
@@ -66,21 +108,86 @@
   </style>
 </head>
 <body>
-  <header>
-    <a href="index.html">← Back to Home</a>
-  </header>
+  <aside>
+    <img src="assets/avatar.png" alt="Profile" />
+    <div class="site-title">Kshitij Raut</div>
+    <div class="site-subtitle">Offensive Security</div>
+    <nav>
+      <a href="index.html">🏠 Home</a>
+      <a href="categories.html">📚 Categories</a>
+      <a href="tags.html">🏷️ Tags</a>
+      <a href="archives.html">🗃️ Archives</a>
+      <a href="about.html">ℹ️ About</a>
+    </nav>
+  </aside>
   <main>
     <h1>Archives</h1>
-    <div class="timeline">
-      <div class="year">2024</div>
-      <div class="entry"><span>06 Nov</span><a href="posts/native_lib_android.html">Extracting pre-built native library of another Android App for embedding and method invoking inside our custom Android App</a></div>
-      <div class="entry"><span>06 Oct</span><a href="posts/adb_commands.html">Common ADB Shell Commands</a></div>
-      <div class="entry"><span>09 Sep</span><a href="posts/git_branching.html">Git Branching with Learn Git Branching</a></div>
-      <div class="entry"><span>09 Sep</span><a href="posts/git_remote.html">Git Remote Branching with Learn Git Branching</a></div>
-      <div class="year">2023</div>
-      <div class="entry"><span>05 Nov</span><a href="posts/topology_htb.html">Topology | HTB Walkthrough</a></div>
-      <div class="entry"><span>01 Nov</span><a href="posts/analytics_htb.html">Analytics | HTB Walkthrough</a></div>
+    <div class="filters">
+      <label>Filter by Category:</label>
+      <select id="categoryFilter"><option value="">All</option></select>
+      <label>Filter by Tag:</label>
+      <select id="tagFilter"><option value="">All</option></select>
     </div>
+    <div class="timeline" id="archiveList"></div>
   </main>
+  <script>
+    fetch("data/posts.json")
+      .then(res => res.json())
+      .then(posts => {
+        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const categories = new Set();
+        const tags = new Set();
+        posts.forEach(post => {
+          if (post.category) categories.add(post.category);
+          (post.tags || []).forEach(tag => tags.add(tag));
+        });
+
+        const catSelect = document.getElementById("categoryFilter");
+        const tagSelect = document.getElementById("tagFilter");
+        categories.forEach(cat => catSelect.innerHTML += `<option value="\${cat}">\${cat}</option>`);
+        tags.forEach(tag => tagSelect.innerHTML += `<option value="\${tag}">\${tag}</option>`);
+
+        function renderFiltered() {
+          const selectedCat = catSelect.value;
+          const selectedTag = tagSelect.value;
+
+          const filtered = posts.filter(post => {
+            const matchCat = !selectedCat || post.category === selectedCat;
+            const matchTag = !selectedTag || (post.tags || []).includes(selectedTag);
+            return matchCat && matchTag;
+          });
+
+          const grouped = {};
+          filtered.forEach(post => {
+            const d = new Date(post.date);
+            const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
+            const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+            if (!grouped[month]) grouped[month] = [];
+            grouped[month].push({ ...post, formattedDate: day });
+          });
+
+          const container = document.getElementById("archiveList");
+          container.innerHTML = "";
+
+          Object.entries(grouped).forEach(([month, entries]) => {
+            const monthDiv = document.createElement("div");
+            monthDiv.className = "month";
+            monthDiv.textContent = month;
+            container.appendChild(monthDiv);
+
+            entries.forEach(entry => {
+              const item = document.createElement("div");
+              item.className = "entry";
+              item.innerHTML = `<span>\${entry.formattedDate}</span><a href="\${entry.href}">\${entry.title}</a>`;
+              container.appendChild(item);
+            });
+          });
+        }
+
+        catSelect.onchange = tagSelect.onchange = renderFiltered;
+        renderFiltered();
+      });
+  </script>
 </body>
 </html>

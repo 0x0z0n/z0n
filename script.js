@@ -1,44 +1,23 @@
 
-const tagCounts = {};
-const posts = document.querySelectorAll(".post-card");
-const tagListEl = document.getElementById("tagList");
+fetch("data/posts.json")
+  .then(res => res.json())
+  .then(data => {
+    const categories = {};
+    data.forEach(post => {
+      const cat = post.category || "Uncategorized";
+      categories[cat] = categories[cat] ? categories[cat] + 1 : 1;
+    });
 
-posts.forEach(card => {
-  const tags = card.getAttribute("data-tags")?.split(",").map(tag => tag.trim()) || [];
-  tags.forEach(tag => {
-    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    const container = document.getElementById("categoryList");
+    if (container) {
+      Object.entries(categories).forEach(([cat, count]) => {
+        const card = document.createElement("div");
+        card.className = "category-card";
+        card.innerHTML = `
+          <a href="tags.html#${encodeURIComponent(cat)}">${cat}</a>
+          <span>${count} post${count > 1 ? "s" : ""}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
   });
-});
-
-function renderTags() {
-  if (!tagListEl) return;
-  tagListEl.innerHTML = "";
-  Object.entries(tagCounts).forEach(([tag, count]) => {
-    const tagEl = document.createElement("a");
-    tagEl.className = "tag";
-    tagEl.href = "index.html#" + tag;
-    tagEl.textContent = `${tag} (${count})`;
-    tagListEl.appendChild(tagEl);
-  });
-}
-
-function filterTags() {
-  const val = document.getElementById("searchTagInput").value.toLowerCase();
-  document.querySelectorAll(".tag").forEach(tag => {
-    tag.style.display = tag.textContent.toLowerCase().includes(val) ? "inline-block" : "none";
-  });
-}
-
-function filterPosts() {
-  const val = document.getElementById("searchInput").value.toLowerCase();
-  posts.forEach(post => {
-    post.style.display = post.textContent.toLowerCase().includes(val) ? "block" : "none";
-  });
-}
-
-document.getElementById("themeToggle")?.addEventListener("click", () => {
-  const current = document.documentElement.getAttribute("data-theme");
-  document.documentElement.setAttribute("data-theme", current === "dark" ? "light" : "dark");
-});
-
-renderTags();
