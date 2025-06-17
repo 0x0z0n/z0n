@@ -2,13 +2,13 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
+  <title>HTB Admirer | Writeup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="HTB Admirer | Writeup">
   <meta property="og:title" content="HTB Admirer Writeup">
   <meta property="og:description" content="Hack The Box Admirer Writeup - Tags: FTP, ShellUpload, Recon">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="0x0z0n">
-  <title>HTB Admirer | Writeup</title>
   <link rel="stylesheet" href="../style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
@@ -20,29 +20,21 @@
       --text: #eee;
     }
     body {
-      font-family: sans-serif;
       background: var(--bg);
       color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 0;
+      padding: 2rem;
+      max-width: 850px;
+      margin: auto;
+      line-height: 1.7;
     }
-    header {
-      background: #222;
-      padding: 1rem;
-      text-align: center;
-    }
-    header a {
+    a {
       color: var(--link-color);
       text-decoration: none;
-      font-weight: bold;
     }
-    header a:hover {
+    a:hover {
       text-decoration: underline;
-    }
-    main {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
     }
     h1, h2, h3 {
       color: var(--accent);
@@ -50,16 +42,10 @@
       border-bottom: 1px solid #333;
       padding-bottom: 0.3rem;
     }
-    a {
-      color: var(--link-color);
-    }
-    a:hover {
-      text-decoration: underline;
-    }
     pre {
       background: var(--card);
       padding: 1rem;
-      border-left: 3px solid var(--accent);
+      border-left: 4px solid var(--accent);
       overflow-x: auto;
       border-radius: 4px;
       margin: 1.5rem 0;
@@ -70,15 +56,12 @@
       border-radius: 4px;
       font-family: monospace;
     }
-    figure {
-      text-align: center;
-      margin: 2rem 0;
+    #content img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin: 1rem 0;
     }
-    figcaption {
-      color: #aaa;
-      font-size: 0.9em;
-    }
-    blockquote {
+    #content blockquote {
       border-left: 4px solid var(--accent);
       background: #1a1a1a;
       padding: 0.8rem 1rem;
@@ -86,15 +69,16 @@
       font-style: italic;
       color: #ccc;
     }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 2rem;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <a href="../index.html">← Back to Home</a>
-  </header>
-  <main>
-    <div id="content">Loading writeup...</div>
-  </main>
+  <a href="../index.html" class="back-link">← Back to Home</a>
+  <div id="content">Loading writeup...</div>
 
   <script>
     fetch("Admirer.md")
