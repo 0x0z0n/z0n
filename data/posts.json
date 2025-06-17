@@ -340,6 +340,6 @@
     "href": "posts/htb_RedPanda.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
-    "tags": ["Easy", "Java", "Log4j", "ExploitChain", "CVE"]
+    "tags": ["Easy", "Java", "Log4j", "ExploitChain"]
   }
 ]
