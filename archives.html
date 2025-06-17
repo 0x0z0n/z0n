@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>Archives</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #222;
+      padding: 1rem;
+      text-align: center;
+    }
+    header a {
+      color: #4caf50;
+      text-decoration: none;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    h1 {
+      color: #4caf50;
+    }
+    .timeline {
+      border-left: 2px solid #4caf50;
+      margin-left: 1rem;
+      padding-left: 1rem;
+    }
+    .year {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      color: #4caf50;
+    }
+    .entry {
+      margin: 1rem 0;
+      padding-left: 1rem;
+      position: relative;
+    }
+    .entry::before {
+      content: '';
+      position: absolute;
+      left: -1.1rem;
+      top: 0.4rem;
+      width: 10px;
+      height: 10px;
+      background: #4caf50;
+      border-radius: 50%;
+    }
+    .entry a {
+      color: #82b1ff;
+      text-decoration: none;
+    }
+    .entry span {
+      display: inline-block;
+      width: 5rem;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html">← Back to Home</a>
+  </header>
+  <main>
+    <h1>Archives</h1>
+    <div class="timeline">
+      <div class="year">2024</div>
+      <div class="entry"><span>06 Nov</span><a href="posts/native_lib_android.html">Extracting pre-built native library of another Android App for embedding and method invoking inside our custom Android App</a></div>
+      <div class="entry"><span>06 Oct</span><a href="posts/adb_commands.html">Common ADB Shell Commands</a></div>
+      <div class="entry"><span>09 Sep</span><a href="posts/git_branching.html">Git Branching with Learn Git Branching</a></div>
+      <div class="entry"><span>09 Sep</span><a href="posts/git_remote.html">Git Remote Branching with Learn Git Branching</a></div>
+      <div class="year">2023</div>
+      <div class="entry"><span>05 Nov</span><a href="posts/topology_htb.html">Topology | HTB Walkthrough</a></div>
+      <div class="entry"><span>01 Nov</span><a href="posts/analytics_htb.html">Analytics | HTB Walkthrough</a></div>
+    </div>
+  </main>
+</body>
+</html>
