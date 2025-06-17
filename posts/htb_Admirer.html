@@ -12,10 +12,17 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
+    :root {
+      --accent: #4caf50;
+      --link-color: #ffeb3b;
+      --bg: #111;
+      --card: #1e1e1e;
+      --text: #eee;
+    }
     body {
       font-family: sans-serif;
-      background: #111;
-      color: #eee;
+      background: var(--bg);
+      color: var(--text);
       margin: 0;
       padding: 0;
     }
@@ -25,9 +32,12 @@
       text-align: center;
     }
     header a {
-      color: #4caf50;
+      color: var(--link-color);
       text-decoration: none;
       font-weight: bold;
+    }
+    header a:hover {
+      text-decoration: underline;
     }
     main {
       max-width: 900px;
@@ -35,20 +45,24 @@
       padding: 1rem;
     }
     h1, h2, h3 {
-      color: #4caf50;
+      color: var(--accent);
       margin-top: 2rem;
       border-bottom: 1px solid #333;
       padding-bottom: 0.3rem;
     }
     a {
-      color: #4caf50;
+      color: var(--link-color);
+    }
+    a:hover {
+      text-decoration: underline;
     }
     pre {
-      background: #1e1e1e;
+      background: var(--card);
       padding: 1rem;
-      border-left: 3px solid #4caf50;
+      border-left: 3px solid var(--accent);
       overflow-x: auto;
       border-radius: 4px;
+      margin: 1.5rem 0;
     }
     code {
       background: #222;
@@ -65,7 +79,7 @@
       font-size: 0.9em;
     }
     blockquote {
-      border-left: 4px solid #4caf50;
+      border-left: 4px solid var(--accent);
       background: #1a1a1a;
       padding: 0.8rem 1rem;
       margin: 1rem 0;
