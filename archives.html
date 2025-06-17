@@ -60,17 +60,6 @@
     h1 {
       color: #4caf50;
     }
-    .filters {
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-    select {
-      background: #1e1e1e;
-      color: white;
-      padding: 0.5rem;
-      border: 1px solid #444;
-      margin: 0.5rem;
-    }
     .timeline {
       border-left: 2px solid #4caf50;
       margin-left: 1rem;
@@ -111,7 +100,7 @@
   <aside>
     <img src="assets/avatar.jpeg" alt="Profile" />
     <div class="site-title">Kshitij Raut</div>
-    <div class="site-subtitle">SecOps Engineer</div>
+    <div class="site-subtitle">Cyber Security Analyst</div>
     <nav>
       <a href="index.html">🏠 Home</a>
       <a href="categories.html">📚 Categories</a>
@@ -137,12 +126,6 @@
 
   <main>
     <h1>Archives</h1>
-    <div class="filters">
-      <label>Filter by Category:</label>
-      <select id="categoryFilter"><option value="">All</option></select>
-      <label>Filter by Tag:</label>
-      <select id="tagFilter"><option value="">All</option></select>
-    </div>
     <div class="timeline" id="archiveList"></div>
   </main>
 
@@ -152,68 +135,31 @@
       .then(posts => {
         posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const categories = new Set();
-        const tags = new Set();
+        const grouped = {};
         posts.forEach(post => {
-          if (post.category) categories.add(post.category);
-          (post.tags || []).forEach(tag => tags.add(tag));
+          const d = new Date(post.date);
+          const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
+          const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+          if (!grouped[month]) grouped[month] = [];
+          grouped[month].push({ ...post, formattedDate: day });
         });
 
-        const catSelect = document.getElementById("categoryFilter");
-        const tagSelect = document.getElementById("tagFilter");
-        categories.forEach(cat => {
-          const opt = document.createElement("option");
-          opt.value = cat;
-          opt.textContent = cat;
-          catSelect.appendChild(opt);
+        const container = document.getElementById("archiveList");
+        container.innerHTML = "";
+
+        Object.entries(grouped).forEach(([month, entries]) => {
+          const monthDiv = document.createElement("div");
+          monthDiv.className = "month";
+          monthDiv.textContent = month;
+          container.appendChild(monthDiv);
+
+          entries.forEach(entry => {
+            const item = document.createElement("div");
+            item.className = "entry";
+            item.innerHTML = `<span>${entry.formattedDate}</span><a href="${entry.href}">${entry.title}</a>`;
+            container.appendChild(item);
+          });
         });
-        tags.forEach(tag => {
-          const opt = document.createElement("option");
-          opt.value = tag;
-          opt.textContent = tag;
-          tagSelect.appendChild(opt);
-        });
-
-        function renderFiltered() {
-          const selectedCat = catSelect.value;
-          const selectedTag = tagSelect.value;
-
-          const filtered = posts.filter(post => {
-            const matchCat = !selectedCat || post.category === selectedCat;
-            const matchTag = !selectedTag || (post.tags || []).includes(selectedTag);
-            return matchCat && matchTag;
-          });
-
-          const grouped = {};
-          filtered.forEach(post => {
-            const d = new Date(post.date);
-            const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
-            const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-            if (!grouped[month]) grouped[month] = [];
-            grouped[month].push({ ...post, formattedDate: day });
-          });
-
-          const container = document.getElementById("archiveList");
-          container.innerHTML = "";
-
-          Object.entries(grouped).forEach(([month, entries]) => {
-            const monthDiv = document.createElement("div");
-            monthDiv.className = "month";
-            monthDiv.textContent = month;
-            container.appendChild(monthDiv);
-
-            entries.forEach(entry => {
-              const item = document.createElement("div");
-              item.className = "entry";
-              item.innerHTML = `<span>${entry.formattedDate}</span><a href="${entry.href}">${entry.title}</a>`;
-              container.appendChild(item);
-            });
-          });
-        }
-
-        catSelect.addEventListener("change", renderFiltered);
-        tagSelect.addEventListener("change", renderFiltered);
-        renderFiltered();
       })
       .catch(err => {
         document.getElementById("archiveList").innerHTML = "<p style='color:red;'>Failed to load archive data.</p>";
