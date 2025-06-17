@@ -142,19 +142,11 @@
       <a href="about.html">ℹ️ About</a>
     </nav>
     <div class="social-icons" style="text-align: center; margin-top: 2rem;">
-    <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-linkedin fa-lg"></i>
-    </a>
-    <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;">
-      <i class="fas fa-envelope fa-lg"></i>
-    </a>
-    <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-youtube fa-lg"></i>
-    </a>
-    <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;">
-      <i class="fab fa-x-twitter fa-lg"></i>
-    </a>
-  </div>
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn" style="margin: 0 0.5rem; color: white;"><i class="fab fa-linkedin fa-lg"></i></a>
+      <a href="mailto:kshitijraut360@gmail.com" title="Gmail" style="margin: 0 0.5rem; color: white;"><i class="fas fa-envelope fa-lg"></i></a>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube" style="margin: 0 0.5rem; color: white;"><i class="fab fa-youtube fa-lg"></i></a>
+      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter" style="margin: 0 0.5rem; color: white;"><i class="fab fa-x-twitter fa-lg"></i></a>
+    </div>
   </aside>
 
   <!-- Main Content -->
@@ -175,6 +167,7 @@
     </footer>
   </main>
 
+  <!-- JavaScript -->
   <script>
     const searchInput = document.getElementById("searchInput");
     const postsContainer = document.getElementById("posts");
@@ -193,7 +186,7 @@
         article.setAttribute("data-tags", post.tags.join(", "));
 
         article.innerHTML = `
-          <h2><a href="${post.url}">${post.title}</a></h2>
+          <h2><a href="${post.href}">${post.title}</a></h2>
           <p><strong>Category:</strong> ${post.category || "Uncategorized"}</p>
           <p><strong>Date:</strong> ${post.date}</p>
           <p><strong>Tags:</strong> ${post.tags.map(tag =>
