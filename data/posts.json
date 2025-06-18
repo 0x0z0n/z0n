@@ -22,7 +22,7 @@
   },
   {
     "title": "HackTheBox: Armageddon",
-    "href": "posts/htb_Armageddon.html",
+    "href": "posts/htb_armageddon.html",
     "date": "2025-07-17",
     "category": "HackTheBox",
     "tags": ["easy", "drupal_rce", "sql_injection", "cms_exploit"]
@@ -99,7 +99,7 @@
   },
   {
     "title": "HackTheBox: Explore",
-    "href": "posts/htb_Explore.html",
+    "href": "posts/htb_xxplore.html",
     "date": "2025-07-06",
     "category": "HackTheBox",
     "tags": ["easy", "android", "es_file_explorer", "mobile_exploit"]
