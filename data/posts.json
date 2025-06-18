@@ -2,7 +2,7 @@
   {
     "title": "HTB: Academy",
     "href": "posts/htb_Academy.html",
-    "date": "2025-07-20",
+    "date": "2025-06-20",
     "category": "HackTheBox",
     "tags": ["easy", "deserialization", "rce", "reverse_shell", "weak_creds", "sudo_abuse"]
   },
