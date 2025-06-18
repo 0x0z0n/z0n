@@ -2,274 +2,337 @@
   {
     "title": "HTB: Academy",
     "href": "posts/htb_Academy.html",
-    "date": "2025-06-17",
+    "date": "2025-07-20",
     "category": "HackTheBox",
     "tags": ["easy", "deserialization", "rce", "reverse_shell", "weak_creds", "sudo_abuse"]
   },
   {
     "title": "HTB: Admirer",
     "href": "posts/htb_Admirer.html",
-    "date": "2025-06-17",
+    "date": "2025-07-19",
     "category": "HackTheBox",
     "tags": ["easy", "ftp_enum", "creds_reuse", "file_enum", "lfi", "config_leak"]
   },
   {
     "title": "HTB: Antique",
     "href": "posts/htb_Antique.html",
-    "date": "2025-06-17",
+    "date": "2025-07-18",
     "category": "HackTheBox",
     "tags": ["easy", "telnet", "firmware", "misconfig"]
   },
   {
     "title": "HTB: Armageddon",
     "href": "posts/htb_Armageddon.html",
-    "date": "2025-06-17",
+    "date": "2025-07-17",
     "category": "HackTheBox",
     "tags": ["easy", "drupal_rce", "sql_injection", "cms_exploit"]
   },
   {
     "title": "HTB: Backend",
     "href": "posts/htb_Backend.html",
-    "date": "2025-06-17",
+    "date": "2025-07-16",
     "category": "HackTheBox",
     "tags": ["medium", "api_enum", "jwt_auth", "creds_leak", "script_misuse", "sudo_abuse"]
   },
   {
     "title": "HTB: Bank",
     "href": "posts/htb_Bank.html",
-    "date": "2025-06-17",
+    "date": "2025-07-15",
     "category": "HackTheBox",
     "tags": ["easy", "dns_zone", "file_disclosure", "directory_bypass"]
   },
   {
     "title": "HTB: Bashed",
     "href": "posts/htb_Bashed.html",
-    "date": "2025-06-17",
+    "date": "2025-07-14",
     "category": "HackTheBox",
     "tags": ["easy", "web_shell", "reverse_shell", "priv_esc", "sudo_abuse"]
   },
   {
     "title": "HTB: Beep",
     "href": "posts/htb_Beep.html",
-    "date": "2025-06-17",
+    "date": "2025-07-13",
     "category": "HackTheBox",
     "tags": ["easy", "lfi", "rce", "creds_reuse", "legacy_services"]
   },
   {
     "title": "HTB: Blocky",
     "href": "posts/htb_Blocky.html",
-    "date": "2025-06-17",
+    "date": "2025-07-12",
     "category": "HackTheBox",
     "tags": ["easy", "ftp", "jar_decompile", "creds_reuse", "wordpress"]
   },
   {
     "title": "HTB: Blunder",
     "href": "posts/htb_Blunder.html",
-    "date": "2025-06-17",
+    "date": "2025-07-11",
     "category": "HackTheBox",
     "tags": ["easy", "cms_enum", "auth_bypass", "file_upload", "priv_esc"]
   },
   {
     "title": "HTB: BountyHunter",
     "href": "posts/htb_BountyHunter.html",
-    "date": "2025-06-17",
+    "date": "2025-07-10",
     "category": "HackTheBox",
     "tags": ["easy", "xxe", "file_read", "php_filter", "creds_discovery"]
   },
   {
     "title": "HTB: Curling",
     "href": "posts/htb_Curling.html",
-    "date": "2025-06-17",
+    "date": "2025-07-09",
     "category": "HackTheBox",
     "tags": ["easy", "joomla", "base64_creds", "bruteforce", "config_leak"]
   },
   {
     "title": "HTB: Delivery",
     "href": "posts/htb_Delivery.html",
-    "date": "2025-06-17",
+    "date": "2025-07-08",
     "category": "HackTheBox",
     "tags": ["easy", "mattermost", "internal_enum", "social_eng", "priv_esc"]
   },
   {
     "title": "HTB: Doctor",
     "href": "posts/htb_Doctor.html",
-    "date": "2025-06-17",
+    "date": "2025-07-07",
     "category": "HackTheBox",
     "tags": ["easy", "os_command_injection", "xss_to_rce", "reverse_shell", "log_analysis"]
   },
   {
     "title": "HTB: Explore",
     "href": "posts/htb_Explore.html",
-    "date": "2025-06-17",
+    "date": "2025-07-06",
     "category": "HackTheBox",
     "tags": ["easy", "android", "es_file_explorer", "mobile_exploit"]
   },
   {
     "title": "HTB: FriendZone",
     "href": "posts/htb_FriendZone.html",
-    "date": "2025-06-17",
+    "date": "2025-07-06",
     "category": "HackTheBox",
     "tags": ["easy", "smb_enum", "dns_zone", "creds_leak", "web_admin"]
   },
   {
     "title": "HTB: Frolic",
     "href": "posts/htb_Frolic.html",
-    "date": "2025-06-17",
+    "date": "2025-07-05",
     "category": "HackTheBox",
     "tags": ["easy", "js_enum", "base64", "zip_bruteforce", "bf_to_php"]
   },
   {
     "title": "HTB: Haystack",
     "href": "posts/htb_Haystack.html",
-    "date": "2025-06-17",
+    "date": "2025-07-05",
     "category": "HackTheBox",
     "tags": ["easy", "elasticsearch", "b64_creds", "logstash_priv_esc"]
   },
   {
     "title": "HTB: Help",
     "href": "posts/htb_Help.html",
-    "date": "2025-06-17",
+    "date": "2025-07-04",
     "category": "HackTheBox",
     "tags": ["easy", "rce", "file_upload", "web_shell", "php_hashing", "apache_default"]
   },
   {
     "title": "HTB: Irked",
     "href": "posts/htb_Irked.html",
-    "date": "2025-06-17",
+    "date": "2025-07-03",
     "category": "HackTheBox",
     "tags": ["easy", "irc_exploit", "unreal_ircd", "backdoor_exec"]
   },
   {
     "title": "HackTheBox: Laboratory",
     "href": "posts/htb_Laboratory.html",
-    "date": "2025-06-17",
+    "date": "2025-07-03",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "SSRF", "JWT", "Misconfig"]
   },
   {
     "title": "HackTheBox: LaCasaDePapel",
     "href": "posts/htb_LaCasaDePapel.html",
-    "date": "2025-06-17",
+    "date": "2025-07-02",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "Backdoor", "FTP", "RestrictedShell"]
   },
   {
     "title": "HackTheBox: Late",
     "href": "posts/htb_Late.html",
-    "date": "2025-06-17",
+    "date": "2025-06-01",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "SSTI", "Flask", "LFI"]
   },
   {
     "title": "HackTheBox: Luanne",
     "href": "posts/htb_Luanne.html",
-    "date": "2025-06-17",
+    "date": "2025-07-01",
     "category": "HackTheBox",
     "tags": ["Easy", "NetBSD", "LuaInjection", "LFI", "ReverseShell"]
   },
   {
     "title": "HackTheBox: Networked",
     "href": "posts/htb_Networked.html",
-    "date": "2025-06-17",
+    "date": "2025-07-01",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "FileUpload", "MIMEBypass", "WebShell"]
   },
   {
     "title": "HackTheBox: OpenAdmin",
     "href": "posts/htb_OpenAdmin.html",
-    "date": "2025-06-17",
+    "date": "2025-06-30",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "RCE", "OpenNetAdmin", "WebExploit"]
   },
   {
     "title": "HackTheBox: OpenSource",
     "href": "posts/htb_OpenSource.html",
-    "date": "2025-06-17",
+    "date": "2025-06-29",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "LFI", "Flask", "PathTraversal"]
   },
   {
     "title": "HackTheBox: Postman",
     "href": "posts/htb_Postman.html",
-    "date": "2025-06-17",
+    "date": "2025-06-29",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "RedisRCE", "SSHKeyInjection", "PrivilegeEsc"]
   },
   {
     "title": "HackTheBox: Previse",
     "href": "posts/htb_Previse.html",
-    "date": "2025-06-17",
+    "date": "2025-06-28",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "CommandInjection", "BackupExploit", "RCE"]
   },
   {
     "title": "HackTheBox: RedPanda",
     "href": "posts/htb_RedPanda.html",
-    "date": "2025-06-17",
+    "date": "2025-06-27",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "SSTI", "SpringBoot", "JinjaInjection"]
   },
   {
     "title": "HackTheBox: Safe",
     "href": "posts/htb_Safe.html",
-    "date": "2025-06-17",
+    "date": "2025-06-26",
     "category": "HackTheBox",
     "tags": ["Easy", "BinaryExploitation", "BufferOverflow", "ROP", "ReverseEngineering"]
   },
   {
     "title": "HackTheBox: ScriptKiddie",
     "href": "posts/htb_ScriptKiddie.html",
-    "date": "2025-06-17",
+    "date": "2025-06-25",
     "category": "HackTheBox",
     "tags": ["Easy", "CommandInjection", "Flask", "Misconfiguration", "FileMonitor"]
   },
   {
     "title": "HackTheBox: Shocker",
     "href": "posts/htb_Shocker.html",
-    "date": "2025-06-17",
+    "date": "2025-06-25",
     "category": "HackTheBox",
     "tags": ["Easy", "Shellshock", "CGI", "RemoteCodeExecution"]
   },
   {
     "title": "HackTheBox: Spectra",
     "href": "posts/htb_Spectra.html",
-    "date": "2025-06-17",
+    "date": "2025-06-25",
     "category": "HackTheBox",
     "tags": ["Easy", "WordPress", "CredentialReuse", "ReverseShell", "FileDisclosure"]
   },
   {
     "title": "HackTheBox: SwagShop",
     "href": "posts/htb_SwagShop.html",
-    "date": "2025-06-17",
+    "date": "2025-06-24",
     "category": "HackTheBox",
     "tags": ["Easy", "Magento", "CredentialDisclosure", "RCE", "WebExploit"]
   },
   {
     "title": "HackTheBox: Tabby",
     "href": "posts/htb_Tabby.html",
-    "date": "2025-06-17",
+    "date": "2025-06-24",
     "category": "HackTheBox",
     "tags": ["Easy", "Tomcat", "LFI", "WARExploit", "CredentialReuse"]
   },
   {
     "title": "HackTheBox: Teacher",
     "href": "posts/htb_Teacher.html",
-    "date": "2025-06-17",
+    "date": "2025-06-23",
     "category": "HackTheBox",
     "tags": ["Easy", "Moodle", "BruteForce", "CredentialReuse", "RCE"]
   },
   {
     "title": "HackTheBox: Template",
     "href": "posts/htb_Template.html",
-    "date": "2025-06-17",
+    "date": "2025-06-23",
     "category": "HackTheBox",
     "tags": ["Easy"]
   },
   {
     "title": "HackTheBox: Traceback",
     "href": "posts/htb_Traceback.html",
-    "date": "2025-06-17",
+    "date": "2025-06-22",
     "category": "HackTheBox",
     "tags": ["Easy", "WebShell", "Lua", "MisconfiguredSudo", "Luvit"]
+  },
+  {
+    "title": "HTB Traverxec | Writeup",
+    "href": "htb_Traverxec.html",
+    "date": "2025-06-21",
+    "category": "HackTheBox",
+    "tags": [
+      "Nostromo",
+      "ExploitDB",
+      "sudoers",
+      "Privilege Escalation",
+      "Enumeration"
+    ]
+  },
+  {
+    "title": "HTB Trick | Writeup",
+    "href": "htb_Trick.html",
+    "date": "2025-06-20",
+    "category": "HackTheBox",
+    "tags": [
+      "SMB",
+      "MySQL abuse",
+      "privesc",
+      "Command Injection",
+      "Privilege Escalation"
+    ]
+  },
+  {
+    "title": "HTB Undetected | Writeup",
+    "href": "htb_Undetected.html",
+    "date": "2025-06-19",
+    "category": "HackTheBox",
+    "tags": [
+      "AV Evasion",
+      "Shellcode",
+      "Hard",
+      "Privilege Escalation"
+    ]
+  },
+  {
+    "title": "HTB Valentine | Writeup",
+    "href": "htb_Valentine.html",
+    "date": "2025-06-18",
+    "category": "HackTheBox",
+    "tags": [
+      "Heartbleed",
+      "Memory Dump",
+      "Password Reuse",
+      "Hard",
+      "PrivEsc"
+    ]
+  },
+  {
+    "title": "HTB Writeup | Writeup",
+    "href": "htb_Writeup.html",
+    "date": "2025-06-17",
+    "category": "HackTheBox",
+    "tags": [
+      "Gobuster",
+      "Web Exploit",
+      "PrivEsc",
+      "Easy"
+    ]
   }
 ]
