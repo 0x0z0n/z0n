@@ -156,7 +156,7 @@
   {
     "title": "HackTheBox: Late",
     "href": "posts/htb_Late.html",
-    "date": "2025-06-01",
+    "date": "2025-07-01",
     "category": "HackTheBox",
     "tags": ["Easy", "Linux", "SSTI", "Flask", "LFI"]
   },
@@ -274,7 +274,7 @@
   },
   {
     "title": "HTB Traverxec | Writeup",
-    "href": "htb_Traverxec.html",
+    "href": "posts/htb_Traverxec.html",
     "date": "2025-06-21",
     "category": "HackTheBox",
     "tags": [
@@ -287,7 +287,7 @@
   },
   {
     "title": "HTB Trick | Writeup",
-    "href": "htb_Trick.html",
+    "href": "posts/htb_Trick.html",
     "date": "2025-06-20",
     "category": "HackTheBox",
     "tags": [
@@ -300,7 +300,7 @@
   },
   {
     "title": "HTB Undetected | Writeup",
-    "href": "htb_Undetected.html",
+    "href": "posts/htb_Undetected.html",
     "date": "2025-06-19",
     "category": "HackTheBox",
     "tags": [
@@ -312,7 +312,7 @@
   },
   {
     "title": "HTB Valentine | Writeup",
-    "href": "htb_Valentine.html",
+    "href": "posts/htb_Valentine.html",
     "date": "2025-06-18",
     "category": "HackTheBox",
     "tags": [
@@ -325,7 +325,7 @@
   },
   {
     "title": "HTB Writeup | Writeup",
-    "href": "htb_Writeup.html",
+    "href": "posts/htb_Writeup.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": [
