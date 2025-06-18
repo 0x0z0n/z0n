@@ -1,133 +1,133 @@
 [
   {
     "title": "HTB: Academy",
-    "href": "posts/Academy.html",
+    "href": "posts/htb_Academy.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "deserialization", "rce", "reverse_shell", "weak_creds", "sudo_abuse"]
   },
   {
     "title": "HTB: Admirer",
-    "href": "posts/Admirer.html",
+    "href": "posts/htb_Admirer.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "ftp_enum", "creds_reuse", "file_enum", "lfi", "config_leak"]
   },
   {
     "title": "HTB: Antique",
-    "href": "posts/Antique.html",
+    "href": "posts/htb_Antique.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "telnet", "firmware", "misconfig"]
   },
   {
     "title": "HTB: Armageddon",
-    "href": "posts/Armageddon.html",
+    "href": "posts/htb_Armageddon.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "drupal_rce", "sql_injection", "cms_exploit"]
   },
   {
     "title": "HTB: Backend",
-    "href": "posts/Backend.html",
+    "href": "posts/htb_Backend.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["medium", "api_enum", "jwt_auth", "creds_leak", "script_misuse", "sudo_abuse"]
   },
   {
     "title": "HTB: Bank",
-    "href": "posts/Bank.html",
+    "href": "posts/htb_Bank.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "dns_zone", "file_disclosure", "directory_bypass"]
   },
   {
     "title": "HTB: Bashed",
-    "href": "posts/Bashed.html",
+    "href": "posts/htb_Bashed.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "web_shell", "reverse_shell", "priv_esc", "sudo_abuse"]
   },
   {
     "title": "HTB: Beep",
-    "href": "posts/Beep.html",
+    "href": "posts/htb_Beep.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "lfi", "rce", "creds_reuse", "legacy_services"]
   },
   {
     "title": "HTB: Blocky",
-    "href": "posts/Blocky.html",
+    "href": "posts/htb_Blocky.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "ftp", "jar_decompile", "creds_reuse", "wordpress"]
   },
   {
     "title": "HTB: Blunder",
-    "href": "posts/Blunder.html",
+    "href": "posts/htb_Blunder.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "cms_enum", "auth_bypass", "file_upload", "priv_esc"]
   },
   {
     "title": "HTB: BountyHunter",
-    "href": "posts/BountyHunter.html",
+    "href": "posts/htb_BountyHunter.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "xxe", "file_read", "php_filter", "creds_discovery"]
   },
   {
     "title": "HTB: Curling",
-    "href": "posts/Curling.html",
+    "href": "posts/htb_Curling.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "joomla", "base64_creds", "bruteforce", "config_leak"]
   },
   {
     "title": "HTB: Delivery",
-    "href": "posts/Delivery.html",
+    "href": "posts/htb_Delivery.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "mattermost", "internal_enum", "social_eng", "priv_esc"]
   },
   {
     "title": "HTB: Doctor",
-    "href": "posts/Doctor.html",
+    "href": "posts/htb_Doctor.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "os_command_injection", "xss_to_rce", "reverse_shell", "log_analysis"]
   },
   {
     "title": "HTB: Explore",
-    "href": "posts/Explore.html",
+    "href": "posts/htb_Explore.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "android", "es_file_explorer", "mobile_exploit"]
   },
   {
     "title": "HTB: FriendZone",
-    "href": "posts/FriendZone.html",
+    "href": "posts/htb_FriendZone.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "smb_enum", "dns_zone", "creds_leak", "web_admin"]
   },
   {
     "title": "HTB: Frolic",
-    "href": "posts/Frolic.html",
+    "href": "posts/htb_Frolic.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "js_enum", "base64", "zip_bruteforce", "bf_to_php"]
   },
   {
     "title": "HTB: Haystack",
-    "href": "posts/Haystack.html",
+    "href": "posts/htb_Haystack.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "elasticsearch", "b64_creds", "logstash_priv_esc"]
   },
   {
     "title": "HTB: Help",
-    "href": "posts/Help.html",
+    "href": "posts/htb_Help.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
     "tags": ["easy", "rce", "file_upload", "web_shell", "php_hashing", "apache_default"]
