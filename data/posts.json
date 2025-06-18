@@ -273,7 +273,7 @@
     "tags": ["Easy", "WebShell", "Lua", "MisconfiguredSudo", "Luvit"]
   },
   {
-    "title": "HTB Traverxec | Writeup",
+    "title": "HTB Traverxec",
     "href": "posts/htb_Traverxec.html",
     "date": "2025-06-21",
     "category": "HackTheBox",
@@ -286,7 +286,7 @@
     ]
   },
   {
-    "title": "HTB Trick | Writeup",
+    "title": "HTB Trick",
     "href": "posts/htb_Trick.html",
     "date": "2025-06-20",
     "category": "HackTheBox",
@@ -299,7 +299,7 @@
     ]
   },
   {
-    "title": "HTB Undetected | Writeup",
+    "title": "HTB Undetected",
     "href": "posts/htb_Undetected.html",
     "date": "2025-06-19",
     "category": "HackTheBox",
@@ -311,7 +311,7 @@
     ]
   },
   {
-    "title": "HTB Valentine | Writeup",
+    "title": "HTB Valentine",
     "href": "posts/htb_Valentine.html",
     "date": "2025-06-18",
     "category": "HackTheBox",
@@ -324,7 +324,7 @@
     ]
   },
   {
-    "title": "HTB Writeup | Writeup",
+    "title": "HTB Writeup",
     "href": "posts/htb_Writeup.html",
     "date": "2025-06-17",
     "category": "HackTheBox",
