@@ -159,83 +159,91 @@
 
   <!-- JavaScript -->
   <script>
-    const searchInput = document.getElementById("searchInput");
-    const postsContainer = document.getElementById("posts");
-    let allPosts = [];
+  const searchInput = document.getElementById("searchInput");
+  const postsContainer = document.getElementById("posts");
+  let allPosts = [];
 
-    function renderPosts(posts) {
-      postsContainer.innerHTML = "";
-      if (posts.length === 0) {
-        postsContainer.innerHTML = "<p>No posts found.</p>";
-        return;
+  function renderPosts(posts) {
+    postsContainer.innerHTML = "";
+    if (posts.length === 0) {
+      postsContainer.innerHTML = "<p>No posts found.</p>";
+      return;
+    }
+
+    posts.forEach(post => {
+      const article = document.createElement("article");
+      article.className = "post-card";
+      article.setAttribute("data-tags", post.tags.join(", "));
+
+      const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
+
+      article.innerHTML = `
+        <h2><a href="${post.href}">${post.title}</a></h2>
+        <p><strong>Category:</strong> ${categories || "Uncategorized"}</p>
+        <p><strong>Date:</strong> ${post.date}</p>
+        <p><strong>Tags:</strong> ${post.tags.map(tag =>
+          `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+        ).join(" ")}</p>
+      `;
+
+      postsContainer.appendChild(article);
+    });
+  }
+
+  function filterPosts() {
+    const query = searchInput.value.trim().toLowerCase();
+    const filtered = allPosts.filter(post =>
+      post.title.toLowerCase().includes(query) ||
+      (Array.isArray(post.category)
+        ? post.category.some(cat => cat.toLowerCase().includes(query))
+        : (post.category || "").toLowerCase().includes(query)
+      ) ||
+      post.tags.some(tag => tag.toLowerCase().includes(query)) ||
+      (post.date && post.date.startsWith(query))
+    );
+    renderPosts(filtered);
+  }
+
+  function getParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+  }
+
+  fetch("data/posts.json")
+    .then(res => res.json())
+    .then(data => {
+      allPosts = data;
+
+      const tagParam = getParam("tag");
+      const catParam = getParam("category");
+      const dateParam = getParam("date");
+
+      let filtered = allPosts;
+
+      if (tagParam) {
+        searchInput.value = tagParam;
+        filtered = allPosts.filter(post =>
+          post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
+        );
+      } else if (catParam) {
+        searchInput.value = catParam;
+        filtered = allPosts.filter(post =>
+          Array.isArray(post.category)
+            ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase())
+            : (post.category || "").toLowerCase() === catParam.toLowerCase()
+        );
+      } else if (dateParam) {
+        searchInput.value = dateParam;
+        filtered = allPosts.filter(post =>
+          post.date && post.date.startsWith(dateParam)
+        );
       }
 
-      posts.forEach(post => {
-        const article = document.createElement("article");
-        article.className = "post-card";
-        article.setAttribute("data-tags", post.tags.join(", "));
-
-        article.innerHTML = `
-          <h2><a href="${post.href}">${post.title}</a></h2>
-          <p><strong>Category:</strong> ${post.category || "Uncategorized"}</p>
-          <p><strong>Date:</strong> ${post.date}</p>
-          <p><strong>Tags:</strong> ${post.tags.map(tag =>
-            `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-          ).join(" ")}</p>
-        `;
-
-        postsContainer.appendChild(article);
-      });
-    }
-
-    function filterPosts() {
-      const query = searchInput.value.trim().toLowerCase();
-      const filtered = allPosts.filter(post =>
-        post.title.toLowerCase().includes(query) ||
-        (post.category && post.category.toLowerCase().includes(query)) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query)) ||
-        (post.date && post.date.startsWith(query))
-      );
       renderPosts(filtered);
-    }
+    });
 
-    function getParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
+  searchInput.addEventListener("input", filterPosts);
+</script>
 
-    fetch("data/posts.json")
-      .then(res => res.json())
-      .then(data => {
-        allPosts = data;
-
-        const tagParam = getParam("tag");
-        const catParam = getParam("category");
-        const dateParam = getParam("date");
-
-        let filtered = allPosts;
-
-        if (tagParam) {
-          searchInput.value = tagParam;
-          filtered = allPosts.filter(post =>
-            post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
-          );
-        } else if (catParam) {
-          searchInput.value = catParam;
-          filtered = allPosts.filter(post =>
-            post.category && post.category.toLowerCase() === catParam.toLowerCase()
-          );
-        } else if (dateParam) {
-          searchInput.value = dateParam;
-          filtered = allPosts.filter(post =>
-            post.date && post.date.startsWith(dateParam)
-          );
-        }
-
-        renderPosts(filtered);
-      });
-
-    searchInput.addEventListener("input", filterPosts);
-  </script>
 </body>
 </html>
