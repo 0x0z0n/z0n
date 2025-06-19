@@ -81,7 +81,7 @@
   <div id="content">Loading writeup...</div>
 
   <script>
-    fetch("Explorer.md")
+    fetch("Explore.md")
       .then(res => res.text())
       .then(md => {
         document.getElementById("content").innerHTML = marked.parse(md);
