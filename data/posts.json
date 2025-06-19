@@ -101,7 +101,7 @@
     "title": "HackTheBox: Explorer",
     "href": "posts/htb_Explorer.html",
     "date": "2025-07-06",
-    "category": "HackTheBox",
+    "category": ["HackTheBox", "Android"],
     "tags": ["easy", "android", "es_file_explorer", "mobile_exploit"]
   },
   {
