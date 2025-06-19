@@ -99,7 +99,7 @@
   },
   {
     "title": "HackTheBox: Explore",
-    "href": "posts/htb_xxplore.html",
+    "href": "posts/htb_Explore.html",
     "date": "2025-07-06",
     "category": "HackTheBox",
     "tags": ["easy", "android", "es_file_explorer", "mobile_exploit"]
