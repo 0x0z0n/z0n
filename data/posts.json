@@ -259,13 +259,6 @@
     "tags": ["Easy", "Moodle", "BruteForce", "CredentialReuse", "RCE"]
   },
   {
-    "title": "HackTheBox: Template",
-    "href": "posts/htb_Template.html",
-    "date": "2025-06-23",
-    "category": "HackTheBox",
-    "tags": ["Easy"]
-  },
-  {
     "title": "HackTheBox: Traceback",
     "href": "posts/htb_Traceback.html",
     "date": "2025-06-22",
