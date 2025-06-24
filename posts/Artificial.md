@@ -1,6 +1,6 @@
 # Artificial
 ```
-Difficulty: Medium  
+Difficulty: Easy
 Operating System: Linux  
 Hints: TensorFlow RCE, Docker misuse, SQLite DB leak, local-only service  
 ```
