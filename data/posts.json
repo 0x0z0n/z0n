@@ -1,5 +1,22 @@
 [
   {
+    "title": "HackTheBox: Artificial",
+    "href": "posts/htb_Artificial.html",
+    "date": "2025-06-24",
+    "category": ["HackTheBox", "Artificial Inteligence", "DevSecOPs"],
+    "tags": [
+      "AI",
+      "Rest_Server",
+      "Restic",
+      "Easy",
+      "TensorFlowRCE",
+      "DockerMisconfiguration",
+      "SQLiteLeak",
+      "Restic",
+      "DockerSecurity"
+    ]
+  },
+  {
     "title": "HackTheBox: Academy",
     "href": "posts/htb_Academy.html",
     "date": "2025-07-20",
