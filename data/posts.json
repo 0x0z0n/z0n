@@ -3,7 +3,7 @@
     "title": "HackTheBox: Artificial",
     "href": "posts/htb_Artificial.html",
     "date": "2025-06-24",
-    "category": ["HackTheBox", "Artificial Inteligence", "DevSecOPs"],
+    "category": ["HackTheBox", "Artificial Inteligence", "DevSecOps"],
     "tags": [
       "AI",
       "Rest_Server",
