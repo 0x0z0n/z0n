@@ -5,7 +5,7 @@ Learn a wide variety of Docker vulnerabilities in this guided showcase.
 [The Docker Rodeo](https://tryhackme.com/room/dockerrodeo)
 
 ```
-Difficulty: Easy
+Difficulty: Medium
 Operating System: Linux , Docker
 Hints:  CgroupsEscape, PrivilegeMisconfiguration, SharedNamespaces, HostVolumeMount, ExposedDockerSocket, DockerDaemonEscape, RCEviaDockerAPI, MaliciousDockerImage, DockerImageReversing, DockerLayerDisassembly, DockerRegistryAttack, DockerSecurity
 
