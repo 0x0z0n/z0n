@@ -184,7 +184,7 @@
           // Custom redirect for CheatSheet
           const href = cat === "CheatSheet"
             ? "https://0x0z0n.github.io/z0n/posts/Cheatsheet.html"
-            : `search.html?category=${encodeURIComponent(cat)}`;
+            : `index.html?category=${encodeURIComponent(cat)}`;
 
           div.innerHTML = `
             <a href="${href}">${cat}</a>
