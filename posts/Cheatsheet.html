@@ -29,10 +29,14 @@
       background: #111; padding: 1rem; border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,255,0,0.3);
     }
+    .tree-map {
+      display: flex; flex-direction: column; gap: 0.5rem;
+      width: 100%; max-width: 768px;
+    }
     details {
-      margin: 0.5rem 0; background: #000;
-      border-left: 3px solid #4caf50; padding: 0.8rem;
-      border-radius: 6px; transition: background 0.3s ease;
+      background: #000; border-left: 3px solid #4caf50;
+      padding: 0.6rem 0.8rem; border-radius: 6px;
+      transition: background 0.3s ease;
     }
     details[open] { background: #1a1a1a; }
     summary {
@@ -51,7 +55,7 @@
     }
     h2 {
       margin-top: 2rem; font-size: 1.2rem;
-      color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.3);
+      color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
     body::before {
       content: "";
@@ -60,56 +64,58 @@
       background-repeat: no-repeat;
       background-position: 5% 10%, 95% 90%;
       background-size: 60px, 120px;
-      opacity: 0.05; z-index: -1;
+      opacity: 0.03; z-index: -1;
     }
   </style>
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back</a>
   <div id="content"></div>
-  <h2>🧰 CTF Resources</h2>
-  <details open>
-    <summary>🌐 General Pentesting</summary>
-    <ul>
-      <li><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></li>
-      <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP CS</a></li>
-    </ul>
-  </details>
-  <details>
-    <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
-    <ul>
-      <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></li>
-      <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></li>
-    </ul>
-  </details>
-  <details>
-    <summary>💻 PrivEsc <span class="tag">TA0004</span></summary>
-    <ul>
-      <li><a href="https://gtfobins.github.io/" target="_blank">GTFOBins</a></li>
-      <li><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey</a></li>
-      <li><a href="https://www.revshells.com/" target="_blank">RevShells</a></li>
-    </ul>
-  </details>
-  <details>
-    <summary>🪟 Windows <span class="tag">TA0004</span></summary>
-    <ul><li><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS</a></li></ul>
-  </details>
-  <details>
-    <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
-    <ul><!-- Add later --></ul>
-  </details>
-  <details>
-    <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
-    <ul><!-- Add later --></ul>
-  </details>
-  <details>
-    <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
-    <ul><!-- Add later --></ul>
-  </details>
-  <details>
-    <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
-    <ul><li><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></li></ul>
-  </details>
+  <h2>🧰 CTF Cheatsheet Tree</h2>
+  <div class="tree-map">
+    <details>
+      <summary>🌐 General Pentesting</summary>
+      <ul>
+        <li><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></li>
+        <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP CS</a></li>
+      </ul>
+    </details>
+    <details>
+      <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
+      <ul>
+        <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></li>
+        <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></li>
+      </ul>
+    </details>
+    <details>
+      <summary>💻 PrivEsc <span class="tag">TA0004</span></summary>
+      <ul>
+        <li><a href="https://gtfobins.github.io/" target="_blank">GTFOBins</a></li>
+        <li><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey</a></li>
+        <li><a href="https://www.revshells.com/" target="_blank">RevShells</a></li>
+      </ul>
+    </details>
+    <details>
+      <summary>🪟 Windows <span class="tag">TA0004</span></summary>
+      <ul><li><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS</a></li></ul>
+    </details>
+    <details>
+      <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
+      <ul></ul>
+    </details>
+    <details>
+      <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
+      <ul></ul>
+    </details>
+    <details>
+      <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
+      <ul></ul>
+    </details>
+    <details>
+      <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
+      <ul><li><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></li></ul>
+    </details>
+  </div>
   <script>
     fetch("CTF-Cheatsheet.md")
       .then(res => res.ok ? res.text() : Promise.reject("Fail"))
