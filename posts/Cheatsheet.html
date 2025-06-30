@@ -13,7 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
-    /* Full page background and base styles */
+    /* Full page background */
     html, body {
       background-color: #000000;
       margin: 0;
@@ -22,6 +22,7 @@
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       color: #ccc;
     }
+
     body {
       display: flex;
       flex-direction: column;
@@ -58,10 +59,126 @@
       border-radius: 8px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.7);
       overflow-wrap: break-word;
-      min-height: 150px;
     }
 
-    /* Details / summary and other styles omitted for brevity - keep your existing CSS here */
+    /* Details / summary styling */
+    details {
+      margin-bottom: 1.6rem;
+      background: #000000;
+      border-left: 5px solid #4caf50;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 3px 7px rgba(0,0,0,0.7);
+      transition: background 0.3s ease;
+    }
+    details[open] {
+      background: #222;
+    }
+    summary {
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #ffeb3b;
+      outline-offset: 4px;
+      user-select: none;
+    }
+    summary:hover,
+    summary:focus {
+      color: #fff066;
+      outline: none;
+    }
+    details ul {
+      margin-top: 1rem;
+      padding-left: 1.5rem;
+      color: #999;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    details li {
+      margin: 0.6rem 0;
+    }
+    details li a {
+      color: #ffeb3b;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      text-decoration: none;
+    }
+    details li a:hover,
+    details li a:focus {
+      color: #fff066;
+      text-decoration: underline;
+      outline: none;
+    }
+
+    /* Tag styling */
+    .tag {
+      background: #333;
+      color: #ccc;
+      padding: 0.2rem 0.7rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.6rem;
+      user-select: none;
+      vertical-align: middle;
+    }
+
+    /* Images inside content */
+    #content img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+    }
+
+    /* Blockquotes inside content */
+    #content blockquote {
+      border-left: 5px solid #4caf50;
+      background: #1c1c1c;
+      padding: 1rem 1.2rem;
+      margin: 1.8rem 0;
+      font-style: italic;
+      color: #bbb;
+      box-shadow: inset 2px 0 8px #4caf50;
+      border-radius: 4px;
+    }
+
+    /* Code blocks */
+    pre {
+      background: #1e1e1e;
+      padding: 1rem 1.2rem;
+      border-left: 5px solid #4caf50;
+      overflow-x: auto;
+      border-radius: 6px;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+      font-family: monospace;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.7);
+      color: #eee;
+    }
+    code {
+      background: #222;
+      padding: 0.25rem 0.5rem;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #eee;
+    }
+
+    /* Headings */
+    h1, h2, h3 {
+      color: #4caf50;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #333;
+      padding-bottom: 0.4rem;
+      font-weight: 700;
+    }
+    h1 {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
 
   </style>
 </head>
@@ -73,7 +190,65 @@
   <hr>
   <h2>🧰 Useful CTF Resources</h2>
 
-  <!-- Your existing details here -->
+  <details open>
+    <summary>🌐 General Pentesting</summary>
+    <ul>
+      <li><a href="https://book.hacktricks.xyz/" target="_blank" rel="noopener noreferrer">HackTricks – Pentesting & PrivEsc Cheatsheet</a></li>
+      <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank" rel="noopener noreferrer">OWASP Cheatsheet Series</a></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>🔍 Web Exploitation & Initial Access <span class="tag">TA0001</span><span class="tag">TA0002</span></summary>
+    <ul>
+      <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/README.md" target="_blank" rel="noopener noreferrer">PortSwigger Academy – Web Exploit Cheat Sheets</a></li>
+      <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank" rel="noopener noreferrer">PayloadsAllTheThings – Exploitation Payload Library</a></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>💻 Execution & Privilege Escalation <span class="tag">TA0002</span><span class="tag">TA0004</span></summary>
+    <ul>
+      <li><a href="https://gtfobins.github.io/" target="_blank" rel="noopener noreferrer">GTFOBins – Linux Binary Exploits</a></li>
+      <li><a href="https://pentestmonkey.net/" target="_blank" rel="noopener noreferrer">PentestMonkey – Reverse Shell Cheatsheets</a></li>
+      <li><a href="https://www.revshells.com/" target="_blank" rel="noopener noreferrer">RevShells – Reverse Shell Generator</a></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>🪟 Windows Exploitation & PrivEsc <span class="tag">TA0004</span></summary>
+    <ul>
+      <li><a href="https://lolbas-project.github.io/" target="_blank" rel="noopener noreferrer">LOLBAS – Living Off The Land Binaries</a></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>🐳 Docker / DevOps / Cloud Security <span class="tag">TA0003</span><span class="tag">TA0005</span></summary>
+    <ul>
+      <!-- Blank as requested -->
+    </ul>
+  </details>
+
+  <details>
+    <summary>📱 Mobile Security & Reverse Engineering <span class="tag">TA0001</span><span class="tag">TA0006</span></summary>
+    <ul>
+      <!-- Blank as requested -->
+    </ul>
+  </details>
+
+  <details>
+    <summary>🧠 AI / ML Security <span class="tag">Adversarial ML</span></summary>
+    <ul>
+      <!-- Blank as requested -->
+    </ul>
+  </details>
+
+  <details>
+    <summary>💣 Exploit Development & Post Exploitation <span class="tag">TA0008</span><span class="tag">TA0009</span></summary>
+    <ul>
+      <li><a href="https://www.exploit-db.com/" target="_blank" rel="noopener noreferrer">Exploit-DB – Public Exploit Archive</a></li>
+    </ul>
+  </details>
 
   <script>
     fetch("CTF-Cheatsheet.md")
@@ -85,8 +260,7 @@
         document.getElementById("content").innerHTML = marked.parse(md);
       })
       .catch(err => {
-        // Friendly fallback message if markdown not loaded
-        document.getElementById("content").innerHTML = "<p style='color:#f44336; font-weight: 600;'>Welcome! Need help? Here I am! 😉</p>";
+        document.getElementById("content").innerHTML = "<p style='color:#f44336;'>Welcome! Need help? Here I am! 😉</p>";
         console.error(err);
       });
   </script>
