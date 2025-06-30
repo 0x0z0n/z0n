@@ -14,7 +14,6 @@
     html, body {
       margin: 0; padding: 0; height: 100%; overflow-x: hidden;
       background: #000; font-family: monospace; color: #ccc;
-      font-size: 16px; /* Increased base font size */
     }
     body {
       display: flex; flex-direction: column; align-items: flex-start;
@@ -23,24 +22,22 @@
     .back-link {
       margin-bottom: 1rem;
       color: #ffeb3b; font-weight: bold; text-decoration: none;
-      font-size: 1.1rem; /* Slightly bigger */
     }
     .back-link:hover { color: #fff066; text-decoration: underline; }
     h2 {
-      margin: 1rem 0; font-size: 1.5rem; /* Larger */
+      margin: 1rem 0; font-size: 1.2rem;
       color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
     details {
       background: #111; border-left: 2px solid #4caf50;
-      padding: 0.5rem 1rem; border-radius: 5px;
-      margin: 0.3rem 0;
-      font-size: 1.1rem; /* Increased */
+      padding: 0.4rem 0.8rem; border-radius: 5px;
+      margin: 0.2rem 0;
     }
     details[open] {
       background: #1a1a1a;
     }
     summary {
-      font-size: 1.1rem; /* Increased */
+      font-size: 1rem;
       font-weight: bold;
       color: #ffeb3b;
       cursor: pointer;
@@ -48,7 +45,6 @@
     }
     a {
       color: #ffeb3b; text-decoration: none;
-      font-size: 1.05rem; /* Slightly bigger */
     }
     a:hover { color: #fff066; text-decoration: underline; }
     body::before {
@@ -66,16 +62,38 @@
   <a href="../index.html" class="back-link">← Back</a>
   <h2>🧰 CTF Cheatsheet Map</h2>
 
-  <details>
+  <details open>
     <summary>🌐 General Pentesting</summary>
-    <details><summary><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></summary></details>
-    <details><summary><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP CS</a></summary></details>
+    <details><summary><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></summary>
+      <details><summary><a href="https://book.hacktricks.xyz/pentesting-web" target="_blank">Web Pentesting</a></summary></details>
+      <details><summary><a href="https://book.hacktricks.xyz/linux-unix" target="_blank">Linux/Unix</a></summary></details>
+      <details><summary><a href="https://book.hacktricks.xyz/windows" target="_blank">Windows</a></summary></details>
+    </details>
+    <details><summary><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP Cheatsheet Series</a></summary>
+      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" target="_blank">Authentication</a></summary></details>
+      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html" target="_blank">Access Control</a></summary></details>
+      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank">SQL Injection</a></summary></details>
+    </details>
   </details>
 
   <details>
     <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
-    <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/README.md" target="_blank">PortSwigger</a></summary></details>
-    <details><summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></summary></details>
+    <details>
+      <summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></summary>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/API%20Testing/README.md" target="_blank">API Testing</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/Access%20Control/README.md" target="_blank">Access Control</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/SQL%20Injection/README.md" target="_blank">SQL Injection</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/XSS/README.md" target="_blank">Cross Site Scripting (XSS)</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/File%20Upload/README.md" target="_blank">File Upload</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/Command%20Injection/README.md" target="_blank">Command Injection</a></summary></details>
+    </details>
+    <details>
+      <summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></summary>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS" target="_blank">XSS Payloads</a></summary></details>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection" target="_blank">SQL Injection Payloads</a></summary></details>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Command%20Injection" target="_blank">Command Injection Payloads</a></summary></details>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/File%20Upload" target="_blank">File Upload Payloads</a></summary></details>
+    </details>
   </details>
 
   <details>
@@ -92,29 +110,28 @@
 
   <details>
     <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
+    <details><summary><a href="https://docs.docker.com/engine/security/security/" target="_blank">Docker Security Docs</a></summary></details>
+    <details><summary><a href="https://github.com/ajinabraham/Docker-Security-Cheat-Sheet" target="_blank">Docker Security Cheat Sheet</a></summary></details>
+    <details><summary><a href="https://github.com/ajohnsonsecurity/Docker-Escapes" target="_blank">Docker Escape Techniques</a></summary></details>
   </details>
 
   <details>
     <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
+    <details><summary><a href="https://www.nowsecure.com/blog/mobile-security-cheat-sheet/" target="_blank">NowSecure Mobile Security Cheat Sheet</a></summary></details>
+    <details><summary><a href="https://github.com/OWASP/OWASP-Mobile-Security-Testing-Guide" target="_blank">OWASP Mobile Security Testing Guide</a></summary></details>
   </details>
 
   <details>
     <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
+    <details><summary><a href="https://adversarial-ml-tutorial.org/" target="_blank">Adversarial ML Tutorial</a></summary></details>
+    <details><summary><a href="https://github.com/Trusted-AI/adversarial-robustness-toolbox" target="_blank">Adversarial Robustness Toolbox</a></summary></details>
   </details>
 
   <details>
     <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
     <details><summary><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></summary></details>
+    <details><summary><a href="https://github.com/rapid7/metasploit-framework" target="_blank">Metasploit Framework</a></summary></details>
   </details>
 
-  <script>
-    fetch("CTF-Cheatsheet.md")
-      .then(res => res.ok ? res.text() : Promise.reject("Fail"))
-      .then(md => {
-        const el = document.getElementById("content");
-        el.innerHTML = marked.parse(md);
-        el.style.display = "block";
-      }).catch(console.error);
-  </script>
 </body>
 </html>
