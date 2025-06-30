@@ -16,47 +16,37 @@
       background: #000; font-family: monospace; color: #ccc;
     }
     body {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 1rem; box-sizing: border-box;
+      display: flex; flex-direction: column; align-items: flex-start;
+      padding: 1rem 2rem; box-sizing: border-box;
     }
     .back-link {
-      align-self: flex-start; margin-bottom: 1rem;
+      margin-bottom: 1rem;
       color: #ffeb3b; font-weight: bold; text-decoration: none;
     }
     .back-link:hover { color: #fff066; text-decoration: underline; }
-    #content {
-      display: none; max-width: 768px; width: 100%;
-      background: #111; padding: 1rem; border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,255,0,0.3);
-    }
-    .tree-map {
-      display: flex; flex-direction: column; gap: 0.5rem;
-      width: 100%; max-width: 768px;
-    }
-    details {
-      background: #000; border-left: 3px solid #4caf50;
-      padding: 0.6rem 0.8rem; border-radius: 6px;
-      transition: background 0.3s ease;
-    }
-    details[open] { background: #1a1a1a; }
-    summary {
-      font-size: 1rem; color: #ffeb3b; font-weight: bold;
-      cursor: pointer; user-select: none;
-    }
-    ul { margin: 0.5rem 0 0 1.25rem; padding: 0; font-size: 0.95rem; }
-    li { margin: 0.4rem 0; }
-    a {
-      color: #ffeb3b; text-decoration: none; transition: color 0.2s;
-    }
-    a:hover { color: #fff066; text-decoration: underline; }
-    .tag {
-      background: #222; color: #ccc; font-size: 0.7rem;
-      padding: 0.1rem 0.5rem; margin-left: 0.5rem; border-radius: 10px;
-    }
     h2 {
-      margin-top: 2rem; font-size: 1.2rem;
+      margin: 1rem 0; font-size: 1.2rem;
       color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
+    details {
+      background: #111; border-left: 2px solid #4caf50;
+      padding: 0.4rem 0.8rem; border-radius: 5px;
+      margin: 0.2rem 0;
+    }
+    details[open] {
+      background: #1a1a1a;
+    }
+    summary {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #ffeb3b;
+      cursor: pointer;
+      user-select: none;
+    }
+    a {
+      color: #ffeb3b; text-decoration: none;
+    }
+    a:hover { color: #fff066; text-decoration: underline; }
     body::before {
       content: "";
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -70,52 +60,52 @@
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back</a>
-  <div id="content"></div>
-  <h2>🧰 CTF Cheatsheet Tree</h2>
-  <div class="tree-map">
-    <details>
-      <summary>🌐 General Pentesting</summary>
-      <ul>
-        <li><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></li>
-        <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP CS</a></li>
-      </ul>
-    </details>
-    <details>
-      <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
-      <ul>
-        <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></li>
-        <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></li>
-      </ul>
-    </details>
-    <details>
-      <summary>💻 PrivEsc <span class="tag">TA0004</span></summary>
-      <ul>
-        <li><a href="https://gtfobins.github.io/" target="_blank">GTFOBins</a></li>
-        <li><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey</a></li>
-        <li><a href="https://www.revshells.com/" target="_blank">RevShells</a></li>
-      </ul>
-    </details>
-    <details>
-      <summary>🪟 Windows <span class="tag">TA0004</span></summary>
-      <ul><li><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS</a></li></ul>
-    </details>
-    <details>
-      <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
-      <ul></ul>
-    </details>
-    <details>
-      <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
-      <ul></ul>
-    </details>
-    <details>
-      <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
-      <ul></ul>
-    </details>
-    <details>
-      <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
-      <ul><li><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></li></ul>
-    </details>
-  </div>
+  <h2>🧰 CTF Cheatsheet Map</h2>
+
+  <details>
+    <summary>🌐 General Pentesting</summary>
+    <details><summary><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></summary></details>
+    <details><summary><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP CS</a></summary></details>
+  </details>
+
+  <details>
+    <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
+    <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></summary></details>
+    <details><summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></summary></details>
+  </details>
+
+  <details>
+    <summary>💻 Privilege Escalation <span class="tag">TA0004</span></summary>
+    <details><summary><a href="https://gtfobins.github.io/" target="_blank">GTFOBins</a></summary></details>
+    <details><summary><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey</a></summary></details>
+    <details><summary><a href="https://www.revshells.com/" target="_blank">RevShells</a></summary></details>
+  </details>
+
+  <details>
+    <summary>🪟 Windows <span class="tag">TA0004</span></summary>
+    <details><summary><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS</a></summary></details>
+  </details>
+
+  <details>
+    <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
+    <!-- Add nested details here if needed -->
+  </details>
+
+  <details>
+    <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
+    <!-- Add nested details here if needed -->
+  </details>
+
+  <details>
+    <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
+    <!-- Add nested details here if needed -->
+  </details>
+
+  <details>
+    <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
+    <details><summary><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></summary></details>
+  </details>
+
   <script>
     fetch("CTF-Cheatsheet.md")
       .then(res => res.ok ? res.text() : Promise.reject("Fail"))
