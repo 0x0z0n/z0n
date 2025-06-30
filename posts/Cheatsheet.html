@@ -2,14 +2,16 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>Cheatsheet</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="CTF Cheatsheet ">
-  <meta property="og:title" content="CTF Cheatsheet">
-  <meta property="og:description" content="Cheatsheet for solving CTFs including links for Recon, Web, Mobile, Docker, Windows, AI/ML, and Post Exploitation.">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="0x0z0n">
+  <title>CTF Cheatsheet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="CTF Cheatsheet" />
+  <meta property="og:title" content="CTF Cheatsheet" />
+  <meta property="og:description" content="Cheatsheet for solving CTFs including links for Recon, Web, Mobile, Docker, Windows, AI/ML, and Post Exploitation." />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="0x0z0n" />
+  
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
   <style>
     /* Full page background */
     html, body {
@@ -17,11 +19,49 @@
       margin: 0;
       padding: 0;
       height: 100%;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: #ccc;
     }
 
-    /* Only styles not in external CSS or needed to support your HTML structure */
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
 
-    /* Details / summary styling for better UX */
+    /* Back-link style */
+    .back-link {
+      align-self: flex-start;
+      margin-bottom: 2rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #ffeb3b;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      user-select: none;
+    }
+    .back-link:hover,
+    .back-link:focus {
+      color: #fff066;
+      text-decoration: underline;
+      outline: none;
+    }
+
+    /* Container for content */
+    #content {
+      max-width: 800px;
+      width: 100%;
+      background: #111;
+      padding: 2rem 2.5rem;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.7);
+      overflow-wrap: break-word;
+    }
+
+    /* Details / summary styling */
     details {
       margin-bottom: 1.6rem;
       background: #000000;
@@ -61,25 +101,10 @@
       color: #ffeb3b;
       font-weight: 500;
       transition: color 0.3s ease;
+      text-decoration: none;
     }
     details li a:hover,
     details li a:focus {
-      color: #fff066;
-      text-decoration: underline;
-      outline: none;
-    }
-
-    /* Back-link style */
-    .back-link {
-      display: inline-block;
-      margin-bottom: 3rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #ffeb3b;
-      transition: color 0.3s ease;
-    }
-    .back-link:hover,
-    .back-link:focus {
       color: #fff066;
       text-decoration: underline;
       outline: none;
@@ -154,6 +179,7 @@
       text-align: center;
       margin-bottom: 3rem;
     }
+
   </style>
 </head>
 <body>
@@ -167,34 +193,34 @@
   <details open>
     <summary>🌐 General Pentesting</summary>
     <ul>
-      <li><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks – Pentesting & PrivEsc Cheatsheet</a></li>
-      <li><a href="https://github.com/danielmiessler/SecLists" target="_blank">SecLists – Wordlists for Fuzzing & Brute Force</a></li>
-      <li><a href="https://linux.die.net/man/" target="_blank">Linux Man Pages (Commands Help)</a></li>
-      <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP Cheatsheet Series</a></li>
+      <li><a href="https://book.hacktricks.xyz/" target="_blank" rel="noopener noreferrer">HackTricks – Pentesting & PrivEsc Cheatsheet</a></li>
+      <li><a href="https://github.com/danielmiessler/SecLists" target="_blank" rel="noopener noreferrer">SecLists – Wordlists for Fuzzing & Brute Force</a></li>
+      <li><a href="https://linux.die.net/man/" target="_blank" rel="noopener noreferrer">Linux Man Pages (Commands Help)</a></li>
+      <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank" rel="noopener noreferrer">OWASP Cheatsheet Series</a></li>
     </ul>
   </details>
 
   <details>
     <summary>🔍 Web Exploitation & Initial Access <span class="tag">TA0001</span><span class="tag">TA0002</span></summary>
     <ul>
-      <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/README.md" target="_blank">PortSwigger Academy – Web Exploit Cheat Sheets</a></li>
-      <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings – Exploitation Payload Library</a></li>
+      <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/README.md" target="_blank" rel="noopener noreferrer">PortSwigger Academy – Web Exploit Cheat Sheets</a></li>
+      <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank" rel="noopener noreferrer">PayloadsAllTheThings – Exploitation Payload Library</a></li>
     </ul>
   </details>
 
   <details>
     <summary>💻 Execution & Privilege Escalation <span class="tag">TA0002</span><span class="tag">TA0004</span></summary>
     <ul>
-      <li><a href="https://gtfobins.github.io/" target="_blank">GTFOBins – Linux Binary Exploits</a></li>
-      <li><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey – Reverse Shell Cheatsheets</a></li>
-      <li><a href="https://www.revshells.com/" target="_blank">RevShells – Reverse Shell Generator</a></li>
+      <li><a href="https://gtfobins.github.io/" target="_blank" rel="noopener noreferrer">GTFOBins – Linux Binary Exploits</a></li>
+      <li><a href="https://pentestmonkey.net/" target="_blank" rel="noopener noreferrer">PentestMonkey – Reverse Shell Cheatsheets</a></li>
+      <li><a href="https://www.revshells.com/" target="_blank" rel="noopener noreferrer">RevShells – Reverse Shell Generator</a></li>
     </ul>
   </details>
 
   <details>
     <summary>🪟 Windows Exploitation & PrivEsc <span class="tag">TA0004</span></summary>
     <ul>
-      <li><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS – Living Off The Land Binaries</a></li>
+      <li><a href="https://lolbas-project.github.io/" target="_blank" rel="noopener noreferrer">LOLBAS – Living Off The Land Binaries</a></li>
     </ul>
   </details>
 
@@ -222,15 +248,22 @@
   <details>
     <summary>💣 Exploit Development & Post Exploitation <span class="tag">TA0008</span><span class="tag">TA0009</span></summary>
     <ul>
-      <li><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB – Public Exploit Archive</a></li>
+      <li><a href="https://www.exploit-db.com/" target="_blank" rel="noopener noreferrer">Exploit-DB – Public Exploit Archive</a></li>
     </ul>
   </details>
 
   <script>
     fetch("CTF-Cheatsheet.md")
-      .then(res => res.text())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load cheatsheet markdown');
+        return res.text();
+      })
       .then(md => {
         document.getElementById("content").innerHTML = marked.parse(md);
+      })
+      .catch(err => {
+        document.getElementById("content").innerHTML = "<p style='color:#f44336;'>Failed to load cheatsheet content.</p>";
+        console.error(err);
       });
   </script>
 </body>
