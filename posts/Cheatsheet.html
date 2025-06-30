@@ -9,196 +9,114 @@
   <meta property="og:description" content="Cheatsheet for solving CTFs including links for Recon, Web, Mobile, Docker, Windows, AI/ML, and Post Exploitation." />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="0x0z0n" />
-
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
   <style>
     html, body {
-      background-color: #000;
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Orbitron', sans-serif;
-      color: #ccc;
-      overflow: hidden;
+      margin: 0; padding: 0; height: 100%; overflow-x: hidden;
+      background: #000; font-family: monospace; color: #ccc;
     }
-
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
-
+    body {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1rem; box-sizing: border-box;
+    }
+    .back-link {
+      align-self: flex-start; margin-bottom: 1rem;
+      color: #ffeb3b; font-weight: bold; text-decoration: none;
+    }
+    .back-link:hover { color: #fff066; text-decoration: underline; }
+    #content {
+      display: none; max-width: 768px; width: 100%;
+      background: #111; padding: 1rem; border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,255,0,0.3);
+    }
+    details {
+      margin: 0.5rem 0; background: #000;
+      border-left: 3px solid #4caf50; padding: 0.8rem;
+      border-radius: 6px; transition: background 0.3s ease;
+    }
+    details[open] { background: #1a1a1a; }
+    summary {
+      font-size: 1rem; color: #ffeb3b; font-weight: bold;
+      cursor: pointer; user-select: none;
+    }
+    ul { margin: 0.5rem 0 0 1.25rem; padding: 0; font-size: 0.95rem; }
+    li { margin: 0.4rem 0; }
+    a {
+      color: #ffeb3b; text-decoration: none; transition: color 0.2s;
+    }
+    a:hover { color: #fff066; text-decoration: underline; }
+    .tag {
+      background: #222; color: #ccc; font-size: 0.7rem;
+      padding: 0.1rem 0.5rem; margin-left: 0.5rem; border-radius: 10px;
+    }
+    h2 {
+      margin-top: 2rem; font-size: 1.2rem;
+      color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.3);
+    }
     body::before {
       content: "";
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 50% 50%, rgba(0,255,0,0.05), transparent 70%),
-                  url('https://cdn-icons-png.flaticon.com/512/3064/3064197.png') no-repeat 10% 20% / 120px auto,
-                  url('https://cdn-icons-png.flaticon.com/512/3064/3064175.png') no-repeat 85% 30% / 140px auto;
-      z-index: -1;
-      opacity: 0.08;
-    }
-
-    .back-link {
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 100;
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #ffeb3b;
-      background: rgba(0,0,0,0.7);
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #ffeb3b;
-      animation: flicker 2s infinite;
-    }
-    .back-link:hover {
-      color: #fff;
-    }
-
-    @keyframes flicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-
-    #content {
-      display: none;
-      max-width: 900px;
-      margin: 6rem auto 2rem auto;
-      padding: 2rem;
-      background: rgba(17, 17, 17, 0.95);
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,255,0,0.3);
-      animation: fadeIn 2s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(-20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      text-align: center;
-      color: #4caf50;
-      text-transform: uppercase;
-      margin-top: 2rem;
-      font-size: 2rem;
-      letter-spacing: 2px;
-      animation: glowText 3s ease-in-out infinite alternate;
-    }
-
-    @keyframes glowText {
-      from { text-shadow: 0 0 5px #4caf50; }
-      to { text-shadow: 0 0 20px #4caf50; }
-    }
-
-    details {
-      background: #111;
-      border-left: 5px solid #4caf50;
-      margin: 1.5rem 0;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 0 8px rgba(76,175,80,0.3);
-      animation: fadeSlide 0.8s ease-out forwards;
-    }
-
-    @keyframes fadeSlide {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    summary {
-      font-size: 1.3rem;
-      color: #ffeb3b;
-      cursor: pointer;
-    }
-    summary:hover {
-      color: #fff066;
-    }
-
-    details ul {
-      margin-top: 1rem;
-      padding-left: 2rem;
-    }
-    details li a {
-      color: #ffeb3b;
-      text-decoration: none;
-    }
-    details li a:hover {
-      text-decoration: underline;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Metasploit_logo.png/240px-Metasploit_logo.png'), url('https://upload.wikimedia.org/wikipedia/commons/8/88/Kali_Linux_2.0_wordmark.svg');
+      background-repeat: no-repeat;
+      background-position: 5% 10%, 95% 90%;
+      background-size: 60px, 120px;
+      opacity: 0.05; z-index: -1;
     }
   </style>
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back</a>
-
   <div id="content"></div>
-
-  <h2>🧰 Cheatsheet CTF Resources</h2>
-
+  <h2>🧰 CTF Resources</h2>
   <details open>
     <summary>🌐 General Pentesting</summary>
     <ul>
-      <li><a href="https://book.hacktricks.xyz/">HackTricks</a></li>
-      <li><a href="https://cheatsheetseries.owasp.org/">OWASP Cheatsheets</a></li>
+      <li><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></li>
+      <li><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP CS</a></li>
     </ul>
   </details>
-
   <details>
-    <summary>🔍 Web Exploitation & Initial Access</summary>
+    <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
     <ul>
-      <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets">PortSwigger</a></li>
-      <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/">PayloadsAllTheThings</a></li>
+      <li><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></li>
+      <li><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></li>
     </ul>
   </details>
-
   <details>
-    <summary>💻 Execution & Privilege Escalation</summary>
+    <summary>💻 PrivEsc <span class="tag">TA0004</span></summary>
     <ul>
-      <li><a href="https://gtfobins.github.io/">GTFOBins</a></li>
-      <li><a href="https://pentestmonkey.net/">PentestMonkey</a></li>
-      <li><a href="https://www.revshells.com/">RevShells</a></li>
+      <li><a href="https://gtfobins.github.io/" target="_blank">GTFOBins</a></li>
+      <li><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey</a></li>
+      <li><a href="https://www.revshells.com/" target="_blank">RevShells</a></li>
     </ul>
   </details>
-
   <details>
-    <summary>🪟 Windows Exploitation</summary>
-    <ul>
-      <li><a href="https://lolbas-project.github.io/">LOLBAS</a></li>
-    </ul>
+    <summary>🪟 Windows <span class="tag">TA0004</span></summary>
+    <ul><li><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS</a></li></ul>
   </details>
-
   <details>
-    <summary>🐳 Docker / DevOps / Cloud Security</summary>
-    <ul></ul>
+    <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
+    <ul><!-- Add later --></ul>
   </details>
-
   <details>
-    <summary>📱 Mobile Security & Reverse Engineering</summary>
-    <ul></ul>
+    <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
+    <ul><!-- Add later --></ul>
   </details>
-
   <details>
-    <summary>🧠 AI / ML Security</summary>
-    <ul></ul>
+    <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
+    <ul><!-- Add later --></ul>
   </details>
-
   <details>
-    <summary>💣 Exploit Development</summary>
-    <ul>
-      <li><a href="https://www.exploit-db.com/">Exploit-DB</a></li>
-    </ul>
+    <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
+    <ul><li><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></li></ul>
   </details>
-
   <script>
     fetch("CTF-Cheatsheet.md")
-      .then(res => res.ok ? res.text() : Promise.reject("Markdown load failed"))
+      .then(res => res.ok ? res.text() : Promise.reject("Fail"))
       .then(md => {
-        const div = document.getElementById("content");
-        div.innerHTML = marked.parse(md);
-        div.style.display = "block";
-      })
-      .catch(err => console.error(err));
+        const el = document.getElementById("content");
+        el.innerHTML = marked.parse(md); el.style.display = "block";
+      }).catch(console.error);
   </script>
-
 </body>
 </html>
