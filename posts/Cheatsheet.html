@@ -50,8 +50,9 @@
       outline: none;
     }
 
-    /* Container for content */
+    /* Container for content - hidden by default */
     #content {
+      display: none; /* HIDDEN initially */
       max-width: 800px;
       width: 100%;
       background: #111;
@@ -257,7 +258,9 @@
       return res.text();
     })
     .then(md => {
-      document.getElementById("content").innerHTML = marked.parse(md);
+      const contentDiv = document.getElementById("content");
+      contentDiv.innerHTML = marked.parse(md);
+      contentDiv.style.display = "block"; // Show content only after loading
     })
     .catch(err => {
       // Silent fail — do NOT change the #content innerHTML or show any message
