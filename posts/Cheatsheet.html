@@ -14,6 +14,7 @@
     html, body {
       margin: 0; padding: 0; height: 100%; overflow-x: hidden;
       background: #000; font-family: monospace; color: #ccc;
+      font-size: 16px; /* Increased base font size */
     }
     body {
       display: flex; flex-direction: column; align-items: flex-start;
@@ -22,22 +23,24 @@
     .back-link {
       margin-bottom: 1rem;
       color: #ffeb3b; font-weight: bold; text-decoration: none;
+      font-size: 1.1rem; /* Slightly bigger */
     }
     .back-link:hover { color: #fff066; text-decoration: underline; }
     h2 {
-      margin: 1rem 0; font-size: 1.2rem;
+      margin: 1rem 0; font-size: 1.5rem; /* Larger */
       color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
     details {
       background: #111; border-left: 2px solid #4caf50;
-      padding: 0.4rem 0.8rem; border-radius: 5px;
-      margin: 0.2rem 0;
+      padding: 0.5rem 1rem; border-radius: 5px;
+      margin: 0.3rem 0;
+      font-size: 1.1rem; /* Increased */
     }
     details[open] {
       background: #1a1a1a;
     }
     summary {
-      font-size: 0.95rem;
+      font-size: 1.1rem; /* Increased */
       font-weight: bold;
       color: #ffeb3b;
       cursor: pointer;
@@ -45,6 +48,7 @@
     }
     a {
       color: #ffeb3b; text-decoration: none;
+      font-size: 1.05rem; /* Slightly bigger */
     }
     a:hover { color: #fff066; text-decoration: underline; }
     body::before {
@@ -70,7 +74,7 @@
 
   <details>
     <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
-    <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></summary></details>
+    <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/README.md" target="_blank">PortSwigger</a></summary></details>
     <details><summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></summary></details>
   </details>
 
@@ -88,17 +92,14 @@
 
   <details>
     <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
-    <!-- Add nested details here if needed -->
   </details>
 
   <details>
     <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
-    <!-- Add nested details here if needed -->
   </details>
 
   <details>
     <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
-    <!-- Add nested details here if needed -->
   </details>
 
   <details>
@@ -111,7 +112,8 @@
       .then(res => res.ok ? res.text() : Promise.reject("Fail"))
       .then(md => {
         const el = document.getElementById("content");
-        el.innerHTML = marked.parse(md); el.style.display = "block";
+        el.innerHTML = marked.parse(md);
+        el.style.display = "block";
       }).catch(console.error);
   </script>
 </body>
