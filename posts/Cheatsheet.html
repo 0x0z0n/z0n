@@ -18,6 +18,7 @@
     body {
       display: flex; flex-direction: column; align-items: flex-start;
       padding: 1rem 2rem; box-sizing: border-box;
+      font-size: 1.1rem;
     }
     .back-link {
       margin-bottom: 1rem;
@@ -25,13 +26,14 @@
     }
     .back-link:hover { color: #fff066; text-decoration: underline; }
     h2 {
-      margin: 1rem 0; font-size: 1.2rem;
+      margin: 1rem 0; font-size: 1.5rem;
       color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
     details {
       background: #111; border-left: 2px solid #4caf50;
       padding: 0.4rem 0.8rem; border-radius: 5px;
       margin: 0.2rem 0;
+      width: 100%;
     }
     details[open] {
       background: #1a1a1a;
@@ -42,11 +44,29 @@
       color: #ffeb3b;
       cursor: pointer;
       user-select: none;
+      outline-offset: 3px;
+      padding-left: 0.25rem;
+    }
+    details details {
+      margin-left: 1.2rem;
+      margin-top: 0.1rem;
     }
     a {
       color: #ffeb3b; text-decoration: none;
+      user-select: text;
     }
     a:hover { color: #fff066; text-decoration: underline; }
+    .tag {
+      background: #333;
+      color: #ccc;
+      padding: 0.1rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.6rem;
+      user-select: none;
+      vertical-align: middle;
+    }
     body::before {
       content: "";
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -64,73 +84,75 @@
 
   <details open>
     <summary>🌐 General Pentesting</summary>
-    <details><summary><a href="https://book.hacktricks.xyz/" target="_blank">HackTricks</a></summary>
-      <details><summary><a href="https://book.hacktricks.xyz/pentesting-web" target="_blank">Web Pentesting</a></summary></details>
-      <details><summary><a href="https://book.hacktricks.xyz/linux-unix" target="_blank">Linux/Unix</a></summary></details>
-      <details><summary><a href="https://book.hacktricks.xyz/windows" target="_blank">Windows</a></summary></details>
+    <details>
+      <summary><a href="https://book.hacktricks.xyz/" target="_blank" rel="noopener noreferrer">HackTricks</a></summary>
+      <details><summary><a href="https://book.hacktricks.xyz/pentesting-web" target="_blank" rel="noopener noreferrer">Web Pentesting</a></summary></details>
+      <details><summary><a href="https://book.hacktricks.xyz/linux-unix" target="_blank" rel="noopener noreferrer">Linux/Unix</a></summary></details>
+      <details><summary><a href="https://book.hacktricks.xyz/windows" target="_blank" rel="noopener noreferrer">Windows</a></summary></details>
     </details>
-    <details><summary><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank">OWASP Cheatsheet Series</a></summary>
-      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" target="_blank">Authentication</a></summary></details>
-      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html" target="_blank">Access Control</a></summary></details>
-      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank">SQL Injection</a></summary></details>
+    <details>
+      <summary><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank" rel="noopener noreferrer">OWASP Cheatsheet Series</a></summary>
+      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">Authentication</a></summary></details>
+      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/Access_Control_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">Access Control</a></summary></details>
+      <details><summary><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" target="_blank" rel="noopener noreferrer">SQL Injection</a></summary></details>
     </details>
   </details>
 
   <details>
     <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
     <details>
-      <summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank">PortSwigger</a></summary>
-      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/API%20Testing/README.md" target="_blank">API Testing</a></summary></details>
-      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/Access%20Control/README.md" target="_blank">Access Control</a></summary></details>
-      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/SQL%20Injection/README.md" target="_blank">SQL Injection</a></summary></details>
-      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/XSS/README.md" target="_blank">Cross Site Scripting (XSS)</a></summary></details>
-      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/File%20Upload/README.md" target="_blank">File Upload</a></summary></details>
-      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/Command%20Injection/README.md" target="_blank">Command Injection</a></summary></details>
+      <summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets" target="_blank" rel="noopener noreferrer">PortSwigger</a></summary>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/API%20Testing/README.md" target="_blank" rel="noopener noreferrer">API Testing</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/Access%20Control/README.md" target="_blank" rel="noopener noreferrer">Access Control</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/SQL%20Injection/README.md" target="_blank" rel="noopener noreferrer">SQL Injection</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/XSS/README.md" target="_blank" rel="noopener noreferrer">Cross Site Scripting (XSS)</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/File%20Upload/README.md" target="_blank" rel="noopener noreferrer">File Upload</a></summary></details>
+      <details><summary><a href="https://github.com/ChrisM-X/PortSwigger-Academy-CheatSheets/blob/master/Command%20Injection/README.md" target="_blank" rel="noopener noreferrer">Command Injection</a></summary></details>
     </details>
     <details>
-      <summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank">PayloadsAllTheThings</a></summary>
-      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS" target="_blank">XSS Payloads</a></summary></details>
-      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection" target="_blank">SQL Injection Payloads</a></summary></details>
-      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Command%20Injection" target="_blank">Command Injection Payloads</a></summary></details>
-      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/File%20Upload" target="_blank">File Upload Payloads</a></summary></details>
+      <summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank" rel="noopener noreferrer">PayloadsAllTheThings</a></summary>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS" target="_blank" rel="noopener noreferrer">XSS Payloads</a></summary></details>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection" target="_blank" rel="noopener noreferrer">SQL Injection Payloads</a></summary></details>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Command%20Injection" target="_blank" rel="noopener noreferrer">Command Injection Payloads</a></summary></details>
+      <details><summary><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/File%20Upload" target="_blank" rel="noopener noreferrer">File Upload Payloads</a></summary></details>
     </details>
   </details>
 
   <details>
     <summary>💻 Privilege Escalation <span class="tag">TA0004</span></summary>
-    <details><summary><a href="https://gtfobins.github.io/" target="_blank">GTFOBins</a></summary></details>
-    <details><summary><a href="https://pentestmonkey.net/" target="_blank">PentestMonkey</a></summary></details>
-    <details><summary><a href="https://www.revshells.com/" target="_blank">RevShells</a></summary></details>
+    <details><summary><a href="https://gtfobins.github.io/" target="_blank" rel="noopener noreferrer">GTFOBins</a></summary></details>
+    <details><summary><a href="https://pentestmonkey.net/" target="_blank" rel="noopener noreferrer">PentestMonkey</a></summary></details>
+    <details><summary><a href="https://www.revshells.com/" target="_blank" rel="noopener noreferrer">RevShells</a></summary></details>
   </details>
 
   <details>
     <summary>🪟 Windows <span class="tag">TA0004</span></summary>
-    <details><summary><a href="https://lolbas-project.github.io/" target="_blank">LOLBAS</a></summary></details>
+    <details><summary><a href="https://lolbas-project.github.io/" target="_blank" rel="noopener noreferrer">LOLBAS</a></summary></details>
   </details>
 
   <details>
     <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
-    <details><summary><a href="https://docs.docker.com/engine/security/security/" target="_blank">Docker Security Docs</a></summary></details>
-    <details><summary><a href="https://github.com/ajinabraham/Docker-Security-Cheat-Sheet" target="_blank">Docker Security Cheat Sheet</a></summary></details>
-    <details><summary><a href="https://github.com/ajohnsonsecurity/Docker-Escapes" target="_blank">Docker Escape Techniques</a></summary></details>
+    <details><summary><a href="https://docs.docker.com/engine/security/security/" target="_blank" rel="noopener noreferrer">Docker Security Docs</a></summary></details>
+    <details><summary><a href="https://github.com/ajinabraham/Docker-Security-Cheat-Sheet" target="_blank" rel="noopener noreferrer">Docker Security Cheat Sheet</a></summary></details>
+    <details><summary><a href="https://github.com/ajohnsonsecurity/Docker-Escapes" target="_blank" rel="noopener noreferrer">Docker Escape Techniques</a></summary></details>
   </details>
 
   <details>
     <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
-    <details><summary><a href="https://www.nowsecure.com/blog/mobile-security-cheat-sheet/" target="_blank">NowSecure Mobile Security Cheat Sheet</a></summary></details>
-    <details><summary><a href="https://github.com/OWASP/OWASP-Mobile-Security-Testing-Guide" target="_blank">OWASP Mobile Security Testing Guide</a></summary></details>
+    <details><summary><a href="https://www.nowsecure.com/blog/mobile-security-cheat-sheet/" target="_blank" rel="noopener noreferrer">NowSecure Mobile Security Cheat Sheet</a></summary></details>
+    <details><summary><a href="https://github.com/OWASP/OWASP-Mobile-Security-Testing-Guide" target="_blank" rel="noopener noreferrer">OWASP Mobile Security Testing Guide</a></summary></details>
   </details>
 
   <details>
     <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
-    <details><summary><a href="https://adversarial-ml-tutorial.org/" target="_blank">Adversarial ML Tutorial</a></summary></details>
-    <details><summary><a href="https://github.com/Trusted-AI/adversarial-robustness-toolbox" target="_blank">Adversarial Robustness Toolbox</a></summary></details>
+    <details><summary><a href="https://adversarial-ml-tutorial.org/" target="_blank" rel="noopener noreferrer">Adversarial ML Tutorial</a></summary></details>
+    <details><summary><a href="https://github.com/Trusted-AI/adversarial-robustness-toolbox" target="_blank" rel="noopener noreferrer">Adversarial Robustness Toolbox</a></summary></details>
   </details>
 
   <details>
     <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
-    <details><summary><a href="https://www.exploit-db.com/" target="_blank">Exploit-DB</a></summary></details>
-    <details><summary><a href="https://github.com/rapid7/metasploit-framework" target="_blank">Metasploit Framework</a></summary></details>
+    <details><summary><a href="https://www.exploit-db.com/" target="_blank" rel="noopener noreferrer">Exploit-DB</a></summary></details>
+    <details><summary><a href="https://github.com/rapid7/metasploit-framework" target="_blank" rel="noopener noreferrer">Metasploit Framework</a></summary></details>
   </details>
 
 </body>
