@@ -180,8 +180,14 @@
         entries.forEach(([cat, count]) => {
           const div = document.createElement("div");
           div.className = "category-card";
+
+          // Direct link for "CheatSheet", search page for others
+          const href = cat === "CheatSheet"
+            ? `index.html?category=${encodeURIComponent(cat)}`
+            : `search.html?category=${encodeURIComponent(cat)}`;
+
           div.innerHTML = `
-            <a href="index.html?category=${encodeURIComponent(cat)}">${cat}</a>
+            <a href="${href}">${cat}</a>
             <small>${count} post${count > 1 ? "s" : ""}</small>
           `;
           container.appendChild(div);
