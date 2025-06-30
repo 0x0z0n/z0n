@@ -188,7 +188,7 @@
   <div id="content">Loading cheatsheet...</div>
 
   <hr>
-  <h2>🧰 Useful CTF Resources</h2>
+  <h2>🧰 Cheatsheet CTF Resources</h2>
 
   <details open>
     <summary>🌐 General Pentesting</summary>
@@ -251,18 +251,19 @@
   </details>
 
   <script>
-    fetch("CTF-Cheatsheet.md")
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load cheatsheet markdown');
-        return res.text();
-      })
-      .then(md => {
-        document.getElementById("content").innerHTML = marked.parse(md);
-      })
-      .catch(err => {
-        document.getElementById("content").innerHTML = "<p style='color:#f44336;'>Welcome! Need help? Here I am! 😉</p>";
-        console.error(err);
-      });
-  </script>
+  fetch("CTF-Cheatsheet.md")
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to load cheatsheet markdown');
+      return res.text();
+    })
+    .then(md => {
+      document.getElementById("content").innerHTML = marked.parse(md);
+    })
+    .catch(err => {
+      // Silent fail — do NOT change the #content innerHTML or show any message
+      console.error(err); // Only log error in console for debugging
+    });
+</script>
+
 </body>
 </html>
