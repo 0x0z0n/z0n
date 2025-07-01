@@ -2,115 +2,202 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>Windows Cheatsheets</title>
+  <title>CTF Cheatsheet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="CTF Cheatsheet" />
+  <meta property="og:title" content="CTF Cheatsheet" />
+  <meta property="og:description" content="Cheatsheet for solving CTFs including links for Recon, Web, Mobile, Docker, Windows, AI/ML, and Post Exploitation." />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="0x0z0n" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; overflow-x: hidden;
+      background: #000; font-family: monospace; color: #ccc;
+    }
     body {
-      margin: 0;
-      background: #000;
-      font-family: monospace;
-      color: #ccc;
-      padding: 2rem;
+      display: flex; flex-direction: column; align-items: flex-start;
+      padding: 1rem 2rem; box-sizing: border-box;
+      font-size: 1.1rem;
     }
-
-    h2 {
-      font-size: 1.6rem;
-      color: #4caf50;
+    .back-link {
       margin-bottom: 1rem;
-      border-bottom: 2px solid #333;
+      color: #ffeb3b; font-weight: bold; text-decoration: none;
     }
-
-    .postcard {
-      background: #111;
-      border-left: 4px solid #4caf50;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,255,0,0.1);
-      margin: 1rem 0;
+    .back-link:hover { color: #fff066; text-decoration: underline; }
+    h2 {
+      margin: 1rem 0; font-size: 1.5rem;
+      color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
-
-    .postcard summary {
-      font-size: 1.2rem;
+    details {
+      background: #111; border-left: 2px solid #4caf50;
+      padding: 0.4rem 0.8rem; border-radius: 5px;
+      margin: 0.2rem 0;
+      width: 100%;
+    }
+    details[open] {
+      background: #1a1a1a;
+    }
+    summary {
+      font-size: 1rem;
       font-weight: bold;
       color: #ffeb3b;
       cursor: pointer;
-      padding: 1rem;
+      user-select: none;
+      outline-offset: 3px;
+      padding-left: 0.25rem;
+    }
+    details details {
+      margin-left: 1.2rem;
+      margin-top: 0.1rem;
+    }
+    a {
+      color: #ffeb3b; text-decoration: none;
+      user-select: text;
+    }
+    a:hover { color: #fff066; text-decoration: underline; }
+    .tag {
+      background: #333;
+      color: #ccc;
+      padding: 0.1rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.6rem;
+      user-select: none;
+      vertical-align: middle;
+    }
+    body::before {
+      content: "";
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Metasploit_logo.png/240px-Metasploit_logo.png'), url('https://upload.wikimedia.org/wikipedia/commons/8/88/Kali_Linux_2.0_wordmark.svg');
+      background-repeat: no-repeat;
+      background-position: 5% 10%, 95% 90%;
+      background-size: 60px, 120px;
+      opacity: 0.03; z-index: -1;
     }
 
-    .postcard[open] summary {
+    /* --- Postcard Styling --- */
+    .external-section {
+      width: 100%;
+      margin-top: 3rem;
+    }
+
+    .postcard {
+      border: 1px solid #4caf50;
+      background: #111;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 10px rgba(0,255,0,0.1);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .postcard summary {
+      padding: 1rem;
+      font-size: 1.2rem;
+      color: #ffeb3b;
+    }
+
+    .postcard summary:hover {
       color: #fff066;
     }
 
-    .postcard-content {
-      padding: 1rem 1.5rem;
-      color: #ccc;
+    .postcard[open] {
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
     }
 
-    .postcard-content h1, .postcard-content h2, .postcard-content h3 {
-      color: #4caf50;
-    }
-
-    .postcard-content pre {
-      background: #1e1e1e;
-      padding: 1rem;
-      overflow-x: auto;
-      border-left: 4px solid #4caf50;
-      border-radius: 4px;
-      color: #eee;
-    }
-
-    .postcard-content code {
-      background: #222;
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      color: #eee;
+    .postcard iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      border-top: 1px solid #333;
+      border-radius: 0 0 8px 8px;
     }
   </style>
 </head>
 <body>
+  <a href="../index.html" class="back-link">← Back</a>
+  <h2>🧰 CTF Cheatsheet Map</h2>
 
-  <h2>🪟 Windows Cheatsheets</h2>
+  <!-- (Your existing details go here...) -->
 
-  <!-- Placeholder for all the MD files -->
-  <div id="windows-cheatsheets"></div>
+  <!-- 🔽 Embedded Section (Postcards) -->
+  <div class="external-section">
+    <h2>📘 External CheatSheet Cards</h2>
 
-  <script>
-    const files = [
-      "Abusing Resource-Based Constrained Delegation.md",
-      "Abusing Unconstrained Delegation.md",
-      "AD ACLs Cheatsheet.md",
-      "ADCS Attacks with Certipy.md",
-      "BloodyAD Cheatsheet.md",
-      "Windows Privilege Escalation.md",
-      "Getting started with Sliver C2.md"
-    ];
+    <details class="postcard">
+      <summary>🧠 HackTricks </summary>
+      <iframe src="https://book.hacktricks.wiki/en/index.html?searchbar=" loading="lazy"></iframe>
+    </details>
 
-    const container = document.getElementById('windows-cheatsheets');
+    <!-- Example template for additional cheat cards -->
+    
+    <details class="postcard">
+      <summary>OWASP CheatSheet</summary>
+      <iframe src="https://cheatsheetseries.owasp.org/Glossary.html" loading="lazy"></iframe>
+    </details>
 
-    files.forEach(filename => {
-      const id = filename.replace(/\s+/g, '-').replace(/\.md$/, '');
-      const filePath = `posts/${filename}`;
+    <details class="postcard">
+      <summary>GTFOBins </summary>
+      <iframe src="https://gtfobins.github.io/" loading="lazy"></iframe>
+    </details>
 
-      const details = document.createElement('details');
-      details.className = 'postcard';
+    <details class="postcard">
+      <summary>ExploitDB</summary>
+      <iframe src="https://www.exploit-db.com/" loading="lazy"></iframe>
+    </details>
 
-      const summary = document.createElement('summary');
-      summary.textContent = filename.replace('.md', '');
-      details.appendChild(summary);
+    <details class="postcard">
+      <summary>Red Team Notes</summary>
+      <iframe src="https://dmcxblue.gitbook.io/red-team-notes-2-0/?q=" loading="lazy"></iframe>
+    </details>
 
-      const content = document.createElement('div');
-      content.className = 'postcard-content';
-      content.innerHTML = `<em>Loading <code>${filename}</code>...</em>`;
-      details.appendChild(content);
+    <details class="postcard">
+      <summary>RevShells </summary>
+      <iframe src="https://www.revshells.com/" loading="lazy"></iframe>
+    </details>
 
-      fetch(filePath)
-        .then(res => res.ok ? res.text() : Promise.reject())
-        .then(md => content.innerHTML = marked.parse(md))
-        .catch(() => content.innerHTML = `<p style="color:red;">Failed to load: ${filename}</p>`);
+    <details class="postcard">
+      <summary>Pentest Monkey</summary>
+      <iframe src="https://pentestmonkey.net/" loading="lazy"></iframe>
+    </details>
 
-      container.appendChild(details);
-    });
-  </script>
+    <details class="postcard">
+      <summary>Living Off The Land Binaries, Scripts and Libraries
+      </summary>
+      <iframe src="https://lolbas-project.github.io/" loading="lazy"></iframe>
+    </details>
+    
+    <details class="postcard">
+      <summary>Payload All The Things</summary>
+      <iframe src="https://swisskyrepo.github.io/PayloadsAllTheThings/" loading="lazy"></iframe>
+    </details>
 
+    <details class="postcard">
+      <summary>DevSecOps </summary>
+      <iframe src="https://docs.docker.com/engine/security/security/" loading="lazy"></iframe>
+    </details>
+    
+    <details class="postcard">
+      <summary>Security Links</summary>
+      <iframe src="https://security-links.hdks.org/search/" loading="lazy"></iframe>
+    </details>
+
+    <details class="postcard">
+      <summary>CTF WIKI's CheatSheet</summary>
+      <iframe src="https://ctf-wiki.org/" loading="lazy"></iframe>
+    </details>
+    
+
+    <!-- Example template for additional cheat cards -->
+    <!--
+    <details class="postcard">
+      <summary>📙 Another CheatSheet</summary>
+      <iframe src="https://example.com" loading="lazy"></iframe>
+    </details>
+    -->
+
+
+  </div>
 </body>
 </html>
