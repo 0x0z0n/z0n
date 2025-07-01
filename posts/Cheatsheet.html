@@ -182,7 +182,7 @@
       wrapper.innerHTML = `<summary>${name}</summary><div id="${safeId}" class="markdown-content"></div>`;
       container.appendChild(wrapper);
 
-      fetch(`posts/${file}`)
+      fetch(`/posts/${file}`)
         .then(res => res.ok ? res.text() : "")
         .then(md => {
           document.getElementById(safeId).innerHTML = marked.parse(md);
