@@ -26,8 +26,10 @@
     }
     .back-link:hover { color: #fff066; text-decoration: underline; }
     h2 {
-      margin: 1rem 0; font-size: 1.5rem;
-      color: #4caf50; text-shadow: 0 0 5px rgba(0,255,0,0.2);
+      margin: 1.5rem 0 1rem;
+      font-size: 1.5rem;
+      color: #4caf50;
+      text-shadow: 0 0 5px rgba(0,255,0,0.2);
     }
     details {
       background: #111; border-left: 2px solid #4caf50;
@@ -67,6 +69,7 @@
       user-select: none;
       vertical-align: middle;
     }
+
     body::before {
       content: "";
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -77,10 +80,9 @@
       opacity: 0.03; z-index: -1;
     }
 
-    /* --- Postcard Styling --- */
     .external-section {
       width: 100%;
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
 
     .postcard {
@@ -98,20 +100,33 @@
       color: #ffeb3b;
     }
 
-    .postcard summary:hover {
-      color: #fff066;
-    }
-
     .postcard[open] {
       box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
     }
 
-    .postcard iframe {
-      width: 100%;
-      height: 600px;
-      border: none;
+    .markdown-content {
+      padding: 1rem 1.5rem;
       border-top: 1px solid #333;
-      border-radius: 0 0 8px 8px;
+    }
+
+    .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+      color: #4caf50;
+    }
+
+    .markdown-content code {
+      background: #222;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      color: #eee;
+    }
+
+    .markdown-content pre {
+      background: #1c1c1c;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 6px;
+      color: #eee;
+      border-left: 5px solid #4caf50;
     }
   </style>
 </head>
@@ -119,85 +134,61 @@
   <a href="../index.html" class="back-link">← Back</a>
   <h2>🧰 CTF Cheatsheet Map</h2>
 
-  <!-- (Your existing details go here...) -->
+  <!-- Existing details go here -->
 
-  <!-- 🔽 Embedded Section (Postcards) -->
   <div class="external-section">
     <h2>📘 External CheatSheet Cards</h2>
 
-    <details class="postcard">
-      <summary>🧠 HackTricks </summary>
-      <iframe src="https://book.hacktricks.wiki/en/index.html?searchbar=" loading="lazy"></iframe>
-    </details>
-
-    <!-- Example template for additional cheat cards -->
-    
-    <details class="postcard">
-      <summary>OWASP CheatSheet</summary>
-      <iframe src="https://cheatsheetseries.owasp.org/Glossary.html" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>GTFOBins </summary>
-      <iframe src="https://gtfobins.github.io/" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>ExploitDB</summary>
-      <iframe src="https://www.exploit-db.com/" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>Red Team Notes</summary>
-      <iframe src="https://dmcxblue.gitbook.io/red-team-notes-2-0/?q=" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>RevShells </summary>
-      <iframe src="https://www.revshells.com/" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>Pentest Monkey</summary>
-      <iframe src="https://pentestmonkey.net/" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>Living Off The Land Binaries, Scripts and Libraries
-      </summary>
-      <iframe src="https://lolbas-project.github.io/" loading="lazy"></iframe>
-    </details>
-    
-    <details class="postcard">
-      <summary>Payload All The Things</summary>
-      <iframe src="https://swisskyrepo.github.io/PayloadsAllTheThings/" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>DevSecOps </summary>
-      <iframe src="https://docs.docker.com/engine/security/security/" loading="lazy"></iframe>
-    </details>
-    
-    <details class="postcard">
-      <summary>Security Links</summary>
-      <iframe src="https://security-links.hdks.org/search/" loading="lazy"></iframe>
-    </details>
-
-    <details class="postcard">
-      <summary>CTF WIKI's CheatSheet</summary>
-      <iframe src="https://ctf-wiki.org/" loading="lazy"></iframe>
-    </details>
-    
-
-    <!-- Example template for additional cheat cards -->
-    <!--
-    <details class="postcard">
-      <summary>📙 Another CheatSheet</summary>
-      <iframe src="https://example.com" loading="lazy"></iframe>
-    </details>
-    -->
-
-
+    <details class="postcard"><summary>🧠 HackTricks</summary><iframe src="https://book.hacktricks.wiki/en/index.html?searchbar=" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>OWASP CheatSheet</summary><iframe src="https://cheatsheetseries.owasp.org/Glossary.html" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>GTFOBins</summary><iframe src="https://gtfobins.github.io/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>ExploitDB</summary><iframe src="https://www.exploit-db.com/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>Red Team Notes</summary><iframe src="https://dmcxblue.gitbook.io/red-team-notes-2-0/?q=" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>RevShells</summary><iframe src="https://www.revshells.com/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>Pentest Monkey</summary><iframe src="https://pentestmonkey.net/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>LOLBAS</summary><iframe src="https://lolbas-project.github.io/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>Payload All The Things</summary><iframe src="https://swisskyrepo.github.io/PayloadsAllTheThings/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>DevSecOps</summary><iframe src="https://docs.docker.com/engine/security/security/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>Security Links</summary><iframe src="https://security-links.hdks.org/search/" loading="lazy"></iframe></details>
+    <details class="postcard"><summary>CTF Wiki</summary><iframe src="https://ctf-wiki.org/" loading="lazy"></iframe></details>
   </div>
+
+  <!-- Load Markdown CheatSheets from /posts/ -->
+  <div class="external-section">
+    <h2>🪟 Windows Cheatsheets</h2>
+
+    <div id="windows-cheatsheets"></div>
+  </div>
+
+  <script>
+    const sheets = [
+      "Abusing Resource-Based Constrained Delegation.md",
+      "Abusing Unconstrained Delegation.md",
+      "AD ACLs Cheatsheet.md",
+      "ADCS Attacks with Certipy.md",
+      "BloodyAD Cheatsheet.md",
+      "Windows Privilege Escalation.md",
+      "Getting started with Sliver C2.md"
+    ];
+
+    const container = document.getElementById("windows-cheatsheets");
+
+    sheets.forEach(file => {
+      const name = file.replace(".md", "");
+      const safeId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      const wrapper = document.createElement("details");
+      wrapper.className = "postcard";
+      wrapper.innerHTML = `<summary>${name}</summary><div id="${safeId}" class="markdown-content"></div>`;
+      container.appendChild(wrapper);
+
+      fetch(`posts/${file}`)
+        .then(res => res.ok ? res.text() : "")
+        .then(md => {
+          document.getElementById(safeId).innerHTML = marked.parse(md);
+        })
+        .catch(err => console.error("Error loading:", file, err));
+    });
+  </script>
 </body>
 </html>
