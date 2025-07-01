@@ -76,69 +76,67 @@
       background-size: 60px, 120px;
       opacity: 0.03; z-index: -1;
     }
+
+    /* --- Postcard Styling --- */
+    .external-section {
+      width: 100%;
+      margin-top: 3rem;
+    }
+
+    .postcard {
+      border: 1px solid #4caf50;
+      background: #111;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 10px rgba(0,255,0,0.1);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .postcard summary {
+      padding: 1rem;
+      font-size: 1.2rem;
+      color: #ffeb3b;
+    }
+
+    .postcard summary:hover {
+      color: #fff066;
+    }
+
+    .postcard[open] {
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+    }
+
+    .postcard iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      border-top: 1px solid #333;
+      border-radius: 0 0 8px 8px;
+    }
   </style>
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back</a>
   <h2>🧰 CTF Cheatsheet Map</h2>
 
-  <details open>
-    <summary>🌐 General Pentesting</summary>
-    <details>
-      <summary><a href="https://book.hacktricks.xyz/" target="_blank" rel="noopener noreferrer">HackTricks</a></summary>
+  <!-- (Your existing details go here...) -->
+
+  <!-- 🔽 Embedded Section (Postcards) -->
+  <div class="external-section">
+    <h2>📘 External CheatSheet Cards</h2>
+
+    <details class="postcard">
+      <summary>🧠 HackTricks Search (click to expand)</summary>
+      <iframe src="https://book.hacktricks.wiki/en/index.html?searchbar=" loading="lazy"></iframe>
     </details>
-    <details>
-      <summary><a href="https://cheatsheetseries.owasp.org/IndexTopTen.html" target="_blank" rel="noopener noreferrer">OWASP Cheatsheet Series</a></summary>
+
+    <!-- Example template for additional cheat cards -->
+    <!--
+    <details class="postcard">
+      <summary>📙 Another CheatSheet</summary>
+      <iframe src="https://example.com" loading="lazy"></iframe>
     </details>
-  </details>
-
-  <details>
-    <summary>🔍 Web Exploitation <span class="tag">TA0001</span></summary>
-    <details>
-      <summary><a href="https://swisskyrepo.github.io/PayloadsAllTheThings/" target="_blank" rel="noopener noreferrer">PayloadsAllTheThings</a></summary>
-    </details>
-  </details>
-
-  <details>
-    <summary>💻 Privilege Escalation <span class="tag">TA0004</span></summary>
-    <details><summary><a href="https://gtfobins.github.io/" target="_blank" rel="noopener noreferrer">GTFOBins</a></summary></details>
-    <details><summary><a href="https://pentestmonkey.net/" target="_blank" rel="noopener noreferrer">PentestMonkey</a></summary></details>
-    <details><summary><a href="https://www.revshells.com/" target="_blank" rel="noopener noreferrer">RevShells</a></summary></details>
-  </details>
-
-  <details>
-    <summary>🪟 Windows <span class="tag">TA0004</span></summary>
-    <details><summary><a href="https://lolbas-project.github.io/" target="_blank" rel="noopener noreferrer">LOLBAS</a></summary></details>
-  </details>
-
-  <details>
-    <summary>🐳 Docker / DevOps <span class="tag">TA0003</span></summary>
-    <details><summary><a href="https://docs.docker.com/engine/security/security/" target="_blank" rel="noopener noreferrer">Docker Security Docs</a></summary></details>
-  </details>
-
-  <details>
-    <summary>📱 Mobile RE <span class="tag">TA0006</span></summary>
-  </details>
-
-  <details>
-    <summary>🧠 AI / ML <span class="tag">MLSec</span></summary>
-    <details><summary><a href="https://adversarial-ml-tutorial.org/" target="_blank" rel="noopener noreferrer">Adversarial ML Tutorial</a></summary></details>
-  </details>
-
-  <details>
-    <summary>💣 Post Exploitation <span class="tag">TA0009</span></summary>
-    <details><summary><a href="https://www.exploit-db.com/" target="_blank" rel="noopener noreferrer">Exploit-DB</a></summary></details>
-  </details>
-
-  <!-- Embedded External Section -->
-  <h2 style="margin-top:3rem;">📘 Embedded External CheatSheets</h2>
-
-  <div style="width:100%; display:flex; flex-direction:column; gap:2rem;">
-    <details open>
-      <summary>HackTricks Searchable Cheatsheet</summary>
-      <iframe src="https://book.hacktricks.wiki/en/index.html?searchbar=" style="width:100%; height:600px; border:1px solid #333; border-radius:8px;" loading="lazy"></iframe>
-    </details>
+    -->
   </div>
-
 </body>
 </html>
