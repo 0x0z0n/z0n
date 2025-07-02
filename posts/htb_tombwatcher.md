@@ -32,7 +32,9 @@ Hostname: DC01.tombwatcher.htb
 ```
 
 Add to /etc/hosts:
+```
 10.10.11.72  DC01.tombwatcher.htb TombWatcher.htb
+```
 Foothold
 The initial credentials provided are: henry : H3nry_987TGV!
 
@@ -84,8 +86,9 @@ bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u alfred -p 'basketball' add g
 GMSA Password Dump: Use gMSADumper.py to find and dump Group Managed Service Account (GMSA) blobs.
 
 Bash
-
+```
 python gMSADumper.py -u alfred -p basketball -d tombwatcher.htb
+```
 This shows that the Infrastructure group can read the password for ansible_dev$.
 
 Change Passwords via GMSA: Utilize bloodyAD to change the passwords for the SAM and john accounts by leveraging the ansible_dev$ GMSA account's dumped credentials.
