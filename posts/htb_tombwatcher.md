@@ -1,7 +1,11 @@
 # TombWatcher
+
+```
 Difficulty: Medium
 Operating System: Windows
 Hints: Active Directory, Kerberoasting, ACL Abuse, GMSA, DACL Abuse, Cert-based Escalation
+
+```
 
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
