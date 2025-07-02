@@ -53,98 +53,110 @@
     "href": "posts/htb_Academy.html",
     "date": "2025-07-20",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "deserialization", "rce", "reverse_shell", "weak_creds", "sudo_abuse"]
+    "tags": ["easy", "php", "laravel", "vhosts", "gobuster", "cve-2018-15133", "deserialization", "metasploit", "password-reuse", "credentials", "adm", "logs", "aureport", "composer", "gtfobins"]
+
   },
   {
     "title": "HackTheBox: Admirer",
     "href": "posts/htb_Admirer.html",
     "date": "2025-07-19",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "ftp_enum", "creds_reuse", "file_enum", "lfi", "config_leak"]
+    "tags": ["easy", "nmap", "debian", "gobuster", "robots-text", "source-code", "adminer", "mysql", "credentials", "sudo", "pythonpath", "path-hijack", "python-library-hijack", "htb-nineveh", "htb-kryptos", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: Antique",
     "href": "posts/htb_Antique.html",
     "date": "2025-07-18",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "telnet", "firmware", "misconfig"]
+    "tags": ["easy", "printer", "nmap", "jetdirect", "telnet", "python", "snmp", "snmpwalk", "tunnel", "chisel", "cups", "cve-2012-5519", "hashcat", "shadow", "cve-2015-1158", "pwnkit", "shared-object", "cve-2021-4034"]
+
   },
   {
     "title": "HackTheBox: Armageddon",
     "href": "posts/htb_armageddon.html",
     "date": "2025-07-17",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "drupal_rce", "sql_injection", "cms_exploit"]
+    "tags": ["easy", "nmap", "ubuntu", "drupal", "drupalgeddon2", "searchsploit", "webshell", "upload", "hashcat", "mysql", "sudo", "snap", "snapcraft", "burp", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: Backend",
     "href": "posts/htb_Backend.html",
     "date": "2025-07-16",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["medium", "api_enum", "jwt_auth", "creds_leak", "script_misuse", "sudo_abuse"]
+    "tags": ["easy", "nmap", "api", "json", "uvicorn", "feroxbuster", "wfuzz", "swagger", "fastapi", "python", "jwt", "pyjwt", "jwt-io", "simple-modify-headers", "burp", "credentials", "uhc"]
+
   },
   {
     "title": "HackTheBox: Bank",
     "href": "posts/htb_Bank.html",
     "date": "2025-07-15",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "dns_zone", "file_disclosure", "directory_bypass"]
+    "tags": ["easy", "nmap", "vhosts", "dns", "dig", "zone-transfer", "wfuzz", "gobuster", "burp", "regex", "burp-repeater", "filter", "suid", "php", "passwd"]
+
   },
   {
     "title": "HackTheBox: Bashed",
     "href": "posts/htb_Bashed.html",
     "date": "2025-07-14",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "web_shell", "reverse_shell", "priv_esc", "sudo_abuse"]
+    "tags": ["easy", "php", "sudo", "cron", "oscp-like-v1", "web_shell", "reverse_shell", "priv_esc", "sudo_abuse"]
   },
   {
     "title": "HackTheBox: Beep",
     "href": "posts/htb_Beep.html",
     "date": "2025-07-13",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "lfi", "rce", "creds_reuse", "legacy_services"]
+    "tags": ["easy", "nmap", "elastix", "pbx", "dirsearch", "searchsploit", "lfi", "webmin", "smtp", "svwar", "sslscan", "shellshock", "webshell", "upload", "credentials", "password-reuse", "htb-unattended", "oscp-like-v1"]
+
   },
   {
     "title": "HackTheBox: Blocky",
     "href": "posts/htb_Blocky.html",
     "date": "2025-07-12",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "ftp", "jar_decompile", "creds_reuse", "wordpress"]
+    "tags": ["easy", "nmap", "wordpress", "java", "jar", "decompile", "jd-gui", "phpmyadmin", "wpscan", "ssh", "sudo", "oswe-like", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: Blunder",
     "href": "posts/htb_Blunder.html",
     "date": "2025-07-11",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "cms_enum", "auth_bypass", "file_upload", "priv_esc"]
+    "tags": ["easy", "nmap", "ubuntu", "bludit", "cms", "searchsploit", "github", "cewl", "bruteforce", "python", "upload", "filter", "credentials", "crackstation", "cve-2019-14287", "sudo", "htaccess", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: BountyHunter",
     "href": "posts/htb_BountyHunter.html",
     "date": "2025-07-10",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "xxe", "file_read", "php_filter", "creds_discovery"]
+    "tags": ["easy", "nmap", "xxe", "feroxbuster", "decoder", "python", "credentials", "password-reuse", "python-eval", "command-injection"]
+
   },
   {
     "title": "HackTheBox: Curling",
     "href": "posts/htb_Curling.html",
     "date": "2025-07-09",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "joomla", "base64_creds", "bruteforce", "config_leak"]
+    "tags": ["easy", "nmap", "joomla", "searchsploit", "webshell", "cron", "pspy", "curl", "suid", "cve-2019-7304", "dirty-sock", "ubuntu", "exploit", "arbitrary-write"]
+
   },
   {
     "title": "HackTheBox: Delivery",
     "href": "posts/htb_Delivery.html",
     "date": "2025-07-08",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "mattermost", "internal_enum", "social_eng", "priv_esc"]
+    "tags": ["easy", "nmap", "vhosts", "osticket", "mattermost", "password-reuse", "mysql", "hashcat", "hashcat-rules", "oscp-like-v2", "cpts-like"]
   },
   {
     "title": "HackTheBox: Doctor",
     "href": "posts/htb_Doctor.html",
     "date": "2025-07-07",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "os_command_injection", "xss_to_rce", "reverse_shell", "log_analysis"]
+    "tags": ["easy", "nmap", "splunk", "vhosts", "flask", "payloadsallthethings", "ssti", "command-injection", "injection", "adm", "linpeas", "splunk-whisperer2", "htb-secnotes", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: Explorer",
@@ -158,84 +170,96 @@
     "href": "posts/htb_FriendZone.html",
     "date": "2025-07-06",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "smb_enum", "dns_zone", "creds_leak", "web_admin"]
+    "tags": ["easy", "nmap", "smbmap", "smbclient", "gobuster", "zone-transfer", "dns", "dig", "lfi", "php", "wfuzz", "credentials", "ssh", "pspy", "python-library-hijack", "oscp-like-v2", "oscp-like-v1"]
+
   },
   {
     "title": "HackTheBox: Frolic",
     "href": "posts/htb_Frolic.html",
     "date": "2025-07-05",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "js_enum", "base64", "zip_bruteforce", "bf_to_php"]
+    "tags": ["easy", "nmap", "smbmap", "smbclient", "nodered", "gobuster", "php", "playsms", "javascript", "ook!", "python", "brainfuck", "fcrackzip", "xxd", "cve-2017-9101", "webshell", "bof", "ret2libc", "peda", "metasploit", "htb-reddish", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: Haystack",
     "href": "posts/htb_Haystack.html",
     "date": "2025-07-05",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "elasticsearch", "b64_creds", "logstash_priv_esc"]
+    "tags": ["easy", "gobuster", "steganography", "elasticsearch", "ssh", "kibana", "cve-2018-17246", "javascript", "lfi", "logstash", "herokuapp"]
+
   },
   {
     "title": "HackTheBox: Help",
     "href": "posts/htb_Help.html",
     "date": "2025-07-04",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "rce", "file_upload", "web_shell", "php_hashing", "apache_default"]
+    "tags": ["easy", "nmap", "graphql", "curl", "crackstation", "gobuster", "helpdeskz", "searchsploit", "exploit-db", "sqli", "blindsqli", "sqlmap", "ssh", "credentials", "filter", "php", "webshell", "exploit", "cve-2017-16995", "cve-2017-5899", "oswe-like", "oscp-like-v3"]
+
   },
   {
     "title": "HackTheBox: Irked",
     "href": "posts/htb_Irked.html",
     "date": "2025-07-03",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["easy", "irc_exploit", "unreal_ircd", "backdoor_exec"]
+    "tags": ["easy", "nmap", "searchsploit", "exploit-db", "hexchat", "irc", "python", "steganography", "steghide", "ssh", "su", "password-reuse", "metasploit", "exim", "oscp-like-v2", "oscp-like-v1"]
+
   },
   {
     "title": "HackTheBox: Laboratory",
     "href": "posts/htb_Laboratory.html",
     "date": "2025-07-03",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "SSRF", "JWT", "Misconfig"]
+    "tags": ["easy", "nmap", "searchsploit", "exploit-db", "hexchat", "irc", "python", "steganography", "steghide", "ssh", "su", "password-reuse", "metasploit", "exim", "oscp-like-v2", "oscp-like-v1"]
+
   },
   {
     "title": "HackTheBox: LaCasaDePapel",
     "href": "posts/htb_LaCasaDePapel.html",
     "date": "2025-07-02",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "Backdoor", "FTP", "RestrictedShell"]
+    "tags": ["easy", "vsftpd", "searchsploit", "python", "psy", "php", "php-disable-functions", "certificate", "client-certificate", "openssl", "directory-traversal", "lfi", "ssh", "pspy", "supervisord", "cron", "metasploit", "ida", "iptables", "js", "certificate-authority", "reverse-engineering", "youtube", "oscp-plus-v1", "oscp-plus-v2"]
+
   },
   {
     "title": "HackTheBox: Late",
     "href": "posts/htb_Late.html",
     "date": "2025-07-01",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "SSTI", "Flask", "LFI"]
+    "tags": ["easy", "nmap", "ocr", "flask", "kolourpaint", "tesseract", "burp-repeater", "ssti", "jinja2", "payloadsallthethings", "linpeas", "pspy", "bash", "chattr", "lsattr", "extended-attributes"]
+
   },
   {
     "title": "HackTheBox: Luanne",
     "href": "posts/htb_Luanne.html",
     "date": "2025-07-01",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "NetBSD", "LuaInjection", "LFI", "ReverseShell"]
+    "tags": ["easy", "nmap", "netbsd", "supervisor-process-manager", "default-creds", "http-basic-auth", "burp", "feroxbuster", "api", "lua", "command-injection", "htpasswd", "hashcat", "doas", "pgp", "netpgp", "source-code", "oscp-like-v2"]
+
   },
   {
     "title": "HackTheBox: Networked",
     "href": "posts/htb_Networked.html",
     "date": "2025-07-01",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "FileUpload", "MIMEBypass", "WebShell"]
+    "tags": ["easy", "nmap", "apache", "dirsearch", "php", "upload", "webshell", "filter", "command-injection", "sudo", "ifcfg", "oscp-like-v2", "oscp-like-v1", "oscp-like-v3"]
+
   },
   {
     "title": "HackTheBox: OpenAdmin",
     "href": "posts/htb_OpenAdmin.html",
     "date": "2025-06-30",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "RCE", "OpenNetAdmin", "WebExploit"]
+    "tags": ["easy", "nmap", "gobuster", "opennetadmin", "searchsploit", "password-reuse", "webshell", "ssh", "john", "sudo", "gtfobins", "oscp-like-v2", "osep-like"]
+
   },
   {
     "title": "HackTheBox: OpenSource",
     "href": "posts/htb_OpenSource.html",
     "date": "2025-06-29",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "LFI", "Flask", "PathTraversal"]
+    "tags": ["easy", "nmap", "upload", "source-code", "git", "git-hooks", "flask", "directory-traversal", "file-read", "flask-debug", "flask-debug-pin", "youtube", "chisel", "gitea", "pspy", "htb-bitlab", "werkzeug", "werkzeug-debug"]
+
   },
   {
     "title": "HackTheBox: Postman",
@@ -249,77 +273,77 @@
     "href": "posts/htb_Previse.html",
     "date": "2025-06-28",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "CommandInjection", "BackupExploit", "RCE"]
+    "tags": ["easy", "nmap", "webmin", "redis", "ssh", "john", "credentials", "cve-2019-12840", "metasploit", "oscp-like-v2", "CommandInjection", "BackupExploit", "RCE"]
   },
   {
     "title": "HackTheBox: RedPanda",
     "href": "posts/htb_RedPanda.html",
     "date": "2025-06-27",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Linux", "SSTI", "SpringBoot", "JinjaInjection"]
+    "tags": ["easy", "nmap", "springboot", "ssti", "feroxbuster", "wfuzz", "filter", "thymeleaf", "burp", "burp-repeater", "pspy", "java", "xxe", "groups", "directory-traversal", "Linux", "SSTI", "SpringBoot", "JinjaInjection"]
   },
   {
     "title": "HackTheBox: Safe",
     "href": "posts/htb_Safe.html",
     "date": "2025-06-26",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "BinaryExploitation", "BufferOverflow", "ROP", "ReverseEngineering"]
+    "tags": ["easy", "rop", "pwntools", "bof", "python", "exploit", "keepass", "kpcli", "john", "htb-redcross", "oscp-plus-v1", "oscp-plus-v2", "BinaryExploitation", "BufferOverflow", "ROP", "ReverseEngineering"]
   },
   {
     "title": "HackTheBox: ScriptKiddie",
     "href": "posts/htb_ScriptKiddie.html",
     "date": "2025-06-25",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "CommandInjection", "Flask", "Misconfiguration", "FileMonitor"]
+    "tags": ["easy", "nmap", "searchsploit", "msfvenom", "cve-2020-7384", "msfconsole", "command-injection", "injection", "incron", "irb", "oscp-like-v2", "CommandInjection", "Flask", "Misconfiguration", "FileMonitor"]
   },
   {
     "title": "HackTheBox: Shocker",
     "href": "posts/htb_Shocker.html",
     "date": "2025-06-25",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Shellshock", "CGI", "RemoteCodeExecution"]
+    "tags": ["easy", "cgi", "shellshock", "bashbug", "burp", "cve-2014-6271", "gtfobin", "oscp-like-v1", "Shellshock", "CGI", "RemoteCodeExecution"]
   },
   {
     "title": "HackTheBox: Spectra",
     "href": "posts/htb_Spectra.html",
     "date": "2025-06-25",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "WordPress", "CredentialReuse", "ReverseShell", "FileDisclosure"]
+    "tags": ["easy", "nmap", "chromeos", "nano", "wordpress", "wpscan", "wordpress-plugin", "credentials", "password-reuse", "autologon-credentials", "initctl", "sudo", "WordPress", "CredentialReuse", "ReverseShell", "FileDisclosure"]
   },
   {
     "title": "HackTheBox: SwagShop",
     "href": "posts/htb_SwagShop.html",
     "date": "2025-06-24",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Magento", "CredentialDisclosure", "RCE", "WebExploit"]
+    "tags": ["easy", "deserialization", "webshell", "sudo", "oscp-like-v2", "oscp-like-v1", "CredentialDisclosure", "RCE", "WebExploit"]
   },
   {
     "title": "HackTheBox: Tabby",
     "href": "posts/htb_Tabby.html",
     "date": "2025-06-24",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Tomcat", "LFI", "WARExploit", "CredentialReuse"]
+    "tags": ["easy", "lfi", "php", "gobuster", "tomcat", "host-manager", "tomcat-manager", "war", "msfvenom", "password-reuse", "credentials", "zip2john", "john", "hashcat", "penglab", "lxc", "lxd", "reverse-engineering", "htb-jerry", "htb-teacher", "htb-popcorn", "htb-lightweight", "htb-sunday", "htb-mischief", "htb-obscurity", "oscp-like-v2", "Tomcat", "LFI", "WARExploit", "CredentialReuse"]
   },
   {
     "title": "HackTheBox: Teacher",
     "href": "posts/htb_Teacher.html",
     "date": "2025-06-23",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "Moodle", "BruteForce", "CredentialReuse", "RCE"]
+    "tags": ["easy", "debian", "stretch", "nmap", "gobuster", "skipfish", "hydra", "python", "cve-2018-1133", "crackstation", "mysql", "pspy", "su", "cron", "chmod", "passwd", "arbitrary-write", "moodle", "Moodle", "BruteForce", "CredentialReuse", "RCE"]
   },
   {
     "title": "HackTheBox: Traceback",
     "href": "posts/htb_Traceback.html",
     "date": "2025-06-22",
     "category": ["HackTheBox", "Linux"],
-    "tags": ["Easy", "WebShell", "Lua", "MisconfiguredSudo", "Luvit"]
+    "tags": ["easy", "webshell", "vim", "gobuster", "smevk", "lua", "luvit", "ssh", "motd", "linpeas", "linenum", "WebShell", "Lua", "MisconfiguredSudo", "Luvit"]
   },
   {
-    "title": "HackTheBox Traverxec",
+    "title": "HackTheBox: Traverxec",
     "href": "posts/htb_Traverxec.html",
     "date": "2025-06-21",
     "category": ["HackTheBox", "Linux"],
-    "tags": [
+    "tags": [ "easy", "nmap", "webshell", "vim", "gobuster", "smevk", "lua", "luvit", "ssh", "motd", "linpeas", "linenum",
       "Nostromo",
       "ExploitDB",
       "sudoers",
@@ -328,36 +352,27 @@
     ]
   },
   {
-    "title": "HackTheBox Trick",
+    "title": "HackTheBox: Trick",
     "href": "posts/htb_Trick.html",
     "date": "2025-06-20",
     "category": ["HackTheBox", "Linux"],
-    "tags": [
-      "SMB",
-      "MySQL abuse",
-      "privesc",
-      "Command Injection",
-      "Privilege Escalation"
-    ]
+    "tags": ["easy", "nmap", "smtp", "smtp-user-enum", "zone-transfer", "vhosts", "wfuzz", "feroxbuster", "employee-management-system", "sqli", "sqli-bypass", "cve-2022-28468", "boolean-based-sqli", "sqlmap", "file-read", "lfi", "directory-traversal", "mail-poisoning", "log-poisoning", "burp", "burp-repeater", "fail2ban", "htb-admirertoo", "cpts-like"]
+
   },
   {
-    "title": "HackTheBox Undetected",
+    "title": "HackTheBox: Undetected",
     "href": "posts/htb_Undetected.html",
     "date": "2025-06-19",
     "category": ["HackTheBox", "Linux"],
-    "tags": [
-      "AV Evasion",
-      "Shellcode",
-      "Hard",
-      "Privilege Escalation"
-    ]
+    "tags": ["easy", "nmap", "feroxbuster", "php", "wfuzz", "vhosts", "composer", "phpunit", "cve-2017-9841", "webshell", "reverse-engineering", "ghidra", "awk", "backdoor", "hashcat", "apache-mod", "sshd", "oscp-plus-v2"]
+
   },
   {
-    "title": "HackTheBox Valentine",
+    "title": "HackTheBox: Valentine",
     "href": "posts/htb_Valentine.html",
     "date": "2025-06-18",
     "category": ["HackTheBox", "Linux"],
-    "tags": [
+    "tags": ["easy", "heartbleed", "dirtycow", "oscp-like-v2", "oscp-like-v1",
       "Heartbleed",
       "Memory Dump",
       "Password Reuse",
@@ -366,15 +381,11 @@
     ]
   },
   {
-    "title": "HackTheBox Writeup",
+    "title": "HackTheBox: Writeup",
     "href": "posts/htb_Writeup.html",
     "date": "2025-06-17",
     "category": ["HackTheBox", "Linux"],
-    "tags": [
-      "Gobuster",
-      "Web Exploit",
-      "PrivEsc",
-      "Easy"
-    ]
+    "tags": ["easy", "nmap", "robots-txt", "cmsms", "sqli", "credentials", "injection", "pspy", "run-parts", "perl"]
+
   }
 ]
