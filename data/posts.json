@@ -1,5 +1,13 @@
 [
   {
+    "title": "HackTheBox: TombWatcher",
+    "href": "posts/htb_tombwatcher.html",
+    "date": "2025-07-02",
+    "category": ["HackTheBox", "Windows", "Active Directory"],
+    "tags": ["medium", "privilege-escalation", "change-password", "certipy", "esc15", "bloodhound", "targeted-kerberoast", "gmsa-dump"]
+
+  },
+  {
     "title": "CheatSheet",
     "href": "posts/Cheatsheet.html",
     "date": "2025-06-28",
