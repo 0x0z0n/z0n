@@ -4,7 +4,7 @@
     "href": "posts/htb_tombwatcher.html",
     "date": "2025-07-02",
     "category": ["HackTheBox", "Windows", "Active Directory"],
-    "tags": ["medium", "privilege-escalation", "change-password", "certipy", "esc15", "bloodhound", "targeted-kerberoast", "gmsa-dump"]
+    "tags": ["easy", "privilege-escalation", "change-password", "certipy", "esc15", "bloodhound", "targeted-kerberoast", "gmsa-dump"]
 
   },
   {

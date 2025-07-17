@@ -105,7 +105,7 @@ bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u SAM -p 'jhvc@4569@' set pass
 This grants access to the john account, and user.txt can be retrieved.
 
 ## Root
-Once we log in as john, following our standard approach, we can run linPEAS looking for possible privilege escalation vectors. After we run linPEAS, we can notice a path for Active Directory Certificate Services (ADCS) abuse.
+Once we log in as john, following our standard approach, we can run WinPEAS looking for possible privilege escalation vectors. After we run WinPEAS, we can notice a path for Active Directory Certificate Services (ADCS) abuse.
 
 DACL Abuse for OU Takeover (from john to cert_admin)
 DACL Abuse: Grant john FullControl over the OU=ADCS,DC=TOMBWATCHER,DC=HTB using impacket-dacledit.
