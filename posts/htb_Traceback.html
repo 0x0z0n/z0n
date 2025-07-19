@@ -74,18 +74,6 @@
       margin-bottom: 2rem;
       font-weight: bold;
     }
-    #graph {
-      margin-top: 3rem;
-      border: 1px solid #00ffcc;
-      background: #0a0a0a;
-      border-radius: 8px;
-      overflow: auto;
-    }
-    svg text {
-      font-family: monospace;
-      font-size: 12px;
-      fill: #00ffcc;
-    }
   </style>
 </head>
 <body>
@@ -96,77 +84,7 @@
     fetch("Traceback.md")
       .then(res => res.text())
       .then(md => {
-        const contentDiv = document.getElementById("content");
-        contentDiv.innerHTML = marked.parse(md);
-
-        const graphWrapper = document.createElement("div");
-        graphWrapper.id = "graph";
-
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("id", "svg-tree");
-        svg.setAttribute("width", "100%");
-        svg.setAttribute("height", "400");
-        graphWrapper.appendChild(svg);
-        document.body.appendChild(graphWrapper);
-
-        const tokens = marked.lexer(md);
-        const nodes = [];
-        let y = 50;
-
-        tokens.forEach(tok => {
-          if (tok.type === 'heading' && tok.depth === 2) {
-            nodes.push({ text: tok.text, depth: 0, y: y });
-            y += 80;
-          } else if (tok.type === 'heading' && tok.depth === 3) {
-            nodes.push({ text: tok.text, depth: 1, y: y });
-            y += 80;
-          }
-        });
-
-        const width = Math.max(800, nodes.length * 50);
-        const height = y + 40;
-        svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-
-        nodes.forEach((n, i) => {
-          const x = 120 + n.depth * 250;
-          const cy = n.y;
-
-          if (n.depth === 1) {
-            for (let j = i - 1; j >= 0; j--) {
-              if (nodes[j].depth === 0) {
-                const px = 120;
-                const py = nodes[j].y;
-                const line = document.createElementNS(svg.namespaceURI, 'line');
-                line.setAttribute('x1', px + 30);
-                line.setAttribute('y1', py);
-                line.setAttribute('x2', x - 30);
-                line.setAttribute('y2', cy);
-                line.setAttribute('stroke', '#00ffcc');
-                line.setAttribute('stroke-width', '2');
-                line.setAttribute('style', 'filter: drop-shadow(0 0 5px #00ffcc)');
-                svg.appendChild(line);
-                break;
-              }
-            }
-          }
-
-          const circle = document.createElementNS(svg.namespaceURI, 'circle');
-          circle.setAttribute('cx', x);
-          circle.setAttribute('cy', cy);
-          circle.setAttribute('r', 25);
-          circle.setAttribute('fill', '#39ff14');
-          circle.setAttribute('stroke', '#00ffcc');
-          circle.setAttribute('stroke-width', '2');
-          circle.setAttribute('style', 'filter: drop-shadow(0 0 10px #00ffcc)');
-          svg.appendChild(circle);
-
-          const text = document.createElementNS(svg.namespaceURI, 'text');
-          text.setAttribute('x', x);
-          text.setAttribute('y', cy + 40);
-          text.setAttribute('text-anchor', 'middle');
-          text.textContent = n.text;
-          svg.appendChild(text);
-        });
+        document.getElementById("content").innerHTML = marked.parse(md);
       });
   </script>
 </body>
