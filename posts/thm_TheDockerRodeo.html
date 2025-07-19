@@ -30,14 +30,15 @@
       gap: 2rem;
     }
     #graph {
-      flex: 0 0 300px;
-      max-height: 100vh;
-      overflow: auto;
+      flex: 0 0 350px;
       border: 1px solid #00ffcc;
       background: #0a0a0a;
       border-radius: 8px;
-      position: sticky;
-      top: 1rem;
+      padding: 1rem;
+      max-height: 100vh;
+      overflow-y: auto;
+      font-family: monospace;
+      white-space: pre-wrap;
     }
     #content {
       flex: 1;
@@ -88,46 +89,24 @@
       margin-bottom: 2rem;
       font-weight: bold;
     }
-    #fullscreen-toggle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: #00ffcc;
-      color: #000;
-      font-weight: bold;
-      padding: 4px 10px;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-      z-index: 2;
+    .toc-line {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
-    svg {
-      width: 100%;
-      height: auto;
-      touch-action: none;
+    .toc-line .icon {
+      margin-right: 0.5rem;
+      color: #00ffcc;
     }
-    svg text {
-      font-family: monospace;
-      font-size: 12px;
-      fill: #00ffcc;
-    }
-    .fullscreen {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 9999 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
+    .toc-line.sub {
+      margin-left: 1.5rem;
     }
   </style>
 </head>
 <body>
   <div id="graph">
-    <button id="fullscreen-toggle">Full Screen</button>
-    <svg id="svg-tree"></svg>
+    <strong style="color:#00ffcc;display:block;margin-bottom:1rem;">📄 Navigation</strong>
+    <div id="toc"></div>
   </div>
   <div id="content">Loading writeup...</div>
 
@@ -137,106 +116,19 @@
       .then(md => {
         document.getElementById("content").innerHTML = marked.parse(md);
 
-        const svg = document.getElementById("svg-tree");
-        const zoomGroup = document.createElementNS(svg.namespaceURI, "g");
-        svg.appendChild(zoomGroup);
-
-        let viewBox = { x: 0, y: 0, width: 1000, height: 1000 };
-        svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
-
-        let isPanning = false;
-        let start = { x: 0, y: 0 };
-
-        svg.addEventListener("mousedown", e => {
-          isPanning = true;
-          start = { x: e.clientX, y: e.clientY };
-        });
-        svg.addEventListener("mouseup", () => { isPanning = false; });
-        svg.addEventListener("mouseleave", () => { isPanning = false; });
-        svg.addEventListener("mousemove", e => {
-          if (!isPanning) return;
-          const dx = (e.clientX - start.x) * viewBox.width / svg.clientWidth;
-          const dy = (e.clientY - start.y) * viewBox.height / svg.clientHeight;
-          viewBox.x -= dx;
-          viewBox.y -= dy;
-          svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
-          start = { x: e.clientX, y: e.clientY };
-        });
-        svg.addEventListener("wheel", e => {
-          e.preventDefault();
-          const scale = e.deltaY < 0 ? 0.9 : 1.1;
-          viewBox.width *= scale;
-          viewBox.height *= scale;
-          svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
-        });
-
+        const toc = document.getElementById("toc");
         const tokens = marked.lexer(md);
-        const nodes = [];
-        let y = 50;
+        let lines = [];
 
         tokens.forEach(tok => {
           if (tok.type === 'heading' && tok.depth === 2) {
-            nodes.push({ text: tok.text, depth: 0, y: y });
-            y += 80;
+            lines.push(`<div class='toc-line'><span class='icon'>🔗</span>Node: ${tok.text}</div>`);
           } else if (tok.type === 'heading' && tok.depth === 3) {
-            nodes.push({ text: tok.text, depth: 1, y: y });
-            y += 80;
+            lines.push(`<div class='toc-line sub'><span class='icon'>🔗</span>Substep: ${tok.text}</div>`);
           }
         });
 
-        const width = Math.max(800, nodes.length * 50);
-        const height = y + 40;
-        viewBox.width = width;
-        viewBox.height = height;
-        svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
-
-        nodes.forEach((n, i) => {
-          const x = 80 + n.depth * 200;
-          const cy = n.y;
-
-          if (n.depth === 1) {
-            for (let j = i - 1; j >= 0; j--) {
-              if (nodes[j].depth === 0) {
-                const px = 80;
-                const py = nodes[j].y;
-                const line = document.createElementNS(svg.namespaceURI, 'line');
-                line.setAttribute('x1', px + 20);
-                line.setAttribute('y1', py);
-                line.setAttribute('x2', x - 20);
-                line.setAttribute('y2', cy);
-                line.setAttribute('stroke', '#00ffcc');
-                line.setAttribute('stroke-width', '2');
-                line.setAttribute('style', 'filter: drop-shadow(0 0 5px #00ffcc)');
-                zoomGroup.appendChild(line);
-                break;
-              }
-            }
-          }
-
-          const circle = document.createElementNS(svg.namespaceURI, 'circle');
-          circle.setAttribute('cx', x);
-          circle.setAttribute('cy', cy);
-          circle.setAttribute('r', 12);
-          circle.setAttribute('fill', '#39ff14');
-          circle.setAttribute('stroke', '#00ffcc');
-          circle.setAttribute('stroke-width', '2');
-          circle.setAttribute('style', 'filter: drop-shadow(0 0 8px #00ffcc)');
-          zoomGroup.appendChild(circle);
-
-          const text = document.createElementNS(svg.namespaceURI, 'text');
-          text.setAttribute('x', x);
-          text.setAttribute('y', cy + 25);
-          text.setAttribute('text-anchor', 'middle');
-          text.textContent = n.text;
-          zoomGroup.appendChild(text);
-        });
-
-        document.getElementById("fullscreen-toggle").onclick = () => {
-          const graph = document.getElementById("graph");
-          graph.classList.toggle("fullscreen");
-          const btn = document.getElementById("fullscreen-toggle");
-          btn.textContent = graph.classList.contains("fullscreen") ? "Exit Fullscreen" : "Full Screen";
-        };
+        toc.innerHTML = lines.join('\n');
       });
   </script>
 </body>
