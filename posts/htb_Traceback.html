@@ -75,7 +75,7 @@
       font-weight: bold;
     }
     #graph {
-      margin-bottom: 3rem;
+      margin-top: 3rem;
       border: 1px solid #00ffcc;
       background: #0a0a0a;
       border-radius: 8px;
@@ -90,7 +90,6 @@
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back to Home</a>
-  <div id="graph"><svg id="svg-tree" width="100%" height="400"></svg></div>
   <div id="content">Loading writeup...</div>
 
   <script>
@@ -99,6 +98,16 @@
       .then(md => {
         const contentDiv = document.getElementById("content");
         contentDiv.innerHTML = marked.parse(md);
+
+        const graphWrapper = document.createElement("div");
+        graphWrapper.id = "graph";
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("id", "svg-tree");
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "400");
+        graphWrapper.appendChild(svg);
+        document.body.appendChild(graphWrapper);
 
         const tokens = marked.lexer(md);
         const nodes = [];
@@ -114,8 +123,6 @@
           }
         });
 
-        const svg = document.getElementById("svg-tree");
-        while (svg.firstChild) svg.removeChild(svg.firstChild);
         const width = Math.max(800, nodes.length * 50);
         const height = y + 40;
         svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
