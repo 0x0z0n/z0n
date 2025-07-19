@@ -80,11 +80,36 @@
       background: #0a0a0a;
       border-radius: 8px;
       overflow: auto;
+      position: relative;
+    }
+    #fullscreen-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      padding: 4px 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      z-index: 2;
     }
     svg text {
       font-family: monospace;
       font-size: 12px;
       fill: #00ffcc;
+    }
+    .fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
     }
   </style>
 </head>
@@ -101,6 +126,15 @@
 
         const graphWrapper = document.createElement("div");
         graphWrapper.id = "graph";
+
+        const fullscreenBtn = document.createElement("button");
+        fullscreenBtn.id = "fullscreen-toggle";
+        fullscreenBtn.textContent = "Full Screen";
+        fullscreenBtn.onclick = () => {
+          graphWrapper.classList.toggle("fullscreen");
+          fullscreenBtn.textContent = graphWrapper.classList.contains("fullscreen") ? "Exit Fullscreen" : "Full Screen";
+        };
+        graphWrapper.appendChild(fullscreenBtn);
 
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("id", "svg-tree");
