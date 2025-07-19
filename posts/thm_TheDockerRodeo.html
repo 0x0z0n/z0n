@@ -25,9 +25,23 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding: 2rem;
-      max-width: 850px;
-      margin: auto;
-      line-height: 1.7;
+      display: flex;
+      flex-direction: row;
+      gap: 2rem;
+    }
+    #graph {
+      flex: 0 0 300px;
+      max-height: 100vh;
+      overflow: auto;
+      border: 1px solid #00ffcc;
+      background: #0a0a0a;
+      border-radius: 8px;
+      position: sticky;
+      top: 1rem;
+    }
+    #content {
+      flex: 1;
+      max-width: 100%;
     }
     a {
       color: var(--link-color);
@@ -74,14 +88,6 @@
       margin-bottom: 2rem;
       font-weight: bold;
     }
-    #graph {
-      margin-top: 3rem;
-      border: 1px solid #00ffcc;
-      background: #0a0a0a;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
-    }
     #fullscreen-toggle {
       position: absolute;
       top: 10px;
@@ -97,7 +103,7 @@
     }
     svg {
       width: 100%;
-      height: 100%;
+      height: auto;
       touch-action: none;
     }
     svg text {
@@ -119,33 +125,19 @@
   </style>
 </head>
 <body>
-  <a href="../index.html" class="back-link">← Back to Home</a>
+  <div id="graph">
+    <button id="fullscreen-toggle">Full Screen</button>
+    <svg id="svg-tree"></svg>
+  </div>
   <div id="content">Loading writeup...</div>
 
   <script>
     fetch("TheDockerRodeo.md")
       .then(res => res.text())
       .then(md => {
-        const contentDiv = document.getElementById("content");
-        contentDiv.innerHTML = marked.parse(md);
+        document.getElementById("content").innerHTML = marked.parse(md);
 
-        const graphWrapper = document.createElement("div");
-        graphWrapper.id = "graph";
-
-        const fullscreenBtn = document.createElement("button");
-        fullscreenBtn.id = "fullscreen-toggle";
-        fullscreenBtn.textContent = "Full Screen";
-        fullscreenBtn.onclick = () => {
-          graphWrapper.classList.toggle("fullscreen");
-          fullscreenBtn.textContent = graphWrapper.classList.contains("fullscreen") ? "Exit Fullscreen" : "Full Screen";
-        };
-        graphWrapper.appendChild(fullscreenBtn);
-
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("id", "svg-tree");
-        graphWrapper.appendChild(svg);
-        document.body.appendChild(graphWrapper);
-
+        const svg = document.getElementById("svg-tree");
         const zoomGroup = document.createElementNS(svg.namespaceURI, "g");
         svg.appendChild(zoomGroup);
 
@@ -159,7 +151,6 @@
           isPanning = true;
           start = { x: e.clientX, y: e.clientY };
         });
-
         svg.addEventListener("mouseup", () => { isPanning = false; });
         svg.addEventListener("mouseleave", () => { isPanning = false; });
         svg.addEventListener("mousemove", e => {
@@ -171,7 +162,6 @@
           svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
           start = { x: e.clientX, y: e.clientY };
         });
-
         svg.addEventListener("wheel", e => {
           e.preventDefault();
           const scale = e.deltaY < 0 ? 0.9 : 1.1;
@@ -201,13 +191,13 @@
         svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
 
         nodes.forEach((n, i) => {
-          const x = 120 + n.depth * 250;
+          const x = 80 + n.depth * 200;
           const cy = n.y;
 
           if (n.depth === 1) {
             for (let j = i - 1; j >= 0; j--) {
               if (nodes[j].depth === 0) {
-                const px = 120;
+                const px = 80;
                 const py = nodes[j].y;
                 const line = document.createElementNS(svg.namespaceURI, 'line');
                 line.setAttribute('x1', px + 20);
@@ -226,7 +216,7 @@
           const circle = document.createElementNS(svg.namespaceURI, 'circle');
           circle.setAttribute('cx', x);
           circle.setAttribute('cy', cy);
-          circle.setAttribute('r', 15);
+          circle.setAttribute('r', 12);
           circle.setAttribute('fill', '#39ff14');
           circle.setAttribute('stroke', '#00ffcc');
           circle.setAttribute('stroke-width', '2');
@@ -235,11 +225,18 @@
 
           const text = document.createElementNS(svg.namespaceURI, 'text');
           text.setAttribute('x', x);
-          text.setAttribute('y', cy + 30);
+          text.setAttribute('y', cy + 25);
           text.setAttribute('text-anchor', 'middle');
           text.textContent = n.text;
           zoomGroup.appendChild(text);
         });
+
+        document.getElementById("fullscreen-toggle").onclick = () => {
+          const graph = document.getElementById("graph");
+          graph.classList.toggle("fullscreen");
+          const btn = document.getElementById("fullscreen-toggle");
+          btn.textContent = graph.classList.contains("fullscreen") ? "Exit Fullscreen" : "Full Screen";
+        };
       });
   </script>
 </body>
