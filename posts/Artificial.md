@@ -255,5 +255,6 @@ ssh -i ./restore/root/.ssh/id_rsa root@artificial.htb
 **Root:** Used Restic backup capability with exposed `rest-server` to exfiltrate and restore `/root`, then extracted SSH key and accessed root.
 
 ---
+![**Pwned Artificial!!**](Pictures/Arificial.png)
 
-**Pwned Artificial!!**
+
