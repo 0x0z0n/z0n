@@ -4,8 +4,7 @@
     "href": "posts/thm_adventofcyber2023.html",
     "date": "2025-07-20",
     "category": ["TryHackMe", "Adentures"],
-    "tags": 
-    [
+    "tags": [
   "PromptInjection",
   "AIChatbotBypass",
   "SecurityMeasures",
@@ -38,9 +37,9 @@
   "LoginBruteforce",
   "WebApplicationVulnerabilities",
   "PrivilegeEscalation",
-  "DataExfiltration"
-]
-  },{
+  "DataExfiltration"]
+  },
+  {
     "title": "HackTheBox: TombWatcher",
     "href": "posts/htb_tombwatcher.html",
     "date": "2025-07-02",
