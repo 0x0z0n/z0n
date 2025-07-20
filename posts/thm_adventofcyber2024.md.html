@@ -2,11 +2,11 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>THM Advent of Cyber 2023 | Writeup</title>
+  <title>THM Advent of Cyber 2024 | Writeup</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="THM | Advent of Cyber 2023">
-  <meta property="og:title" content="Advent of Cyber 2023">
-  <meta property="og:description" content="Advent of Cyber 2023 Writeup - Tags: ">
+  <meta name="description" content="THM | Advent of Cyber 2024">
+  <meta property="og:title" content="Advent of Cyber 2024">
+  <meta property="og:description" content="Advent of Cyber 2024 Writeup - Tags: ">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="0x0z0n">
   <link rel="stylesheet" href="../style.css" />
@@ -74,6 +74,25 @@
       margin-bottom: 2rem;
       font-weight: bold;
     }
+    .linkedin-section {
+      margin-top: 3rem;
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+    }
+    .linkedin-section h2 {
+      margin-top: 0;
+      border: none;
+      padding: 0;
+    }
+    .linkedin-section ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .linkedin-section li {
+      margin: 0.5rem 0;
+    }
   </style>
 </head>
 <body>
@@ -81,22 +100,23 @@
 
   <div id="content">Loading writeup...</div>
 
-  <!-- ✅ Markdown rendered using marked.js -->
   <script>
-    fetch("adventofcyber2023.md")
+    fetch("adventofcyber2024.md")
       .then(res => res.text())
       .then(md => {
         document.getElementById("content").innerHTML = marked.parse(md);
       });
   </script>
 
-  
-  <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7139212756016054272?collapsed=1" height="568" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>
-  
-  <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7142097560512442368?collapsed=1" height="568" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>
+  <!-- 🔗 Related LinkedIn Posts Section -->
+  <div class="linkedin-section">
+    <h2>🔗 Related LinkedIn Posts</h2>
+    <ul>
+      <li><a href="https://www.linkedin.com/posts/kshitijnraut_adventofcyber2024-tryhackme-cybersecurity-activity-7272944417617920001-4pEN" target="_blank"></a></li>
+      <li><a href="https://www.linkedin.com/posts/kshitijnraut_wifisecurity-wpa2-wps-activity-7274038357934923776-1-l8" target="_blank"></a></li>
+      <li><a href="https://www.linkedin.com/posts/kshitijnraut_wifisecurity-wpa2-wps-activity-7274038357934923776-1-l8" target="_blank"></a></li>
+    </ul>
+  </div>
 
-  <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7145043306660397056?collapsed=1" height="568" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>
-
-  
 </body>
 </html>
