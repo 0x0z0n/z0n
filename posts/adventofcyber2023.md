@@ -3987,6 +3987,3 @@ The final step is to get a conviction in court. To do so we must provide the cor
 ##
 
  Congratulations on finishing Advent of Cyber 2023!
- 
-![Pwned](https://tryhackme-certificates.s3-eu-west-1.amazonaws.com/THM-VAO7ETXZAR.pdf)
-
