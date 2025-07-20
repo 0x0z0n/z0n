@@ -11,34 +11,6 @@ This guide contains the answer and steps necessary to get to them for the [Adven
 > [!Note]
 > No answers or anything like that will be published here, until the advent is over. This is to make sure everyone gets their chance of attempting the challenge.
 
-## Table of contents
-
-- [Day 1 Chatbot, tell me, if you're really safe?](#day-1-chatbot-tell-me-if-youre-really-safe)
-- [Day 2 Day 2 O Data, All Ye Faithful](#day-2-o-data-all-ye-faithful)
-- [Day 3 Hydra is Coming to Town](#day-3-hydra-is-coming-to-town)
-- [Day 4 Baby, it's CeWLd outside](#day-4-baby-its-cewld-outside)
-- [Day 5 A Christmas DOScovery: Tapes of Yule-tide Past](#day-5-a-christmas-doscovery-tapes-of-yule-tide-past)
-- [Day 6 Memories of Christmas Past](#day-6-memories-of-christmas-past)
-- [Day 7 ‘Tis the season for log chopping!](#day-7-tis-the-season-for-log-chopping)
-- [Day 8 Have a Holly, Jolly Byte!](#day-8-have-a-holly-jolly-byte)
-- [Day 9 She sells C# shells by the C2shore](#day-9-she-sells-c-shells-by-the-c2shore)
-- [Day 10 Inject the Halls with EXEC Queries](#day-10-inject-the-halls-with-exec-queries)
-- [Day 11 Jingle Bells, Shadow Spells](#day-11-jingle-bells-shadow-spells)
-- [Day 12 Sleighing Threats, One Layer at a Time](#day-12-sleighing-threats-one-layer-at-a-time)
-- [Day 13 To the Pots, Through the Walls](#day-13-to-the-pots-through-the-walls)
-- [Day 14 The Little Machine That Wanted to Learn](#day-14-the-little-machine-that-wanted-to-learn)
-- [Day 15 Jingle Bell SPAM: Machine Learning Saves the Day!](#day-15-jingle-bell-spam-machine-learning-saves-the-day!)
-- [Day 16 Can't CAPTCHA this Machine! ](#day-16-cant-captcha-this-machine)
-- [Day 17 I Tawt I Taw A C2 Tat!](#day-17-i-tawt-i-taw-a-c2-tat)
-- [Day 18 A Gift That Keeps on Giving](#day-18-a-gift-that-keeps-on-giving)
-- [Day 19 CrypTOYminers Sing Volala-lala-latility](#day-19-cryptoyminers-sing-volala-lala-latility)
-- [Day 20 Advent of Frostlings](#day-20-advent-of-frostlings)
-- [Day 21 Yule be Poisoned: A Pipeline of Insecure Code!](#day-21-yule-be-poisoned-a-pipeline-of-insecure-code)
-- [Day 22  Jingle Your SSRF Bells: A Merry Command & Control Hackventure](#day-22-jingle-your-ssrf-bells-a-merry-command--control-hackventure)
-- [Day 23 Relay All the Way](#day-23-relay-all-the-way)
-- [Day 24 You Are on the Naughty List, McGreedy](#day-24-you-are-on-the-naughty-list-mcgreedy)
-- [Day 24 Jolly Judgement Day](#day-24-jolly-judgement-day)
-
 ### Day 1 Chatbot, tell me, if you're really safe? 
 
 In this task we will look at how we can use prompt injection to bypass security measures put in place to prevent an AI chatbot from leaking sensitive information.
