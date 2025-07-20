@@ -1,13 +1,13 @@
 [
   {
-    "title": "TryHackMe: Adevent of Cyber 2023",
+    "title": "TryHackMe: Advent of Cyber 2023",
     "href": "posts/thm_adventofcyber2024.html",
     "date": "2025-07-20",
     "category": ["TryHackMe", "Adentures"],
     "tags": ["Exiftool", "C2Server", "PowerShellScript", "GitHubAnalysis", "LogAnalysis", "FailedLogins", "IPAddress", "ElasticStack", "ELK", "WebShell", "FileUploadVulnerability", "BurpSuite", "AtomicRedTeam", "MITREATTACK", "RansomwareSimulation", "CloudTrail", "AWSLogs", "IAM", "S3Bucket", "JQL", "ReverseShell", "Metasploit", "MacroMalware", "Phishing", "WPA2Cracking", "Airodump-ng", "Aireplay-ng", "Aircrack-ng", "RaceCondition", "InsecureDirectObjectReference", "IDOR", "WirelessSecurity", "NetworkAttacks", "DigitalForensics", "IncidentResponse", "VulnerabilityAssessment"]
   },
   {
-    "title": "TryHackMe: Adevent of Cyber 2023",
+    "title": "TryHackMe: Advent of Cyber 2023",
     "href": "posts/thm_adventofcyber2023.html",
     "date": "2025-07-20",
     "category": ["TryHackMe", "Adentures"],
