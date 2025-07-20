@@ -78,8 +78,10 @@
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back to Home</a>
+
   <div id="content">Loading writeup...</div>
 
+  <!-- ✅ Markdown rendered using marked.js -->
   <script>
     fetch("adventofcyber2023.md")
       .then(res => res.text())
@@ -87,5 +89,12 @@
         document.getElementById("content").innerHTML = marked.parse(md);
       });
   </script>
+
+  <!-- ✅ Correct iframe placement (outside script!) -->
+  <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7139212756016054272" height="1114" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>
+
+  <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7142097560512442368" height="1723" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>
+
+  <iframe src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7145043306660397056" height="2647" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe>
 </body>
 </html>
