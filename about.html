@@ -5,78 +5,96 @@
   <title>About</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Font Awesome CDN (Free version) -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-p6xY1e7XazgQx5L3MZxF1BoOaWqkn61C1q3+fYO9vbK5gPp+qYuwhu7YyU1lHQAtdfOqMpKvRz2/aq1UVY5TIg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-color: #111;
-      --card-bg: #1e1e1e;
-      --text-color: #eee;
+      --bg-color: #0d0d0d;
+      --card-bg: #1a1a1a;
+      --text-color: #e0e0e0;
       --accent: #4caf50;
+      --hover-bg: #333;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: sans-serif;
-      background: var(--bg-color);
+      font-family: 'Fira Code', monospace;
+      background-color: var(--bg-color);
       color: var(--text-color);
       display: flex;
+      min-height: 100vh;
     }
 
     aside {
       width: 250px;
-      background: #1a1a1a;
+      background-color: var(--card-bg);
       padding: 1rem;
       height: 100vh;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
       position: sticky;
       top: 0;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     aside img {
       width: 100px;
+      height: 100px;
       border-radius: 50%;
-      display: block;
-      margin: 0 auto;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      border: 2px solid var(--accent);
     }
 
     .site-title {
-      text-align: center;
-      margin: 1rem 0 0.25rem;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
+      margin-bottom: 0.2rem;
+      font-weight: bold;
     }
 
     .site-subtitle {
-      text-align: center;
       color: #aaa;
       font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
     }
 
     nav a {
       display: block;
-      color: white;
+      color: var(--text-color);
       text-decoration: none;
       padding: 0.5rem;
-      border-radius: 5px;
       margin: 0.3rem 0;
-      background: #2a2a2a;
+      border-radius: 5px;
+      background-color: var(--hover-bg);
+      transition: background 0.2s;
+      font-size: 0.95rem;
     }
 
     nav a:hover {
-      background: var(--accent);
+      background-color: var(--accent);
+      color: black;
     }
 
     .social-icons {
-      text-align: center;
-      margin-top: 2rem;
+      margin-top: auto;
+      padding-top: 1rem;
     }
 
     .social-icons a {
-      margin: 0 0.5rem;
-      color: white;
+      color: var(--text-color);
+      margin: 0 0.4rem;
       font-size: 1.2rem;
-      text-decoration: none;
+      transition: color 0.2s;
     }
 
     .social-icons a:hover {
@@ -86,16 +104,41 @@
     main {
       flex: 1;
       padding: 2rem;
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
     }
 
     h1 {
       color: var(--accent);
+      font-size: 2rem;
+      margin-bottom: 1rem;
     }
 
     p {
-      line-height: 1.6;
+      line-height: 1.7;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    strong {
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      aside {
+        width: 100%;
+        height: auto;
+        position: relative;
+        box-shadow: none;
+      }
+
+      main {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
@@ -111,30 +154,21 @@
       <a href="archives.html">🗃️ Archives</a>
       <a href="about.html">ℹ️ About</a>
     </nav>
-
     <div class="social-icons">
-      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
-        <i class="fab fa-linkedin"></i>
-      </a>
-      <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
-        <i class="fas fa-envelope"></i>
-      </a>
-      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
-        <i class="fab fa-youtube"></i>
-      </a>
-      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
-        <i class="fab fa-x-twitter"></i>
-      </a>
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank"><i class="fab fa-linkedin"></i></a>
+      <a href="mailto:kshitijraut360@gmail.com"><i class="fas fa-envelope"></i></a>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank"><i class="fab fa-youtube"></i></a>
+      <a href="https://x.com/0x0z0n" target="_blank"><i class="fab fa-x-twitter"></i></a>
     </div>
   </aside>
 
   <main>
     <h1>About Me</h1>
-    <p>Hello! 👋 I'm a <strong>Cybersecurity Analyst</strong> with hands-on experience in both <strong>offensive and defensive security operations</strong>. I actively contribute to SecOps, helping organizations identify and mitigate threats before they cause harm.</p>
+    <p>Hello! 👋 I'm a <strong>Cybersecurity Analyst</strong> with hands-on experience in both <strong>offensive</strong> and <strong>defensive security operations</strong>. I actively contribute to <strong>SecOps</strong>, helping organizations identify and mitigate threats before they cause harm.</p>
 
-    <p>My core passion lies in <strong>exploit development</strong>—whether it's researching vulnerabilities, crafting proof-of-concepts, or understanding the intricacies of low-level systems. I regularly apply my knowledge of <strong>networking</strong>, <strong>programming</strong>, and <strong>vulnerability analysis</strong> to solve complex security challenges.</p>
+    <p>My core passion lies in <strong>exploit development</strong> — whether it's researching vulnerabilities, crafting proof-of-concepts, or understanding the intricacies of low-level systems. I regularly apply my knowledge of <strong>networking</strong>, <strong>programming</strong>, and <strong>vulnerability analysis</strong> to solve complex security challenges.</p>
 
-    <p>With a problem-solving mindset, I focus on building resilient security strategies and improving threat detection, response, and prevention. I also share insights and learning through CTF.</p>
+    <p>With a problem-solving mindset, I focus on building resilient security strategies and improving threat detection, response, and prevention. I also share insights and learning through <strong>CTF</strong> competitions and community content.</p>
   </main>
 </body>
 </html>
