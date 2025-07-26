@@ -1,174 +1,203 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>About</title>
+  <meta charset="UTF-8" />
+  <title>Kshitij Raut | Resume</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-p6xY1e7XazgQx5L3MZxF1BoOaWqkn61C1q3+fYO9vbK5gPp+qYuwhu7YyU1lHQAtdfOqMpKvRz2/aq1UVY5TIg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <!-- Google Font -->
+  <!-- Font & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-color: #0d0d0d;
-      --card-bg: #1a1a1a;
-      --text-color: #e0e0e0;
       --accent: #4caf50;
-      --hover-bg: #333;
-    }
-
-    * {
-      box-sizing: border-box;
+      --text: #e0e0e0;
+      --bg: #0d0d0d;
+      --card: #1a1a1a;
+      --muted: #aaa;
     }
 
     body {
-      margin: 0;
       font-family: 'Fira Code', monospace;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      line-height: 1.6;
     }
 
-    aside {
-      width: 250px;
-      background-color: var(--card-bg);
-      padding: 1rem;
-      height: 100vh;
-      position: sticky;
-      top: 0;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    .resume-container {
+      max-width: 800px;
+      margin: auto;
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 10px;
     }
 
-    aside img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 1rem;
-      border: 2px solid var(--accent);
-    }
-
-    .site-title {
-      font-size: 1.3rem;
-      margin-bottom: 0.2rem;
-      font-weight: bold;
-    }
-
-    .site-subtitle {
-      color: #aaa;
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+    header {
       text-align: center;
+      margin-bottom: 2rem;
     }
 
-    nav a {
-      display: block;
-      color: var(--text-color);
-      text-decoration: none;
-      padding: 0.5rem;
-      margin: 0.3rem 0;
-      border-radius: 5px;
-      background-color: var(--hover-bg);
-      transition: background 0.2s;
-      font-size: 0.95rem;
+    header h1 {
+      font-size: 2rem;
+      color: var(--accent);
+      margin: 0;
     }
 
-    nav a:hover {
-      background-color: var(--accent);
-      color: black;
+    header h2 {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .contact {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .section {
+      margin-bottom: 1.8rem;
+    }
+
+    .section h3 {
+      color: var(--accent);
+      font-size: 1.2rem;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 0.2rem;
+      margin-bottom: 1rem;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
     }
 
     .social-icons {
-      margin-top: auto;
-      padding-top: 1rem;
+      text-align: center;
+      margin-top: 1rem;
     }
 
     .social-icons a {
-      color: var(--text-color);
-      margin: 0 0.4rem;
+      margin: 0 0.5rem;
+      color: var(--text);
       font-size: 1.2rem;
-      transition: color 0.2s;
     }
 
     .social-icons a:hover {
       color: var(--accent);
     }
 
-    main {
-      flex: 1;
-      padding: 2rem;
-      max-width: 900px;
-      margin: auto;
-    }
-
-    h1 {
-      color: var(--accent);
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      line-height: 1.7;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    strong {
-      color: var(--accent);
-    }
-
-    @media (max-width: 768px) {
+    /* PDF/Print Mode */
+    @media print {
       body {
-        flex-direction: column;
+        background: #fff;
+        color: #000;
+        padding: 0;
       }
 
-      aside {
-        width: 100%;
-        height: auto;
-        position: relative;
+      .resume-container {
+        background: #fff;
+        color: #000;
         box-shadow: none;
+        border-radius: 0;
+        padding: 1rem;
       }
 
-      main {
-        padding: 1.5rem;
+      .social-icons {
+        display: none;
       }
+
+      a::after {
+        content: " (" attr(href) ")";
+      }
+    }
+
+    .download-btn {
+      display: block;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .download-btn button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .download-btn button:hover {
+      background: #3e8e41;
     }
   </style>
 </head>
+
 <body>
-  <aside>
-    <img src="assets/avatar.jpeg" alt="Profile" />
-    <div class="site-title">Kshitij Raut</div>
-    <div class="site-subtitle">Cyber Security Analyst</div>
-    <nav>
-      <a href="index.html">🏠 Home</a>
-      <a href="categories.html">📚 Categories</a>
-      <a href="tags.html">🏷️ Tags</a>
-      <a href="archives.html">🗃️ Archives</a>
-      <a href="about.html">ℹ️ About</a>
-    </nav>
+  <div class="resume-container">
+    <div class="download-btn">
+      <button onclick="window.print()">⬇️ Download PDF</button>
+    </div>
+
+    <header>
+      <h1>Kshitij Raut</h1>
+      <h2>Cybersecurity Analyst</h2>
+      <div class="contact">
+        <span><i class="fas fa-envelope"></i> kshitijraut360@gmail.com</span>
+        <span><i class="fab fa-linkedin"></i> /in/kshitijnraut</span>
+        <span><i class="fab fa-x-twitter"></i> @0x0z0n</span>
+        <span><i class="fab fa-youtube"></i> @0x0z0n</span>
+      </div>
+    </header>
+
+    <section class="section">
+      <h3>About Me</h3>
+      <p>I am a <strong>Cybersecurity Analyst</strong> with practical experience in <strong>offensive</strong> and <strong>defensive security</strong>. I specialize in <strong>exploit development</strong>, vulnerability research, and threat analysis. I actively engage in <strong>CTFs</strong>, contribute to <strong>security communities</strong>, and develop tools and strategies to improve cyber defense capabilities.</p>
+    </section>
+
+    <section class="section">
+      <h3>Skills</h3>
+      <ul>
+        <li>Offensive Security (CTFs, Exploit Dev)</li>
+        <li>Defensive Operations (SIEM, Threat Hunting)</li>
+        <li>Tools: Burp Suite, Nmap, Metasploit, Wireshark</li>
+        <li>Languages: Python, Bash, JavaScript</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h3>Experience</h3>
+      <ul>
+        <li><strong>Cybersecurity Analyst</strong> at ABC Corp – 2023–Present</li>
+        <li><strong>Intern – SOC</strong> at XYZ Solutions – 2022–2023</li>
+        <li><strong>Freelance Pentester</strong> – Bug Bounty Hunter on HackerOne & Bugcrowd</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h3>Education</h3>
+      <ul>
+        <li><strong>B.Tech in Information Security</strong> – Institute of Cyber Studies, Pune</li>
+        <li>Additional: THM, HTB, and OffSec certifications in progress</li>
+      </ul>
+    </section>
+
     <div class="social-icons">
       <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank"><i class="fab fa-linkedin"></i></a>
       <a href="mailto:kshitijraut360@gmail.com"><i class="fas fa-envelope"></i></a>
       <a href="https://www.youtube.com/@0x0z0n" target="_blank"><i class="fab fa-youtube"></i></a>
       <a href="https://x.com/0x0z0n" target="_blank"><i class="fab fa-x-twitter"></i></a>
     </div>
-  </aside>
-
-  <main>
-    <h1>About Me</h1>
-    <p>Hello! 👋 I'm a <strong>Cybersecurity Analyst</strong> with hands-on experience in both <strong>offensive</strong> and <strong>defensive security operations</strong>. I actively contribute to <strong>SecOps</strong>, helping organizations identify and mitigate threats before they cause harm.</p>
-
-    <p>My core passion lies in <strong>exploit development</strong> — whether it's researching vulnerabilities, crafting proof-of-concepts, or understanding the intricacies of low-level systems. I regularly apply my knowledge of <strong>networking</strong>, <strong>programming</strong>, and <strong>vulnerability analysis</strong> to solve complex security challenges.</p>
-
-    <p>With a problem-solving mindset, I focus on building resilient security strategies and improving threat detection, response, and prevention. I also share insights and learning through <strong>CTF</strong> competitions and community content.</p>
-  </main>
+  </div>
 </body>
 </html>
