@@ -5,29 +5,31 @@
   <title>0x0z0n Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-p6xY1e7XazgQx5L3MZxF1BoOaWqkn61C1q3+fYO9vbK5gPp+qYuwhu7YyU1lHQAtdfOqMpKvRz2/aq1UVY5TIg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-color: #111;
-      --card-bg: #1e1e1e;
-      --text-color: #318b2a;
-      --accent: #eee;
-      --tag-bg: #007bff;
-      --tag-hover: #0056b3;
+      --bg-color: #0a0a0a;
+      --card-bg: #141414;
+      --text-color: #00ff95;
+      --accent: #00d0ff;
+      --tag-bg: #0f0f0f;
+      --tag-hover: #00ffcc;
+      --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
     }
     body {
       margin: 0;
-      font-family: sans-serif;
+      font-family: 'Orbitron', sans-serif;
       background: var(--bg-color);
       color: var(--text-color);
       display: flex;
     }
     aside {
       width: 250px;
-      background: #1a1a1a;
+      background: #101010;
       padding: 1rem;
       height: 100vh;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      box-shadow: 2px 0 8px #00d0ff44;
       position: sticky;
       top: 0;
     }
@@ -36,28 +38,34 @@
       border-radius: 50%;
       display: block;
       margin: 0 auto;
+      border: 2px solid #00d0ff;
+      box-shadow: var(--border-glow);
     }
     .site-title {
       text-align: center;
       margin: 1rem 0 0.25rem;
-      font-size: 1.2rem;
+      font-size: 1.4rem;
     }
     .site-subtitle {
       text-align: center;
-      color: #aaa;
-      font-size: 0.9rem;
+      color: #888;
+      font-size: 0.85rem;
     }
     nav a {
       display: block;
-      color: white;
+      color: var(--text-color);
       text-decoration: none;
       padding: 0.5rem;
-      border-radius: 5px;
+      border-radius: 6px;
       margin: 0.3rem 0;
-      background: #2a2a2a;
+      background: #151515;
+      border-left: 3px solid transparent;
+      transition: all 0.3s ease;
     }
     nav a:hover {
-      background: var(--accent);
+      background: #1a1a1a;
+      border-left: 3px solid var(--accent);
+      color: var(--accent);
     }
     .social-icons {
       text-align: center;
@@ -65,24 +73,32 @@
     }
     .social-icons a {
       margin: 0 0.5rem;
-      color: white;
-      font-size: 1.2rem;
+      color: #aaa;
+      font-size: 1.3rem;
+      transition: 0.3s;
     }
     .social-icons a:hover {
       color: var(--accent);
+      transform: scale(1.1);
     }
     main {
       flex: 1;
       padding: 2rem;
-      max-width: 900px;
+      max-width: 1000px;
       margin: auto;
     }
     .post-card {
       background: var(--card-bg);
-      padding: 1.2rem;
-      border-left: 4px solid #10a31a;
-      margin-bottom: 1.5rem;
-      border-radius: 6px;
+      padding: 1.5rem;
+      border: 1px solid #00ffcc33;
+      margin-bottom: 2rem;
+      border-radius: 10px;
+      box-shadow: var(--border-glow);
+      transition: 0.3s ease;
+    }
+    .post-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px #00d0ffcc;
     }
     .post-card h2 {
       margin-top: 0;
@@ -96,11 +112,13 @@
       text-align: center;
     }
     .search-box input {
-      padding: 0.5rem;
-      width: 250px;
-      background: #1e1e1e;
-      color: white;
-      border: 1px solid #444;
+      padding: 0.6rem 1rem;
+      width: 260px;
+      background: #0f0f0f;
+      color: #00ffcc;
+      border: 1px solid #00d0ff;
+      border-radius: 6px;
+      box-shadow: var(--border-glow);
     }
     .tag-container {
       display: flex;
@@ -110,26 +128,27 @@
     }
     .tag-link {
       background: var(--tag-bg);
-      padding: 4px 8px;
-      color: white;
-      border-radius: 4px;
+      padding: 5px 10px;
+      color: #00d0ff;
+      border-radius: 6px;
       text-decoration: none;
-      font-size: 0.9rem;
-      display: inline-block;
+      font-size: 0.85rem;
+      border: 1px solid #00d0ff44;
+      transition: 0.2s;
     }
     .tag-link:hover {
       background: var(--tag-hover);
+      color: #000;
     }
     footer {
       text-align: center;
-      color: #888;
+      color: #555;
       font-size: 0.8rem;
       margin-top: 3rem;
     }
   </style>
 </head>
 <body>
-
   <!-- Sidebar -->
   <aside>
     <img src="assets/avatar.jpeg" alt="Profile" />
@@ -253,6 +272,5 @@
 
     searchInput.addEventListener("input", filterPosts);
   </script>
-
 </body>
 </html>
