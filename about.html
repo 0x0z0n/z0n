@@ -116,7 +116,23 @@
       background: #3e8e41;
     }
 
-    /* Print/PDF settings */
+    /* Collapsible */
+    details {
+      background-color: var(--card);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+
+    /* Print Mode */
     @media print {
       body {
         background: #fff;
@@ -127,8 +143,8 @@
       .resume-container {
         background: #fff;
         color: #000;
-        border-radius: 0;
         padding: 1rem;
+        border-radius: 0;
       }
 
       .download-btn {
@@ -194,10 +210,58 @@
       <a href="https://www.youtube.com/@0x0z0n" target="_blank"><i class="fab fa-youtube"></i></a>
       <a href="https://x.com/0x0z0n" target="_blank"><i class="fab fa-x-twitter"></i></a>
     </div>
+
+    <details>
+      <summary>📄 Cover Letter</summary>
+      <section class="section">
+        <p><strong>Date:</strong> <span id="cover-date"></span></p>
+        <p><strong>To:</strong><br>
+          [Hiring Manager's Name]<br>
+          [Company's Name]<br>
+          [Company's Address]<br>
+          [City, State, Zip Code]
+        </p>
+
+        <p>Dear [Hiring Manager's Name],</p>
+
+        <p>
+          I am writing to express my interest in the <strong>[Job Title]</strong> position at <strong>[Company's Name]</strong>, as advertised on <strong>[source]</strong>. As a passionate and technically adept Cybersecurity Analyst with a strong foundation in both offensive and defensive operations, I am eager to contribute to your organization’s mission of securing digital infrastructure and data.
+        </p>
+
+        <p>
+          In my current role at <strong>Tata Consultancy Services (TCS)</strong>, I serve as a Security Analyst, working on real-world SOC environments and vulnerability assessments. I actively engage in threat analysis, alert triaging, incident response, and exploit validation to support proactive security posture improvements.
+        </p>
+
+        <p>
+          Previously, as a Cybersecurity & Digital Forensics Intern at Cyber Secured India, I participated in live project work involving both technical assignments and investigative forensics. This opportunity greatly enhanced my practical knowledge in network traffic analysis, malware behavior, and incident documentation.
+        </p>
+
+        <p>Key strengths I bring include:</p>
+        <ul>
+          <li>Hands-on experience with SOC workflows, VAPT reports, and threat mitigation strategies.</li>
+          <li>Practical exposure to tools like Splunk, Wireshark, Burp Suite, and Nmap.</li>
+          <li>Strong academic foundation and active participation on platforms like TryHackMe and HackTheBox.</li>
+        </ul>
+
+        <p>
+          I am particularly drawn to <strong>[Company's Name]</strong> because of <strong>[specific reason – e.g., its innovation in threat intelligence, zero-trust architecture, or community involvement]</strong>. I believe my proactive mindset and technical competencies align well with your requirements, and I am excited about the opportunity to contribute.
+        </p>
+
+        <p>
+          Thank you for reviewing my application. I would welcome the chance to discuss how my experience and motivation can be a valuable asset to your team. Please feel free to contact me at <strong>+91 9325094085</strong> or via email at <strong>kshitijraut360@gmail.com</strong>.
+        </p>
+
+        <p>Sincerely,<br>
+          <strong>Kshitij Raut</strong><br>
+          Pune, Maharashtra, India<br>
+          <a href="https://www.linkedin.com/in/kshitijnraut" target="_blank">linkedin.com/in/kshitijnraut</a>
+        </p>
+      </section>
+    </details>
   </div>
 
   <script>
-    // Auto-calculate duration at TCS from March 2024 to now
+    // TCS Duration
     function calculateExperienceDuration(startDate) {
       const start = new Date(startDate);
       const now = new Date();
@@ -207,8 +271,11 @@
       let output = `March 2024 – Present (${years > 0 ? years + " yr" + (years > 1 ? "s" : "") : ""}${years > 0 && remMonths > 0 ? " " : ""}${remMonths > 0 ? remMonths + " mo" : ""})`;
       return output;
     }
-
     document.getElementById("tcs-duration").textContent = calculateExperienceDuration("2024-03-01");
+
+    // Cover Letter Date
+    const today = new Date();
+    document.getElementById("cover-date").textContent = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   </script>
 </body>
 </html>
