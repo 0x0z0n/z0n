@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg-color: #0a0a0a;
@@ -102,6 +102,16 @@
     }
     .post-card h2 {
       margin-top: 0;
+    }
+    /* Glowing hover effect for post headings */
+    .post-card h2 a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .post-card h2 a:hover {
+      color: #00ffcc;
+      text-shadow: 0 0 8px #00ffcc, 0 0 15px #00ffccbb;
     }
     .post-card a {
       color: var(--accent);
