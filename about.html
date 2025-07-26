@@ -96,31 +96,6 @@
       color: var(--accent);
     }
 
-    /* PDF/Print Mode */
-    @media print {
-      body {
-        background: #fff;
-        color: #000;
-        padding: 0;
-      }
-
-      .resume-container {
-        background: #fff;
-        color: #000;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 1rem;
-      }
-
-      .social-icons {
-        display: none;
-      }
-
-      a::after {
-        content: " (" attr(href) ")";
-      }
-    }
-
     .download-btn {
       display: block;
       text-align: center;
@@ -140,6 +115,30 @@
     .download-btn button:hover {
       background: #3e8e41;
     }
+
+    /* Print/PDF settings */
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        padding: 0;
+      }
+
+      .resume-container {
+        background: #fff;
+        color: #000;
+        border-radius: 0;
+        padding: 1rem;
+      }
+
+      .download-btn {
+        display: none !important;
+      }
+
+      a::after {
+        content: " (" attr(href) ")";
+      }
+    }
   </style>
 </head>
 
@@ -153,42 +152,39 @@
       <h1>Kshitij Raut</h1>
       <h2>Cybersecurity Analyst</h2>
       <div class="contact">
+        <span><i class="fas fa-phone"></i> +91 9325094085</span>
         <span><i class="fas fa-envelope"></i> kshitijraut360@gmail.com</span>
         <span><i class="fab fa-linkedin"></i> /in/kshitijnraut</span>
-        <span><i class="fab fa-x-twitter"></i> @0x0z0n</span>
-        <span><i class="fab fa-youtube"></i> @0x0z0n</span>
       </div>
     </header>
 
     <section class="section">
-      <h3>About Me</h3>
-      <p>I am a <strong>Cybersecurity Analyst</strong> with practical experience in <strong>offensive</strong> and <strong>defensive security</strong>. I specialize in <strong>exploit development</strong>, vulnerability research, and threat analysis. I actively engage in <strong>CTFs</strong>, contribute to <strong>security communities</strong>, and develop tools and strategies to improve cyber defense capabilities.</p>
+      <h3>Summary</h3>
+      <p>Hello! I’m a <strong>Cybersecurity Analyst</strong> with experience in <strong>SecOps</strong>, <strong>VAPT</strong>, and <strong>Exploit Development</strong>. I actively contribute to both offensive and defensive security operations and enjoy applying my skills in real-world security scenarios including CTFs and bug bounty programs. I'm focused on building resilient cybersecurity strategies to protect digital infrastructures.</p>
     </section>
 
     <section class="section">
       <h3>Skills</h3>
       <ul>
-        <li>Offensive Security (CTFs, Exploit Dev)</li>
-        <li>Defensive Operations (SIEM, Threat Hunting)</li>
-        <li>Tools: Burp Suite, Nmap, Metasploit, Wireshark</li>
-        <li>Languages: Python, Bash, JavaScript</li>
+        <li>Cybersecurity · SOC · VAPT · Digital Forensics</li>
+        <li>Microsoft Azure · Python · Networking · SIEM</li>
+        <li>Languages: English (Full Professional), Hindi, Marathi</li>
       </ul>
     </section>
 
     <section class="section">
       <h3>Experience</h3>
       <ul>
-        <li><strong>Cybersecurity Analyst</strong> at ABC Corp – 2023–Present</li>
-        <li><strong>Intern – SOC</strong> at XYZ Solutions – 2022–2023</li>
-        <li><strong>Freelance Pentester</strong> – Bug Bounty Hunter on HackerOne & Bugcrowd</li>
+        <li><strong>Cybersecurity Analyst (SE)</strong> at Tata Consultancy Services – <span id="tcs-duration"></span></li>
+        <li><strong>Cybersecurity & Digital Forensics Intern</strong> at Cyber Secured India – Dec 2023 – Mar 2024 (4 months)</li>
       </ul>
     </section>
 
     <section class="section">
       <h3>Education</h3>
       <ul>
-        <li><strong>B.Tech in Information Security</strong> – Institute of Cyber Studies, Pune</li>
-        <li>Additional: THM, HTB, and OffSec certifications in progress</li>
+        <li><strong>B.E in Computer Science and Engineering</strong> – India</li>
+        <li>Certifications: TryHackMe, HackTheBox, OffSec (in progress)</li>
       </ul>
     </section>
 
@@ -199,5 +195,20 @@
       <a href="https://x.com/0x0z0n" target="_blank"><i class="fab fa-x-twitter"></i></a>
     </div>
   </div>
+
+  <script>
+    // Auto-calculate duration at TCS from March 2024 to now
+    function calculateExperienceDuration(startDate) {
+      const start = new Date(startDate);
+      const now = new Date();
+      const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+      const years = Math.floor(months / 12);
+      const remMonths = months % 12;
+      let output = `March 2024 – Present (${years > 0 ? years + " yr" + (years > 1 ? "s" : "") : ""}${years > 0 && remMonths > 0 ? " " : ""}${remMonths > 0 ? remMonths + " mo" : ""})`;
+      return output;
+    }
+
+    document.getElementById("tcs-duration").textContent = calculateExperienceDuration("2024-03-01");
+  </script>
 </body>
 </html>
