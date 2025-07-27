@@ -76,27 +76,26 @@
       margin-bottom: 0.8rem;
     }
 
+    .job {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .job-title {
+      font-weight: bold;
+    }
+
+    .job-description {
+      margin-top: 0.5rem;
+    }
+
     ul {
       padding-left: 1.2rem;
     }
 
     li {
       margin-bottom: 0.4rem;
-    }
-
-    .social-icons {
-      text-align: center;
-      margin-top: 1.5rem;
-    }
-
-    .social-icons a {
-      margin: 0 0.5rem;
-      color: var(--text);
-      font-size: 1.2rem;
-    }
-
-    .social-icons a:hover {
-      color: var(--accent);
     }
 
     .download-btn {
@@ -118,48 +117,6 @@
 
     .download-btn button:hover {
       background: #3e8e41;
-    }
-
-    details {
-      background-color: var(--card);
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 2rem;
-    }
-
-    details summary {
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1.05rem;
-      color: var(--accent);
-    }
-
-    @media print {
-      body {
-        background: white;
-        color: black;
-        padding: 0;
-        font-size: 12px;
-      }
-
-      .resume-container {
-        background: white;
-        color: black;
-        padding: 1rem;
-        box-shadow: none;
-        border-radius: 0;
-        max-width: 100%;
-      }
-
-      .download-btn {
-        display: none;
-      }
-
-      a::after {
-        content: " (" attr(href) ")";
-        color: black;
-      }
     }
   </style>
 </head>
@@ -201,18 +158,38 @@
 
     <section class="section">
       <h3>Experience</h3>
-      <ul>
-        <li><strong>Cybersecurity Analyst (SE)</strong> at Tata Consultancy Services – <span id="tcs-duration"></span></li>
-        <li><strong>Cybersecurity & Digital Forensics Intern</strong> at Cyber Secured India – Dec 2023 – Mar 2024 (4 months)</li>
-      </ul>
-    </section>
+      <div class="job">
+        <div class="job-title">Cybersecurity Analyst (SE) – Tata Consultancy Services</div>
+        <div>March 2024 – Present (<span id="tcs-duration"></span>)</div>
+      </div>
+      <div class="job-description">
+        <ul>
+          <li>Investigate triaged security alerts and events using SIEM and XDR tools daily.</li>
+          <li>Conduct in-depth investigations to determine the root cause and impact of incidents.</li>
+          <li>Proactively hunt for hidden threats and research TTPs.</li>
+          <li>Lead containment, eradication, and recovery efforts during incidents and provide detailed recommendations.</li>
+          <li>Conduct vulnerability scans and validate identified vulnerabilities.</li>
+          <li>Perform penetration tests to identify potential security gaps.</li>
+          <li>Develop custom scripts or payloads to test specific attack scenarios.</li>
+          <li>Prepare vulnerability assessment reports with remediation plans.</li>
+          <li>Collaborate with teams to implement corrective actions and ensure compliance with security standards.</li>
+        </ul>
+      </div>
 
-    <section class="section">
-      <h3>Education</h3>
-      <ul>
-        <li><strong>B.E in Computer Science and Engineering</strong> – India</li>
-        <li>Certifications: TryHackMe, HackTheBox, OffSec (in progress)</li>
-      </ul>
+      <div class="job">
+        <div class="job-title">Cybersecurity & Digital Forensics Intern – Cyber Secured India</div>
+        <div>Dec 2023 – Mar 2024 (4 months)</div>
+      </div>
+      <div class="job-description">
+        <p>Internship Responsibilities: During my internship, I had the opportunity to gain practical experience and hands-on exposure in the Cybersecurity and Digital Forensics area.</p>
+        <ul>
+          <li>Weekly 36 hours of training and internship</li>
+          <li>Attended recorded sessions and solved assignments</li>
+          <li>Worked on live projects 4 hours on weekdays, 8 hours on weekends</li>
+          <li>Completed weekly assignments and project tasks</li>
+        </ul>
+        <p><strong>Certificate & Materials:</strong> <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank">Google Drive Link</a></p>
+      </div>
     </section>
 
     <section class="section">
@@ -230,63 +207,6 @@
         <li>TryHackMe (Elite), HackTheBox (Pro Lab), Cuckoo Sandbox</li>
       </ul>
     </section>
-
-    <div class="social-icons">
-      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-      <a href="mailto:kshitijraut360@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
-      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
-      <a href="https://x.com/0x0z0n" target="_blank" title="Twitter/X"><i class="fab fa-x-twitter"></i></a>
-      <a href="https://0x0z0n.github.io/z0n/" target="_blank" title="Portfolio"><i class="fas fa-globe"></i></a>
-    </div>
-
-    <details>
-      <summary> Cover Letter</summary>
-      <section class="section">
-        <p><strong>Date:</strong> <span id="cover-date"></span></p>
-        <p><strong>To:</strong><br />Hiring Manager<br />Recruitment Team</p>
-
-        <p>Dear Hiring Manager,</p>
-
-        <p>
-          I am writing to express my enthusiasm for a cybersecurity opportunity at your
-          organization. With a proactive mindset and a strong technical foundation in both
-          offensive and defensive security, I am eager to contribute to your mission of securing
-          critical systems and data.
-        </p>
-
-        <p>
-          At <strong>Tata Consultancy Services (TCS)</strong>, I work as a Cybersecurity Analyst
-          within a Security Operations Centre environment, focusing on threat detection, incident
-          response, and vulnerability management.
-        </p>
-
-        <p>
-          Previously, I completed an internship at Cyber Secured India, where I applied forensic
-          and investigative techniques in real-world cybersecurity scenarios.
-        </p>
-
-        <p><strong>Highlights of my profile include:</strong></p>
-        <ul>
-          <li>Hands-on experience with SOC operations, security event analysis, and VAPT engagements.</li>
-          <li>Practical use of tools like Wireshark, Sentinel, Nmap, and Burp Suite.</li>
-          <li>Active engagement in continuous learning via TryHackMe, HackTheBox, and cybersecurity communities.</li>
-        </ul>
-
-        <p>
-          I am particularly drawn to environments that emphasize innovation, collaboration, and ethical
-          security practices. I am confident that my skills and enthusiasm align well with your values.
-        </p>
-
-        <p>
-          Thank you for considering my application.<br />
-          <strong>Sincerely,</strong><br />
-          Kshitij Raut<br />
-          Pune, Maharashtra, India<br />
-          Email: <a href="mailto:kshitijraut360@gmail.com">kshitijraut360@gmail.com</a><br />
-          LinkedIn: <a href="https://www.linkedin.com/in/kshitijnraut" target="_blank">linkedin.com/in/kshitijnraut</a>
-        </p>
-      </section>
-    </details>
   </div>
 
   <script>
@@ -296,12 +216,8 @@
       const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
       const years = Math.floor(months / 12);
       const remMonths = months % 12;
-      return `March 2024 – Present (${years ? years + " yr" + (years > 1 ? "s" : "") : ""}${years && remMonths ? " " : ""}${remMonths ? remMonths + " mo" : ""})`;
+      return `${years ? years + " yr" + (years > 1 ? "s" : "") : ""}${years && remMonths ? " " : ""}${remMonths ? remMonths + " mo" : ""}`;
     })();
-
-    document.getElementById("cover-date").textContent = new Date().toLocaleDateString("en-GB", {
-      day: "numeric", month: "long", year: "numeric"
-    });
   </script>
 </body>
 </html>
