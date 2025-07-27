@@ -90,33 +90,22 @@
       margin-top: 0.5rem;
     }
 
+    .edu {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .edu-title {
+      font-weight: bold;
+    }
+
     ul {
       padding-left: 1.2rem;
     }
 
     li {
       margin-bottom: 0.4rem;
-    }
-
-    .download-btn {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 1.5rem;
-    }
-
-    .download-btn button {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .download-btn button:hover {
-      background: #3e8e41;
     }
 
     a {
@@ -127,27 +116,23 @@
 </head>
 <body>
   <div class="resume-container">
-    <div class="download-btn">
-      <button onclick="window.print()">⬇️ Download PDF</button>
-    </div>
-
     <header>
       <h1>Kshitij Raut</h1>
       <h2>Cybersecurity Analyst</h2>
       <div class="contact">
         <span><i class="fas fa-envelope"></i> kshitijraut360@gmail.com</span>
         <span><i class="fab fa-linkedin"></i> /in/kshitijnraut</span>
-        <span><i class="fas fa-globe"></i> <a href="https://0x0z0n.github.io/z0n/" target="_blank" style="color: var(--text); text-decoration: none;">Portfolio</a></span>
+        <span><i class="fas fa-globe"></i> <a href="https://0x0z0n.github.io/z0n/" target="_blank">Portfolio</a></span>
       </div>
     </header>
 
     <section class="section">
       <h3>Summary</h3>
       <p>
-        Hello! I’m a <strong>Cybersecurity Analyst</strong> with experience in <strong>SOC</strong> and
-        <strong>VAPT</strong>. I actively contribute to both
+        Hello! I’m a <strong>Cybersecurity Analyst</strong> with experience in <strong>SecOps</strong>,
+        <strong>VAPT</strong>, and <strong>Exploit Development</strong>. I actively contribute to both
         offensive and defensive security operations and enjoy applying my skills in real-world
-        security scenarios including CTFs. I'm focused on building resilient
+        security scenarios including CTFs and bug bounty programs. I'm focused on building resilient
         cybersecurity strategies to protect digital infrastructures.
       </p>
     </section>
@@ -157,6 +142,7 @@
       <ul>
         <li>Cybersecurity · SOC · VAPT · Digital Forensics</li>
         <li>Microsoft Azure · Python · Networking · SIEM</li>
+        <li>Languages: English (Full Professional), Hindi, Marathi</li>
       </ul>
     </section>
 
@@ -166,7 +152,7 @@
         <div class="job-title">Cybersecurity Analyst (SE) – Tata Consultancy Services</div>
         <div>March 2024 – Present (<span id="tcs-duration"></span>)</div>
       </div>
-      <div class="job-description" style="margin-bottom: 2rem;">
+      <div class="job-description">
         <ul>
           <li>Investigate triaged security alerts and events using SIEM and XDR tools daily.</li>
           <li>Conduct in-depth investigations to determine the root cause and impact of incidents.</li>
@@ -192,39 +178,68 @@
           <li>Worked on live projects 4 hours on weekdays, 8 hours on weekends</li>
           <li>Completed weekly assignments and project tasks</li>
         </ul>
-        <p><strong>Certificate & Materials:</strong> <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank" style="color: var(--text); text-decoration: underline;">Google Drive Link</a></p>
+        <p><strong>Certificate & Materials:</strong> <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank">Google Drive Link</a></p>
       </div>
     </section>
 
     <section class="section">
       <h3>Education</h3>
-      <p><strong>Bachelor of Computer Science (Computer Science and Engineering)</strong></p>
+      <div class="edu">
+        <div class="edu-title">Bachelor of Computer Science (Computer Science and Engineering)</div>
+        <div>2013 – 2023</div>
+      </div>
       <p>Sant Gadge Baba University</p>
-      <p>2013 - 2023</p>
       <p>CGPA: 9.16</p>
     </section>
 
+    <details>
+      <summary> Cover Letter</summary>
+      <section class="section">
+        <p><strong>Date:</strong> <span id="cover-date"></span></p>
+        <p><strong>To:</strong><br />Hiring Manager<br />Recruitment Team</p>
 
-    <section class="section">
-      <h3>Projects</h3>
-      <ul>
-        <li><strong>CTF Platform Automation</strong> – Automated report generation from HTB/THM labs.</li>
-        <li><strong>SIEM Use Case Builder</strong> – Developed Azure Sentinel rules for detection</li>
-      </ul>
-    </section>
+        <p>Dear Hiring Manager,</p>
 
-    <section class="section">
-      <h3>Tools & Platforms</h3>
-      <ul>
-        <li>Burp Suite · Wireshark · Nmap · Git · Azure Sentinel</li>
-        <li><strong>HackTheBox Profile:</strong> https://app.hackthebox.com/profile/1761906</li>
-        <li><strong>TryHackMe Profile:</strong> https://tryhackme.com/p/0xz0n</li>
-      </ul>
-    </section>
-  </div>
+        <p>
+          I am writing to express my enthusiasm for a cybersecurity opportunity at your
+          organization. With a proactive mindset and a strong technical foundation in both
+          offensive and defensive security, I am eager to contribute to your mission of securing
+          critical systems and data.
+        </p>
 
-  <details>
-    <summary> Cover Letter</summary>
+        <p>
+          At <strong>Tata Consultancy Services (TCS)</strong>, I work I have successfully managed client relationships and ensured the delivery of top-tier cybersecurity services. My responsibilities include identifying and managing IT security services, analysing security risks, and providing comprehensive security reports. These experiences have honed my ability to build trust with clients and deliver actionable insights that enhance their security posture.
+        </p>
+
+        <p>
+          Previously, I completed an internship at Cyber Secured India, where I applied forensic
+          and investigative techniques in Platform based CTF Scenarios.
+        </p>
+
+        <p><strong>Highlights of my profile include:</strong></p>
+        <ul>
+          <li>Hands-on experience with SOC operations, security event analysis, and VAPT engagements.</li>
+          <li>Proven value in VAPT: Discovered critical vulnerabilities and presented actionable remediation steps.</li>
+          <li>Practical use of tools like Wireshark, Sentinel, Nmap, and Burp Suite.</li>
+          <li>Active engagement in continuous learning via TryHackMe, HackTheBox, and cybersecurity communities.</li>
+        </ul>
+
+        <p>
+          I am particularly drawn to environments that emphasize innovation, collaboration, and ethical
+          security practices. I am confident that my skills and enthusiasm align well with your values.
+        </p>
+
+        <p>
+          Thank you for considering my application.<br /><br />
+          <strong>Sincerely,</strong><br />
+          Kshitij Raut<br />
+          Pune, Maharashtra, India<br />
+          Email: <a href="mailto:kshitijraut360@gmail.com" style="color: var(--text); text-decoration: underline;">kshitijraut360@gmail.com</a><br />
+          LinkedIn: <a href="https://www.linkedin.com/in/kshitijnraut" target="_blank" style="color: var(--text); text-decoration: underline;">linkedin.com/in/kshitijnraut</a>
+        </p>
+      </section>
+
+      <summary> Cover Letter</summary>
     <section class="section">
       <p><strong>Date:</strong> <span id="cover-date"></span></p>
       <p><strong>To:</strong><br />Hiring Manager<br />Recruitment Team</p>
@@ -269,6 +284,9 @@
       </p>
     </section>
   </details>
+
+
+  </div>
 
   <script>
     document.getElementById("tcs-duration").textContent = (() => {
