@@ -12,74 +12,89 @@
   <style>
     :root {
       --accent: #4caf50;
-      --text: #e0e0e0;
-      --bg: #0d0d0d;
-      --card: #1a1a1a;
-      --muted: #aaa;
-      --font-size: 14px;
+      --text: #111; /* Dark text for print */
+      --bg: #fff;   /* White background for print */
+      --card: #fff;
+      --muted: #555;
+      --font-size: 12pt;
     }
 
     body {
       font-family: 'Fira Code', monospace;
       background: var(--bg);
       color: var(--text);
-      margin: 0;
-      padding: 2rem;
+      margin: 1in;
+      padding: 0;
       font-size: var(--font-size);
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     .resume-container {
-      max-width: 1000px;
+      max-width: 800px;
       margin: auto;
       background: var(--card);
-      padding: 2.5rem;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
     }
 
     header {
       text-align: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 1rem;
     }
 
     header h1 {
-      font-size: 2.3rem;
+      font-size: 24pt;
       color: var(--accent);
       margin: 0;
+      font-weight: bold;
     }
 
     header h2 {
-      font-size: 1rem;
+      font-size: 12pt;
       color: var(--muted);
-      margin: 0.3rem 0;
+      margin: 0.2rem 0 0 0;
+      font-weight: normal;
+      font-style: normal;
     }
 
     .contact {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 1.2rem;
-      font-size: 0.85rem;
-      margin-top: 0.6rem;
+      gap: 1rem;
+      font-size: 10pt;
+      margin-top: 0.4rem;
+      color: var(--muted);
+    }
+
+    .contact a {
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: none;
+      cursor: default;
     }
 
     .section {
-      margin-bottom: 1.7rem;
+      margin-bottom: 1rem;
     }
 
     .section h3 {
       color: var(--accent);
-      font-size: 1.15rem;
+      font-size: 14pt;
       border-bottom: 1px solid var(--accent);
-      padding-bottom: 0.3rem;
-      margin-bottom: 0.8rem;
+      padding-bottom: 0.15rem;
+      margin-bottom: 0.6rem;
+      font-weight: bold;
     }
 
     .job {
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
+      margin-bottom: 0.2rem;
+      font-size: 11pt;
+      font-weight: bold;
     }
 
     .job-title {
@@ -87,44 +102,61 @@
     }
 
     .job-description {
-      margin-top: 0.5rem;
+      margin-top: 0.3rem;
+      margin-bottom: 0.8rem;
+      font-weight: normal;
+      font-size: 11pt;
+      color: var(--text);
     }
 
     ul {
       padding-left: 1.2rem;
+      margin-top: 0;
+      margin-bottom: 0.6rem;
+      font-size: 11pt;
     }
 
     li {
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.3rem;
     }
 
+    a {
+      color: inherit;
+      text-decoration: underline;
+      cursor: default;
+      font-weight: normal;
+    }
+
+    /* Hide download button completely */
     .download-btn {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 1.5rem;
+      display: none;
     }
 
-    .download-btn button {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 0.5rem 1rem;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .download-btn button:hover {
-      background: #3e8e41;
+    /* Print-specific styling */
+    @media print {
+      body {
+        margin: 1in;
+        -webkit-print-color-adjust: exact; /* Ensure colors print */
+      }
+      a[href]:after {
+        content: ""; /* Hide URL after links in print */
+      }
+      /* Avoid page breaks inside jobs */
+      .job-description, .job {
+        page-break-inside: avoid;
+      }
+      details {
+        display: block; /* Show cover letter expanded in print */
+      }
+      summary {
+        display: none; /* Hide summary toggle text */
+      }
     }
   </style>
 </head>
 <body>
   <div class="resume-container">
-    <div class="download-btn">
-      <button onclick="window.print()">⬇️ Download PDF</button>
-    </div>
+    <!-- Removed Download PDF button -->
 
     <header>
       <h1>Kshitij Raut</h1>
@@ -132,7 +164,7 @@
       <div class="contact">
         <span><i class="fas fa-envelope"></i> kshitijraut360@gmail.com</span>
         <span><i class="fab fa-linkedin"></i> /in/kshitijnraut</span>
-        <span><i class="fas fa-globe"></i> <a href="https://0x0z0n.github.io/z0n/" target="_blank" style="color: var(--text); text-decoration: none;">Portfolio</a></span>
+        <span><i class="fas fa-globe"></i> Portfolio: 0x0z0n.github.io/z0n</span>
       </div>
     </header>
 
@@ -162,7 +194,7 @@
         <div class="job-title">Cybersecurity Analyst (SE) – Tata Consultancy Services</div>
         <div>March 2024 – Present (<span id="tcs-duration"></span>)</div>
       </div>
-      <div class="job-description" style="margin-bottom: 2rem;">
+      <div class="job-description" style="margin-bottom: 1.5rem;">
         <ul>
           <li>Investigate triaged security alerts and events using SIEM and XDR tools daily.</li>
           <li>Conduct in-depth investigations to determine the root cause and impact of incidents.</li>
@@ -188,7 +220,7 @@
           <li>Worked on live projects 4 hours on weekdays, 8 hours on weekends</li>
           <li>Completed weekly assignments and project tasks</li>
         </ul>
-        <p><strong>Certificate & Materials:</strong> <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank">Google Drive Link</a></p>
+        <p><strong>Certificate & Materials:</strong> Google Drive Link</p>
       </div>
     </section>
 
@@ -197,20 +229,8 @@
       <ul>
         <li><strong>CTF Platform Automation</strong> – Automated report generation from HTB/THM labs using Python + Markdown.</li>
         <li><strong>SIEM Use Case Builder</strong> – Developed Azure Sentinel rules for detection of lateral movement & privilege escalation.</li>
-        <li>
-          <strong>HackTheBox Profile:</strong>
-          <a href="https://app.hackthebox.com/profile/1761906" target="_blank" style="color: var(--accent); text-decoration: none;">
-            https://app.hackthebox.com/profile/1761906
-          </a>
-          <span id="htb-rank" style="margin-left: 0.5rem; color: var(--muted);">(Rank info unavailable)</span>
-        </li>
-        <li>
-          <strong>TryHackMe Profile:</strong>
-          <a href="https://tryhackme.com/p/0xz0n" target="_blank" style="color: var(--accent); text-decoration: none;">
-            https://tryhackme.com/p/0xz0n
-          </a>
-          <span id="thm-rank" style="margin-left: 0.5rem; color: var(--muted);">Loading rank...</span>
-        </li>
+        <li><strong>HackTheBox Profile:</strong> https://app.hackthebox.com/profile/1761906</li>
+        <li><strong>TryHackMe Profile:</strong> https://tryhackme.com/p/0xz0n</li>
       </ul>
     </section>
 
@@ -223,8 +243,8 @@
     </section>
   </div>
 
-  <details>
-    <summary> Cover Letter</summary>
+  <details open>
+    <summary style="display:none;">Cover Letter</summary>
     <section class="section">
       <p><strong>Date:</strong> <span id="cover-date"></span></p>
       <p><strong>To:</strong><br />Hiring Manager<br />Recruitment Team</p>
@@ -266,8 +286,8 @@
         <strong>Sincerely,</strong><br />
         Kshitij Raut<br />
         Pune, Maharashtra, India<br />
-        Email: <a href="mailto:kshitijraut360@gmail.com">kshitijraut360@gmail.com</a><br />
-        LinkedIn: <a href="https://www.linkedin.com/in/kshitijnraut" target="_blank">linkedin.com/in/kshitijnraut</a>
+        Email: kshitijraut360@gmail.com<br />
+        LinkedIn: linkedin.com/in/kshitijnraut
       </p>
     </section>
   </details>
@@ -281,21 +301,6 @@
       const remMonths = months % 12;
       return `${years ? years + " yr" + (years > 1 ? "s" : "") : ""}${years && remMonths ? " " : ""}${remMonths ? remMonths + " mo" : ""}`;
     })();
-
-    async function fetchTHMRank() {
-      try {
-        const response = await fetch('https://tryhackme.com/api/profile/0xz0n');
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
-        const rank = data.data?.stats?.rank || 'N/A';
-        document.getElementById('thm-rank').textContent = `(Rank: #${rank})`;
-      } catch (err) {
-        document.getElementById('thm-rank').textContent = '(Rank info not available)';
-        console.error('Error fetching THM rank:', err);
-      }
-    }
-
-    fetchTHMRank();
 
     document.getElementById("cover-date").textContent = new Date().toLocaleDateString("en-GB", {
       day: "numeric", month: "long", year: "numeric"
