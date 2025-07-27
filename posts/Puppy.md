@@ -268,20 +268,23 @@ This completes the penetration test, gaining full control of the domain.
 
 #### 🏁 Summary of Attack Chain
 ```
-Step	User / Access	Technique Used	Result
-1	levi.james	Nmap, rpcclient, smbmap, BloodHound	Identified open ports, enumerated users, found inaccessible DEV share
-2	levi.james	bloodyAD (Group Membership)	Added levi.james to DEVELOPERS group, gained access to DEV share
-3	levi.james	SMB, KeePass Brute-Force	Downloaded recovery.kdbx, cracked password (liverpool)
-4	(Local)	KeePass Extraction	Obtained various user passwords (e.g., HJKL2025!, Antman2025!)
-5	(Multiple Users)	Netexec (Password Spray)	Identified ant.edwards/Antman2025! as valid credentials
-6	ant.edwards	BloodHound (ACL Analysis)	Found ant.edwards had Full Control over adam.silver user object
-7	ant.edwards	bloodyAD (Password Reset)	Reset adam.silver's password, but account was disabled
-8	ant.edwards	ldapsearch, ldapmodify	Enabled adam.silver's account
-9	adam.silver	Evil-WinRM, SMB	Connected via WinRM, downloaded site-backup-2024-12-30.zip
-10	(Local)	File Analysis	Discovered steph.cooper/ChefSteph2025! in backup file
-11	steph.cooper	Evil-WinRM, impacket-smbserver, impacket-dpapi	Extracted steph.cooper's DPAPI master key and steph.cooper_adm credentials (FivethChipOnItsWay2025!)
-12	steph.cooper_adm	impacket-secretsdump (DCSync)	Dumped NTLM hashes for all domain accounts, including Administrator
-13	Administrator	Evil-WinRM (Pass-the-Hash)	Gained Administrator shell, retrieved root.txt
+
+| Step | User / Access        | Technique Used                                                                 | Result                                                                                     |
+|------|----------------------|----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| 1    | levi.james           | Nmap, rpcclient, smbmap, BloodHound                                             | Identified open ports, enumerated users, found inaccessible DEV share                     |
+| 2    | levi.james           | bloodyAD (Group Membership)                                                     | Added levi.james to DEVELOPERS group, gained access to DEV share                          |
+| 3    | levi.james           | SMB, KeePass Brute-Force                                                         | Downloaded `recovery.kdbx`, cracked password (`liverpool`)                                |
+| 4    | (Local)              | KeePass Extraction                                                               | Obtained various user passwords (e.g., `HJKL2025!`, `Antman2025!`)                        |
+| 5    | (Multiple Users)     | Netexec (Password Spray)                                                         | Identified `ant.edwards` / `Antman2025!` as valid credentials                             |
+| 6    | ant.edwards          | BloodHound (ACL Analysis)                                                       | Found `ant.edwards` had Full Control over `adam.silver` user object                       |
+| 7    | ant.edwards          | bloodyAD (Password Reset)                                                       | Reset `adam.silver`'s password, but account was disabled                                  |
+| 8    | ant.edwards          | ldapsearch, ldapmodify                                                           | Enabled `adam.silver`'s account                                                           |
+| 9    | adam.silver          | Evil-WinRM, SMB                                                                  | Connected via WinRM, downloaded `site-backup-2024-12-30.zip`                              |
+| 10   | (Local)              | File Analysis                                                                    | Discovered `steph.cooper` / `ChefSteph2025!` in backup file                               |
+| 11   | steph.cooper         | Evil-WinRM, impacket-smbserver, impacket-dpapi                                  | Extracted DPAPI master key and `steph.cooper_adm` credentials (`FivethChipOnItsWay2025!`) |
+| 12   | steph.cooper_adm     | impacket-secretsdump (DCSync)                                                   | Dumped NTLM hashes for all domain accounts, including `Administrator`                     |
+| 13   | Administrator        | Evil-WinRM (Pass-the-Hash)                                                      | Gained Administrator shell, retrieved `root.txt`                                          |
+
 ```
 
 **Pwned! Puppy**
