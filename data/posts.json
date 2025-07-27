@@ -1,5 +1,32 @@
 [
   {
+    "title": "HackTheBox: Puppy",
+    "href": "posts/htb_Puppy.html",
+    "date": "2025-07-27",
+    "category": ["HackTheBox", "Windows", "Active Directory"],
+    "tags": 
+    [
+  "Nmap",
+  "RPC",
+  "SMBMAP",
+  "Bloodhound",
+  "Keepass Brute",
+  "Netexec",
+  "Password Reset",
+  "Enable Account",
+  "Privilege Escalation",
+  "#ACLAbuse",
+  "#GroupMembership",
+  "#AccountManipulation",
+  "#UserAccountControl",
+  "#PasswordReset",
+  "#DPAPI",
+  "#MasterKey",
+  "#CredentialDecryption",
+  "#DCSync",
+  "#SecretsDump"]
+  },
+  {
     "title": "TryHackMe: Advent of Cyber 2024",
     "href": "posts/thm_adventofcyber2024.html",
     "date": "2025-07-20",
