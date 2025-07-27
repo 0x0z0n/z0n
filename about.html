@@ -12,89 +12,74 @@
   <style>
     :root {
       --accent: #4caf50;
-      --text: #111; /* Dark text for print */
-      --bg: #fff;   /* White background for print */
-      --card: #fff;
-      --muted: #555;
-      --font-size: 12pt;
+      --text: #e0e0e0;
+      --bg: #0d0d0d;
+      --card: #1a1a1a;
+      --muted: #aaa;
+      --font-size: 14px;
     }
 
     body {
       font-family: 'Fira Code', monospace;
       background: var(--bg);
       color: var(--text);
-      margin: 1in;
-      padding: 0;
+      margin: 0;
+      padding: 2rem;
       font-size: var(--font-size);
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
     .resume-container {
-      max-width: 800px;
+      max-width: 1000px;
       margin: auto;
       background: var(--card);
-      padding: 0;
-      border-radius: 0;
-      box-shadow: none;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
     }
 
     header {
       text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 2.5rem;
     }
 
     header h1 {
-      font-size: 24pt;
+      font-size: 2.3rem;
       color: var(--accent);
       margin: 0;
-      font-weight: bold;
     }
 
     header h2 {
-      font-size: 12pt;
+      font-size: 1rem;
       color: var(--muted);
-      margin: 0.2rem 0 0 0;
-      font-weight: normal;
-      font-style: normal;
+      margin: 0.3rem 0;
     }
 
     .contact {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 1rem;
-      font-size: 10pt;
-      margin-top: 0.4rem;
-      color: var(--muted);
-    }
-
-    .contact a {
-      color: var(--text);
-      text-decoration: none;
-      border-bottom: none;
-      cursor: default;
+      gap: 1.2rem;
+      font-size: 0.85rem;
+      margin-top: 0.6rem;
     }
 
     .section {
-      margin-bottom: 1rem;
+      margin-bottom: 1.7rem;
     }
 
     .section h3 {
       color: var(--accent);
-      font-size: 14pt;
+      font-size: 1.15rem;
       border-bottom: 1px solid var(--accent);
-      padding-bottom: 0.15rem;
-      margin-bottom: 0.6rem;
-      font-weight: bold;
+      padding-bottom: 0.3rem;
+      margin-bottom: 0.8rem;
     }
 
     .job {
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
-      margin-bottom: 0.2rem;
-      font-size: 11pt;
-      font-weight: bold;
     }
 
     .job-title {
@@ -102,61 +87,49 @@
     }
 
     .job-description {
-      margin-top: 0.3rem;
-      margin-bottom: 0.8rem;
-      font-weight: normal;
-      font-size: 11pt;
-      color: var(--text);
+      margin-top: 0.5rem;
     }
 
     ul {
       padding-left: 1.2rem;
-      margin-top: 0;
-      margin-bottom: 0.6rem;
-      font-size: 11pt;
     }
 
     li {
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .download-btn {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1.5rem;
+    }
+
+    .download-btn button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .download-btn button:hover {
+      background: #3e8e41;
     }
 
     a {
-      color: inherit;
-      text-decoration: underline;
-      cursor: default;
-      font-weight: normal;
-    }
-
-    /* Hide download button completely */
-    .download-btn {
-      display: none;
-    }
-
-    /* Print-specific styling */
-    @media print {
-      body {
-        margin: 1in;
-        -webkit-print-color-adjust: exact; /* Ensure colors print */
-      }
-      a[href]:after {
-        content: ""; /* Hide URL after links in print */
-      }
-      /* Avoid page breaks inside jobs */
-      .job-description, .job {
-        page-break-inside: avoid;
-      }
-      details {
-        display: block; /* Show cover letter expanded in print */
-      }
-      summary {
-        display: none; /* Hide summary toggle text */
-      }
+      color: var(--text);
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
   <div class="resume-container">
-    <!-- Removed Download PDF button -->
+    <div class="download-btn">
+      <button onclick="window.print()">⬇️ Download PDF</button>
+    </div>
 
     <header>
       <h1>Kshitij Raut</h1>
@@ -164,7 +137,7 @@
       <div class="contact">
         <span><i class="fas fa-envelope"></i> kshitijraut360@gmail.com</span>
         <span><i class="fab fa-linkedin"></i> /in/kshitijnraut</span>
-        <span><i class="fas fa-globe"></i> Portfolio: 0x0z0n.github.io/z0n</span>
+        <span><i class="fas fa-globe"></i> <a href="https://0x0z0n.github.io/z0n/" target="_blank" style="color: var(--text); text-decoration: none;">Portfolio</a></span>
       </div>
     </header>
 
@@ -194,7 +167,7 @@
         <div class="job-title">Cybersecurity Analyst (SE) – Tata Consultancy Services</div>
         <div>March 2024 – Present (<span id="tcs-duration"></span>)</div>
       </div>
-      <div class="job-description" style="margin-bottom: 1.5rem;">
+      <div class="job-description" style="margin-bottom: 2rem;">
         <ul>
           <li>Investigate triaged security alerts and events using SIEM and XDR tools daily.</li>
           <li>Conduct in-depth investigations to determine the root cause and impact of incidents.</li>
@@ -220,7 +193,7 @@
           <li>Worked on live projects 4 hours on weekdays, 8 hours on weekends</li>
           <li>Completed weekly assignments and project tasks</li>
         </ul>
-        <p><strong>Certificate & Materials:</strong> Google Drive Link</p>
+        <p><strong>Certificate & Materials:</strong> <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank" style="color: var(--text); text-decoration: underline;">Google Drive Link</a></p>
       </div>
     </section>
 
@@ -243,8 +216,8 @@
     </section>
   </div>
 
-  <details open>
-    <summary style="display:none;">Cover Letter</summary>
+  <details>
+    <summary> Cover Letter</summary>
     <section class="section">
       <p><strong>Date:</strong> <span id="cover-date"></span></p>
       <p><strong>To:</strong><br />Hiring Manager<br />Recruitment Team</p>
@@ -286,8 +259,8 @@
         <strong>Sincerely,</strong><br />
         Kshitij Raut<br />
         Pune, Maharashtra, India<br />
-        Email: kshitijraut360@gmail.com<br />
-        LinkedIn: linkedin.com/in/kshitijnraut
+        Email: <a href="mailto:kshitijraut360@gmail.com" style="color: var(--text); text-decoration: underline;">kshitijraut360@gmail.com</a><br />
+        LinkedIn: <a href="https://www.linkedin.com/in/kshitijnraut" target="_blank" style="color: var(--text); text-decoration: underline;">linkedin.com/in/kshitijnraut</a>
       </p>
     </section>
   </details>
