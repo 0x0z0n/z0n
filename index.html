@@ -275,7 +275,7 @@
         return;
       }
 
-      posts.forEach(post => {
+      posts.forEach((post, index) => {
         const article = document.createElement("article");
         article.className = "post-card";
         article.setAttribute("data-tags", post.tags.join(", "));
@@ -284,7 +284,7 @@
 
         article.innerHTML = `
           <h2><a href="${post.href}">${post.title}</a></h2>
-          <i class="fas fa-network-wired graph-icon" title="Show Attack Graph" onclick='showGraph(${JSON.stringify(post.attackPath || [])})'></i>
+          <i class="fas fa-network-wired graph-icon" title="Show Attack Graph" data-post-index="${index}"></i>
           <p><strong>Category:</strong> ${categories || "Uncategorized"}</p>
           <p><strong>Date:</strong> ${post.date}</p>
           <p><strong>Tags:</strong></p>
@@ -296,6 +296,16 @@
         `;
 
         postsContainer.appendChild(article);
+      });
+
+      // Add click listeners to graph icons after rendering
+      document.querySelectorAll(".graph-icon").forEach(icon => {
+        icon.addEventListener("click", (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute("data-post-index"), 10);
+          if (!isNaN(idx) && allPosts[idx]) {
+            showGraph(allPosts[idx].attackPath || []);
+          }
+        });
       });
     }
 
