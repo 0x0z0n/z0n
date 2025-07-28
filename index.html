@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- Cytoscape & Dagre -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.27.0/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-dagre@2.3.2/cytoscape-dagre.min.js"></script>
+
   <style>
     :root {
       --bg-color: #0a0a0a;
@@ -86,6 +92,7 @@
       padding: 2rem;
       max-width: 1000px;
       margin: auto;
+      position: relative;
     }
     .post-card {
       background: var(--card-bg);
@@ -95,6 +102,7 @@
       border-radius: 10px;
       box-shadow: var(--border-glow);
       transition: 0.3s ease;
+      position: relative;
     }
     .post-card:hover {
       transform: translateY(-5px);
@@ -102,6 +110,7 @@
     }
     .post-card h2 {
       margin-top: 0;
+      display: inline-block;
     }
     /* Glowing hover effect for post headings */
     .post-card h2 a {
@@ -156,6 +165,58 @@
       font-size: 0.8rem;
       margin-top: 3rem;
     }
+    /* Graph icon on post */
+    .graph-icon {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 1.3rem;
+      transition: 0.3s;
+    }
+    .graph-icon:hover {
+      color: #00ffcc;
+      transform: scale(1.15);
+    }
+    /* Modal styling */
+    .graph-modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    .graph-modal.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .graph-container {
+      width: 90%;
+      height: 80vh;
+      background: #111;
+      border-radius: 10px;
+      padding: 1rem;
+      position: relative;
+      box-shadow: 0 0 20px var(--accent);
+    }
+    .graph-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      color: #00ffcc;
+      cursor: pointer;
+      font-size: 1.5rem;
+      font-weight: bold;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -192,8 +253,17 @@
     </footer>
   </main>
 
-  <!-- JavaScript -->
+  <!-- Graph Modal -->
+  <div id="graphModal" class="graph-modal">
+    <div class="graph-container">
+      <span class="graph-close" onclick="toggleGraphModal(false)">&times;</span>
+      <div id="cy" style="width: 100%; height: 100%;"></div>
+    </div>
+  </div>
+
   <script>
+    cytoscape.use(window.cytoscapeDagre); // Register dagre layout
+
     const searchInput = document.getElementById("searchInput");
     const postsContainer = document.getElementById("posts");
     let allPosts = [];
@@ -214,6 +284,7 @@
 
         article.innerHTML = `
           <h2><a href="${post.href}">${post.title}</a></h2>
+          <i class="fas fa-network-wired graph-icon" title="Show Attack Graph" onclick='showGraph(${JSON.stringify(post.attackPath || [])})'></i>
           <p><strong>Category:</strong> ${categories || "Uncategorized"}</p>
           <p><strong>Date:</strong> ${post.date}</p>
           <p><strong>Tags:</strong></p>
@@ -281,6 +352,76 @@
       });
 
     searchInput.addEventListener("input", filterPosts);
+
+    function toggleGraphModal(show) {
+      const modal = document.getElementById("graphModal");
+      if (show) modal.classList.add("active");
+      else modal.classList.remove("active");
+    }
+
+    function showGraph(attackSteps) {
+      toggleGraphModal(true);
+
+      // Clear previous graph if any
+      const container = document.getElementById('cy');
+      container.innerHTML = '';
+
+      if (!attackSteps.length) {
+        container.innerHTML = '<p style="color:#00ffcc; text-align:center; margin-top:20px;">No attack path available.</p>';
+        return;
+      }
+
+      const elements = attackSteps.map((step, i) => {
+        const nodeId = `step${i + 1}`;
+        return {
+          data: {
+            id: nodeId,
+            label: `${i + 1}. ${step.user || "(N/A)"}\n${step.technique || "(No technique)"}`,
+          }
+        };
+      });
+
+      const edges = attackSteps.map((_, i) => {
+        if (i === 0) return null;
+        return { data: { source: `step${i}`, target: `step${i + 1}` } };
+      }).filter(Boolean);
+
+      const cyInstance = cytoscape({
+        container: container,
+        elements: [...elements, ...edges],
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'background-color': 'var(--accent)',
+              'label': 'data(label)',
+              'color': '#000',
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'font-size': '11px',
+              'width': 'label',
+              'padding': '10px',
+              'shape': 'roundrectangle',
+              'text-wrap': 'wrap',
+              'font-weight': '600',
+              'text-outline-width': 1,
+              'text-outline-color': '#004455'
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 2,
+              'line-color': '#00ffcc',
+              'target-arrow-color': '#00ffcc',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier'
+            }
+          }
+        ],
+        layout: { name: 'dagre' }
+      });
+    }
   </script>
 </body>
 </html>
