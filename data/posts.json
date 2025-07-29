@@ -4175,62 +4175,60 @@
       ]
    },
    {
-  "title": "HackTheBox: Valentine",
-  "href": "posts/htb_Valentine.html",
-  "date": "2025-06-18",
-  "category": [
-    "HackTheBox",
-    "Linux"
-  ],
-  "tags": [
-    "easy",
-    "heartbleed",
-    "dirtycow",
-    "oscp-like-v2",
-    "oscp-like-v1",
-    "Heartbleed",
-    "Memory Dump",
-    "Password Reuse",
-    "Hard",
-    "PrivEsc"
-  ],
-  "attack_path": [
-    {
-  "step": 1,
-  "user": null,
-  "technique": "Initial Enumeration",
-  "result": "Open ports 22 (SSH - OpenSSH 5.9p1), 80 (HTTP - Apache 2.2.22), and 443 (HTTPS/SSL) on Ubuntu. Discovered directories /dev, /encode, /decode, /omg with directory listing enabled for /dev. Vulnerabilities found: CVE-2014-0160 (Heartbleed), CVE-2014-0224 (CCS Injection), CVE-2014-3566 (POODLE).",
-  "mitigation": []
-}
-,
-    {
-      "Step 2": "Foothold",
-      "user": null,
-      "technique": "Heartbleed Exploitation (CVE-2014-0160) and SSH Private Key Recovery",
-      "description": "Used Heartbleed exploit to dump server memory; extracted base64 string 'heartbleedbelievethehype'; found hex-encoded SSH private key in /dev directory; decoded key and used extracted string as passphrase",
-      "result": "SSH access as user 'hype' using recovered private key and passphrase",
-      "mitigation": [
-        "Patch OpenSSL to non-vulnerable versions",
-        "Revoke and reissue SSL/TLS certificates after compromise",
-        "Reset user passwords and SSH keys",
-        "Avoid placing sensitive files in web-accessible directories"
+      "title": "HackTheBox: Valentine",
+      "href": "posts/htb_Valentine.html",
+      "date": "2025-06-18",
+      "category": [
+         "HackTheBox",
+         "Linux"
+      ],
+      "tags": [
+         "easy",
+         "heartbleed",
+         "dirtycow",
+         "oscp-like-v2",
+         "oscp-like-v1",
+         "Heartbleed",
+         "Memory Dump",
+         "Password Reuse",
+         "Hard",
+         "PrivEsc"
+      ],
+      "attack_path": [
+         {
+            "step": 1,
+            "user": null,
+            "technique": "Initial Enumeration",
+            "result": "Open ports 22 (SSH - OpenSSH 5.9p1), 80 (HTTP - Apache 2.2.22), and 443 (HTTPS/SSL) on Ubuntu. Discovered directories /dev, /encode, /decode, /omg with directory listing enabled for /dev. Vulnerabilities found: CVE-2014-0160 (Heartbleed), CVE-2014-0224 (CCS Injection), CVE-2014-3566 (POODLE).",
+            "mitigation": []
+         },
+         {
+            "Step 2": "Foothold",
+            "user": null,
+            "technique": "Heartbleed Exploitation (CVE-2014-0160) and SSH Private Key Recovery",
+            "description": "Used Heartbleed exploit to dump server memory; extracted base64 string 'heartbleedbelievethehype'; found hex-encoded SSH private key in /dev directory; decoded key and used extracted string as passphrase",
+            "result": "SSH access as user 'hype' using recovered private key and passphrase",
+            "mitigation": [
+               "Patch OpenSSL to non-vulnerable versions",
+               "Revoke and reissue SSL/TLS certificates after compromise",
+               "Reset user passwords and SSH keys",
+               "Avoid placing sensitive files in web-accessible directories"
+            ]
+         },
+         {
+            "Step 3": "Root",
+            "user": "hype",
+            "technique": "Privilege Escalation via Tmux Session Hijacking and Dirty Cow Kernel Exploit, method_1 : technique : Tmux session hijacking, description: Attached to root-owned tmux session via accessible socket /.devs/dev_sess granting root shell, result : Root shell obtained via tmux, method_2: technique : Dirty Cow kernel exploit (CVE-2016-5195),description : Compiled and ran Dirty Cow exploit to modify /etc/passwd, creating a root user; logged in as new root user,",
+            "result": "Root shell obtained via kernel exploit",
+            "mitigation": [
+               "Secure tmux sockets with proper permissions",
+               "Avoid persistent root tmux sessions",
+               "Keep Linux kernel updated with security patches",
+               "Deploy endpoint detection for suspicious compilation and privilege escalation attempts"
+            ]
+         }
       ]
-    },
-    {
-      "Step 3": "Root",
-      "user": "hype",
-      "technique": "Privilege Escalation via Tmux Session Hijacking and Dirty Cow Kernel Exploit, method_1 : technique : Tmux session hijacking, description: Attached to root-owned tmux session via accessible socket /.devs/dev_sess granting root shell, result : Root shell obtained via tmux, method_2: technique : Dirty Cow kernel exploit (CVE-2016-5195),description : Compiled and ran Dirty Cow exploit to modify /etc/passwd, creating a root user; logged in as new root user,",
-      "result": "Root shell obtained via kernel exploit",
-      "mitigation": [
-        "Secure tmux sockets with proper permissions",
-        "Avoid persistent root tmux sessions",
-        "Keep Linux kernel updated with security patches",
-        "Deploy endpoint detection for suspicious compilation and privilege escalation attempts"
-      ]
-    }
-  ]
-}
-,
+   },
    {
       "title": "HackTheBox: Writeup",
       "href": "posts/htb_Writeup.html",
