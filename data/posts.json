@@ -4175,74 +4175,66 @@
       ]
    },
    {
-      "title": "HackTheBox: Valentine",
-      "href": "posts/htb_Valentine.html",
-      "date": "2025-06-18",
-      "category": [
-         "HackTheBox",
-         "Linux"
-      ],
-      "tags": [
-         "easy",
-         "heartbleed",
-         "dirtycow",
-         "oscp-like-v2",
-         "oscp-like-v1",
-         "Heartbleed",
-         "Memory Dump",
-         "Password Reuse",
-         "Hard",
-         "PrivEsc"
-      ],
-      "attack_path": [
-         {
-            "phase": "Initial Enumeration",
-            "details": {
-               "nmap": "Open ports 22 (SSH - OpenSSH 5.9p1), 80 (HTTP - Apache 2.2.22), and 443 (HTTPS/SSL) on Ubuntu",
-               "vulnerabilities": [
-                  "CVE-2014-0160 (Heartbleed) in OpenSSL 1.0.1/1.0.2-beta",
-                  "CVE-2014-0224 (CCS Injection)",
-                  "CVE-2014-3566 (POODLE)"
-               ],
-               "http_enum": "Discovered directories /dev, /encode, /decode, /omg with directory listing enabled for /dev"
-            }
-         },
-         {
-            "phase": "Foothold",
-            "user": null,
-            "technique": "Heartbleed Exploitation (CVE-2014-0160) and SSH Private Key Recovery",
-            "description": "Used Heartbleed exploit to dump server memory; extracted base64 string 'heartbleedbelievethehype'; found hex-encoded SSH private key in /dev directory; decoded key and used extracted string as passphrase",
-            "result": "SSH access as user 'hype' using recovered private key and passphrase",
-            "mitigation": [
-               "Patch OpenSSL to non-vulnerable versions",
-               "Revoke and reissue SSL/TLS certificates after compromise",
-               "Reset user passwords and SSH keys",
-               "Avoid placing sensitive files in web-accessible directories"
-            ]
-         },
-         {
-            "phase": "Root",
-            "user": "hype",
-            "technique": "Privilege Escalation via Tmux Session Hijacking and Dirty Cow Kernel Exploit",
-            "method_1": {
-               "technique": "Tmux session hijacking",
-               "description": "Attached to root-owned tmux session via accessible socket /.devs/dev_sess granting root shell",
-               "result": "Root shell obtained via tmux"
-            },
-            "method_2": {
-               "technique": "Dirty Cow kernel exploit (CVE-2016-5195)",
-               "description": "Compiled and ran Dirty Cow exploit to modify /etc/passwd, creating a root user; logged in as new root user",
-               "result": "Root shell obtained via kernel exploit"
-            },
-            "mitigation": [
-               "Secure tmux sockets with proper permissions",
-               "Avoid persistent root tmux sessions",
-               "Keep Linux kernel updated with security patches",
-               "Deploy endpoint detection for suspicious compilation and privilege escalation attempts"
-            ]
-         }
+  "title": "HackTheBox: Valentine",
+  "href": "posts/htb_Valentine.html",
+  "date": "2025-06-18",
+  "category": [
+    "HackTheBox",
+    "Linux"
+  ],
+  "tags": [
+    "easy",
+    "heartbleed",
+    "dirtycow",
+    "oscp-like-v2",
+    "oscp-like-v1",
+    "Heartbleed",
+    "Memory Dump",
+    "Password Reuse",
+    "Hard",
+    "PrivEsc"
+  ],
+  "attack_path": [
+    {
+      "Step 1": "Initial Enumeration",
+      "details": {
+        "nmap": "Open ports 22 (SSH - OpenSSH 5.9p1), 80 (HTTP - Apache 2.2.22), and 443 (HTTPS/SSL) on Ubuntu",
+        "vulnerabilities": [
+          "CVE-2014-0160 (Heartbleed) in OpenSSL 1.0.1/1.0.2-beta",
+          "CVE-2014-0224 (CCS Injection)",
+          "CVE-2014-3566 (POODLE)"
+        ],
+        "http_enum": "Discovered directories /dev, /encode, /decode, /omg with directory listing enabled for /dev"
+      }
+    },
+    {
+      "Step 2": "Foothold",
+      "user": null,
+      "technique": "Heartbleed Exploitation (CVE-2014-0160) and SSH Private Key Recovery",
+      "description": "Used Heartbleed exploit to dump server memory; extracted base64 string 'heartbleedbelievethehype'; found hex-encoded SSH private key in /dev directory; decoded key and used extracted string as passphrase",
+      "result": "SSH access as user 'hype' using recovered private key and passphrase",
+      "mitigation": [
+        "Patch OpenSSL to non-vulnerable versions",
+        "Revoke and reissue SSL/TLS certificates after compromise",
+        "Reset user passwords and SSH keys",
+        "Avoid placing sensitive files in web-accessible directories"
       ]
-   },
+    },
+    {
+      "Step 3": "Root",
+      "user": "hype",
+      "technique": "Privilege Escalation via Tmux Session Hijacking and Dirty Cow Kernel Exploit, method_1 : technique : Tmux session hijacking, description: Attached to root-owned tmux session via accessible socket /.devs/dev_sess granting root shell, result : Root shell obtained via tmux, method_2: technique : Dirty Cow kernel exploit (CVE-2016-5195),description : Compiled and ran Dirty Cow exploit to modify /etc/passwd, creating a root user; logged in as new root user,",
+      "result": "Root shell obtained via kernel exploit",
+      "mitigation": [
+        "Secure tmux sockets with proper permissions",
+        "Avoid persistent root tmux sessions",
+        "Keep Linux kernel updated with security patches",
+        "Deploy endpoint detection for suspicious compilation and privilege escalation attempts"
+      ]
+    }
+  ]
+}
+,
    {
       "title": "HackTheBox: Writeup",
       "href": "posts/htb_Writeup.html",
@@ -4265,7 +4257,7 @@
       ],
       "attack_path": [
          {
-            "phase": "Initial Enumeration",
+            "Step 1": "Initial Enumeration",
             "details": {
                "nmap": "Open ports 22 (SSH - OpenSSH 7.4p1 Debian 10+deb9u6) and 80 (HTTP - Apache httpd 2.4.25) on Debian 10",
                "http_robots": "/writeup directory disallowed in robots.txt",
@@ -4275,7 +4267,7 @@
             }
          },
          {
-            "phase": "Foothold",
+            "Step 2": "Foothold",
             "user": null,
             "technique": "Inferential SQL Injection to enumerate salt, username, email, and password hash",
             "description": "Used blind SQLi exploit to extract salted md5 hash and related user info from CMS database",
@@ -4292,7 +4284,7 @@
             ]
          },
          {
-            "phase": "User",
+            "Step 3": "User",
             "user": "jkr",
             "technique": "Password cracking of salted md5 hash",
             "description": "Cracked salted md5 password hash using hashcat mode 20 (md5($salt.$pass)) with rockyou wordlist",
@@ -4307,7 +4299,7 @@
             ]
          },
          {
-            "phase": "Root",
+            "Step 4": "Root",
             "user": "jkr",
             "technique": "PATH hijacking via writable /usr/local/bin directory and run-parts invocation",
             "description": "Identified writable /usr/local/bin directory in PATH; created malicious run-parts script that adds authorized SSH key for root; triggered execution by SSH login (motd update script)",
