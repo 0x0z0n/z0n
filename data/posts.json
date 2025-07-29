@@ -4196,17 +4196,13 @@
   ],
   "attack_path": [
     {
-      "Step 1": "Initial Enumeration",
-      "details": {
-        "nmap": "Open ports 22 (SSH - OpenSSH 5.9p1), 80 (HTTP - Apache 2.2.22), and 443 (HTTPS/SSL) on Ubuntu",
-        "vulnerabilities": [
-          "CVE-2014-0160 (Heartbleed) in OpenSSL 1.0.1/1.0.2-beta",
-          "CVE-2014-0224 (CCS Injection)",
-          "CVE-2014-3566 (POODLE)"
-        ],
-        "http_enum": "Discovered directories /dev, /encode, /decode, /omg with directory listing enabled for /dev"
-      }
-    },
+  "step": 1,
+  "user": null,
+  "technique": "Initial Enumeration",
+  "result": "Open ports 22 (SSH - OpenSSH 5.9p1), 80 (HTTP - Apache 2.2.22), and 443 (HTTPS/SSL) on Ubuntu. Discovered directories /dev, /encode, /decode, /omg with directory listing enabled for /dev. Vulnerabilities found: CVE-2014-0160 (Heartbleed), CVE-2014-0224 (CCS Injection), CVE-2014-3566 (POODLE).",
+  "mitigation": []
+}
+,
     {
       "Step 2": "Foothold",
       "user": null,
