@@ -8,127 +8,160 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
     <style>
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+      :root {
+        --bg-color: #0d0d12;
+        --card-bg: #151820;
+        --text-color: #94f9c1;
+        --accent: #36e0ff;
+        --tag-bg: #121417;
+        --tag-hover: #5fffd2;
+        --border-glow: 0 0 10px #36e0ff, 0 0 20px #36e0ff44;
+      }
 
-  :root {
-    --bg-color: #0c0f14;
-    --card-bg: #14181f;
-    --text-color: #b6ffe6;
-    --accent: #49eaff;
-    --tag-bg: #1b1f26;
-    --tag-hover: #6effd9;
-    --border-glow: 0 0 10px #49eaff, 0 0 20px #49eaff44;
-  }
 
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
+      body {
+        margin: 0;
+        font-family: 'Orbitron', sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+      }
 
-  body {
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Orbitron', sans-serif;
-    display: flex;
-    flex-direction: row;
-    letter-spacing: 0.5px;
-    padding: 1rem;
-  }
+      aside {
+        width: 250px;
+        background: #101010;
+        padding: 1rem;
+        height: 100vh;
+        box-shadow: 2px 0 8px #00d0ff44;
+        position: sticky;
+        top: 0;
+      }
 
-  aside {
-    width: 200px;
-    padding: 1rem;
-    background: #11141a;
-    box-shadow: 2px 0 12px #49eaff33;
-    border-radius: 12px;
-  }
+      aside img {
+        width: 100px;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto;
+        border: 2px solid #00d0ff;
+        box-shadow: var(--border-glow);
+      }
 
-  nav a {
-    display: block;
-    padding: 0.8rem 1rem;
-    background: #1b1f26;
-    margin-bottom: 0.5rem;
-    border-radius: 8px;
-    color: var(--text-color);
-    text-decoration: none;
-    transition: background 0.3s ease, border 0.3s ease;
-  }
+      .site-title {
+        text-align: center;
+        margin: 1rem 0 0.25rem;
+        font-size: 1.4rem;
+      }
 
-  nav a:hover {
-    background: #21262e;
-    border-left: 3px solid var(--accent);
-    color: var(--accent);
-  }
+      .site-subtitle {
+        text-align: center;
+        color: #888;
+        font-size: 0.85rem;
+      }
 
-  main {
-    flex: 1;
-    margin-left: 1.5rem;
-    background: transparent;
-    color: var(--text-color);
-  }
+      nav a {
+        display: block;
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 6px;
+        margin: 0.3rem 0;
+        background: #151515;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
 
-  h1 {
-    color: var(--accent);
-    font-size: 2rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    text-shadow: 0 0 10px #49eaff22;
-  }
+      nav a:hover {
+        background: #1a1a1a;
+        border-left: 3px solid var(--accent);
+        color: var(--accent);
+      }
 
-  .categories {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
-  }
+      .social-icons {
+        text-align: center;
+        margin-top: 2rem;
+      }
 
-  .category-card {
-    background: rgba(25, 30, 35, 0.4);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    border-left: 4px solid var(--accent);
-    padding: 1.2rem 1.5rem;
-    border-radius: 12px;
-    width: 250px;
-    text-align: center;
-    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-    box-shadow: 0 6px 24px rgba(73, 234, 255, 0.08), var(--border-glow);
-  }
+      .social-icons a {
+        margin: 0 0.5rem;
+        color: #aaa;
+        font-size: 1.3rem;
+        transition: 0.3s;
+      }
 
-  .category-card:hover {
-    background: rgba(45, 60, 75, 0.55);
-    box-shadow: 0 0 25px var(--accent), 0 0 15px var(--tag-hover);
-    transform: translateY(-3px);
-  }
+      .social-icons a:hover {
+        color: var(--accent);
+        transform: scale(1.1);
+      }
 
-  .category-card a {
-    color: var(--accent);
-    font-size: 1.2rem;
-    font-weight: 600;
-    text-decoration: none;
-  }
+      main {
+        flex: 1;
+        padding: 2rem;
+        max-width: 1000px;
+        margin: auto;
+      }
 
-  .category-card a:hover {
-    color: var(--tag-hover);
-    text-shadow: 0 0 10px var(--tag-hover);
-  }
+      h1 {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--accent);
+        text-align: center;
+        margin-bottom: 2rem;
+      }
 
-  .category-card small {
-    color: #ccc;
-    margin-top: 0.4rem;
-    font-size: 0.85rem;
-    display: block;
-  }
+      .category-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+      }
 
-  footer {
-    color: #666;
-    font-size: 0.8rem;
-    margin-top: 3rem;
-    text-align: center;
-  }
-</style>
+      .category-card {
+        background: rgba(20, 20, 20, 0.6);
+        /* semi-transparent dark */
+        backdrop-filter: blur(4px);
+        /* blur effect */
+        -webkit-backdrop-filter: blur(6px);
+        /* Safari support */
+        border-left: 4px solid var(--accent);
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        width: 250px;
+        text-align: center;
+        transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+        box-shadow: 0 8px 30px rgba(0, 208, 255, 0.1), var(--border-glow);
+      }
 
+      .category-card:hover {
+        background: rgba(40, 60, 70, 0.8);
+        box-shadow: 0 0 25px var(--accent), 0 0 15px var(--tag-hover);
+        transform: translateY(-3px);
+      }
+
+
+      .category-card a {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 1.2rem;
+        transition: color 0.3s ease, text-shadow 0.3s ease;
+      }
+
+      .category-card a:hover {
+        color: #00ffcc;
+        text-shadow: 0 0 8px #00ffcc;
+      }
+
+      .category-card small {
+        display: block;
+        color: #aaa;
+        margin-top: 0.5rem;
+      }
+
+      footer {
+        text-align: center;
+        color: #555;
+        font-size: 0.8rem;
+        margin-top: 3rem;
+      }
+    </style>
   </head>
   <body>
     <aside>
