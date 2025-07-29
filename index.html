@@ -178,14 +178,28 @@
   background: transparent;
 }
 
-/* Hide scrollbar for Firefox */
-.attack-path-terminal {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
+/* Show scrollbar on hover for WebKit browsers */
+.attack-path-terminal:hover::-webkit-scrollbar {
+  width: 6px;
 }
 
+/* Track style when scrollbar is visible on hover */
 .attack-path-terminal::-webkit-scrollbar-track {
-  background: transparent;
+  background: #001100;
+}
+
+/* Firefox & Edge */
+.attack-path-terminal {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE and Edge */
+}
+
+/* Show scrollbar in light mode only */
+@media (prefers-color-scheme: light) {
+  .attack-path-terminal {
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+  }
 }
 
   </style>
