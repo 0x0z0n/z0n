@@ -89,14 +89,17 @@ main {
   margin: auto;
 }
 .post-card {
-  background: linear-gradient(145deg, #141414, #101010);
+  background: rgba(20, 20, 20, 0.7); /* transparent dark background */
+  backdrop-filter: blur(12px); /* glassy blur effect */
+  -webkit-backdrop-filter: blur(12px); /* Safari support */
   padding: 1.8rem;
   border: 1px solid #00ffcc33;
   margin-bottom: 2.5rem;
   border-radius: 12px;
-  box-shadow: var(--border-glow);
+  box-shadow: 0 10px 30px rgba(0, 208, 255, 0.15), var(--border-glow);
   transition: 0.3s ease;
 }
+
 .post-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 0 20px #00d0ffcc;
