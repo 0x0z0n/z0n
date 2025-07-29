@@ -313,7 +313,50 @@
          "DockerRegistryAttack",
          "DockerSecurity"
       ],
-      "attack_path": []
+      "attack_path": [
+         {
+            "step": 1,
+            "user": "(Unauthenticated)",
+            "technique": "Docker Registry Enumeration",
+            "result": "Interacted with open registry on port 5000 and 7000, retrieved repository `securesolutions/webserver`, tag `production`, and plaintext credentials from manifest.",
+            "mitigation": "Enable authentication for Docker Registry; restrict registry API access via firewalls or network policies."
+         },
+         {
+            "step": 2,
+            "user": "(Unauthenticated)",
+            "technique": "Reverse Engineering Docker Images (Dive)",
+            "result": "Pulled image `challenge`, used Dive to inspect layers and found user `uogctf` added.",
+            "mitigation": "Avoid storing secrets or sensitive configurations in image layers; scan images before deployment."
+         },
+         {
+            "step": 3,
+            "user": "(Unauthenticated)",
+            "technique": "Upload Malicious Docker Image",
+            "result": "Pushed reverse shell image to unprotected registry, leading to root access when pulled by victim.",
+            "mitigation": "Enforce registry access control; use signed images and monitor for unauthorized image uploads."
+         },
+         {
+            "step": 4,
+            "user": "(Unauthenticated)",
+            "technique": "RCE via Exposed Docker Daemon (Port 2375)",
+            "result": "Enumerated and interacted with the exposed Docker API, executed containers with host bindings.",
+            "mitigation": "Never expose Docker daemon over TCP without TLS + auth; use socket-based access with group restrictions."
+         },
+         {
+            "step": 5,
+            "user": "danny",
+            "technique": "Host Escape via Docker Volume Mount",
+            "result": "Inside compromised container, mounted `/` from host and chrooted to gain root on host.",
+            "mitigation": "Restrict container permissions; do not mount sensitive directories; use AppArmor/SELinux profiles."
+         },
+         {
+            "step": 6,
+            "user": "root (container)",
+            "technique": "Host Escape via Shared Namespace",
+            "result": "Used `nsenter` to join PID 1 namespace from inside container, gaining host shell.",
+            "mitigation": "Ensure proper namespace isolation; avoid running containers with `--pid=host`; drop unnecessary capabilities."
+         }
+      ]
    },
    {
       "title": "HackTheBox: Artificial",
