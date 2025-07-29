@@ -172,6 +172,22 @@
       max-height: 200px;
       overflow-y: auto;
     }
+    /* Hide scrollbar for WebKit browsers (Chrome, Safari) */
+.attack-path-terminal::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Hide scrollbar for Firefox */
+.attack-path-terminal {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.attack-path-terminal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
   </style>
 </head>
 
