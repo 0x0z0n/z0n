@@ -241,102 +241,128 @@
 
   <!-- JavaScript -->
   <script>
-    const searchInput = document.getElementById("searchInput");
-    const postsContainer = document.getElementById("posts");
-    let allPosts = [];
+  const searchInput = document.getElementById("searchInput");
+  const postsContainer = document.getElementById("posts");
+  let allPosts = [];
 
-    function renderPosts(posts) {
-      postsContainer.innerHTML = "";
-      if (posts.length === 0) {
-        postsContainer.innerHTML = "<p>No posts found.</p>";
-        return;
+  function renderPosts(posts) {
+    postsContainer.innerHTML = "";
+    if (posts.length === 0) {
+      postsContainer.innerHTML = "<p>No posts found.</p>";
+      return;
+    }
+
+    posts.forEach(post => {
+      const article = document.createElement("article");
+      article.className = "post-card";
+      article.setAttribute("data-tags", post.tags.join(", "));
+
+      const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
+
+      // Terminal view of attack_path
+      let attackPathText = "";
+      if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
+        attackPathText = post.attack_path.map(step => {
+          return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
+        }).join("\n");
       }
 
-      posts.forEach(post => {
-        const article = document.createElement("article");
-        article.className = "post-card";
-        article.setAttribute("data-tags", post.tags.join(", "));
+      article.innerHTML = `
+        <h2><a href="${post.href}">${post.title}</a></h2>
+        <p><strong>Category:</strong> ${categories || "Uncategorized"}</p>
+        <p><strong>Date:</strong> ${post.date}</p>
+        <p><strong>Tags:</strong></p>
+        <div class="tag-container">
+          ${post.tags.map(tag =>
+            `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+          ).join("")}
+        </div>
+        ${attackPathText ? `<pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
+      `;
 
-        const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
+      postsContainer.appendChild(article);
+    });
+  }
 
-        // Prepare terminal view of attack_path if present
-        let attackPathText = "";
-        if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
-          attackPathText = post.attack_path.map(step => {
-            return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
-          }).join("\n");
-        }
-
-        article.innerHTML = `
-          <h2><a href="${post.href}">${post.title}</a></h2>
-          <p><strong>Category:</strong> ${categories || "Uncategorized"}</p>
-          <p><strong>Date:</strong> ${post.date}</p>
-          <p><strong>Tags:</strong></p>
-          <div class="tag-container">
-            ${post.tags.map(tag =>
-              `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-            ).join("")}
-          </div>
-          ${attackPathText ? `<pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
-        `;
-
-        postsContainer.appendChild(article);
-      });
+  async function fetchAndSearchPostContent(post, query) {
+    try {
+      const res = await fetch(post.href);
+      const html = await res.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const textContent = doc.body.textContent.toLowerCase();
+      return textContent.includes(query);
+    } catch (e) {
+      console.warn(`Failed to fetch ${post.href}`, e);
+      return false;
     }
+  }
 
-    function filterPosts() {
-      const query = searchInput.value.trim().toLowerCase();
-      const filtered = allPosts.filter(post =>
+  async function filterPosts() {
+    const query = searchInput.value.trim().toLowerCase();
+
+    const promises = allPosts.map(async post => {
+      const matchesMeta =
         post.title.toLowerCase().includes(query) ||
+        post.tags.some(tag => tag.toLowerCase().includes(query)) ||
         (Array.isArray(post.category)
           ? post.category.some(cat => cat.toLowerCase().includes(query))
-          : (post.category || "").toLowerCase().includes(query)
-        ) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query)) ||
-        (post.date && post.date.startsWith(query))
-      );
+          : (post.category || "").toLowerCase().includes(query)) ||
+        (post.date && post.date.startsWith(query)) ||
+        (post.attack_path || []).some(step =>
+          Object.values(step).some(val => (val || "").toLowerCase().includes(query))
+        );
+
+      const matchesContent = await fetchAndSearchPostContent(post, query);
+      return matchesMeta || matchesContent ? post : null;
+    });
+
+    const matchedPosts = (await Promise.all(promises)).filter(Boolean);
+    renderPosts(matchedPosts);
+  }
+
+  function getParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+  }
+
+  fetch("data/posts.json")
+    .then(res => res.json())
+    .then(data => {
+      allPosts = data;
+
+      const tagParam = getParam("tag");
+      const catParam = getParam("category");
+      const dateParam = getParam("date");
+
+      let filtered = allPosts;
+
+      if (tagParam) {
+        searchInput.value = tagParam;
+        filtered = allPosts.filter(post =>
+          post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
+        );
+      } else if (catParam) {
+        searchInput.value = catParam;
+        filtered = allPosts.filter(post =>
+          Array.isArray(post.category)
+            ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase())
+            : (post.category || "").toLowerCase() === catParam.toLowerCase()
+        );
+      } else if (dateParam) {
+        searchInput.value = dateParam;
+        filtered = allPosts.filter(post =>
+          post.date && post.date.startsWith(dateParam)
+        );
+      }
+
       renderPosts(filtered);
-    }
+    });
 
-    function getParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
+  searchInput.addEventListener("input", () => {
+    filterPosts();
+  });
+</script>
 
-    fetch("data/posts.json")
-      .then(res => res.json())
-      .then(data => {
-        allPosts = data;
-
-        const tagParam = getParam("tag");
-        const catParam = getParam("category");
-        const dateParam = getParam("date");
-
-        let filtered = allPosts;
-
-        if (tagParam) {
-          searchInput.value = tagParam;
-          filtered = allPosts.filter(post =>
-            post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
-          );
-        } else if (catParam) {
-          searchInput.value = catParam;
-          filtered = allPosts.filter(post =>
-            Array.isArray(post.category)
-              ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase())
-              : (post.category || "").toLowerCase() === catParam.toLowerCase()
-          );
-        } else if (dateParam) {
-          searchInput.value = dateParam;
-          filtered = allPosts.filter(post =>
-            post.date && post.date.startsWith(dateParam)
-          );
-        }
-
-        renderPosts(filtered);
-      });
-
-    searchInput.addEventListener("input", filterPosts);
-  </script>
 </body>
 </html>
