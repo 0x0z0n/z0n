@@ -2653,7 +2653,7 @@
     "date": "2025-06-24",
     "category": ["HackTheBox", "Linux"],
     "tags": ["easy", "deserialization", "webshell", "sudo", "oscp-like-v2", "oscp-like-v1", "CredentialDisclosure", "RCE", "WebExploit"],
-  "attack_path": [
+    "attack_path": [
     {
       "phase": "Initial Enumeration",
       "details": {
@@ -2712,8 +2712,6 @@
       ]
     }
   ]
-
-
   },
   {
     "title": "HackTheBox: Tabby",
@@ -2793,7 +2791,6 @@
     "date": "2025-06-23",
     "category": ["HackTheBox", "Linux"],
     "tags": ["easy", "debian", "stretch", "nmap", "gobuster", "skipfish", "hydra", "python", "cve-2018-1133", "crackstation", "mysql", "pspy", "su", "cron", "chmod", "passwd", "arbitrary-write", "moodle", "Moodle", "BruteForce", "CredentialReuse", "RCE"],
-    {
   "attack_path": [
     {
       "phase": "Initial Enumeration",
