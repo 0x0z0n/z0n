@@ -1,234 +1,259 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <title>Archives</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-color: #0a0a0a;
-      --text-color: #00ff95;
-      --accent: #00d0ff;
-      --glow-color: #00ff99;
-      --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
-    }
-    body {
-      margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-    }
-    aside {
-      width: 250px;
-      background: #101010;
-      padding: 1rem;
-      height: 100vh;
-      box-shadow: 2px 0 8px #00d0ff44;
-      position: sticky;
-      top: 0;
-    }
-    aside img {
-      width: 100px;
-      border-radius: 50%;
-      display: block;
-      margin: 0 auto;
-      border: 2px solid var(--accent);
-      box-shadow: var(--border-glow);
-    }
-    .site-title {
-      text-align: center;
-      margin: 1rem 0 0.25rem;
-      font-size: 1.4rem;
-    }
-    .site-subtitle {
-      text-align: center;
-      color: #888;
-      font-size: 0.85rem;
-    }
-    nav a {
-      display: block;
-      color: var(--text-color);
-      text-decoration: none;
-      padding: 0.5rem;
-      border-radius: 6px;
-      margin: 0.3rem 0;
-      background: #151515;
-      border-left: 3px solid transparent;
-      transition: all 0.3s ease;
-    }
-    nav a:hover {
-      background: #1a1a1a;
-      border-left: 3px solid var(--accent);
-      color: var(--accent);
-    }
-    .social-icons {
-      text-align: center;
-      margin-top: 2rem;
-    }
-    .social-icons a {
-      margin: 0 0.5rem;
-      color: #aaa;
-      font-size: 1.3rem;
-      transition: 0.3s;
-    }
-    .social-icons a:hover {
-      color: var(--accent);
-      transform: scale(1.1);
-    }
-    main {
-      flex: 1;
-      padding: 2rem;
-      max-width: 1000px;
-      margin: auto;
-    }
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      color: var(--accent);
-      text-align: center;
-      margin-bottom: 2rem;
-      text-shadow: 0 0 6px var(--accent);
-    }
-    .timeline {
-      border-left: 3px solid var(--accent);
-      margin-left: 1rem;
-      padding-left: 1rem;
-    }
-    .month {
-      margin-top: 2rem;
-      font-size: 1.5rem;
-      color: var(--accent);
-      font-weight: 600;
-      text-shadow: 0 0 6px var(--accent);
-    }
-    .entry {
-      margin: 1rem 0;
-      padding-left: 1.5rem;
-      position: relative;
-      font-size: 1.1rem;
-      transition: color 0.3s ease;
-    }
-    .entry::before {
-      content: '';
-      position: absolute;
-      left: -1.4rem;
-      top: 0.6rem;
-      width: 14px;
-      height: 14px;
-      background: var(--accent);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent);
-      transition: background 0.3s ease;
-    }
-    .entry a {
-      color: #82b1ff;
-      text-decoration: none;
-      text-shadow: 0 0 4px #82b1ffaa;
-      font-weight: 600;
-    }
-    .entry a:hover {
-      color: var(--glow-color);
-      text-shadow: 0 0 8px var(--glow-color);
-    }
-    .entry span {
-      display: inline-block;
-      width: 5.5rem;
-      color: #66ccaa;
-      font-weight: 600;
-      text-shadow: 0 0 4px #66ccaa99;
-    }
-    .entry:hover {
-  background: rgba(32, 32, 32, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 1rem;
-  border-radius: 10px;
-  box-shadow: 0 0 12px rgba(0, 208, 255, 0.2);
-  transition: all 0.3s ease;
-}
-.entry {
-  margin: 1rem 0;
-  padding-left: 1.5rem;
-  padding: 0.5rem 0.5rem 0.5rem 1.5rem; /* base padding for alignment */
-  border-radius: 10px; /* subtle rounding even when not hovered */
-  position: relative;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-}
-  </style>
-</head>
-<body>
-  <aside>
-    <img src="assets/avatar.jpeg" alt="Profile" />
-    <div class="site-title">Kshitij Raut</div>
-    <div class="site-subtitle">Cyber Security Analyst</div>
-    <nav>
-      <a href="index.html">🏠 Home</a>
-      <a href="categories.html">📚 Categories</a>
-      <a href="tags.html">🏷️ Tags</a>
-      <a href="archives.html">🗃️ Archives</a>
-      <a href="about.html">ℹ️ About</a>
-    </nav>
-    <div class="social-icons">
-      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
-        <i class="fab fa-linkedin"></i>
-      </a>
-      <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
-        <i class="fas fa-envelope"></i>
-      </a>
-      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
-        <i class="fab fa-youtube"></i>
-      </a>
-      <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
-        <i class="fab fa-x-twitter"></i>
-      </a>
-    </div>
-  </aside>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Archives</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-color: #0a0a0a;
+        --text-color: #00ff95;
+        --accent: #00d0ff;
+        --glow-color: #00ff99;
+        --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
+      }
 
-  <main>
-    <h1>Archives</h1>
-    <div class="timeline" id="archiveList"></div>
-  </main>
+      body {
+        margin: 0;
+        font-family: 'Orbitron', sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+      }
 
-  <script>
-    fetch("data/posts.json")
-      .then(res => res.json())
-      .then(posts => {
+      aside {
+        width: 250px;
+        background: #101010;
+        padding: 1rem;
+        height: 100vh;
+        box-shadow: 2px 0 8px #00d0ff44;
+        position: sticky;
+        top: 0;
+      }
+
+      aside img {
+        width: 100px;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto;
+        border: 2px solid var(--accent);
+        box-shadow: var(--border-glow);
+      }
+
+      .site-title {
+        text-align: center;
+        margin: 1rem 0 0.25rem;
+        font-size: 1.4rem;
+      }
+
+      .site-subtitle {
+        text-align: center;
+        color: #888;
+        font-size: 0.85rem;
+      }
+
+      nav a {
+        display: block;
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 6px;
+        margin: 0.3rem 0;
+        background: #151515;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+
+      nav a:hover {
+        background: #1a1a1a;
+        border-left: 3px solid var(--accent);
+        color: var(--accent);
+      }
+
+      .social-icons {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      .social-icons a {
+        margin: 0 0.5rem;
+        color: #aaa;
+        font-size: 1.3rem;
+        transition: 0.3s;
+      }
+
+      .social-icons a:hover {
+        color: var(--accent);
+        transform: scale(1.1);
+      }
+
+      main {
+        flex: 1;
+        padding: 2rem;
+        max-width: 1000px;
+        margin: auto;
+      }
+
+      h1 {
+        font-family: 'Orbitron', sans-serif;
+        color: var(--accent);
+        text-align: center;
+        margin-bottom: 2rem;
+        text-shadow: 0 0 6px var(--accent);
+      }
+
+      .timeline {
+        border-left: 3px solid var(--accent);
+        margin-left: 1rem;
+        padding-left: 1rem;
+      }
+
+      .month {
+        margin-top: 2rem;
+        font-size: 1.5rem;
+        color: var(--accent);
+        font-weight: 600;
+        text-shadow: 0 0 6px var(--accent);
+      }
+
+      .entry {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+      }
+
+      .entry::before {
+        content: '';
+        position: absolute;
+        left: -1.4rem;
+        top: 0.6rem;
+        width: 14px;
+        height: 14px;
+        background: var(--accent);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--accent);
+        transition: background 0.3s ease;
+      }
+
+      .entry a {
+        color: #82b1ff;
+        text-decoration: none;
+        text-shadow: 0 0 4px #82b1ffaa;
+        font-weight: 600;
+      }
+
+      .entry a:hover {
+        color: var(--glow-color);
+        text-shadow: 0 0 8px var(--glow-color);
+      }
+
+      .entry span {
+        display: inline-block;
+        width: 5.5rem;
+        color: #66ccaa;
+        font-weight: 600;
+        text-shadow: 0 0 4px #66ccaa99;
+      }
+
+      .entry:hover {
+        background: rgba(32, 32, 32, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0, 208, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .entry {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+        padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+        /* base padding for alignment */
+        border-radius: 10px;
+        /* subtle rounding even when not hovered */
+        position: relative;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <img src="assets/avatar.jpeg" alt="Profile" />
+      <div class="site-title">Kshitij Raut</div>
+      <div class="site-subtitle">Cyber Security Analyst</div>
+      <nav>
+        <a href="index.html">🏠 Home</a>
+        <a href="categories.html">📚 Categories</a>
+        <a href="tags.html">🏷️ Tags</a>
+        <a href="archives.html">🗃️ Archives</a>
+        <a href="about.html">ℹ️ About</a>
+      </nav>
+      <div class="social-icons">
+        <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
+          <i class="fab fa-linkedin"></i>
+        </a>
+        <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
+          <i class="fas fa-envelope"></i>
+        </a>
+        <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
+          <i class="fab fa-youtube"></i>
+        </a>
+        <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
+          <i class="fab fa-x-twitter"></i>
+        </a>
+      </div>
+    </aside>
+    <main>
+      <h1>Archives</h1>
+      <div class="timeline" id="archiveList"></div>
+    </main>
+    <script>
+      fetch("data/posts.json").then(res => res.json()).then(posts => {
         posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
         const grouped = {};
         posts.forEach(post => {
           const d = new Date(post.date);
-          const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
-          const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+          const month = d.toLocaleDateString('en-GB', {
+            year: 'numeric',
+            month: 'short'
+          });
+          const day = d.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short'
+          });
           if (!grouped[month]) grouped[month] = [];
-          grouped[month].push({ ...post, formattedDate: day });
+          grouped[month].push({
+            ...post,
+            formattedDate: day
+          });
         });
-
         const container = document.getElementById("archiveList");
         container.innerHTML = "";
-
         Object.entries(grouped).forEach(([month, entries]) => {
           const monthDiv = document.createElement("div");
           monthDiv.className = "month";
           monthDiv.textContent = month;
           container.appendChild(monthDiv);
-
           entries.forEach(entry => {
             const item = document.createElement("div");
             item.className = "entry";
-            item.innerHTML = `<span>${entry.formattedDate}</span><a href="${entry.href}">${entry.title}</a>`;
+            item.innerHTML = `
+        <span>${entry.formattedDate}</span>
+        <a href="${entry.href}">${entry.title}</a>`;
             container.appendChild(item);
           });
         });
-      })
-      .catch(err => {
-        document.getElementById("archiveList").innerHTML = "<p style='color:red;'>Failed to load archive data.</p>";
+      }).catch(err => {
+        document.getElementById("archiveList").innerHTML = " < p style = 'color:red;' > Failed to load archive data. < /p>";
         console.error("Error loading posts.json:", err);
       });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
