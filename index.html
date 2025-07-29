@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -8,8 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.25.1/cytoscape.min.js"></script>
-
+  
   <style>
     :root {
       --bg-color: #0a0a0a;
@@ -160,58 +158,24 @@
       margin-top: 3rem;
     }
 
-    /* === Modal styles for attack graph === */
-    .graph-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(10, 10, 10, 0.95);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .graph-modal-content {
-      background: var(--card-bg);
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 800px;
-      box-shadow: 0 0 15px #00d0ffcc;
-      position: relative;
-      color: var(--text-color);
-      font-family: 'Orbitron', sans-serif;
-    }
-
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      color: var(--accent);
-      font-size: 2rem;
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.3s ease;
-    }
-
-    .close:hover {
-      color: #00ffcc;
+    /* Terminal style for attack path */
+    .attack-path-terminal {
+      background-color: #001100;
+      color: #00ff00;
+      font-family: monospace, monospace;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      box-shadow: inset 0 0 5px #00ff0044;
+      max-height: 200px;
+      overflow-y: auto;
     }
   </style>
 </head>
-<body>
-  <div id="graphModal" class="graph-modal" style="display:none;">
-    <div class="graph-modal-content">
-      <span id="closeModal" class="close">&times;</span>
-      <h3 id="graphTitle"></h3>
-      <div id="graphContainer" style="width: 100%; height: 400px;"></div>
-    </div>
-  </div>
 
+<body>
   <!-- Sidebar -->
   <aside>
     <img src="assets/avatar.jpeg" alt="Profile" />
@@ -265,36 +229,28 @@
 
         const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
 
-        // Prepare graph icon HTML if attack_path valid
-        let graphIconHTML = "";
+        // Prepare terminal view of attack_path if present
+        let attackPathText = "";
         if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
-          graphIconHTML = `<i class="fas fa-code graph-icon" title="View Attack Graph" style="cursor:pointer; float: right; color: var(--accent);"></i>`;
+          attackPathText = post.attack_path.map(step => {
+            return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
+          }).join("\n");
         }
 
-        article.innerHTML = \`
-          <h2>
-            <a href="\${post.href}">\${post.title}</a>
-            \${graphIconHTML}
-          </h2>
-          <p><strong>Category:</strong> \${categories || "Uncategorized"}</p>
-          <p><strong>Date:</strong> \${post.date}</p>
+        article.innerHTML = `
+          <h2><a href="${post.href}">${post.title}</a></h2>
+          <p><strong>Category:</strong> ${categories || "Uncategorized"}</p>
+          <p><strong>Date:</strong> ${post.date}</p>
           <p><strong>Tags:</strong></p>
           <div class="tag-container">
-            \${post.tags.map(tag =>
-              \`<a href="index.html?tag=\${encodeURIComponent(tag)}" class="tag-link">\${tag}</a>\`
+            ${post.tags.map(tag =>
+              `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
             ).join("")}
           </div>
-        \`;
+          ${attackPathText ? `<pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
+        `;
 
         postsContainer.appendChild(article);
-
-        // Attach click handler to graph icon if present
-        if (graphIconHTML) {
-          const icon = article.querySelector(".graph-icon");
-          icon.addEventListener("click", () => {
-            showGraph(post.attack_path, post.title);
-          });
-        }
       });
     }
 
@@ -351,94 +307,6 @@
       });
 
     searchInput.addEventListener("input", filterPosts);
-
-    const modal = document.getElementById("graphModal");
-    const closeModalBtn = document.getElementById("closeModal");
-    const graphTitle = document.getElementById("graphTitle");
-    const graphContainer = document.getElementById("graphContainer");
-
-    closeModalBtn.addEventListener("click", () => {
-      modal.style.display = "none";
-      graphContainer.innerHTML = ""; // clear graph
-    });
-
-    // Utility: transform attack_path to cytoscape elements
-    function buildCytoscapeElements(attackPath) {
-      const nodes = [];
-      const edges = [];
-      attackPath.forEach((step, i) => {
-        nodes.push({
-          data: { id: \`step\${i}\`, label: \`\${step.user}\n\${step.technique}\` }
-        });
-        if (i > 0) {
-          edges.push({
-            data: { source: \`step\${i-1}\`, target: \`step\${i}\` }
-          });
-        }
-      });
-      return { nodes, edges };
-    }
-
-    function showGraph(attackPath, title) {
-      if (!Array.isArray(attackPath) || attackPath.length === 0) {
-        alert("No valid attack path data to display.");
-        return;
-      }
-
-      try {
-        modal.style.display = "flex";
-        graphTitle.textContent = title;
-
-        const { nodes, edges } = buildCytoscapeElements(attackPath);
-
-        cytoscape({
-          container: graphContainer,
-          elements: {
-            nodes,
-            edges
-          },
-          style: [
-            {
-              selector: 'node',
-              style: {
-                'label': 'data(label)',
-                'text-wrap': 'wrap',
-                'text-max-width': 120,
-                'background-color': '#00d0ff',
-                'color': '#000',
-                'text-valign': 'center',
-                'text-halign': 'center',
-                'font-size': 12,
-                'shape': 'roundrectangle',
-                'padding': '10px',
-                'border-width': 2,
-                'border-color': '#00ffcc',
-                'text-outline-color': '#000',
-                'text-outline-width': 1
-              }
-            },
-            {
-              selector: 'edge',
-              style: {
-                'width': 3,
-                'line-color': '#00ffcc',
-                'target-arrow-color': '#00ffcc',
-                'target-arrow-shape': 'triangle',
-                'curve-style': 'bezier'
-              }
-            }
-          ],
-          layout: {
-            name: 'breadthfirst',
-            directed: true,
-            padding: 10
-          }
-        });
-      } catch (err) {
-        console.warn("Error rendering attack graph:", err);
-        alert("Failed to render attack graph. See console for details.");
-      }
-    }
   </script>
 </body>
 </html>
