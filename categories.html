@@ -9,158 +9,155 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg-color: #0d0d12;
-        --card-bg: #151820;
-        --text-color: #94f9c1;
-        --accent: #36e0ff;
-        --tag-bg: #121417;
-        --tag-hover: #5fffd2;
-        --border-glow: 0 0 10px #36e0ff, 0 0 20px #36e0ff44;
-      }
+  --bg-color: #0a0a0f;
+  --card-bg: #121820;
+  --text-color: #a8ffe6;
+  --accent: #00eaff;
+  --tag-bg: #11141b;
+  --tag-hover: #00ffc8;
+  --border-glow: 0 0 10px var(--accent), 0 0 20px #00eaff44;
+}
 
+body {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+}
 
-      body {
-        margin: 0;
-        font-family: 'Orbitron', sans-serif;
-        background: var(--bg-color);
-        color: var(--text-color);
-        display: flex;
-      }
+aside {
+  width: 250px;
+  background: #0d0d0d;
+  padding: 1rem;
+  height: 100vh;
+  box-shadow: 2px 0 8px #00eaff22;
+  position: sticky;
+  top: 0;
+}
 
-      aside {
-        width: 250px;
-        background: #101010;
-        padding: 1rem;
-        height: 100vh;
-        box-shadow: 2px 0 8px #00d0ff44;
-        position: sticky;
-        top: 0;
-      }
+aside img {
+  width: 100px;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto;
+  border: 2px solid var(--accent);
+  box-shadow: var(--border-glow);
+}
 
-      aside img {
-        width: 100px;
-        border-radius: 50%;
-        display: block;
-        margin: 0 auto;
-        border: 2px solid #00d0ff;
-        box-shadow: var(--border-glow);
-      }
+.site-title {
+  text-align: center;
+  margin: 1rem 0 0.25rem;
+  font-size: 1.4rem;
+}
 
-      .site-title {
-        text-align: center;
-        margin: 1rem 0 0.25rem;
-        font-size: 1.4rem;
-      }
+.site-subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 0.85rem;
+}
 
-      .site-subtitle {
-        text-align: center;
-        color: #888;
-        font-size: 0.85rem;
-      }
+nav a {
+  display: block;
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin: 0.3rem 0;
+  background: #141414;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
 
-      nav a {
-        display: block;
-        color: var(--text-color);
-        text-decoration: none;
-        padding: 0.5rem;
-        border-radius: 6px;
-        margin: 0.3rem 0;
-        background: #151515;
-        border-left: 3px solid transparent;
-        transition: all 0.3s ease;
-      }
+nav a:hover {
+  background: #1a1a1a;
+  border-left: 3px solid var(--accent);
+  color: var(--accent);
+}
 
-      nav a:hover {
-        background: #1a1a1a;
-        border-left: 3px solid var(--accent);
-        color: var(--accent);
-      }
+.social-icons {
+  text-align: center;
+  margin-top: 2rem;
+}
 
-      .social-icons {
-        text-align: center;
-        margin-top: 2rem;
-      }
+.social-icons a {
+  margin: 0 0.5rem;
+  color: #bbb;
+  font-size: 1.3rem;
+  transition: 0.3s;
+}
 
-      .social-icons a {
-        margin: 0 0.5rem;
-        color: #aaa;
-        font-size: 1.3rem;
-        transition: 0.3s;
-      }
+.social-icons a:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
 
-      .social-icons a:hover {
-        color: var(--accent);
-        transform: scale(1.1);
-      }
+main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1000px;
+  margin: auto;
+}
 
-      main {
-        flex: 1;
-        padding: 2rem;
-        max-width: 1000px;
-        margin: auto;
-      }
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 5px var(--accent);
+}
 
-      h1 {
-        font-family: 'Orbitron', sans-serif;
-        color: var(--accent);
-        text-align: center;
-        margin-bottom: 2rem;
-      }
+.category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
 
-      .category-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: center;
-      }
+.category-card {
+  background: rgba(18, 24, 32, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-left: 4px solid var(--accent);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  width: 250px;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 234, 255, 0.08), var(--border-glow);
+}
 
-      .category-card {
-        background: rgba(20, 20, 20, 0.6);
-        /* semi-transparent dark */
-        backdrop-filter: blur(4px);
-        /* blur effect */
-        -webkit-backdrop-filter: blur(6px);
-        /* Safari support */
-        border-left: 4px solid var(--accent);
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        width: 250px;
-        text-align: center;
-        transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-        box-shadow: 0 8px 30px rgba(0, 208, 255, 0.1), var(--border-glow);
-      }
+.category-card:hover {
+  background: rgba(0, 255, 200, 0.1);
+  box-shadow: 0 0 25px var(--accent), 0 0 20px var(--tag-hover);
+  transform: translateY(-4px);
+}
 
-      .category-card:hover {
-        background: rgba(40, 60, 70, 0.8);
-        box-shadow: 0 0 25px var(--accent), 0 0 15px var(--tag-hover);
-        transform: translateY(-3px);
-      }
+.category-card a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: 0.3s ease;
+}
 
+.category-card a:hover {
+  color: var(--tag-hover);
+  text-shadow: 0 0 8px var(--tag-hover);
+}
 
-      .category-card a {
-        color: var(--accent);
-        text-decoration: none;
-        font-size: 1.2rem;
-        transition: color 0.3s ease, text-shadow 0.3s ease;
-      }
+.category-card small {
+  display: block;
+  color: #999;
+  margin-top: 0.5rem;
+}
 
-      .category-card a:hover {
-        color: #00ffcc;
-        text-shadow: 0 0 8px #00ffcc;
-      }
+footer {
+  text-align: center;
+  color: #555;
+  font-size: 0.8rem;
+  margin-top: 3rem;
+}
 
-      .category-card small {
-        display: block;
-        color: #aaa;
-        margin-top: 0.5rem;
-      }
-
-      footer {
-        text-align: center;
-        color: #555;
-        font-size: 0.8rem;
-        margin-top: 3rem;
-      }
     </style>
   </head>
   <body>
