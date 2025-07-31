@@ -1,317 +1,325 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <title>0x0z0n Blog</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
-    <style>
-      :root {
-        --bg-color: #0a0a0a;
-        --card-bg: #141414;
-        --text-color: #00ff95;
-        --accent: #00d0ff;
-        --tag-bg: #0f0f0f;
-        --tag-hover: #00ffcc;
-        --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
-      }
+   <head>
+      <meta charset="UTF-8" />
+      <title>0x0z0n Blog</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="stylesheet" href="style.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+      <style>
+         :root {
+            --bg-color: #0a0a0a;
+            --card-bg: #141414;
+            --text-color: #00ff95;
+            --accent: #00d0ff;
+            --tag-bg: #0f0f0f;
+            --tag-hover: #00ffcc;
+            --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
+         }
 
-      body {
-        margin: 0;
-        font-family: 'Orbitron', system-ui, sans-serif;
-        background: var(--bg-color);
-        color: var(--text-color);
-        display: flex;
-      }
+         body {
+            margin: 0;
+            font-family: 'Orbitron', system-ui, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+         }
 
-      aside {
-        width: 250px;
-        background: linear-gradient(to bottom, #101010, #080808);
-        padding: 1.5rem 1rem;
-        height: 100vh;
-        box-shadow: inset -1px 0 0 #00d0ff33;
-        position: sticky;
-        top: 0;
-      }
+         aside {
+            width: 250px;
+            background: linear-gradient(to bottom, #101010, #080808);
+            padding: 1.5rem 1rem;
+            height: 100vh;
+            box-shadow: inset -1px 0 0 #00d0ff33;
+            position: sticky;
+            top: 0;
+         }
 
-      aside img {
-        width: 100px;
-        border-radius: 50%;
-        display: block;
-        margin: 0 auto 1rem;
-        border: 2px solid #00d0ff;
-        box-shadow: var(--border-glow);
-      }
+         aside img {
+            width: 100px;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto 1rem;
+            border: 2px solid #00d0ff;
+            box-shadow: var(--border-glow);
+         }
 
-      .site-title {
-        text-align: center;
-        margin: 0.5rem 0 0.2rem;
-        font-size: 1.4rem;
-      }
+         .site-title {
+            text-align: center;
+            margin: 0.5rem 0 0.2rem;
+            font-size: 1.4rem;
+         }
 
-      .site-subtitle {
-        text-align: center;
-        color: #888;
-        font-size: 0.8rem;
-      }
+         .site-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.8rem;
+         }
 
-      nav a {
-        display: block;
-        color: var(--text-color);
-        text-decoration: none;
-        padding: 0.55rem 1rem;
-        border-radius: 8px;
-        margin: 0.4rem 0;
-        background: #161616;
-        border-left: 3px solid transparent;
-        transition: all 0.3s ease;
-      }
+         nav a {
+            display: block;
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 0.55rem 1rem;
+            border-radius: 8px;
+            margin: 0.4rem 0;
+            background: #161616;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+         }
 
-      nav a:hover {
-        background: #1e1e1e;
-        border-left: 3px solid var(--accent);
-        color: var(--accent);
-      }
+         nav a:hover {
+            background: #1e1e1e;
+            border-left: 3px solid var(--accent);
+            color: var(--accent);
+         }
 
-      .social-icons {
-        text-align: center;
-        margin-top: 2rem;
-      }
+         .social-icons {
+            text-align: center;
+            margin-top: 2rem;
+         }
 
-      .social-icons a {
-        margin: 0 0.5rem;
-        color: #999;
-        font-size: 1.4rem;
-        transition: 0.3s ease;
-      }
+         .social-icons a {
+            margin: 0 0.5rem;
+            color: #999;
+            font-size: 1.4rem;
+            transition: 0.3s ease;
+         }
 
-      .social-icons a:hover {
-        color: var(--accent);
-        transform: scale(1.15);
-      }
+         .social-icons a:hover {
+            color: var(--accent);
+            transform: scale(1.15);
+         }
 
-      main {
-        flex: 1;
-        padding: 2.5rem;
-        max-width: 1000px;
-        margin: auto;
-      }
+         main {
+            flex: 1;
+            padding: 2.5rem;
+            max-width: 1000px;
+            margin: auto;
+         }
 
-      .post-card {
-        background: rgba(20, 20, 20, 0.7);
-        /* transparent dark background */
-        backdrop-filter: blur(12px);
-        /* glassy blur effect */
-        -webkit-backdrop-filter: blur(12px);
-        /* Safari support */
-        padding: 1.8rem;
-        border: 1px solid #00ffcc33;
-        margin-bottom: 2.5rem;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 208, 255, 0.15), var(--border-glow);
-        transition: 0.3s ease;
-      }
+         .post-card {
+            background: rgba(20, 20, 20, 0.7);
+            /* transparent dark background */
+            backdrop-filter: blur(12px);
+            /* glassy blur effect */
+            -webkit-backdrop-filter: blur(12px);
+            /* Safari support */
+            padding: 1.8rem;
+            border: 1px solid #00ffcc33;
+            margin-bottom: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 208, 255, 0.15), var(--border-glow);
+            transition: 0.3s ease;
+         }
 
-      .post-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 0 20px #00d0ffcc;
-      }
+         .post-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 0 20px #00d0ffcc;
+         }
 
-      .post-card h2 {
-        margin-top: 0;
-      }
+         .post-card h2 {
+            margin-top: 0;
+         }
 
-      .post-card h2 a {
-        color: var(--accent);
-        text-decoration: none;
-        transition: color 0.3s ease, text-shadow 0.3s ease;
-      }
+         .post-card h2 a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+         }
 
-      .post-card h2 a:hover {
-        color: #00ffcc;
-        text-shadow: 0 0 8px #00ffcc, 0 0 15px #00ffccbb;
-      }
+         .post-card h2 a:hover {
+            color: #00ffcc;
+            text-shadow: 0 0 8px #00ffcc, 0 0 15px #00ffccbb;
+         }
 
-      .post-card a {
-        color: var(--accent);
-        text-decoration: none;
-      }
+         .post-card a {
+            color: var(--accent);
+            text-decoration: none;
+         }
 
-      .search-box {
-        margin-bottom: 2.5rem;
-        text-align: center;
-      }
+         .search-box {
+            margin-bottom: 2.5rem;
+            text-align: center;
+         }
 
-      .search-box input {
-        padding: 0.7rem 1.2rem;
-        width: 280px;
-        background: #0f0f0f;
-        color: #00ffcc;
-        border: 1px solid #00d0ff;
-        border-radius: 8px;
-        box-shadow: var(--border-glow);
-        font-size: 0.95rem;
-      }
+         .search-box input {
+            padding: 0.7rem 1.2rem;
+            width: 280px;
+            background: #0f0f0f;
+            color: #00ffcc;
+            border: 1px solid #00d0ff;
+            border-radius: 8px;
+            box-shadow: var(--border-glow);
+            font-size: 0.95rem;
+         }
 
-      .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 8px;
-      }
+         .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+         }
 
-      .tag-link {
-        background: var(--tag-bg);
-        padding: 6px 12px;
-        color: #00d0ff;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.82rem;
-        border: 1px solid #00d0ff44;
-        transition: 0.2s ease-in-out;
-      }
+         .tag-link {
+            background: var(--tag-bg);
+            padding: 6px 12px;
+            color: #00d0ff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            border: 1px solid #00d0ff44;
+            transition: 0.2s ease-in-out;
+         }
 
-      .tag-link:hover {
-        background: var(--tag-hover);
-        color: #000;
-      }
+         .tag-link:hover {
+            background: var(--tag-hover);
+            color: #000;
+         }
 
-      footer {
-        text-align: center;
-        color: #555;
-        font-size: 0.8rem;
-        margin-top: 4rem;
-      }
+         footer {
+            text-align: center;
+            color: #555;
+            font-size: 0.8rem;
+            margin-top: 4rem;
+         }
 
-      /* Terminal style */
-      .attack-path-terminal {
-        background-color: #001100;
-        color: #00ff00;
-        font-family: monospace;
-        padding: 10px;
-        margin-top: 12px;
-        border-radius: 6px;
-        white-space: pre-wrap;
-        font-size: 0.9rem;
-        box-shadow: inset 0 0 6px #00ff0044;
-        max-height: 200px;
-        overflow-y: auto;
-      }
+         /* Terminal style */
+         .attack-path-terminal {
+            background-color: #001100;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 10px;
+            margin-top: 12px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            box-shadow: inset 0 0 6px #00ff0044;
+            max-height: 200px;
+            overflow-y: auto;
+         }
 
-      .attack-path-terminal::-webkit-scrollbar {
-        width: 0px;
-        background: transparent;
-      }
+         .attack-path-terminal::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+         }
 
-      .attack-path-terminal:hover::-webkit-scrollbar {
-        width: 6px;
-      }
+         .attack-path-terminal:hover::-webkit-scrollbar {
+            width: 6px;
+         }
 
-      .attack-path-terminal::-webkit-scrollbar-track {
-        background: #001100;
-      }
+         .attack-path-terminal::-webkit-scrollbar-track {
+            background: #001100;
+         }
 
-      .attack-path-terminal {
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
+         .attack-path-terminal {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+         }
 
-      @media (prefers-color-scheme: light) {
-        .attack-path-terminal {
-          scrollbar-width: thin;
-          -ms-overflow-style: auto;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Sidebar -->
-    <aside>
-      <img src="assets/avatar.jpeg" alt="Profile" />
-      <div class="site-title">Kshitij Raut</div>
-      <div class="site-subtitle">Cyber Security Analyst</div>
-      <nav>
-        <a href="index.html">🏠 Home</a>
-        <a href="categories.html">📚 Categories</a>
-        <a href="tags.html">🏷️ Tags</a>
-        <a href="archives.html">🗃️ Archives</a>
-        <a href="about.html">ℹ️ About</a>
-      </nav>
-      <div class="social-icons">
-        <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
-          <i class="fab fa-linkedin"></i>
-        </a>
-        <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
-          <i class="fas fa-envelope"></i>
-        </a>
-        <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
-          <i class="fab fa-youtube"></i>
-        </a>
-        <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
-          <i class="fab fa-x-twitter"></i>
-        </a>
-      </div>
-    </aside>
-    <!-- Main Content -->
-    <main>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search posts..." />
-      </div>
-      <section id="posts"></section>
-      <footer>
-        <p>&copy; 2025 0x0z0n</p>
-      </footer>
-    </main>
-    <!-- JavaScript -->
-    <script>
-      const searchInput = document.getElementById("searchInput");
-      const postsContainer = document.getElementById("posts");
-      let allPosts = [];
+         @media (prefers-color-scheme: light) {
+            .attack-path-terminal {
+               scrollbar-width: thin;
+               -ms-overflow-style: auto;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <!-- Sidebar -->
+      <aside>
+         <img src="assets/avatar.jpeg" alt="Profile" />
+         <div class="site-title">Kshitij Raut</div>
+         <div class="site-subtitle">Cyber Security Analyst</div>
+         <nav>
+            <a href="index.html">🏠 Home</a>
+            <a href="categories.html">📚 Categories</a>
+            <a href="tags.html">🏷️ Tags</a>
+            <a href="archives.html">🗃️ Archives</a>
+            <a href="about.html">ℹ️ About</a>
+         </nav>
+         <div class="social-icons">
+            <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
+               <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
+               <i class="fas fa-envelope"></i>
+            </a>
+            <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
+               <i class="fab fa-youtube"></i>
+            </a>
+            <a href="https://x.com/0x0z0n" target="_blank" title="X/Twitter">
+               <i class="fab fa-x-twitter"></i>
+            </a>
+         </div>
+      </aside>
+      <!-- Main Content -->
+      <main>
+         <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search posts..." />
+         </div>
+         <section id="posts"></section>
+         <footer>
+            <p>&copy; 2025 0x0z0n</p>
+         </footer>
+      </main>
+      <!-- JavaScript -->
+      <script>
+         const searchInput = document.getElementById("searchInput");
+         const postsContainer = document.getElementById("posts");
+         let allPosts = [];
 
-      function renderPosts(posts) {
-        postsContainer.innerHTML = "";
-        if (posts.length === 0) {
-          postsContainer.innerHTML = " < p > No posts found. < /p>";
-          return;
-        }
-        posts.forEach(post => {
-          const article = document.createElement("article");
-          article.className = "post-card";
-          article.setAttribute("data-tags", post.tags.join(", "));
-          const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
-          // Prepare terminal view of attack_path if present
-          let attackPathText = "";
-          if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
-            attackPathText = post.attack_path.map(step => {
-              return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
-            }).join("\n");
-          }
-          article.innerHTML = `
+         function renderPosts(posts) {
+            postsContainer.innerHTML = "";
+            if (posts.length === 0) {
+               postsContainer.innerHTML = " < p > No posts found. < /p>";
+               return;
+            }
+            posts.forEach(post => {
+                  const article = document.createElement("article");
+                  article.className = "post-card";
+                  article.setAttribute("data-tags", post.tags.join(", "));
+                  const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
+                  // Prepare terminal view of attack_path if present
+                  let attackPathText = "";
+                  if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
+                     attackPathText = post.attack_path.map(step => {
+                        return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
+                     }).join("\n");
+                  }
+                  article.innerHTML = `
           
+      
       <h2>
         <a href="${post.href}">${post.title}</a>
       </h2>
       <p>
-        <strong>Category:</strong> ${categories || "Uncategorized"}
-      </p>
-      <p>
-        <strong>Date:</strong> ${post.date}
-      </p>
-      <p>
-        <strong>Tags:</strong>
-      </p>
-      <div class="tag-container">
-            ${post.tags.map(tag =>
-              `
-        <a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-            ).join("")}
-          
-      </div>
-          ${attackPathText ? `
-      <pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
-        `;
+        <strong>Category:</strong> ${
+  categories
+    ? categories.split(', ').map(cat => {
+        if (cat.includes(":")) {
+          const [main, sub] = cat.split(":").map(s => s.trim());
+          return `
+        <span>${main}:</span>
+        <span style="color:#00ffcc">${sub}</span>`;
+        } else {
+          return ` < span style = "color:#00ffcc" > $ {
+                     cat
+                  } < /span>`;
+               }
+            }).join(' < br / > '): "Uncategorized"
+         } < /p> < p > < strong > Date: < /strong> ${post.date} < /p> < p > < strong > Tags: < /strong> < /p> < div class = "tag-container" > $ {
+            post.tags.map(tag => `
+        
+        <a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`).join("")
+         } < /div>
+         $ {
+            attackPathText ? `
+      
+      <pre class="attack-path-terminal">${attackPathText}</pre>` : ""
+         }
+         `;
           postsContainer.appendChild(article);
         });
       }
@@ -345,6 +353,7 @@
         renderPosts(filtered);
       });
       searchInput.addEventListener("input", filterPosts);
-    </script>
-  </body>
+    
+      </script>
+   </body>
 </html>
