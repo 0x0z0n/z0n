@@ -148,6 +148,8 @@ impacket-dpapi credential -file <credential_file> -key <decrypted_master_key>
 ```
 This process successfully extracts new credentials: jeremy.combs with the password qT3V.....7W4m.
 
+![View](Pictures/htb_voleur_access.png)
+
 ### Privilege Escalation (Part 3) - SSH Access and Final Credential Dump
 
 With the new jeremy.combs credentials, a final push is made to compromise the domain.
