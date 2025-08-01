@@ -178,6 +178,25 @@
         color: #000;
       }
 
+      .category-button {
+  display: inline-block;
+  background-color: #222;
+  border: 1px solid #00ffcc44;
+  color: #00ffcc;
+  padding: 6px 12px;
+  margin: 2px 4px 4px 0;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.2s ease-in-out;
+}
+
+.category-button:hover {
+  background-color: var(--tag-hover);
+  color: #000;
+}
+
+
       footer {
         text-align: center;
         color: #555;
@@ -293,18 +312,18 @@
       <h2>
         <a href="${post.href}">${post.title}</a>
       </h2>
-      <p><strong>Category:</strong> ${
-  categories
-    ? categories.split(', ').map(cat => {
-        if (cat.includes(":")) {
-          const [main, sub] = cat.split(":").map(s => s.trim());
-          return `<span>${main}:</span> <span style="color:#00ffcc">${sub}</span>`;
-        } else {
-          return `<span style="color:#00ffcc">${cat}</span>`;
-        }
-      }).join('<br/>')
-    : "Uncategorized"
-}</p>
+      <div>
+  <strong>Category:</strong><br/>
+  ${
+    categories
+      ? categories.split(', ').map(cat => {
+          const encoded = encodeURIComponent(cat.trim());
+          return `<a href="index.html?category=${encoded}" class="category-button">${cat.trim()}</a>`;
+        }).join('')
+      : `<span style="color:#888;">Uncategorized</span>`
+  }
+</div>
+
 
       <p>
         <strong>Date:</strong> ${post.date}
