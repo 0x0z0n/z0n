@@ -1,5 +1,89 @@
 [
    {
+      "title": "HackTheBox: Voleur",
+      "href": "posts/htb_Voleur.html",
+      "date": "2025-08-01",
+      "category": [
+          "HackTheBox",
+          "Windows",
+          "Active Directory"
+      ],
+      "tags": [
+          "Nmap",
+          "SMB",
+          "Kerberos",
+          "LDAP",
+          "impacket",
+          "impacket-getTGT",
+          "nxc",
+          "NetExec",
+          "bloodhound",
+          "brute-force",
+          "targetedKerberoast",
+          "WriteSPN",
+          "Evil-WinRM",
+          "RunasCs",
+          "DPAPI",
+          "Restore-ADObject",
+          "impacket-dpapi",
+          "ssh",
+          "netcat",
+          "impacket-secretsdump",
+          "DCSync"
+      ],
+      "attack_path": [
+          {
+              "step": 1,
+              "user": "ryan.naylor",
+              "technique": "Nmap scan, Kerberos TGT acquisition, SMB/LDAP enumeration",
+              "result": "Gained initial access and discovered a sensitive file on the IT share.",
+              "mitigation": "Enforce strong password policies; implement network segmentation; monitor authentication logs."
+          },
+          {
+              "step": 2,
+              "user": "ryan.naylor",
+              "technique": "SMB file download and brute-force crack of an encrypted spreadsheet",
+              "result": "Found multiple credentials, including those for `svc_ldap` and a deleted user `Todd Wolfe`.",
+              "mitigation": "Secure sensitive files on accessible shares; use a strong password for encryption."
+          },
+          {
+              "step": 3,
+              "user": "svc_ldap",
+              "technique": "Targeted Kerberoasting exploiting a misconfigured `WriteSPN` ACL",
+              "result": "Acquired and cracked the password for the `svc_winrm` user.",
+              "mitigation": "Regularly audit and remediate excessive ACL permissions; monitor for Kerberoast attacks."
+          },
+          {
+              "step": 4,
+              "user": "svc_winrm",
+              "technique": "WinRM access and leveraging `RESTORE_USERS` group to restore an account",
+              "result": "Restored the `Todd Wolfe` account to access his archived profile data.",
+              "mitigation": "Follow the principle of least privilege for service accounts; restrict account restoration privileges."
+          },
+          {
+              "step": 5,
+              "user": "Todd Wolfe",
+              "technique": "SMB access to archived user data and DPAPI decryption",
+              "result": "Recovered the password for `jeremy.combs` from a DPAPI credential blob.",
+              "mitigation": "Protect user archives and DPAPI master keys; ensure sensitive data is not stored in plain text."
+          },
+          {
+              "step": 6,
+              "user": "jeremy.combs",
+              "technique": "SSH private key discovery and SSH login",
+              "result": "Gained a foothold on the system as `svc_backup` via SSH using an exposed private key.",
+              "mitigation": "Securely store SSH keys and other credentials; monitor for SSH logins from unusual sources."
+          },
+          {
+              "step": 7,
+              "user": "svc_backup",
+              "technique": "File exfiltration of `ntds.dit` and `SYSTEM` and secretsdump",
+              "result": "Dumped all domain user hashes and Kerberos keys, leading to full domain compromise.",
+              "mitigation": "Strictly control access to `ntds.dit` and `SYSTEM` files; implement host-based security to prevent file access."
+          }
+      ]
+},
+{
       "title": "HackTheBox: Puppy",
       "href": "posts/htb_Puppy.html",
       "date": "2025-07-27",
