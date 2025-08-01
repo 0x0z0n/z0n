@@ -723,3 +723,8 @@ Anyways, I hope you enjoyed it! Don't be afraid to stick around in this room and
 Finished!
 
 `No answer needed`
+
+
+![The Docker Rodeo Mindmap](Pictures/THM_Docker_Rodeo_Mindmap.svg)
+
+**Pwned! The Docker Rodeo**
