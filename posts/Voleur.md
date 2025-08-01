@@ -52,7 +52,6 @@ nxc ldap voleur.htb -u ryan.naylor -p HollowOct31Nyt -k
 ```
 nxc smb dc.voleur.htb -u ryan.naylor -p HollowOct31Nyt -k
 ```
-# ... successfully authenticates ...
 
 Information Gathering and First Privilege Escalation Path
 The initial foothold provides an opportunity for deeper enumeration to find a path for privilege escalation.
@@ -108,7 +107,7 @@ python targetedKerberoast.py -k --dc-host dc.voleur.htb -u svc_ldap -d voleur.ht
 ```
 This dumps the Kerberos tickets for lacey.miller and svc_winrm. The ticket for svc_winrm is successfully cracked, yielding its password (which is not explicitly stated in the log but is a crucial step).
 
-WinRM Access: The newly acquired credentials for svc_winrm are used to establish a session via WinRM on port 5985.
+WinRM Access: The newly acquired credentials for svc_winrm are used to establish a session via WinRM.
 ![Credentials](Pictures/htb_voleur_svc_winrm_cred.png)
 
 Bash
@@ -161,6 +160,7 @@ Note.txt.txt indicates that the key is for the svc_backup user and is related to
 
 SSH Login: The private key is used to connect to the SSH server on port 2222 as svc_backup.
 ![Key](Pictures/htb_voleur_sshkey.png)
+
 Bash
 ```
 chmod 600 id_rsa
