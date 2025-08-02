@@ -725,6 +725,5 @@ Finished!
 `No answer needed`
 
 
-![The Docker Rodeo Mindmap](Pictures/THM_Docker_Rodeo_Mindmap.svg)
 
 **Pwned! The Docker Rodeo**
