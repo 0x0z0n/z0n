@@ -354,10 +354,10 @@ e94XXXXXXXXXXXXXXXXXXXXXXXXXXXX0144
 | Step | User / Access | Technique Used | Result |
 |---|---|---|---|
 | 1 | ryan.naylor | Nmap, ntpdate, impacket-getTGT, nxc | Initial access to Active Directory services via Kerberos. Confirmed successful authentication with provided credentials. |
-| 2 | ryan.naylor | NetExec, impacket-smbclient, brute-force | Enumerated SMB shares, discovered a file `Access_Review.xlsx` on the `IT` share. Cracked the password (`football1`) and found credentials for `svc_ldap`, `svc_iis`, and `Todd Wolfe`. |
+| 2 | ryan.naylor | NetExec, impacket-smbclient, brute-force | Enumerated SMB shares, discovered a file `Access_Review.xlsx` on the `IT` share. Cracked the password (`fo..........1`) and found credentials for `svc_ldap`, `svc_iis`, and `Todd Wolfe`. |
 | 3 | svc_ldap | impacket-getTGT, targetedKerberoast.py | Gained access to `svc_winrm`'s hashed password by exploiting `WriteSPN` and performing targeted Kerberoasting. |
 | 4 | svc_winrm | Evil-WinRM, RunasCs, Get-ADObject, Restore-ADObject | Logged in via WinRM. Impersonated `svc_ldap` to restore the deleted user `Todd Wolfe`. |
-| 5 | Todd Wolfe | impacket-smbclient, impacket-dpapi | Gained access to `Todd Wolfe`'s archived profile on a new SMB share. Decrypted DPAPI credentials using his password (`NightT1meP1dg3on14`) to discover `jeremy.combs`'s credentials. |
+| 5 | Todd Wolfe | impacket-smbclient, impacket-dpapi | Gained access to `Todd Wolfe`'s archived profile on a new SMB share. Decrypted DPAPI credentials using his password (`Nig............14`) to discover `jeremy.combs`'s credentials. |
 | 6 | jeremy.combs | impacket-smbclient, ssh | Found the `Third-Line Support` SMB share. Downloaded `id_rsa` and a note revealing the key was for `svc_backup`. Used the key to log in via SSH on port 2222. |
 | 7 | svc_backup | netcat, impacket-secretsdump | Exfiltrated `ntds.dit` and `SYSTEM` files from a mounted C drive backup. Used these files to perform an offline hash dump of all domain users, including the `Administrator`. |
 ```
