@@ -48,7 +48,7 @@ Bash
 ```
 nxc ldap voleur.htb -u ryan.naylor -p HollowOct31Nyt -k
 ```
-# ... successfully authenticates ...
+**Successfully Authenticates**
 ```
 nxc smb dc.voleur.htb -u ryan.naylor -p HollowOct31Nyt -k
 ```
@@ -214,7 +214,7 @@ export KRB5CCNAME=/home/XXXXXXXXXXXx/ctf_OpenVPN/administrator.ccache
 ```
 
 
-**add that configuration to the Kerberos configuration file:**
+**Add that configuration to the Kerberos configuration file:**
 
 bash
 
