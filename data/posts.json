@@ -1,5 +1,69 @@
 [
    {
+    "title": "HackTheBox: Editor",
+    "href": "posts/htb_editor.html",
+    "date": "2025-08-04",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Nmap",
+        "XWiki",
+        "CVE-2025-24983",
+        "Groovy",
+        "ReverseShell",
+        "hibernate",
+        "Netdata",
+        "CVE-2024-32019",
+        "LPE"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": null,
+            "technique": "Nmap scan, DNS enumeration",
+            "result": "Discovered open ports 80/8080 and identified domain `editor.htb`.",
+            "mitigation": "Properly configure firewall rules to expose only necessary services; ensure DNS records are not easily discoverable by unauthorized parties."
+        },
+        {
+            "step": 2,
+            "user": null,
+            "technique": "Web enumeration, CVE discovery",
+            "result": "Identified XWiki v15.10.8 and found a remote code execution vulnerability (CVE-2025-24983) via Groovy script injection.",
+            "mitigation": "Keep all web applications and their dependencies updated; perform regular vulnerability scanning on all exposed services."
+        },
+        {
+            "step": 3,
+            "user": "xwiki",
+            "technique": "Groovy script injection",
+            "result": "Used the CVE to upload a reverse shell script and execute it, gaining a shell as the `xwiki` user.",
+            "mitigation": "Implement a Web Application Firewall (WAF) to detect and block malicious payloads; restrict the execution of scripts within web application contexts."
+        },
+        {
+            "step": 4,
+            "user": "oliver",
+            "technique": "Credential discovery in config files",
+            "result": "Found SSH credentials (`oliver:theXXXXXXXam99`) in `/usr/lib/xwiki/WEB-INF/hibernate.cfg.xml` and used them to log in via SSH.",
+            "mitigation": "Securely store credentials in a dedicated secrets manager; enforce strict file permissions on configuration files to prevent unauthorized access."
+        },
+        {
+            "step": 5,
+            "user": "oliver",
+            "technique": "Local port enumeration & forwarding",
+            "result": "Discovered a locally-bound `netdata` service (v1.45.2) on port 19999 and forwarded it via SSH to access the dashboard.",
+            "mitigation": "Bind all non-critical services to the loopback interface; implement monitoring to detect unusual port-forwarding activity."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "Netdata LPE (CVE-2024-32019)",
+            "result": "Exploited a local privilege escalation vulnerability in `netdata` by using a malicious executable and `PATH` manipulation to gain a root shell.",
+            "mitigation": "Regularly patch all system software; restrict access to writable directories like `/tmp`; implement robust security policies for `sudo` and other privileged executables."
+        }
+    ]
+},
+   {
     "title": "HackTheBox: Outbound",
     "href": "posts/htb_Outbound.html",
     "date": "2025-08-03",
@@ -38,7 +102,7 @@
             "step": 3,
             "user": "jacob",
             "technique": "Database credentials discovery and password decryption",
-            "result": "Found MySQL credentials (`roundcube:RCDBPass2025`) in a config file and used them to access the 'session' table. Decrypted `jacob`'s password using a 3DES key from another config file.",
+            "result": "Found MySQL credentials (`roundcube:RCDXXXXXXX025`) in a config file and used them to access the 'session' table. Decrypted `jacob`'s password using a 3DES key from another config file.",
             "mitigation": "Store credentials securely; encrypt sensitive data in databases; restrict file permissions to prevent unauthorized access to configuration files."
         },
         {
@@ -291,7 +355,7 @@
             "step": 4,
             "user": "multiple",
             "technique": "Password spraying with netexec",
-            "result": "Found valid credentials for ant.edwards / Antman2025!",
+            "result": "Found valid credentials for ant.edwards / AntXXXX25!",
             "mitigation": "Enforce account lockouts; require complex passwords"
          },
          {
@@ -469,7 +533,7 @@
             "step": 3,
             "user": "henry",
             "technique": "Kerberoasting (Add SPN + Crack TGS Hash)",
-            "result": "Added SPN to Alfred account, dumped TGS ticket, cracked password to reveal `alfred:basketball`.",
+            "result": "Added SPN to Alfred account, dumped TGS ticket, cracked password to reveal `alfred:baXXXXXXXll`.",
             "mitigation": "Avoid weak passwords; monitor and alert on SPN modifications and TGS ticket requests for high-value users."
          },
          {
@@ -647,7 +711,7 @@
             "step": 5,
             "user": "app",
             "technique": "Hash Cracking (MD5 + John)",
-            "result": "Cracked MD5 hash for `gael` and recovered password: `mattp005numbertwo`.",
+            "result": "Cracked MD5 hash for `gael` and recovered password: `mattpXXXXXXXXXXXXXXtwo`.",
             "mitigation": "Use strong password hashing algorithms like Argon2 or bcrypt with sufficient cost factors."
          },
          {
@@ -675,7 +739,7 @@
             "step": 9,
             "user": "gael",
             "technique": "Bcrypt Hash Cracking (John + rockyou.txt)",
-            "result": "Cracked password: `!@#$%^` for user `backrest_root`.",
+            "result": "Cracked password: `!@XX%^` for user `backrest_root`.",
             "mitigation": "Use complex and unique passwords; enable account lockout policies on repeated failed attempts."
          },
          {
