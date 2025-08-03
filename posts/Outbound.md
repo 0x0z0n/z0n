@@ -65,7 +65,7 @@ select * from session;
 
 The session table's vars column contained Base64 encoded data. Decoding this data revealed an encrypted password for the user jacob and an auth_secret.
 
-The config.inc.php file also contained a des_key: rcmail-!24ByteDESkey Str.
+The config.inc.php file also contained a des_key: rcmail-!XXXXXXXXXXXX Str.
 
 ```
 tyler@mail:/var/www/html/roundcube/config$ cat config.inc.php
@@ -239,7 +239,7 @@ jacob@outbound:~$ su spy
 spy@outbound:/home/jacob# ls                                                                                                                                  
 snapshot_01754213707_01754213707.VTKFBl  user.txt                                                                                                             
 spy@outbound:/home/jacob# cat user.txt
-6ebfd4a3a75ef7071b73442e4875a300
+<HIDDEN>
 spy@outbound:/home/jacob# cd /root
 spy@outbound:~# ls                                                                                                                                            
 root.txt                                                                                                                                                      
