@@ -1,5 +1,70 @@
 [
    {
+    "title": "HackTheBox: Outbound",
+    "href": "posts/htb_Outbound.html",
+    "date": "2025-08-03",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Nmap",
+        "Nuclei",
+        "Roundcube",
+        "CVE-2025-49113",
+        "Metasploit",
+        "MySQL",
+        "3DES",
+        "sudo",
+        "CVE-2025-27591",
+        "symlink"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "tyler",
+            "technique": "Nmap scan, Nuclei scan, Webmail access",
+            "result": "Discovered Roundcube webmail (v1.6.10) with credentials for 'tyler', and identified CVE-2025-49113 as a potential RCE vector.",
+            "mitigation": "Keep web applications and their components up to date; use strong, unique passwords for all accounts; monitor for unusual web traffic."
+        },
+        {
+            "step": 2,
+            "user": "www-data",
+            "technique": "CVE-2025-49113 exploitation",
+            "result": "Gained a reverse shell as the 'www-data' user by exploiting the Roundcube deserialization vulnerability.",
+            "mitigation": "Patch web applications promptly; implement web application firewalls (WAF) to detect and block exploit attempts."
+        },
+        {
+            "step": 3,
+            "user": "jacob",
+            "technique": "Database credentials discovery and password decryption",
+            "result": "Found MySQL credentials (`roundcube:RCDBPass2025`) in a config file and used them to access the 'session' table. Decrypted `jacob`'s password using a 3DES key from another config file.",
+            "mitigation": "Store credentials securely; encrypt sensitive data in databases; restrict file permissions to prevent unauthorized access to configuration files."
+        },
+        {
+            "step": 4,
+            "user": "jacob",
+            "technique": "SSH login",
+            "result": "Used `jacob`'s decrypted password to log in via SSH and obtained the `user.txt` flag.",
+            "mitigation": "Rotate passwords frequently; enforce multi-factor authentication (MFA) for SSH access."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Privilege escalation via `sudo` and symlink attack",
+            "result": "Exploited a vulnerability (CVE-2025-27591) in the `below` binary by leveraging its `sudo` permissions to overwrite `/etc/passwd` using a symlink.",
+            "mitigation": "Audit `sudo` permissions carefully; restrict the use of wildcards in `sudo` entries; apply patches for known privilege escalation vulnerabilities."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "Final root access",
+            "result": "Switched to the newly created root user to gain a full root shell and retrieve the `root.txt` flag.",
+            "mitigation": "Regularly monitor for changes in critical system files like `/etc/passwd`; use intrusion detection systems (IDS) to alert on suspicious activity."
+        }
+    ]
+},
+{
     "title": "HackTheBox: RustyKey",
     "href": "posts/htb_RustyKey.html",
     "date": "2025-08-02",
