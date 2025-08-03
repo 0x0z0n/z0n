@@ -50,15 +50,15 @@ exploit
 ```
 Upon successful exploitation, a shell was obtained as the www-data user.
 
-The next step was to find credentials for another user. A configuration file for Roundcube was located at /var/www/html/roundcube/config/config.inc.php. This file contained the credentials for a MySQL database: roundcube:RCDBPass2025.
+The next step was to find credentials for another user. A configuration file for Roundcube was located at /var/www/html/roundcube/config/config.inc.php. This file contained the credentials for a MySQL database: roundcube:RCXXXXXXXX25.
 
 ```
-$config['db_dsnw'] = 'mysql://roundcube:RCDBPass2025@localhost/roundcube';
+$config['db_dsnw'] = 'mysql://roundcube:RCXXXXXXXX25@localhost/roundcube';
 ```
 Using these credentials, the MySQL database was accessed, and the session table was queried.
 
 ```
-mysql -u roundcube -pRCDBPass2025 -h localhost roundcube
+mysql -u roundcube -pRCXXXXXXXX25 -h localhost roundcube
 use roundcube;
 select * from session;
 ```
@@ -79,7 +79,7 @@ $config = [];
 // For examples see http://pear.php.net/manual/en/package.database.mdb2.intro-dsn.php
 // NOTE: for SQLite use absolute path (Linux): 'sqlite:////full/path/to/sqlite.db?mode=0646'
 //       or (Windows): 'sqlite:///C:/full/path/to/sqlite.db'
-$config['db_dsnw'] = 'mysql://roundcube:RCDBPass2025@localhost/roundcube';
+$config['db_dsnw'] = 'mysql://roundcube:RCXXXXXXXX25@localhost/roundcube';
 
 // IMAP host chosen to perform the log-in.
 // See defaults.inc.php for the option description.
@@ -143,7 +143,7 @@ failed_login_counter: 1
 
 
 
-tyler@mail:/$ mysql -u roundcube -pRCDBPass2025 -h localhost roundcube -e 'use roundcube;select * from session;' -E
+tyler@mail:/$ mysql -u roundcube -pRCXXXXXXXX25 -h localhost roundcube -e 'use roundcube;select * from session;' -E
 *************************** 1. row ***************************
 sess_id: 6a5ktqih5uca6lj8vrmgh9v0oh
 changed: 2025-06-08 15:46:40
@@ -259,7 +259,7 @@ With root access, the root.txt flag was retrieved, completing the machine.
 | Step | User / Access | Technique Used | Result |
 |---|---|---|---|
 | 1 | N/A | Nmap, Nuclei, Initial Credentials (tyler:LhKL1o9Nm3X2) | Initial enumeration of open ports and services. Discovered Roundcube webmail and a critical vulnerability (CVE-2025-49113). Logged into the webmail with provided credentials. |
-| 2 | www-data | Metasploit, MySQL enumeration | Exploited CVE-2025-49113 to gain a shell as `www-data`. Discovered MySQL credentials (`roundcube:RCDBPass2025`) in a configuration file. |
+| 2 | www-data | Metasploit, MySQL enumeration | Exploited CVE-2025-49113 to gain a shell as `www-data`. Discovered MySQL credentials (`roundcube:RCXXXXXXXX25`) in a configuration file. |
 | 3 | jacob | Database enumeration, 3DES decryption | Queried the `session` table in the `roundcube` database. Decrypted a password for `jacob` using a 3DES key found in a configuration file. |
 | 4 | jacob | SSH access | Used the decrypted password to log in via SSH as `jacob`, obtaining the `user.txt` flag. |
 | 5 | root | `sudo -l`, CVE-2025-27591 (symlink attack) | Identified a `sudo` vulnerability in the `below` binary. Exploited a symlink attack on `/etc/passwd` by overwriting the `error_root.log` file. |
