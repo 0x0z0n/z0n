@@ -237,7 +237,7 @@ Info: Downloading C:\Users\bb.morgan\desktop\internal.pdf to internal.pdf
 ```
 ![Pwned! User](Pictures/htb_Rustykey_User_flag.png)
 
-![BH Start](Pictures/htb_Rustykey_Internal_DOC.pdf)
+![BH Start](Pictures/htb_Rustykey_Internal_DOC.png)
 
 The PDF states that the SUPPORT group has been granted extended permissions to test file archiving functions and may make registry adjustments. The user EE.REED is in the SUPPORT group and the PROTECTED OBJECTS group.
 
