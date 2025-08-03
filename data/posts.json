@@ -1,5 +1,92 @@
 [
    {
+    "title": "HackTheBox: RustyKey",
+    "href": "posts/htb_RustyKey.html",
+    "date": "2025-08-02",
+    "category": [
+        "HackTheBox",
+        "Windows",
+        "Active Directory"
+    ],
+    "tags": [
+        "Nmap",
+        "Kerberos",
+        "LDAP",
+        "impacket",
+        "impacket-getTGT",
+        "nxc",
+        "NetExec",
+        "timeroast",
+        "hashcat",
+        "bloodyAD",
+        "evil-winrm",
+        "RunasCs",
+        "COM Hijack",
+        "msfvenom",
+        "RBCD",
+        "impacket-secretsdump",
+        "DCSync"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "rr.parker",
+            "technique": "Nmap scan, Kerberos TGT acquisition",
+            "result": "Gained initial access to Active Directory services via Kerberos after configuring krb5.conf.",
+            "mitigation": "Enforce strong password policies; implement network segmentation; monitor authentication logs."
+        },
+        {
+            "step": 2,
+            "user": "rr.parker",
+            "technique": "Timeroasting vulnerability and hash cracking",
+            "result": "Discovered computer account hashes by exploiting a Timeroasting vulnerability and cracked the password for IT-COMPUTER3$.",
+            "mitigation": "Enforce strong password policies for all accounts, including computer accounts."
+        },
+        {
+            "step": 3,
+            "user": "IT-COMPUTER3$",
+            "technique": "Password reset via bloodyAD and WinRM access",
+            "result": "Used bloodyAD to remove the IT group from PROTECTED OBJECTS, allowing a password reset for bb.morgan. Logged in via evil-winrm and obtained the user.txt flag.",
+            "mitigation": "Implement the principle of least privilege and regularly audit protected objects."
+        },
+        {
+            "step": 4,
+            "user": "ee.reed",
+            "technique": "RunasCs for reverse shell",
+            "result": "Found a PDF mentioning registry modification rights for the SUPPORT group. Used RunasCs to get a PowerShell reverse shell as ee.reed.",
+            "mitigation": "Restrict program execution rights; use application whitelisting."
+        },
+        {
+            "step": 5,
+            "user": "ee.reed",
+            "technique": "COM Hijack with a malicious DLL",
+            "result": "Performed a COM Hijack by creating a malicious DLL and modifying the InprocServer32 registry key for 7-Zip, which granted a Meterpreter session as mm.turner.",
+            "mitigation": "Monitor and restrict registry modifications; use host-based security solutions to prevent DLL hijacking."
+        },
+        {
+            "step": 6,
+            "user": "mm.turner",
+            "technique": "Resource-based Constrained Delegation (RBCD)",
+            "result": "Exploited RBCD by using mm.turner's permissions to configure the DC computer object to delegate to IT-COMPUTER3$.",
+            "mitigation": "Regularly audit and remediate excessive ACL permissions for delegation; monitor for delegation changes."
+        },
+        {
+            "step": 7,
+            "user": "backupadmin",
+            "technique": "Impersonation with impacket-getST and wmiexec",
+            "result": "Used impacket-getST to impersonate backupadmin via Kerberos delegation, gaining a shell with impacket-wmiexec.",
+            "mitigation": "Implement host-based security to restrict lateral movement and shell access."
+        },
+        {
+            "step": 8,
+            "user": "administrator",
+            "technique": "DCSync and final WinRM access",
+            "result": "Performed a DCSync attack to dump all domain user hashes, including the Administrator's. Used the Administrator's hash to obtain a ticket and logged in with evil-winrm to gain full control of the domain controller.",
+            "mitigation": "Restrict DCSync privileges to only necessary accounts; implement advanced threat detection and response tools to monitor for such attacks."
+        }
+    ]
+},
+{
       "title": "HackTheBox: Voleur",
       "href": "posts/htb_Voleur.html",
       "date": "2025-08-01",
