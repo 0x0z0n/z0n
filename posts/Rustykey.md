@@ -393,7 +393,7 @@ rustykey\administrator
 *Evil-WinRM* PS C:\Users\Administrator\Documents>
 ```
 
-![BH Start](Pictures/htb_Rustykey_Root_flag.png)
+![BH Root](Pictures/htb_Rustykey_Root_flag.png)
 
 
 #### 🏁 Summary of Attack Chain
@@ -410,5 +410,8 @@ rustykey\administrator
 | 7 | backupadmin | impacket-getST, impacket-wmiexec | Used impacket-getST to impersonate backupadmin via Kerberos delegation. Gained a shell with impacket-wmiexec as backupadmin. |
 | 8 | administrator | impacket-secretsdump, impacket-getTGT, evil-winrm | Performed a DCSync attack to dump all domain user hashes, including the Administrator's. Used the Administrator's hash to obtain a ticket and logged in with evil-winrm to gain full control of the domain controller. |
 ```
+
+
+
 
 **Pwned! RustKey**

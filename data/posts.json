@@ -1,5 +1,88 @@
 [
    {
+    "title": "HackTheBox: Mirage",
+    "href": "posts/htb_mirage.html",
+    "date": "2025-08-04",
+    "category": [
+        "HackTheBox",
+        "Windows"
+    ],
+    "tags": [
+        "Nmap",
+        "ActiveDirectory",
+        "Kerberos",
+        "DNSHijacking",
+        "NATS",
+        "CredentialInterception",
+        "Impacket",
+        "Kerberoasting",
+        "BloodHound",
+        "bloodyAD",
+        "ESC10",
+        "Certipy",
+        "RBCD",
+        "DCSync"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": null,
+            "technique": "Nmap scan, NFS enumeration",
+            "result": "Identified open ports for Active Directory, NATS service on port 4222, and an NFS share. Accessed PDF reports from the NFS share.",
+            "mitigation": "Restrict NFS share access to authorized hosts; ensure no sensitive data is stored in publicly accessible shares."
+        },
+        {
+            "step": 2,
+            "user": "Dev_Account_A",
+            "technique": "DNS hijacking & Credential interception",
+            "result": "Hijacked the DNS record for `nats-svc.mirage.htb` and used a fake NATS server to intercept credentials for `Dev_Account_A`.",
+            "mitigation": "Securely configure DNS updates; disable dynamic DNS if not needed; implement network monitoring to detect rogue services."
+        },
+        {
+            "step": 3,
+            "user": "david.jjackson",
+            "technique": "NATS service interaction",
+            "result": "Used the `Dev_Account_A` credentials to interact with the NATS service, retrieving the credentials for the `david.jjackson` user from log messages.",
+            "mitigation": "Do not log sensitive credentials in plaintext; use end-to-end encryption for message queues; restrict access to messaging services."
+        },
+        {
+            "step": 4,
+            "user": "nathan.aadam",
+            "technique": "Kerberoasting & password cracking",
+            "result": "Discovered the `nathan.aadam` account was vulnerable to Kerberoasting, extracted its hash, and cracked the password (`3eXXXXX3`).",
+            "mitigation": "Do not use weak passwords for service accounts; use AES keys for Kerberos tickets; enforce strong password policies."
+        },
+        {
+            "step": 5,
+            "user": "javier.mmarshall",
+            "technique": "AD object manipulation via bloodyAD",
+            "result": "Used a discovered password for `mark.bbond` to enable and reset the password of the disabled `javier.mmarshall` account, leveraging `nathan.aadam`'s rights.",
+            "mitigation": "Apply the 'Protected Users' group to sensitive accounts; regularly audit and remove unnecessary ACLs and permissions on AD objects."
+        },
+        {
+            "step": 6,
+            "user": "Mirage-Service$",
+            "technique": "GMSA password retrieval",
+            "result": "Used the compromised `javier.mmarshall` account to retrieve the hash for the `Mirage-Service$` Group Managed Service Account.",
+            "mitigation": "Restrict access to GMSAs to the specific computers that need them; monitor for unauthorized attempts to read GMSA passwords."
+        },
+        {
+            "step": 7,
+            "user": "dc01$",
+            "technique": "ESC10 Abuse & Schannel Authentication",
+            "result": "Exploited a weak certificate mapping vulnerability (ESC10) on the `dc01$` computer account to forge a certificate and impersonate the DC.",
+            "mitigation": "Review certificate templates for weak configurations; enforce strong certificate mapping rules; monitor for unusual certificate requests."
+        },
+        {
+            "step": 8,
+            "user": "Administrator",
+            "technique": "Resource-Based Constrained Delegation (RBCD) & DCSync",
+            "result": "Used the forged identity to enable RBCD, allowing for a DCSync attack to dump the `Administrator`'s NTLM hash. Used the hash to gain full control of the domain.",
+            "mitigation": "Carefully manage and audit delegation settings; restrict who can create computer objects; use intrusion detection systems to alert on DCSync attacks."
+        }
+    ]
+},
+{
     "title": "HackTheBox: Editor",
     "href": "posts/htb_editor.html",
     "date": "2025-08-04",
