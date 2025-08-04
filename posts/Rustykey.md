@@ -135,7 +135,7 @@ The cracked password is R.....!, which corresponds to the computer account with 
 Bloodhound
 Bloodhound is used to enumerate the domain and identify potential attack paths.
 ```
-[xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ bloodhound-python  -u 'rr.parker' -p '8#t5HE8L!W3A' -k -d rustykey.htb -ns 10.10.11.75 -c ALl --zip
+[xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ bloodhound-python  -u 'rr.parker' -p '8#XXXXXXX!W3A' -k -d rustykey.htb -ns 10.10.11.75 -c ALl --zip
 INFO: BloodHound.py for BloodHound LEGACY (BloodHound 4.2 and 4.3)
 INFO: Found AD domain: rustykey.htb
 INFO: Using TGT from cache

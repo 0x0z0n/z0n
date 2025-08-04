@@ -90,7 +90,8 @@ ssh oliver@editor.htb
 
 With the SSH shell, I was able to retrieve the user.txt flag.
 
-Privilege Escalation and root.txt
+### Privilege Escalation and root.txt
+
 Once logged in as oliver, I checked for potential privilege escalation vectors. My first attempt was to check sudo permissions, but this was not fruitful.
 
 Bash
