@@ -319,7 +319,7 @@ nats consumer next auth_logs reader --count=5 --server nats://mirage.htb:4222 --
 This gave us the credentials for our first user:
 david.jjackson:pNXXXXXXXXXXXXX4@
 
-![ MSG ](Pictures/htb_Mirage_cred_AD_via_sercom.pngg)
+![ MSG ](Pictures/htb_Mirage_cred_AD_via_sercom.png)
 
 With these credentials, we ran bloodhound-python to map out the Active Directory environment.
 
