@@ -203,7 +203,7 @@ Executing the command immediately dropped me into a root shell, allowing me to r
 | 2 | (Web) | XWiki Enumeration | Found XWiki version `15.10.8` and associated CVE-2025-24983 |
 | 3 | xwiki | Groovy Script Injection (CVE-2025-24983) | Executed remote command to download and run a reverse shell script |
 | 4 | xwiki | Shell Enumeration | Gained a shell as the `xwiki` user and identified user `oliver` |
-| 5 | xwiki -> oliver | File Enumeration | Found `oliver`'s SSH password (`theEd1t0rTeam99`) in `/usr/lib/xwiki/WEB-INF/hibernate.cfg.xml` |
+| 5 | xwiki -> oliver | File Enumeration | Found `oliver`'s SSH password (`theXXXXXXXeam99`) in `/usr/lib/xwiki/WEB-INF/hibernate.cfg.xml` |
 | 6 | oliver | SSH Login | Gained an SSH shell as `oliver` and retrieved `user.txt` |
 | 7 | oliver | Port Enumeration | Used `ss -tulnp` to find `netdata` service listening on `127.0.0.1:19999` |
 | 8 | oliver | SSH Local Port Forwarding | Forwarded port `19999` to `localhost` to access the `netdata` dashboard |
