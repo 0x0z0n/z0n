@@ -19,15 +19,84 @@
 }
 
 html[data-theme="light"] {
-  --bg-color: #f9f9f9;
+  --bg-color: #f4f7f9;
   --card-bg: #ffffff;
-  --text-color: #1e1e1e;
-  --accent: #007acc; /* Calming blue */
-  --tag-bg: #f0f0f0;
-  --tag-hover: #cceeff;
-  --border-glow: 0 0 6px #007acc33;
+  --text-color: #1a1a1a;
+  --accent: #007acc;
+  --tag-bg: #e3eff9;
+  --tag-hover: #007acc;
+  --border-glow: 0 0 4px #007acc55;
 }
 
+/* Post card fix */
+html[data-theme="light"] .post-card {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+/* Terminal block fix */
+html[data-theme="light"] .attack-path-terminal {
+  background-color: #f0f0f0;
+  color: #003b5b;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tag buttons */
+html[data-theme="light"] .tag-link {
+  background: var(--tag-bg);
+  color: #005080;
+  border: 1px solid #c6dce8;
+}
+
+html[data-theme="light"] .tag-link:hover {
+  background: var(--tag-hover);
+  color: #ffffff;
+}
+
+/* Category buttons */
+html[data-theme="light"] .category-button {
+  background: #e8f1fb;
+  color: #005080;
+  border: 1px solid #b3d4ef;
+}
+
+html[data-theme="light"] .category-button:hover {
+  background: var(--tag-hover);
+  color: #ffffff;
+}
+
+/* Sidebar nav */
+html[data-theme="light"] aside {
+  background: linear-gradient(to bottom, #f0f0f0, #e8e8e8);
+  box-shadow: inset -1px 0 0 #ccc;
+}
+
+html[data-theme="light"] nav a {
+  background: #f6f6f6;
+  color: var(--text-color);
+}
+
+html[data-theme="light"] nav a:hover {
+  background: #e0e0e0;
+  border-left: 3px solid var(--accent);
+  color: var(--accent);
+}
+
+/* Social icons hover */
+html[data-theme="light"] .social-icons a:hover {
+  color: var(--accent);
+}
+
+/* Search box */
+html[data-theme="light"] .search-box input {
+  background: #ffffff;
+  color: var(--text-color);
+  border: 1px solid #ccc;
+  box-shadow: none;
+}
 
 
       body {
@@ -335,37 +404,6 @@ html[data-theme="light"] {
   transform: scale(1.1);
 }
 
-html[data-theme="light"] .post-card {
-  border: 1px solid #d0d0d0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-html[data-theme="light"] .tag-link {
-  color: #007acc;
-  border-color: #aad4f5;
-}
-
-html[data-theme="light"] .tag-link:hover {
-  background: var(--tag-hover);
-  color: #003c5e;
-}
-
-html[data-theme="light"] nav a {
-  background: #f1f1f1;
-  color: var(--text-color);
-}
-
-html[data-theme="light"] nav a:hover {
-  background: #e0e0e0;
-  border-left: 3px solid var(--accent);
-  color: var(--accent);
-}
-
-html[data-theme="light"] .attack-path-terminal {
-  background-color: #eef8ff;
-  color: #005f87;
-  box-shadow: inset 0 0 5px #007acc33;
-}
 
     </style>
   </head>
