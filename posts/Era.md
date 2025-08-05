@@ -25,6 +25,12 @@ We added file.era.htb to our /etc/hosts file and then performed a directory scan
 
 ![File ](Pictures/htb_Era_file2ndWeb.png)
 
+
+
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 Bash
 
 ```
@@ -470,7 +476,7 @@ nc -lnvp 1337
 This gave us a root shell, and we successfully retrieved root.txt.
 
 
-
+-->
 
 #### 🏁 Summary of Attack Chain
 
