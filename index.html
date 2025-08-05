@@ -28,6 +28,23 @@ html[data-theme="light"] {
   --border-glow: 0 0 4px #007acc55;
 }
 
+.theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 999;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+
 /* Post card fix */
 html[data-theme="light"] .post-card {
   background: var(--card-bg);
@@ -404,6 +421,30 @@ html[data-theme="light"] .search-box input {
   transform: scale(1.1);
 }
 
+#shooting-star {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  background: linear-gradient(45deg, white, #007acc);
+  border-radius: 50%;
+  box-shadow: 0 0 8px #fff;
+  opacity: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes shoot {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(600px, 300px) scale(0.2);
+    opacity: 0;
+  }
+}
 
     </style>
   </head>
@@ -561,20 +602,35 @@ html[data-theme="light"] .search-box input {
     </script>
     <script>
   const toggle = document.querySelector(".theme-toggle");
-  const icon = toggle.querySelector("i");
+const icon = toggle.querySelector("i");
+const star = document.getElementById("shooting-star");
 
-  // On load, check and apply stored theme
-  const currentTheme = localStorage.getItem("theme") || "dark";
-  document.documentElement.setAttribute("data-theme", currentTheme);
-  icon.className = currentTheme === "light" ? "fas fa-sun" : "fas fa-moon";
+const currentTheme = localStorage.getItem("theme") || "dark";
+document.documentElement.setAttribute("data-theme", currentTheme);
+icon.className = currentTheme === "light" ? "fas fa-sun" : "fas fa-moon";
 
-  toggle.addEventListener("click", () => {
-    const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-    icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
-  });
+toggle.addEventListener("click", () => {
+  const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+  icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
+
+  if (newTheme === "light") {
+    // Trigger shooting star animation
+    star.style.top = `${Math.random() * 40 + 10}px`;
+    star.style.left = `${Math.random() * 40 + 10}px`;
+    star.style.opacity = 1;
+    star.style.animation = "shoot 0.8s ease-out";
+
+    setTimeout(() => {
+      star.style.animation = "";
+      star.style.opacity = 0;
+    }, 800);
+  }
+});
+
 </script>
+<div id="shooting-star"></div>
 
   </body>
 </html>
