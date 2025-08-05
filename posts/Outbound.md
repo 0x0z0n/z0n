@@ -32,6 +32,10 @@ nuclei -u http://mail.outbound.htb/
 
 The Nuclei scan identified several points of interest, including the version of Roundcube Webmail (1.6.10) and a potential log disclosure at /roundcube/logs/errors.log. It also highlighted a critical vulnerability, CVE-2025-49113, which requires authentication.
 
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 ### Foothold and user.txt
 
 Initial credentials were provided for the user tyler with the password LhKL1o9Nm3X2. This allowed for authentication into the Roundcube webmail application.
@@ -267,3 +271,5 @@ With root access, the root.txt flag was retrieved, completing the machine.
 ```
 
 **Pwned! Outbound**
+
+-->
