@@ -1,5 +1,71 @@
 [
    {
+    "title": "HackTheBox: Era",
+    "href": "posts/htb_Era.html",
+    "date": "2025-08-06",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Nmap",
+        "SubdomainFuzzing",
+        "FFUF",
+        "IDOR",
+        "SQLite",
+        "PasswordCracking",
+        "SSRF",
+        "PHPStreamWrapper",
+        "RCE",
+        "CronJob",
+        "LPE"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": null,
+            "technique": "Subdomain Fuzzing",
+            "result": "Discovered the `file.era.htb` subdomain and added it to `/etc/hosts`.",
+            "mitigation": "Properly configure DNS records and use wildcard DNS entries carefully. Restrict public-facing subdomains to only those absolutely necessary."
+        },
+        {
+            "step": 2,
+            "user": null,
+            "technique": "Dirsearch & IDOR",
+            "result": "Found `register.php`, `upload.php`, and `download.php`. Used IDOR to find a public backup file.",
+            "mitigation": "Implement proper access control for all files and resources; use UUIDs or unique, non-guessable identifiers instead of sequential IDs."
+        },
+        {
+            "step": 3,
+            "user": "yuri",
+            "technique": "File Analysis & Password Cracking",
+            "result": "Extracted `filedb.sqlite` from the backup, found user hashes, and cracked passwords for `eric` (`<HIDDEN>`) and `yuri` (`<HIDDEN>`).",
+            "mitigation": "Do not store database backups in publicly accessible locations. Enforce strong password policies and salt/hash passwords securely."
+        },
+        {
+            "step": 4,
+            "user": "admin_ef01cab31aa",
+            "technique": "LFI via PHP Stream Wrapper",
+            "result": "Used the admin security questions from the database dump to log in, then exploited a vulnerability in `download.php` using the `ssh2.exec://` stream wrapper for RCE.",
+            "mitigation": "Sanitize and validate all user inputs to prevent LFI and SSRF. Restrict PHP stream wrappers or use a whitelist of allowed protocols."
+        },
+        {
+            "step": 5,
+            "user": "eric",
+            "technique": "User Escalation",
+            "result": "Gained a reverse shell as `yuri` and used the cracked password to switch to the `eric` user, retrieving `user.txt`.",
+            "mitigation": "Enforce principle of least privilege and use separate, non-overlapping credentials for different services and users."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "Cron Job Exploitation & Binary Signing",
+            "result": "Found a root-owned cron job executing a binary with an integrity check. Replaced the binary with a malicious version that passed the check to get a root shell.",
+            "mitigation": "Ensure cron jobs run with the least necessary privileges. Use a more robust integrity verification method than a simple file signature, such as cryptographic hashes stored in a secure location. Enforce strong file permissions to prevent unauthorized modifications to critical system files."
+        }
+    ]
+},
+{
     "title": "HackTheBox: Mirage",
     "href": "posts/htb_mirage.html",
     "date": "2025-08-05",
