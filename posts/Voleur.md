@@ -35,6 +35,11 @@ Bash
 # Synchronize time
 ntpdate voleur.htb
 ```
+
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 Kerberos TGT Acquisition: The impacket-getTGT tool is used to request a Kerberos Ticket-Granting Ticket (TGT) for ryan.naylor, which is saved to a .ccache file. This ticket is then exported as the primary authentication method.
 
 Bash
@@ -362,4 +367,8 @@ e94XXXXXXXXXXXXXXXXXXXXXXXXXXXX0144
 | 7 | svc_backup | netcat, impacket-secretsdump | Exfiltrated `ntds.dit` and `SYSTEM` files from a mounted C drive backup. Used these files to perform an offline hash dump of all domain users, including the `Administrator`. |
 ```
 
+
+
 **Pwned! Voleur**
+
+-->

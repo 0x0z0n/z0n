@@ -516,6 +516,8 @@ evil-winrm -i dc01.mirage.htb -r mirage.htb
 | 10 | Administrator | RBCD, DCSync, Pass-the-Hash | Abused RBCD to perform a DCSync attack, dumping the `Administrator` hash. Used the hash with `evil-winrm` to gain a root shell. |
 ```
 
--->
+
 
 **Pwned! Mirage**
+
+-->

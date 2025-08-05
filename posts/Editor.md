@@ -17,6 +17,10 @@ sudo nano /etc/hosts
 ```
 Navigating to http://editor.htb in a browser revealed a code editor interface. Further enumeration showed a service running on port 8080, which turned out to be XWiki, an open-source wiki platform.
 
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 ### Foothold and user.txt
 The XWiki instance was running version 15.10.8. A quick search for this version, in combination with "XWiki", led me to a vulnerability with the CVE ID CVE-2025-24983.
 
@@ -214,3 +218,5 @@ Executing the command immediately dropped me into a root shell, allowing me to r
 ```
 
 **Pwned! Editor**
+
+-->

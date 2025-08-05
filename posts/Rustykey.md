@@ -53,6 +53,10 @@ To improve client configuration, the /etc/krb5.conf file is modified.
     rustykey.htb = RUSTYKEY.HTB
 ```
 
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 A Kerberos ticket is requested for authentication.
 ```
 [xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ impacket-getTGT rustykey.htb/'rr.parker':'8#t5HE8L!W3A'
@@ -415,3 +419,5 @@ rustykey\administrator
 
 
 **Pwned! RustKey**
+
+-->

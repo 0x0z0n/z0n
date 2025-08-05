@@ -15,6 +15,10 @@ PORT   STATE SERVICE VERSION
 |_http-server-header: nginx/1.18.0 (Ubuntu)
 ```
 
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 ## Foothold
 
 The website hosted on port 80 allows user registration and provides a feature to upload `requirements.txt`, suggesting potential dependency injection.
@@ -259,5 +263,7 @@ ssh -i ./restore/root/.ssh/id_rsa root@artificial.htb
 **Pwned Artificial!!**
 
 ![**Pwned Artificial!!**](Pictures/Arificial.png)
+
+-->
 
 

