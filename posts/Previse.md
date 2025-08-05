@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | N/A | Nmap, Gobuster, Execute After Read (EAR) | Performed an Nmap scan to identify open ports, finding SSH (22) and HTTP (80). Directory enumeration with `gobuster` revealed several PHP files, and analysis of the responses in Burp Suite uncovered an "Execute After Read" (EAR) vulnerability, where the server would return the full PHP source code before redirecting. |
+| 2 | www-data | Web Code Analysis, Command Injection | Exploited the EAR vulnerability to view the source code of `logs.php`. The script was found to be vulnerable to command injection via the `delim` POST parameter. A reverse shell payload was crafted and injected into the parameter, resulting in a shell as the `www-data` user. |
+| 3 | m4lwhere | Database Credentials, Hash Cracking | The web application's configuration file (`config.php`) was found to contain MySQL root credentials (`root:mySQL_p@ssw0rd!:)`). Logged into the database using these credentials and dumped the `accounts` table. This revealed an MD5 hash for the user `m4lwhere`, which was cracked using a wordlist attack with `hashcat`, yielding the password `ilovecody112235!`. Used these credentials to log in via SSH as `m4lwhere`. |
+| 4 | root | `sudo` Path Manipulation, Shell | Performed local enumeration as `m4lwhere` and discovered that the user could run the `/opt/scripts/access_backup.sh` script as `root` without a password. The script used the `gzip` command without a full path and did not specify a `secure_path` in the `sudo` configuration. Created a malicious executable named `gzip` in the `/home/m4lwhere` directory, which, when executed, would give the user a `bash` shell with SUID privileges. This allowed the user to execute `/bin/bash -p` to get a root shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

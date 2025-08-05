@@ -5,7 +5,26 @@ Operating System: Windows
 Hints: True
 ```
 
-Nmap Scan
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `levi.james` | Nmap, `rpcclient`, `smbmap`, BloodHound | Initial enumeration of open ports, user accounts, and shares. Identified a restricted `DEV` share. |
+| 2 | `levi.james` | `bloodyAD` (Group Membership) | Added `levi.james` to the `DEVELOPERS` group, gaining access to the `DEV` share. |
+| 3 | `levi.james` | SMB, KeePass Brute-Force | Downloaded a `recovery.kdbx` file from the `DEV` share and used a brute-force attack to crack the password (`liXXXXool`). |
+| 4 | (Local) | KeePass Extraction | Extracted various credentials, including passwords for `ant.edwards` (`AnXXXX25!`) and `steph.cooper` (`ChXXXXXX25!`). |
+| 5 | `ant.edwards` | `netexec` (Password Spray) | Verified that `ant.edwards` and the cracked password were valid credentials. |
+| 6 | `ant.edwards` | BloodHound (ACL Analysis) | Used BloodHound to discover an ACL misconfiguration giving `ant.edwards` full control over the `adam.silver` user object. |
+| 7 | `ant.edwards` | `bloodyAD` (Password Reset) | Attempted to reset `adam.silver`'s password, but the account was disabled. |
+| 8 | `ant.edwards` | `ldapsearch`, `ldapmodify` | Used LDAP tools to re-enable `adam.silver`'s account. |
+| 9 | `adam.silver` | `Evil-WinRM`, SMB | Logged in as `adam.silver` via WinRM and downloaded a `site-backup-2024-12-30.zip` file from the host. |
+| 10 | (Local) | File Analysis | Discovered the password for `steph.cooper` in the site backup file. |
+| 11 | `steph.cooper` | `Evil-WinRM`, `impacket-smbserver`, `impacket-dpapi` | Connected via WinRM, used a malicious SMB server to retrieve DPAPI data, and then used `impacket-dpapi` to decrypt the master key and extract the credentials for `steph.cooper_adm`. |
+| 12 | `steph.cooper_adm` | `impacket-secretsdump` (DCSync) | Exploited the `steph.cooper_adm` credentials, which had DCSync privileges, to dump NTLM hashes for all domain accounts, including the `Administrator`. |
+| 13 | `Administrator` | `Evil-WinRM` (Pass-the-Hash) | Used the `Administrator`'s NTLM hash with a pass-the-hash attack via `Evil-WinRM` to gain a privileged shell and retrieve the final flag. |
+
+
+#### Nmap Scan
 First, we perform an Nmap scan to identify open ports and services on the target puppy.htb.
 
 Bash
@@ -270,27 +289,12 @@ cat root.txt
 Once connected, navigate to the desktop and retrieve the flag
 This completes the penetration test, gaining full control of the domain.
 
-#### 🏁 Summary of Attack Chain
-```
 
-| Step | User / Access        | Technique Used                                                                 | Result                                                                                     |
-|------|----------------------|----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| 1    | levi.james           | Nmap, rpcclient, smbmap, BloodHound                                             | Identified open ports, enumerated users, found inaccessible DEV share                     |
-| 2    | levi.james           | bloodyAD (Group Membership)                                                     | Added levi.james to DEVELOPERS group, gained access to DEV share                          |
-| 3    | levi.james           | SMB, KeePass Brute-Force                                                         | Downloaded `recovery.kdbx`, cracked password (`liXXXXool`)                                |
-| 4    | (Local)              | KeePass Extraction                                                               | Obtained various user passwords (e.g., `HXXXX25!`, `Antman2025!`)                        |
-| 5    | (Multiple Users)     | Netexec (Password Spray)                                                         | Identified `ant.edwards` / `AnXXXX25!` as valid credentials                             |
-| 6    | ant.edwards          | BloodHound (ACL Analysis)                                                       | Found `ant.edwards` had Full Control over `adam.silver` user object                       |
-| 7    | ant.edwards          | bloodyAD (Password Reset)                                                       | Reset `adam.silver`'s password, but account was disabled                                  |
-| 8    | ant.edwards          | ldapsearch, ldapmodify                                                           | Enabled `adam.silver`'s account                                                           |
-| 9    | adam.silver          | Evil-WinRM, SMB                                                                  | Connected via WinRM, downloaded `site-backup-2024-12-30.zip`                              |
-| 10   | (Local)              | File Analysis                                                                    | Discovered `steph.cooper` / `ChXXXXXX25!` in backup file                               |
-| 11   | steph.cooper         | Evil-WinRM, impacket-smbserver, impacket-dpapi                                  | Extracted DPAPI master key and `steph.cooper_adm` credentials (`FiveXXXXXXXXXXXay2025!`) |
-| 12   | steph.cooper_adm     | impacket-secretsdump (DCSync)                                                   | Dumped NTLM hashes for all domain accounts, including `Administrator`                     |
-| 13   | Administrator        | Evil-WinRM (Pass-the-Hash)                                                      | Gained Administrator shell, retrieved `root.txt`                                          |
 
-```
+-->
+
 
 **Pwned! Puppy**
 
--->
+
+

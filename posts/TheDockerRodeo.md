@@ -12,6 +12,19 @@ Hints:  CgroupsEscape, PrivilegeMisconfiguration, SharedNamespaces, HostVolumeMo
 
 ```
 
+### 🏁 Summary of The Docker Rodeo Room
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `(unauthenticated)` | Abusing a Docker Registry | An Nmap scan revealed two Docker registries running on ports 5000 and **7000**. By querying the API of the second registry at `http://docker-rodeo.thm:7000/v2/_catalog`, a repository named `securesolutions/webserver` was discovered. Further enumeration of the repository's tags at `http://docker-rodeo.thm:7000/v2/securesolutions/webserver/tags/list` revealed a `production` tag. Finally, pulling the manifest for this tag from `http://docker-rodeo.thm:7000/v2/securesolutions/webserver/manifests/production` exposed the database credentials `admin` and `production_admin` in the history layer. |
+| 2 | `(unauthenticated)` | Reverse Engineering Docker Images | Using the previously identified vulnerable registry, a malicious Docker image was pulled. The tool `Dive` was then used to reverse engineer the image. This allowed for an in-depth analysis of the image layers and filesystem, exposing hidden files and commands executed during the image build process. This technique revealed a new user, `uogctf`, and demonstrated how an attacker can find hidden information that is not present in the final running container. |
+| 3 | `(unauthenticated)` | Uploading Malicious Docker Images | The room explains how a vulnerable registry can be used to push a malicious image. An attacker can create a custom image containing a reverse shell, upload it to the registry, and wait for the victim's system to automatically pull and execute the new `latest` version of the image. This would give the attacker a shell with root privileges inside the container, which could be used to further compromise the system. |
+| 4 | `(unauthenticated)` | RCE via Exposed Docker Daemon | An Nmap scan revealed an exposed Docker daemon on port **2375**. This daemon was accessible remotely without authentication. The `docker` command was used with the `-H` flag to remotely execute commands on the host. This allowed the attacker to list containers and images, as well as to run a new container with the host's filesystem mounted inside, effectively granting root access to the host machine. |
+| 5 | `root` (container) | Escape via Exposed Docker Daemon | After gaining a foothold inside a container (simulated by SSHing to a specific port), a check for the exposed Docker socket was performed. The attacker, as the container's root user, found that the Docker socket was accessible. A new container was then created using the command `docker run -v /:/mnt --rm -it alpine chroot /mnt sh`. This command mounted the host's entire filesystem (`/`) into the new container's `/mnt` directory, providing the attacker with a root shell on the host machine. |
+| 6 | `root` (container) | Shared Namespaces Escape | Another container, with a misconfigured shared namespace, was accessed via SSH. A simple `ps aux` command revealed all the host's processes, not just those within the container, confirming the misconfiguration. The `nsenter` command was then used to escape the container. By running `nsenter --target 1 --mount sh`, the attacker executed a shell within the same namespace as the host's `init` process (PID 1), which has root privileges, thereby gaining root access to the host. |
+
+
+
 ## Topic's
 
 * Docker Escaping

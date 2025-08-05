@@ -5,6 +5,24 @@ Operating System: Linux
 Hints: TensorFlow RCE, Docker misuse, SQLite DB leak, local-only service  
 ```
 
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Website Enumeration | Identified open ports 22 (SSH) and 80 (HTTP), with a web service for AI solutions on port 80. |
+| 2 | (Web) | TensorFlow RCE (CVE-N/A) | Crafted a malicious `.h5` model with a `tf.keras.layers.Lambda` layer to execute a reverse shell. |
+| 3 | app | Reverse Shell Execution | Uploaded the malicious model and triggered the exploit, gaining a shell as the `app` user. |
+| 4 | app | Local File Enumeration | Found a SQLite database (`users.db`) containing a list of users and hashed passwords. |
+| 5 | gael | Hash Cracking (MD5) | Extracted `gael`'s MD5 hash (`c99...f8`) and cracked it to reveal the password. |
+| 6 | gael | SSH Login | Used the cracked password to log in via SSH as the `gael` user and retrieve `user.txt`. |
+| 7 | gael | LinPEAS & File Enumeration | Ran `linPEAS` and discovered `gael` was in the `sysadm` group with read access to a large backup file (`backrest_backup.tar.gz`). |
+| 8 | gael | Backup File Analysis & Bcrypt Cracking | Exfiltrated and extracted the backup, finding a Bcrypt hash in a config file which was then cracked to reveal a password. |
+| 9 | gael | Local Port Forwarding & Service Abuse | Used SSH local port forwarding to access a local-only service on port `9898`, which was running a `rest-server` for backups. |
+| 10 | root | Restic Abuse | Used `restic` to initialize a repository on our local machine, backed up the entire `/root` directory from the target, and restored it locally to access `root.txt` and SSH keys. |
+| 11 | root | SSH Login (Keys) | Used the recovered SSH private key to log in as `root`, completing the attack chain. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

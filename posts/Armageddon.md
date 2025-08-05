@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User/Access | Technique Used | Result |
+| :--- | :--- | :--- | :--- |
+| **1. Initial Enumeration** | (Web) | Nmap scan & `CHANGELOG.txt` discovery | Identified an Apache web server running **Drupal 7.56**, a version known to be vulnerable. |
+| **2. Foothold** | (apache) | 'Drupalgeddon2' Remote Code Execution (RCE) | Exploited the known RCE vulnerability in Drupal to gain an initial shell as the `apache` user. |
+| **3. User** | (brucetherealadmin) | Database Credential Theft & Hash Cracking | Found database credentials in `/var/www/html/sites/default/settings.php`. Used these credentials to connect to the MySQL database and retrieve a hashed password for `brucetherealadmin`. The hash was cracked using John the Ripper. |
+| **4. SSH Access** | (brucetherealadmin) | Password Reuse | Used the cracked password to log in to the machine via SSH as the `brucetherealadmin` user. |
+| **5. Privilege Escalation** | (root) | Sudo Misconfiguration (`snap install`) | Identified a `sudo` misconfiguration allowing `brucetherealadmin` to run `snap install` as root without a password. Created a malicious snap package to give a local copy of `bash` the SUID bit, granting root privileges. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

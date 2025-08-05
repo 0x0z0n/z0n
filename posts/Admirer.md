@@ -264,3 +264,18 @@ connect to [10.10.14.24] from (UNKNOWN) [10.10.10.187] 44392
 id                     
 uid=0(root) gid=0(root) groups=0(root)
 ```
+
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Website Enumeration | Identified open ports 21 (FTP), 22 (SSH), and 80 (HTTP). Found a `robots.txt` file with a disallowed directory `/admin-dir`. |
+| 2 | (Web) | Directory Enumeration | Used `gobuster` to find `credentials.txt` and `contacts.txt` within the `/admin-dir` directory. |
+| 3 | ftpuser | FTP Credential Usage | Found FTP credentials in `credentials.txt` and logged in to the FTP service. |
+| 4 | (Web) | FTP File Download & Code Review | Downloaded `html.tar.gz` and `dump.sql`. Reviewed the PHP files from the archive, discovering a new set of credentials for the `waldo` user. |
+| 5 | (Web) | Adminer Vulnerability (Arbitrary File Read) | Discovered a vulnerable Adminer version on `/utility-scripts/adminer.php`. Set up a remote MySQL database and used the `LOAD DATA LOCAL INFILE` query to read files on the target server. |
+| 6 | waldo | Password Reuse & SSH Login | Read `/var/www/html/index.php` to find another set of credentials. Used these credentials to log in via SSH as the `waldo` user. |
+| 7 | waldo | `sudo` & SUID Enumeration | Ran `sudo -l` and found that `waldo` could execute the `/opt/scripts/admin_tasks.sh` script with `SETENV` privileges. |
+| 8 | waldo | `PYTHONPATH` Hijacking | The `admin_tasks.sh` script called `/opt/scripts/backup.py`. We exploited the `SETENV` option to set a malicious `PYTHONPATH` pointing to a custom `shutil.py` script. |
+| 9 | root | Reverse Shell | Our custom `shutil.py` script contained a reverse shell payload. Executing `admin_tasks.sh` with the crafted `PYTHONPATH` gave us a shell as the `root` user. |

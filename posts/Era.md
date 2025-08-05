@@ -6,6 +6,23 @@ Operating System: Linux
 Hints: True
 ```
 
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access                  | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap, Subdomain Fuzzing | Identified `era.htb` and found subdomain `file.era.htb` via `ffuf`. |
+| 2 | (Web) | Dirsearch, User Registration | Discovered `register.php`, allowing for new user account creation on `file.era.htb`. |
+| 3 | (Web) | IDOR & File Download | Used `burpsuite` Intruder to brute-force file IDs, finding a `site-backup` archive. |
+| 4 | (Local) | Archive Analysis & Hash Cracking | Extracted a `filedb.sqlite` database from the backup and cracked two user passwords (`eric:amXXXXa`, `yuri:muXXXXX`) using `john`. |
+| 5 | (Web) | LFI & SSH2 Wrapper Exploit | Analyzed `download.php` source code, found an admin-only feature vulnerable to LFI, and used `ssh2.exec://` to get a reverse shell. |
+| 6 | yuri -> eric | Shell Escalation & User Enumeration | Initially gained a shell as `yuri`, then switched to `eric` using the cracked password to retrieve `user.txt`. |
+| 7 | eric | Cron Job Enumeration (pspy) | Identified a `root` owned cron job that periodically executed a binary named `monitor` in `/opt/AV/periodic-checks`. |
+| 8 | eric | Binary Analysis & Code Signing | Discovered the cron job was checking a `.text_sig` section of the `monitor` binary for integrity. |
+| 9 | eric -> root | Malicious Binary Replacement | Created a malicious `monitor` binary, signed it with the correct key to bypass the integrity check, and replaced the original binary. |
+| 10 | root | Root Shell | The cron job executed the malicious `monitor` binary as `root`, granting a reverse shell and the `root.txt` flag. |
+
+
+
 ### Initial Enumeration
 
 An initial nmap scan did not reveal anything particularly unusual, showing common ports like 21 (FTP) and 80 (HTTP). We added era.htb to the /etc/hosts file.
@@ -477,23 +494,6 @@ This gave us a root shell, and we successfully retrieved root.txt.
 
 
 -->
-
-#### 🏁 Summary of Attack Chain
-
-| Step | User / Access                  | Technique Used | Result |
-|:---|:---|:---|:---|
-| 1 | (Local) | Nmap, Subdomain Fuzzing | Identified `era.htb` and found subdomain `file.era.htb` via `ffuf`. |
-| 2 | (Web) | Dirsearch, User Registration | Discovered `register.php`, allowing for new user account creation on `file.era.htb`. |
-| 3 | (Web) | IDOR & File Download | Used `burpsuite` Intruder to brute-force file IDs, finding a `site-backup` archive. |
-| 4 | (Local) | Archive Analysis & Hash Cracking | Extracted a `filedb.sqlite` database from the backup and cracked two user passwords (`eric:amXXXXa`, `yuri:muXXXXX`) using `john`. |
-| 5 | (Web) | LFI & SSH2 Wrapper Exploit | Analyzed `download.php` source code, found an admin-only feature vulnerable to LFI, and used `ssh2.exec://` to get a reverse shell. |
-| 6 | yuri -> eric | Shell Escalation & User Enumeration | Initially gained a shell as `yuri`, then switched to `eric` using the cracked password to retrieve `user.txt`. |
-| 7 | eric | Cron Job Enumeration (pspy) | Identified a `root` owned cron job that periodically executed a binary named `monitor` in `/opt/AV/periodic-checks`. |
-| 8 | eric | Binary Analysis & Code Signing | Discovered the cron job was checking a `.text_sig` section of the `monitor` binary for integrity. |
-| 9 | eric -> root | Malicious Binary Replacement | Created a malicious `monitor` binary, signed it with the correct key to bypass the integrity check, and replaced the original binary. |
-| 10 | root | Root Shell | The cron job executed the malicious `monitor` binary as `root`, granting a reverse shell and the `root.txt` flag. |
-
-
 
 
 

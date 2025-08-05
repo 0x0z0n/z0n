@@ -4,6 +4,18 @@ Difficulty: Medium
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `(unauthenticated)` | Subdomain Enumeration & Directory Bruteforcing | An initial `nmap` scan revealed ports 22 (SSH) and 80 (HTTP) were open. The HTTP service hosted on `10.10.11.146` and `store.djewelry.htb`. A directory bruteforce on `store.djewelry.htb` uncovered the `/vendor` directory with directory listing enabled. Inside, the `/vendor/phpunit/phpunit` directory was discovered. |
+| 2 | `www-data` | RCE via PHPUnit `eval-stdin.php` & Reverse Shell | A known **Remote Code Execution (RCE)** vulnerability in PHPUnit's `eval-stdin.php` was identified and exploited. A PHP payload `<?php system("whoami"); ?>` was sent in a POST request body, confirming command execution as the `www-data` user. A subsequent payload was used to obtain a reverse shell on a listening netcat session. |
+| 3 | `steven` | Information Disclosure via Binary Analysis | Once a shell was established as `www-data`, a binary file named `/var/backups/info` was discovered. Running `strings` on this file revealed a long, hex-encoded string. Decoding this string exposed a script that included a **SHA512 hashed password**. This hash was cracked using `hashcat` and a wordlist, revealing the password `ihatehackers`. The script also mentioned modifying `/etc/passwd`, and a `crackmapexec` scan with the cracked password confirmed that the user `steven1` could log in via SSH with this password. |
+| 4 | `root` | Backdoored SSHD & Hardcoded Password Extraction | After logging in as `steven`, the mail spool at `/var/mail/steven` contained an email mentioning system changes to Apache and SSH. Investigation of file timestamps on the system revealed that `/usr/sbin/sshd` had a modification date of `2020-04-13` and an unusually large size. This was a strong indicator of a malicious binary. The binary was downloaded and analyzed with Ghidra, revealing a backdoored authentication function. The function contained a hardcoded root password, encoded using a XOR operation with a hex key. The encoded password was extracted and decoded to obtain the root password: `@=qfe5%2^k-aqXXXXXXXXu#f*b?3`. This password was then used to SSH in as the `root` user. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```shell

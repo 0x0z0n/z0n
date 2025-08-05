@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Web Service Enumeration | Found `nginx` on port 80 and `nginx` on port 9200. Port 80 displayed a static image, while port 9200 returned a `502 Bad Gateway` error, suggesting a proxy to another service like Elasticsearch. |
+| 2 | (Local) | Elasticsearch Index Enumeration & Data Exfiltration | Enumerated the Elasticsearch indices on port 9200. Found `quotes` and `bank` indices. Dumped all documents from the `quotes` index, which contained quotes in Spanish. |
+| 3 | `security` | Credential Discovery & SSH Login (User Flag) | Translated the Spanish quotes and found a Base64-encoded username and password: `user: security` and `pass: spanish.is.key`. Used these credentials to log in via SSH as the `security` user. |
+| 4 | `kibana` | Kibana RCE via LFI | Used port forwarding via SSH to access the Kibana web interface running locally on port 5601. Discovered Kibana version 6.4.2 was running, which is vulnerable to an LFI leading to RCE (CVE-2018-17246). Created a malicious Node.js reverse shell payload, placed it in `/tmp/shell.js`, and used the LFI to execute it, gaining a shell as the `kibana` user. |
+| 5 | `root` | Logstash RCE via Malicious Log File | Found a Logstash configuration file in `/etc/logstash/conf.d/` that was processing log files in `/opt/kibana/` and executing commands from them. Created a new log file `/opt/kibana/logstash_root` with a payload matching the `grok` filter (`Ejecutar comando : <command>`). The log file contained a reverse shell payload, which Logstash executed as the root user, granting a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

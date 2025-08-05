@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | N/A | Nmap, Unauthenticated Redis Access | Performed an Nmap scan to discover open ports and services, identifying a Redis server on port 6379 with unauthenticated access. |
+| 2 | redis | SSH Key Injection via Redis | Exploited the unauthenticated Redis server by using it to write an SSH public key to the `~/.ssh/authorized_keys` file of the `redis` user. This was achieved by changing the Redis database's working directory (`dir`) and filename (`dbfilename`) and then saving the public key. This provided an SSH shell as the `redis` user. |
+| 3 | Matt | Local Enumeration, SSH Key Cracking | From the `redis` shell, local enumeration revealed an encrypted SSH private key belonging to a user named `Matt` in `/opt/id_rsa.bak`. Downloaded the key, used `ssh2john` to format it, and cracked the passphrase (`computer2008`) with `john`. Although direct SSH login with this key failed, the password was successfully used with the `su` command to switch to the `Matt` user. |
+| 4 | root | `linPEAS`, Webmin RCE (1.910) | After gaining access as `Matt`, ran `linPEAS` to identify privilege escalation vectors. Discovered that the Webmin service (version 1.910) was running as `root` on port 10000. Used a known Metasploit module for Webmin 1.910 (CVE-2019-15107) and the `Matt` credentials to execute a reverse shell payload, gaining a root shell. |
+| 5 | root | Manual RCE from Burp Suite | Dissected the Metasploit exploit's HTTP request in Burp Suite to understand the underlying mechanism. The exploit leveraged a command injection vulnerability in the `/package-updates/update.cgi` endpoint. The request used a URL-encoded and base64-encoded payload to execute a reverse shell command. Recreated and executed a similar, handcrafted payload to confirm the command injection and achieve a root shell manually. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

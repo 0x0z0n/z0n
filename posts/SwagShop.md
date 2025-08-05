@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | N/A | Nmap, Magescan, LFI | An Nmap scan revealed ports 22 (SSH) and 80 (HTTP) were open. The web server on port 80 was a Magento e-commerce site. A scan with `magescan` revealed the Magento version to be `1.9.0.0, 1.9.0.1` and a misconfiguration that allowed a Local File Inclusion (LFI) vulnerability. This vulnerability was exploited to read `app/etc/local.xml`, which contained MySQL database credentials: `root:fMVWh7bDHpgZkyfqQXreTjU9`. |
+| 2 | `b0d` | Magento RCE (CVE-2015-3850) | The identified Magento version was found to be vulnerable to multiple exploits, including an unauthenticated RCE (CVE-2015-3850). A public exploit script was modified to leverage this vulnerability and inject a new administrative user, `b0d`, with a password `forme`. This granted an authenticated foothold. |
+| 3 | `www-data` | Authenticated RCE, Reverse Shell | With administrative access, a different public exploit (`php/webapps/37811.py`) for an authenticated RCE was used. This exploit was debugged and adjusted to bypass encoding and type-casting issues. It was then used to inject a reverse shell payload, which successfully connected back to the attacking machine, granting a shell as the `www-data` user. |
+| 4 | `root` | `sudo` Misconfiguration (GTFOBins) | Once a shell was established as `www-data`, a `linPEAS` scan revealed a `sudo` misconfiguration. The `www-data` user was allowed to run `/usr/bin/vi` on any file in `/var/www/html/*` as `root` without a password. This was a classic GTFOBins scenario. The `vi` editor was executed with `sudo`, and a new shell was spawned from within `vi` by typing `:!/bin/bash`. |
+| 5 | `root` | Final Flag | The final step of the attack chain was to leverage the root shell to navigate the file system and retrieve the final flag. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

@@ -6,6 +6,16 @@ Operating System: Linux
 Hints: True
 ```
 
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `N/A` | Nmap, Nuclei, Initial Credentials | Performed an initial Nmap scan to discover open ports and services, identifying a Roundcube webmail instance. A Nuclei scan revealed a critical vulnerability, CVE-2025-49113, and initial credentials (`tyler:LhKL1o9Nm3X2`) were used to log in. |
+| 2 | `www-data` | Metasploit, MySQL Enumeration | Exploited CVE-2025-49113 via Metasploit to gain a shell as the `www-data` user. Further enumeration uncovered MySQL database credentials (`roundcube:RCXXXXXXXX25`) in a configuration file. |
+| 3 | `jacob` | Database Enumeration, 3DES Decryption | Accessed the `roundcube` database using the discovered credentials. I queried the `session` table to find an encrypted password. A 3DES key, also located in a configuration file, was used to decrypt this password, revealing the credentials for the user `jacob`. |
+| 4 | `jacob` | SSH Access | Used the decrypted password to successfully log in to the machine via SSH as `jacob`, which provided access to the `user.txt` flag. |
+| 5 | `root` | `sudo -l`, CVE-2025-27591 | Identified a `sudo` vulnerability in the `/usr/bin/below` binary via the `sudo -l` command. Exploited a symlink attack by creating a symlink from `/etc/passwd` to a log file (`error_root.log`) that the binary would overwrite with root privileges. |
+| 6 | `root2` | `su` Command | The symlink attack successfully added a new user (`root2`) with root privileges to `/etc/passwd`. Switched to the `root2` user using the `su` command to gain a privileged shell and retrieve the `root.txt` flag. |
 
 ### Initial Enumeration
 
@@ -257,19 +267,7 @@ spy@outbound:~#
 
 With root access, the root.txt flag was retrieved, completing the machine.
 
-### 🏁 Summary of Attack Chain
-
-```
-| Step | User / Access | Technique Used | Result |
-|---|---|---|---|
-| 1 | N/A | Nmap, Nuclei, Initial Credentials (tyler:LhKL1o9Nm3X2) | Initial enumeration of open ports and services. Discovered Roundcube webmail and a critical vulnerability (CVE-2025-49113). Logged into the webmail with provided credentials. |
-| 2 | www-data | Metasploit, MySQL enumeration | Exploited CVE-2025-49113 to gain a shell as `www-data`. Discovered MySQL credentials (`roundcube:RCXXXXXXXX25`) in a configuration file. |
-| 3 | jacob | Database enumeration, 3DES decryption | Queried the `session` table in the `roundcube` database. Decrypted a password for `jacob` using a 3DES key found in a configuration file. |
-| 4 | jacob | SSH access | Used the decrypted password to log in via SSH as `jacob`, obtaining the `user.txt` flag. |
-| 5 | root | `sudo -l`, CVE-2025-27591 (symlink attack) | Identified a `sudo` vulnerability in the `below` binary. Exploited a symlink attack on `/etc/passwd` by overwriting the `error_root.log` file. |
-| 6 | root2 | `su` command | Switched to the newly created `root2` user to gain a root shell, obtaining the `root.txt` flag. |
-```
-
-**Pwned! Outbound**
 
 -->
+
+**Pwned! Outbound**

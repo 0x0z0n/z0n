@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `kid` | Nmap, Web Enumeration, Command Injection | An Nmap scan revealed ports 22 (SSH) and 5000 (HTTP) were open. The web server on port 5000 hosted a 'kiddie' toolset. Upon inspection and fuzzing, a command injection vulnerability was discovered in the `msfvenom` functionality by exploiting an APK template command injection vulnerability. This was confirmed by sending a `ping` command and observing the ICMP traffic on the attacking machine. |
+| 2 | `kid` | Reverse Shell | A reverse shell was crafted using a `curl` command to download and execute a bash script hosted on the attacking machine. The script was injected into the vulnerable `msfvenom` template field, successfully granting a shell as the user `kid`. |
+| 3 | `pwn` | Log File Manipulation, `incron` Job, Command Injection | Once on the system as `kid`, a `hackers` log file in the `kid` user's home directory was found to be writable and owned by `kid:pwn`. A `pspy` analysis revealed that a script, `scanlosers.sh`, was being executed by the `pwn` user via `incron` whenever the `hackers` log file was written to. The script parsed the log file and executed an `nmap` command on the IP addresses found. By crafting a malicious entry in the log file, a second command injection was performed. This executed a reverse shell payload that granted access as the user `pwn`. |
+| 4 | `root` | `sudo` Misconfiguration | After gaining access as `pwn`, a `sudo -l` command revealed a misconfiguration allowing the `pwn` user to run `/opt/metasploit-framework-6.0.9/msfconsole` as `root` without a password. By executing `sudo msfconsole` and then using the `bash` command within the console, a root shell was obtained. |
+| 5 | `root` | Final Flag, Forensic Analysis | The final flag was retrieved after gaining root access. A post-exploitation forensic analysis was performed to understand the `incron` setup, identifying the configuration files in `/etc/incron.allow` and `/var/spool/incron/pwn`, which detailed the monitored file and the command executed upon the `IN_CLOSE_WRITE` event. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

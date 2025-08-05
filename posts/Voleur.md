@@ -5,6 +5,20 @@ Difficulty: Medium
 Operating System: Windows
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+| :--- | :--- | :--- | :--- |
+| 1 | `ryan.naylor` | **Nmap**, **ntpdate**, **impacket-getTGT**, **nxc** | Used a Kerberos pre-authentication vulnerability to gain initial access to Active Directory services and successfully authenticated with provided credentials. |
+| 2 | `ryan.naylor` | **NetExec**, **impacket-smbclient**, **brute-force** | Enumerated SMB shares to find the `IT` share. A brute-force attack on a file `Access_Review.xlsx` in that share revealed the password (`fo..........1`). The file contained credentials for `svc_ldap`, `svc_iis`, and `Todd Wolfe`. |
+| 3 | `svc_ldap` | **impacket-getTGT**, **targetedKerberoast.py** | Exploited the `WriteSPN` vulnerability to perform a targeted Kerberoasting attack against `svc_winrm`, which yielded its hashed password. |
+| 4 | `svc_winrm` | **Evil-WinRM**, **RunasCs**, **Get-ADObject**, **Restore-ADObject** | Used WinRM to log in. Impersonated `svc_ldap` to restore the deleted user `Todd Wolfe` from Active Directory. |
+| 5 | `Todd Wolfe` | **impacket-smbclient**, **impacket-dpapi** | Accessed `Todd Wolfe`'s archived profile via a new SMB share. Decrypted his DPAPI credentials with his password (`Nig............14`) to find the credentials for `jeremy.combs`. |
+| 6 | `jeremy.combs` | **impacket-smbclient**, **ssh** | Found the `Third-Line Support` SMB share and downloaded `id_rsa`. A note confirmed the key was for the `svc_backup` user, allowing a successful SSH login on a non-standard port. |
+| 7 | `svc_backup` | **netcat**, **impacket-secretsdump** | Exfiltrated the `ntds.dit` and `SYSTEM` files from a mounted C drive backup. An offline hash dump was performed on these files to obtain the hashes of all domain users, including the `Administrator` account. |
+
+
 ### Initial Foothold
 The penetration test begins with the provided credentials for the user ryan.naylor and the password HollowOct31Nyt. The first step is to perform reconnaissance and establish a working environment.
 
@@ -350,25 +364,7 @@ e94XXXXXXXXXXXXXXXXXXXXXXXXXXXX0144
 *Evil-WinRM* PS C:\Users\svc_wxxxx\Desktop> 
 
 
-```
-
-
-
-#### 🏁 Summary of Attack Chain
-```
-| Step | User / Access | Technique Used | Result |
-|---|---|---|---|
-| 1 | ryan.naylor | Nmap, ntpdate, impacket-getTGT, nxc | Initial access to Active Directory services via Kerberos. Confirmed successful authentication with provided credentials. |
-| 2 | ryan.naylor | NetExec, impacket-smbclient, brute-force | Enumerated SMB shares, discovered a file `Access_Review.xlsx` on the `IT` share. Cracked the password (`fo..........1`) and found credentials for `svc_ldap`, `svc_iis`, and `Todd Wolfe`. |
-| 3 | svc_ldap | impacket-getTGT, targetedKerberoast.py | Gained access to `svc_winrm`'s hashed password by exploiting `WriteSPN` and performing targeted Kerberoasting. |
-| 4 | svc_winrm | Evil-WinRM, RunasCs, Get-ADObject, Restore-ADObject | Logged in via WinRM. Impersonated `svc_ldap` to restore the deleted user `Todd Wolfe`. |
-| 5 | Todd Wolfe | impacket-smbclient, impacket-dpapi | Gained access to `Todd Wolfe`'s archived profile on a new SMB share. Decrypted DPAPI credentials using his password (`Nig............14`) to discover `jeremy.combs`'s credentials. |
-| 6 | jeremy.combs | impacket-smbclient, ssh | Found the `Third-Line Support` SMB share. Downloaded `id_rsa` and a note revealing the key was for `svc_backup`. Used the key to log in via SSH on port 2222. |
-| 7 | svc_backup | netcat, impacket-secretsdump | Exfiltrated `ntds.dit` and `SYSTEM` files from a mounted C drive backup. Used these files to perform an offline hash dump of all domain users, including the `Administrator`. |
-```
-
+-->
 
 
 **Pwned! Voleur**
-
--->

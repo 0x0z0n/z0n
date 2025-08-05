@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `paul` | Nmap, Code Analysis, Command Injection | An initial Nmap scan revealed ports 22 (SSH) and 80 (HTTP) were open. The web server on port 80 offered a downloadable `RouterSpace.apk` file. The APK was analyzed in an emulated Android environment (using Anbox and ADB) and was found to make a POST request to `/api/v4/monitoring/router/dev/check/deviceAccess` with a JSON payload containing an IP address. By intercepting this request with a proxy, a command injection vulnerability was identified in the `ip` parameter. |
+| 2 | `paul` | SSH Key Injection, SSH Login | Exploited the command injection vulnerability to echo a public SSH key into the `authorized_keys` file for the `paul` user. This allowed for an SSH connection as `paul`, successfully bypassing a firewall that was blocking outbound reverse shell connections. |
+| 3 | `root` | `linPEAS`, Sudo Vulnerability (CVE-2021-3156) | After gaining access as `paul`, a standard enumeration script (`linPEAS`) was run. The script identified that the `sudo` version `1.8.31` was vulnerable to CVE-2021-3156, a heap-based buffer overflow. A public exploit for this vulnerability was downloaded, compiled, and executed. This resulted in gaining a root shell. |
+| 4 | `root` | Final Flag | Once a root shell was obtained, the final flag was retrieved. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

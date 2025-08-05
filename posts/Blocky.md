@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & Website Enumeration | Identified open ports 21 (FTP), 22 (SSH), and 80 (HTTP). Discovered a WordPress site and the user `notch`. Found a `/plugins` directory containing two `.jar` files. |
+| 2 | (Web) | Decompiling Java Files & Password Reuse | Decompiled the `BlockyCore.jar` file and found hardcoded MySQL credentials for the root user. The password from these credentials was reused to log in to the server via SSH as the user `notch`. |
+| 3 | (Web) | Wordpress Theme Exploitation | (Alternative Path) Gained initial access by exploiting the FTP service to upload a public key. Found database credentials in `wp-config.php`, used them to compromise the WordPress admin account, and then uploaded a web shell by editing a theme file to get a shell as `www-data`. Discovered the `notch` password in a configuration file and used `su` to switch to that user. |
+| 4 | notch -> root | `sudo` Abuse | After gaining a shell as `notch`, ran `sudo -l` and found that the user could run all commands as any user without a password. Used `sudo su -` to escalate privileges to the `root` user. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

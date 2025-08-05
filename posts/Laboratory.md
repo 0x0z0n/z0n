@@ -4,6 +4,16 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `gitlab-user` | Vhost Enumeration and LFI/RCE (CVE-2020-10433) | Enumerated subdomains to find `git.laboratory.htb`, which hosts a GitLab instance. Created an account and discovered an LFI/RCE vulnerability in GitLab version 12.8.0. Exploited the vulnerability by reading the `secrets.yml` file, which contains the `secret_key_base`. Used this key with a local GitLab instance to craft a deserialization payload that resulted in a reverse shell as the `git` user. |
+| 2 | `dexter` | GitLab Admin Privileges and SSH Key Discovery (User Flag) | Gained `gitlab-rails console` access from the reverse shell. Used the console to elevate our own account to an administrator role. With admin access, searched existing repositories and found an SSH private key for the user `dexter`. Used this key to log in to the machine via SSH. |
+| 3 | `root` | SUID Binary Path Hijacking (Root Flag) | Found an uncommon SUID binary `/usr/local/bin/docker-security`. Used `ltrace` to discover that the binary was attempting to execute `chmod` as root without specifying the full path. Hijacked the PATH variable by creating a malicious `chmod` script in a writable directory. Executing the SUID binary then ran the malicious script as root, granting a root shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `www-data` | OpenNetAdmin (ONA) RCE | Discovered OpenNetAdmin 18.1.1 running on the `/ona` directory. Used a public exploit to leverage a command injection vulnerability. This allowed me to execute a reverse shell payload, gaining an initial shell on the machine as the `www-data` user. |
+| 2 | `jimmy` | Database Credential Reuse & SSH | Upon gaining a shell, I enumerated the ONA application's directory and found the database configuration file (`/var/www/html/ona/local/config/database_settings.inc.php`). This file contained credentials for the `ona_sys` database user: `n1nj4W4rri0R!`. I tried to reuse this password for other users on the system and was able to successfully log in via SSH as the user `jimmy`. |
+| 3 | `joanna` | Port Forwarding & Password Cracking | As `jimmy`, I noticed an unusual local service running on port `52846`. I configured an SSH tunnel (`ssh -L 8081:127.0.0.1:52846 jimmy@...`) to access this service from my local machine. The service presented a login page. I found the credentials hardcoded in the application's source code: `jimmy` and a SHA512 hash. Cracking this hash revealed the password `Revealed`. Logging in with these credentials led to the discovery of a passphrase-protected SSH key for the user `joanna`. I cracked the key's passphrase (`bloodninjas`) using `john` and used the key to log in as `joanna` via SSH. |
+| 4 | `root` | Sudo Misconfiguration (GTFOBins) | After gaining access as `joanna`, I checked her `sudo` permissions and found she could run `nano` on the file `/opt/priv` as any user, including `root`, without a password. I leveraged a GTFOBins exploit for `nano`, which involves using `^R^X` to execute a command from within the editor, to spawn a root shell. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

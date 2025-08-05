@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Web Service Enumeration | Found Apache on port 80 with a default page, and a Node.js Express framework on port 3000. Further enumeration of port 80 revealed a `/support` directory running HelpDeskZ version 1.0.2. |
+| 2 | `help` (Method 1) | HelpDeskZ Arbitrary File Upload (CVE-2015-6677) | Exploited an arbitrary file upload vulnerability in HelpDeskZ 1.0.2 by uploading a PHP reverse shell. Recreated the file name hash using the server's epoch time (obtained from HTTP headers), and then accessed the file to trigger the reverse shell, gaining a shell as the `help` user. |
+| 3 | `help` (Method 2) | GraphQL Enumeration & SQL Injection | Enumerated the GraphQL endpoint on port 3000 to discover `user` and `password` fields. The returned MD5 hash for the `help` user was cracked to reveal the password `Welcome1`. Used this password to log in via SSH as the `help` user. |
+| 4 | `root` | Kernel Exploit (Privilege Escalation) | Discovered a vulnerable Linux kernel version (4.4.0-116-generic) running on the target. Used a known kernel exploit (CVE-2017-1000253) to escalate privileges from the `help` user to `root`. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

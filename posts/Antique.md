@@ -4,6 +4,20 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan | Identified an unusual service on port 23, which was identified as HP JetDirect telnet, and an SNMP service on UDP port 161. |
+| 2 | (Local) | SNMP Walk | Used `snmpwalk` to query the SNMP service with the default community string `public`, and found a BITS array for an OID that looked like it contained a password. |
+| 3 | lp | Password Decoding & Telnet Login | Decoded the hexadecimal BITS array to a cleartext password. Used this password to log in to the HP JetDirect telnet service, which gave a limited command shell as the `lp` user. |
+| 4 | lp | Command Execution & Reverse Shell | Used the `exec` command available in the HP JetDirect shell to run a reverse shell payload, establishing a more functional shell on the target system. |
+| 5 | lp | Local Enumeration | Used `netstat` to find services running on the local machine and discovered the CUPS service on port 631. |
+| 6 | lp | Port Forwarding | Used `chisel` to forward the local CUPS port 631 on the target to a port on our attacking machine. This allowed us to access the CUPS web interface from our machine. |
+| 7 | root | CUPS Arbitrary File Read | Exploited a known vulnerability in older CUPS versions that allows a user to change the `ErrorLog` file path using `cupsctl`. We set the `ErrorLog` to `/etc/shadow` and then to `/root/root.txt`, and retrieved the contents by making a `curl` request to the CUPS web interface. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

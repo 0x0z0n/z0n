@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: NetBSD
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `_httpd` | Lua Command Injection | Discovered a hidden directory `/weather/forecast` on port 80. Fuzzing the `city` parameter with special characters revealed a Lua error. By using the payload `');os.execute("sleep+5")--`, I was able to confirm blind command injection. Leveraged this vulnerability to download a reverse shell script, set its permissions, and execute it using `sh`, gaining a shell as the `_httpd` user. |
+| 2 | `r.michaels` | Internal Web Server & SSH Key Retrieval | While enumerating the system as `_httpd`, I found an internal web server running on `127.0.0.1:3001` as user `r.michaels`. The server was configured to serve a user's `public_html` directory via the `-u` flag. The web server required basic authentication, and I cracked the password hash from `/var/www/.htpasswd`. This gave me a password to access the internal web server, where I found and downloaded `r.michaels`'s SSH key. Logged into the machine as `r.michaels` via SSH. |
+| 3 | `root` | PGP Backup Decryption & Password Reuse | Found an encrypted backup file `devel_backup-2020-09-16.tar.gz.enc` in the `r.michaels` home directory. Identified that NetBSD's `netpgp` tool was available and that there was a key fingerprint associated with `r.michaels`. Used `netpgp` to decrypt the backup file, which contained a different `.htpasswd` file. Cracked this new hash to find a new password. Used this password with `doas sh` to escalate privileges to `root`, as `r.michaels` was a `doas` user. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

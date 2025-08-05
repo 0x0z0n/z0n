@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & Website Enumeration | Identified multiple open ports including 22 (SSH), 80/443 (HTTP/S), 10000 (Webmin), and services like Elastix and FreePBX. The version numbers suggested old software. |
+| 2 | (Web) | Local File Inclusion (LFI) & Credential Leakage | Exploited a LFI vulnerability in `/vtigercrm/graph.php` to read the `amportal.conf` file, which contained cleartext passwords. This password was reused to log in via SSH as the `root` user. |
+| 3 | (Web) | LFI & SMTP for RCE | (Alternative Path) Used LFI to determine the web server user was `asterisk`. Sent an email containing a PHP web shell payload to `asterisk@localhost` via port 25. Then used the LFI to execute the web shell and get a reverse shell as `asterisk`. |
+| 4 | (Web) | FreePBX/Elastix Exploit | (Alternative Path) Used `sipvicious` to enumerate SIP extensions, finding extension `233`. Used the `18650.py` exploit with this extension to gain a shell. |
+| 5 | (Web) | Shellshock Vulnerability | (Alternative Path) Discovered that the Webmin service on port 10000 was vulnerable to Shellshock. Exploited the vulnerability by injecting a reverse shell payload into the User-Agent header, which directly granted a root shell. |
+| 6 | asterisk -> root | `sudo` Abuse with `nmap` | After gaining a shell as the `asterisk` user, ran `sudo -l` to find that the user could run `nmap` as root without a password. Used `nmap --interactive` to get an interactive shell and then executed `!sh` to get a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

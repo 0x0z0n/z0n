@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Unauthenticated) | Nmap, Code Analysis, Binary Reversing | An Nmap scan revealed ports 22 (SSH) and 80 (HTTP) were open. The web server on port 80 served a default Apache page with a comment that led to a downloadable `myapp` binary and a service running on port 1337. The `myapp` binary was analyzed using Ghidra and found to be vulnerable to a stack-based buffer overflow via the `gets()` function. |
+| 2 | `user` | Stack Buffer Overflow, ROP Chain | A ROP (Return-Oriented Programming) chain was crafted to bypass the NX bit protection. The ROP chain exploited a vulnerable `test()` function to execute the `system()` function with `/bin/sh` as an argument, which was injected into the payload. This granted a shell on the service running on port 1337, resulting in user-level access as `user`. |
+| 3 | `root` | File Enumeration, KeePass Brute-Force, SSH Login | Once on the machine, `user.txt` was located in the user's home directory. Further enumeration of the home directory revealed a KeePass database (`MyPasswords.kdbx`) and several `.JPG` files. The KeePass database was downloaded along with the `.JPG` files. The `keepass2john` tool was used to extract hashes from the database, using the `.JPG` files as potential key files. The resulting hash was cracked with John the Ripper and a password list, revealing the password `bullshit` for the `IMG_0547.JPG` key file. The KeePass database was opened with this key and password, revealing the root password. |
+| 4 | `root` | Final Flag | The root password was used with the `su -` command to escalate privileges to `root` and retrieve the final flag. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

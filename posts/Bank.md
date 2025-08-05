@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & DNS Zone Transfer | Identified open ports 22, 53, and 80. Used `dig axfr` to perform a DNS zone transfer on `bank.htb` to find subdomains. |
+| 2 | (Web) | Vulnerable 302 Redirection (Unintended) | Discovered an issue where the web server would send a `302 Found` header but still deliver the page content. Used Burp Suite to intercept and change the response code to `200 OK` to access protected pages without authentication. |
+| 3 | (Web) | File Upload & RCE | Found a file upload function on `/support.php`. Exploited a debug feature that executed files with the `.htb` extension as PHP, uploading a web shell and gaining code execution as the `www-data` user. |
+| 4 | (Web) | Directory Enumeration & Credential Leakage | (Alternative Path) Found a directory `/balance-transfer` containing files. One file was improperly encrypted, revealing a cleartext password for a user named `chris`. |
+| 5 | www-data -> root | SUID Binary | After gaining a shell, ran `linPEAS` and found a SUID binary at `/var/htb/bin/emergency`. Executing this binary immediately granted a root shell. |
+| 6 | www-data -> root | Writable `/etc/passwd` | (Alternative Path) Discovered that `/etc/passwd` was world-writable. Generated a new password hash for the `root` user, edited the `/etc/passwd` file, and used `su root` to gain a root shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

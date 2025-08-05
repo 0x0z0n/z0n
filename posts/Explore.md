@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Android
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & OSINT | Identified a running **Android** device with ports 2222 (SSH), 5555 (filtered), and high-numbered ports 42135 and 59777 open, pointing to **ES File Explorer**. |
+| 2 | (Local) | Exploitation of ES File Explorer Vulnerability (CVE-2019-6447) | Used a public exploit to achieve arbitrary file read on the device. Discovered and downloaded a `creds.jpg` file which contained SSH credentials for the user `kristi`. |
+| 3 | kristi | SSH Login | Used the stolen credentials (`kristi:Kr1sT!5h@Rp3xPl0r3!`) to log in via SSH on port 2222. |
+| 4 | kristi | Port Forwarding & Service Enumeration | Found the filtered port 5555 was listening on the local interface (127.0.0.1). Used SSH local port forwarding to access the service from the attacker machine. |
+| 5 | root | ADB Privileged Access | The service on port 5555 was identified as **Android Debug Bridge (ADB)**. Used the `adb root` command to restart the daemon with root privileges, gaining a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

@@ -4,6 +4,16 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Web Enumeration & Client-Side Exploit | Found a web server on port 9999 and a directory `/admin`. The login was protected by a simple client-side JavaScript check. The hardcoded credentials were `admin:superduperlooperpassword_lol`, which granted access to a new page. |
+| 2 | (Local) | Multi-Stage Decoding & Directory Traversal | The next page contained an Ook-encoded message. Decoding it revealed a new directory `/asdiSIAJJ0QWE9JAS`. This directory held a Base64-encoded zip file. After decoding, the zip was cracked with the password "password" to reveal a file containing hex, which decoded to Brainfuck. The final message was the password `idkwhatispass`. |
+| 3 | www-data | Authenticated RCE (User Flag) | Found a web login page for `playsms` at `/dev/backup/playsms`. Used the password `idkwhatispass` to log in as `admin`. Exploited a known vulnerability in PlaySMS (e.g., authenticated RCE via `import.php` or `sendfromfile.php`) by uploading a malicious `.csv` file containing a PHP reverse shell, gaining a shell as the `www-data` user. |
+| 4 | root | Buffer Overflow & ROP Chain (Root Flag) | Discovered a SUID binary named `rop` in `/home/ayush/.binary`. Confirmed it was a 32-bit binary with a stack buffer overflow vulnerability, and that ASLR was disabled on the system. Crafted a ROP chain using `libc` addresses for `system`, `exit`, and the string `/bin/sh` to execute a shell. The ROP chain was injected into the vulnerable program, granting a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

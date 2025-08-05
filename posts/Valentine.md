@@ -4,6 +4,20 @@ Difficulty:
 Operating System:
 Hints:
 ```
+
+
+### 🏁 Summary of Attack Chain
+
+
+| Step | User / Access | Technique Used | Result |
+| :--- | :--- | :--- | :--- |
+| 1 | `(unauthenticated)` | Heartbleed Vulnerability | Used a Heartbleed exploit to leak data from the server's memory, which revealed a base64-encoded string that decoded to the password `heartbleedbelievethehype`. |
+| 2 | `(unauthenticated)` | Directory Enumeration & Hex Decoding | Found a hex-encoded file in a publicly accessible `/dev` directory. The decoded file was an encrypted SSH private key. |
+| 3 | `hype` | SSH Authentication | Used the SSH private key with the passphrase found from the Heartbleed leak to log in as the user `hype`. |
+| 4 | `root` | Tmux Session Hijacking or Dirty Cow Exploit | Gained a root shell by either attaching to a running `tmux` session owned by root or by compiling and executing the **Dirty Cow** kernel exploit to create a new root user. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results.
 ```

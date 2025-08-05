@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `(unauthenticated)` | Nostromo Web Server RCE | An `nmap` scan revealed ports 22 and 80 were open. The web server on port 80 was identified as `nostromo 1.9.6`. A `searchsploit` for this version revealed a known Remote Code Execution (RCE) vulnerability. By sending a specially crafted `POST` request with a directory traversal sequence (`/.%0d./.%0d./...`) to bypass security checks and a `bash` reverse shell payload, a command shell was obtained as the `www-data` user. |
+| 2 | `www-data` | Information Gathering & Password Cracking | After gaining a foothold, `linPEAS` was run to enumerate the system. It discovered a `.htpasswd` file at `/var/nostromo/conf/.htpasswd` containing credentials for a user named `david`. The password hash was cracked using `john` and a wordlist, revealing the password `Nowonly4me`. This password, however, did not grant access to the `david` user via `su`. |
+| 3 | `david` | SSH Key Misconfiguration & Password Cracking | Further enumeration revealed that Nostromo's configuration file `/var/nostromo/conf/nhttpd.conf` had `homedirs` enabled. This allowed the attacker to access user directories via the web server. Navigating to `/home/david/public_www/protected-file-area/` revealed a `.tgz` archive named `backup-ssh-identity-files.tgz`. This archive contained an encrypted `id_rsa` file. The private key's passphrase was cracked using `ssh2john` and `john`, revealing the password `hunter`. Using this key and password, SSH access was gained as the `david` user. |
+| 4 | `root` | Sudo Privilege Escalation via `journalctl` | After logging in as `david`, a custom script named `server-stats.sh` was found in `~/bin`. This script executed `/usr/bin/journalctl` with `sudo` and without a password. The `journalctl` binary, when its output is longer than the terminal height, invokes a pager like `less`. This `less` pager can be escaped to run arbitrary commands by typing `:!/bin/bash`. By resizing the terminal to a small size and executing the `journalctl` command from the `server-stats.sh` script, the `less` pager was triggered, allowing the attacker to get a root shell. |
+| 5 | `root` | Final Flag | With a root shell obtained through the `journalctl` exploit, the final flag was retrieved. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

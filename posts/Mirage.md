@@ -7,6 +7,23 @@ Operating System: Windows
 Hints: True
 ```
 
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `(Local)` | Nmap & DNS Enumeration | Conducted an Nmap scan to discover open ports and services, identifying a NATS service on port 4222. DNS enumeration revealed the Active Directory domain `mirage.htb`. |
+| 2 | `(Local)` | NFS Mount & File Analysis | Mounted an NFS share to access files, where I discovered PDF documents. Analyzing these documents revealed the hostname `nats-svc` and details about NTLM and Kerberos authentication. |
+| 3 | `(Local)` | DNS Hijacking & Credential Interception | Hijacked the `nats-svc.mirage.htb` DNS record using `nsupdate`. I set up a fake Python server to act as the NATS service, successfully intercepting credentials for a user named `Dev_Account_A`. |
+| 4 | `david.jjackson` | NATS Service Interaction | Used the `Dev_Account_A` credentials to interact with the legitimate NATS service, retrieving the credentials for the Active Directory user `david.jjackson`. |
+| 5 | `nathan.aadam` | BloodHound & Kerberoasting | Used `david.jjackson`'s credentials with BloodHound to map the Active Directory environment. Identified the user `nathan.aadam` as vulnerable to Kerberoasting. I performed a Kerberoasting attack and cracked the password hash, revealing the plaintext password `3eXXXXDC3`. |
+| 6 | `javier.mmarshall` | WinRM, WinPEAS & bloodyAD | Gained a shell as `nathan.aadam` via WinRM. Ran `winPEAS` to enumerate the system and discovered a password change log for the `javier.mmarshall` account from a `mark.bbond` account. I used `bloodyAD` to enable the disabled `javier.mmarshall` account and reset its password. |
+| 7 | `Mirage-Service$` | bloodyAD | Used the compromised `javier.mmarshall` account to retrieve the `msDS-ManagedPassword` attribute hash for the `Mirage-Service$` computer account using `bloodyAD`. |
+| 8 | `dc01$` | Certipy (ESC10 Abuse) | Exploited a misconfigured certificate template (ESC10) using `Certipy` to obtain a certificate for the `dc01$` domain controller computer account, which allowed me to impersonate it. |
+| 9 | `dc01$` | certipy-ad & bloodyAD | Used the forged `dc01$` identity and `certipy-ad` to enable Resource-Based Constrained Delegation (RBCD). This granted the `Mirage-Service$` account control over the DC computer object, a critical step for further privilege escalation. |
+| 10 | `Administrator` | RBCD, DCSync & Pass-the-Hash | Abused the newly configured RBCD to perform a DCSync attack, which allowed me to dump the NTLM hash for the domain `Administrator` account. I then used the `evil-winrm` tool with the `Administrator` hash to gain a root shell on the domain controller. |
+
+
+
 ### Initial Enumeration
 
 An nmap scan revealed several open ports, including the standard Active Directory ports and an unusual port 4222 running the NATS service. The scan also identified two domains: dc01.mirage.htb and mirage.htb. Both were added to the /etc/hosts file.
@@ -499,25 +516,7 @@ evil-winrm -i dc01.mirage.htb -r mirage.htb
 ![Root](Pictures/htb_Mirage_cred_AD_Admin_Root_flag.png)
 
 
-#### 🏁 Summary of Attack Chain
-
-```
-| Step | User / Access | Technique Used | Result |
-|---|---|---|---|
-| 1 | (Local) | Nmap, DNS Enumeration | Identified AD domains (`mirage.htb`) and the NATS service on port 4222. |
-| 2 | (Local) | NFS Mount, File Analysis | Mounted an NFS share and found PDF documents revealing `nats-svc` hostname and NTLM/Kerberos information. |
-| 3 | (Local) | DNS Hijacking & Credential Interception | Used `nsupdate` to hijack the `nats-svc.mirage.htb` DNS record and a fake Python server to intercept NATS service credentials (`Dev_Account_A`). |
-| 4 | david.jjackson | NATS Service Interaction | Used intercepted credentials to interact with the NATS service and retrieve an AD user's credentials (`david.jjackson`). |
-| 5 | nathan.aadam | BloodHound, Kerberoasting | Used `david.jjackson`'s credentials to enumerate AD, identified `nathan.aadam` as Kerberoastable, and cracked its password (`3eXXXXDC3`). |
-| 6 | javier.mmarshall | WinRM, WinPEAS, bloodyAD | Gained a shell as `nathan.aadam`, ran `winPEAS`, and found a password change right on `javier.mmarshall` from the `mark.bbond` account. Enabled the disabled account and reset its password using `bloodyAD`. |
-| 7 | Mirage-Service$ | bloodyAD | Used the `javier.mmarshall` account to retrieve the `msDS-ManagedPassword` hash for the `Mirage-Service$` computer account. |
-| 8 | dc01$ | Certipy (ESC10 Abuse) | Exploited a weak certificate mapping vulnerability (ESC10) to obtain a certificate for `dc01$`, enabling impersonation. |
-| 9 | dc01$ | certipy-ad, bloodyAD | Used the forged `dc01$` identity to enable Resource-Based Constrained Delegation (RBCD), granting `Mirage-Service$` control over the DC computer object. |
-| 10 | Administrator | RBCD, DCSync, Pass-the-Hash | Abused RBCD to perform a DCSync attack, dumping the `Administrator` hash. Used the hash with `evil-winrm` to gain a root shell. |
-```
-
-
-
-**Pwned! Mirage**
 
 -->
+
+**Pwned! Mirage**

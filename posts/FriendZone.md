@@ -4,6 +4,18 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & SMB Enumeration | Identified several open ports, including SMB (139/445). Enumerated SMB shares and found a readable `general` share and a writable `Development` share. |
+| 2 | (Local) | SMB File Access & DNS Zone Transfer | Downloaded `creds.txt` from the `general` SMB share, which contained credentials for a portal. Performed a DNS zone transfer on the `friendzone.red` and `friendzoneportal.red` domains, revealing several subdomains. |
+| 3 | www-data | Web Portal Vulnerability (LFI to RCE) | Discovered a login portal at `administrator1.friendzone.red`. Logged in using the credentials from `creds.txt`. Found a **Local File Inclusion (LFI)** vulnerability in `dashboard.php`. Used the writable `Development` SMB share to upload a PHP reverse shell, then included it via the LFI to gain a shell as `www-data`. |
+| 4 | friend | Credential Reuse (User Flag) | Discovered MySQL credentials in `/var/www/mysql_data.conf`. These credentials (`friend:Agpyu12!0.213$`) were reusable for SSH, allowing a login as the `friend` user. |
+| 5 | root | World-Writable Python Library & Cron Job | Identified a cron job running as `root` that executed a Python script (`reporter.py`). The script imported the `os` library, which was found to be world-writable. A malicious Python reverse shell payload was injected into `/usr/lib/python2.7/os.py`. When the cron job executed, the payload was run as root, granting a root shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

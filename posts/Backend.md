@@ -4,6 +4,19 @@ Difficulty: Medium
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & API Enumeration | Found a web server on port 80 running an API with `uvicorn`. Manually and with `wfuzz`, discovered endpoints like `/api/v1/user`, `/api/v1/admin`, and the `/docs` page. |
+| 2 | (Web) | API User Creation & Credential Theft | Used `wfuzz` with the `-X POST` option to discover the `/signup` and `/login` endpoints. Created a new user and logged in, receiving a JWT token. Also used enumeration on `/api/v1/user/` to find a user with the email `admin@htb.local` and a GUID. |
+| 3 | (Web) | Insecure API Call & JWT Token Forgery | Used the newly created user's JWT token to access the `/docs` endpoint, which revealed a Swagger UI. Discovered a `/updatepass` endpoint and used it to change the password for the `admin@htb.local` user using their known GUID. |
+| 4 | (Web) | LFI through API & JWT Secret Disclosure | Used the admin JWT token to access the `/api/v1/admin/file` endpoint, which was vulnerable to Local File Inclusion. Enumerated the file system to find the application's source code, leading to the discovery of the **JWT signing secret**. |
+| 5 | (Web) | JWT Forgery & Command Execution | Used the discovered JWT secret to forge a new token with a `"debug": true` payload. This enabled command execution via the `/api/v1/admin/exec/{command}` endpoint. A reverse shell payload was crafted, Base64-encoded, and URL-encoded to bypass restrictions. |
+| 6 | htb | Reverse Shell | Executed the reverse shell payload through the API, gaining an interactive shell as the `htb` user. |
+| 7 | htb -> root | Password Reuse | Discovered an `auth.log` file in the user's home directory with a login failure for the string `Tr0ub4dor&3`. Attempted to use this string as a password with `su -`, which successfully granted root access. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```shell

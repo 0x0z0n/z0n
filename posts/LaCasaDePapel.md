@@ -4,6 +4,16 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `ftp` user | vsftpd 2.3.4 Backdoor (CVE-2011-2523) | Identified vsftpd 2.3.4 running on port 21, a version known to have a backdoor. Exploited the backdoor by logging in with the username ending in a smiley face `:)`, which caused the FTP server to spawn a shell on port 6200. Connected to port 6200 and gained a PHP interactive shell, but with disabled command execution functions. |
+| 2 | `professor` | LFI via Client-Side Certificate & Key Re-use | Discovered the website on port 443 required a client-side certificate for access. Used the PHP shell to enumerate files and found a **ca.key** in `/home/nairobi/`. Generated a valid client certificate using this key. Accessed the website and found a Local File Inclusion (LFI) vulnerability. Used the LFI to read `/home/berlin/.ssh/id_rsa`, but it didn't work for `berlin`. The key was valid for user **professor** due to key re-use. Logged in as `professor` via SSH. |
+| 3 | `root` | Cron Job & Path Hijacking | After gaining access as `professor`, identified a cron job running a Node.js script. This script was configured via a file named **memcached.ini**, which was included by a root-owned `supervisord` process. Replaced `memcached.ini` with a malicious file containing a reverse shell command. The cron job executed the command as **root**, granting a root shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

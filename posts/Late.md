@@ -4,6 +4,15 @@ Difficulty: Easy
 Operating System: Linux
 Hints: False
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `svc_acc` | Server-Side Template Injection (SSTI) | Identified a virtual host `images.late.htb` running a Flask application that converts images to text. By creating a custom image containing `{{ 7*7 }}`, a response of `49` confirmed a Jinja2/Twig SSTI vulnerability. Used a command injection payload within the template to download and execute a reverse shell script, gaining a shell as the `svc_acc` user. |
+| 2 | `root` | PATH Hijacking & SUID Binary Execution | After gaining a shell, found the `/usr/local/sbin` directory was owned by the `svc_acc` user. A script within this directory, `ssh-alert.sh`, was being executed as `root` upon every SSH login via `pam_exec.so`. The script called several commands, including `date`, without specifying the full path. Created a malicious executable named `date` in `/usr/local/sbin` that granted SUID permissions to `/bin/bash`. Logging in via SSH triggered the root-owned script, which in turn executed the malicious `date` script, setting the SUID bit on bash. Executed `bash -p` to gain a root shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

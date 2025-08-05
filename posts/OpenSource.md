@@ -4,6 +4,15 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True 
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `root` (in Docker) | LFI to RCE via Debug Mode and File Overwrite | Identified a Flask application running in debug mode, which allows for dynamic code reloading. The application's `get_file_name` function, intended to prevent path traversal, was vulnerable to bypass using URL-encoded slashes (`%2F`). I exploited this with a Local File Inclusion (LFI) to confirm the application's root directory (`/app`). By uploading a malicious file to overwrite `/app/app/__init__.py` with a Python reverse shell payload, the application reloaded with my malicious code, granting a shell as the `root` user within the Docker container. |
+| 2 | `dev01` | Chisel Tunnelling & Git Credentials | Once inside the container, I used `ifconfig` to discover the internal network and the host's IP (`172.17.0.1`). Noticing that port 3000 was filtered on the main host, I used `chisel` to create a reverse tunnel, forwarding `localhost:3000` to my attacking machine. This exposed a Gitea service. Using credentials (`dev01:Soulless_Developer#2022`) found in a `.git` commit from the website's source code, I logged into Gitea and found an SSH key (`id_rsa`) in a `home-backup` repository, which allowed me to log in to the host machine as the user `dev01`. |
+| 3 | `root` | Git Hooks & SUID Exploitation | As `dev01`, I discovered a cron job running a `git-sync` script as the `root` user. The script performed a `git commit` in the user's home directory. I exploited this by creating a `pre-commit` hook script in the `.git/hooks` directory. The hook, which is executed before a commit, contained a command to set the SUID bit on `/bin/bash`. When the cron job ran, the `pre-commit` hook was triggered, and the SUID bit was successfully set. I then executed the `bash -p` command to get a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```shell

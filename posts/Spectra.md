@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Chromium
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `administrator` | Nmap, Dirb, Credential Reuse | An Nmap scan revealed ports 22 (SSH), 80 (HTTP), and 3306 (MySQL) were open. The web server on port 80 pointed to the domain `spectra.htb`. Directory enumeration on `spectra.htb/testing/` revealed a `wp-config.php.save` file containing MySQL credentials: `devtest:devteam01`. These credentials were found to be reusable for the WordPress `administrator` user on the `main` site. |
+| 2 | `nginx` | WordPress Plugin Upload, Meterpreter | With administrator access to WordPress, a malicious plugin was generated using a public tool and uploaded to the site. The plugin contained a PHP meterpreter reverse shell. The shell was triggered by navigating to the plugin's URL, establishing a meterpreter session as the user `nginx`. |
+| 3 | `katie` | Privilege Escalation, Password Reuse | A stable SSH shell was obtained as `nginx` by adding a public key to the user's `authorized_keys` file. A system scan with linPEAS revealed an `/etc/init/autologin.conf` file, which contained a hardcoded password `SummerHereWeCome!!` and indicated a possible password file location. This password was tested against a list of users extracted from `/etc/passwd` using `crackmapexec`, leading to a successful login for the user `katie`. |
+| 4 | `root` | `sudo` Misconfiguration, `initctl` | As user `katie`, a new `linPEAS` scan identified a `sudo` misconfiguration allowing `katie` to run `initctl` as root without a password. Furthermore, `katie` was a member of the `developers` group, which had write permissions on several `initctl` configuration files in `/etc/init/`. A malicious `initctl` file was created that would set the SUID bit on `/bin/bash` upon execution. The script was then executed with `sudo initctl start <filename>`, successfully setting the SUID bit. |
+| 5 | `root` | Final Flag | The SUID bit on `/bin/bash` allowed `katie` to execute a new bash shell with root privileges by using the command `bash -p`, which was then used to retrieve the final flag. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

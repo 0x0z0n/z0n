@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `woodenk` | Nmap, SSTI, Command Injection | An initial Nmap scan revealed ports 22 (SSH) and 8080 (HTTP) were open. The web server on port 8080 was running a Spring Boot application, which was found to be vulnerable to Server-Side Template Injection (SSTI). An SSTI payload was crafted and injected into the `/search` endpoint's `name` parameter, allowing for blind command injection. |
+| 2 | `woodenk` | Command Injection, Reverse Shell | Exploited the SSTI vulnerability to execute a series of commands to download, give permissions to, and execute a reverse shell script. This resulted in gaining a shell on the target machine as the `woodenk` user. |
+| 3 | `woodenk` | Code Analysis, SSH Login | Performed code analysis of the web application's source code, which was accessible through the shell. The `MainController.java` file contained MySQL credentials for the `woodenk` user (`woodenk:RedPandazRule`). These credentials were used to log in to the target machine via SSH. |
+| 4 | `root` | `pspy64`, Cronjob, Log Poisoning, XXE | Used `pspy64` to monitor running processes and discovered a cronjob running a Java application as `root` every two minutes. Decompiled the Java application to understand its logic, which involved parsing a log file, reading image metadata, and processing an XML file. This presented a log poisoning and XXE vulnerability. A malicious `.jpg` file with a path traversal in its `Artist` metadata and a crafted XML file with an XXE payload were created. The application log was poisoned with a path traversal payload, which caused the cronjob to read the malicious XML file. The XXE payload was then triggered, allowing the private SSH key of the `root` user to be read from `/root/.ssh/id_rsa`. This key was used to log in as `root`. |
+| 5 | `root` | Final Flag | Once logged in as root, the final flag was retrieved. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```shell

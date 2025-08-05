@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `(unauthenticated)` | LFI & Command Injection via Web Shell | An `nmap` scan revealed ports 22 and 80 were open. The web server on port 80 displayed a message from a user named `Xh4H` about leaving a "backdoor". Directory enumeration with `gobuster` using the `CommonBackdoors-PHP.fuzz.txt` wordlist found `/smevk.php`. This page was a web shell accessible with the default credentials `admin:admin`. This web shell allowed for arbitrary command execution. |
+| 2 | `webadmin` | Reverse Shell from Web Shell | Using the web shell, a `bash` reverse shell payload was executed to connect back to the attacker's machine. This provided a shell as the `webadmin` user. The user flag was not in the expected `/home/webadmin` directory, but a `note.txt` file hinted at a tool for Lua programming left by a `sysadmin`. |
+| 3 | `sysadmin` | Sudo Misconfiguration (`luvit`) | `linPEAS` was run to enumerate privilege escalation vectors. It revealed that the `webadmin` user could run `/home/sysadmin/luvit` as the `sysadmin` user without a password. This binary was identified as a Lua interpreter. By crafting a Lua script that appends the attacker's public SSH key to `/home/sysadmin/.ssh/authorized_keys`, and then executing it with `sudo -u sysadmin /home/sysadmin/luvit`, the attacker gained SSH access as the `sysadmin` user. |
+| 4 | `root` | `motd` Misconfiguration and Race Condition | As `sysadmin`, `linPEAS` and `pspy64` were used to find a privilege escalation vector. It was discovered that files in `/etc/update-motd.d/`, which are executed as `root` upon SSH login, were writable by the `sysadmin` group. Additionally, a cron job was observed running every 30 seconds that would overwrite these files with a backup. By modifying a `motd` file (e.g., `00-header`) to include a `bash` reverse shell payload and quickly logging in via SSH before the cron job could restore the original files, the attacker was able to execute their payload as `root` and gain a root shell. |
+| 5 | `root` | Final Flag | With a root shell, the final flag was retrieved. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

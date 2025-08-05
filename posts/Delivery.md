@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Directory & File Enumeration, Service Fingerprinting | Identified open ports 22 (SSH), 80 (Nginx), and 8065. Port 8065 was fingerprinted as a "Mattermost" application, and port 80 was a web server with a link to `helpdesk.delivery.htb` running `osTicket`. |
+| 2 | (Web) | Open Ticket Exploitation | On `osTicket`, created a new ticket which generated a new email address with the `@delivery.htb` domain. This provided a valid email address to use on the Mattermost registration page. |
+| 3 | mattermost | Email Verification Bypass | Registered on Mattermost using the `@delivery.htb` email. The verification token was sent to the email and appeared as a comment on the `osTicket` page, allowing the user to bypass the email verification process and log in to Mattermost. |
+| 4 | maildeliverer | Information Disclosure, Credential Reuse | Inside Mattermost, found credentials for the `maildeliverer` user (`Youve_G0t_Mail!`) and a hint about a password-cracking wordlist (`PleaseSubscribe!`). These credentials were used to log in via SSH. |
+| 5 | root | Password Spraying via `sucrack`, Credential Reuse | **Method 1:** Using the `PleaseSubscribe!` hint, generated a wordlist with `hashcat` rules. Compiled and ran `sucrack` on the target machine, which successfully cracked a password. The discovered password was `PleaseSubscribe!21`, which granted access to the `root` user via `su`. |
+| 6 | root | MySQL Hash Dump, Hash Cracking, Credential Reuse | **Method 2:** Found MySQL credentials in `/opt/mattermost/config/config.json`. Logged into the MySQL database, dumped user hashes from the `mattermost.Users` table, and cracked the root user's hash using `john` and the wordlist generated from `PleaseSubscribe!`. The cracked password was `PleaseSubscribe!21`, which granted `root` access via `su`. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

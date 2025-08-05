@@ -4,6 +4,20 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan & Website Enumeration | Identified an Apache web server on port 80. The website hinted at a `phpbash` tool developed on the server. |
+| 2 | (Web) | Directory Enumeration & RCE | Used `gobuster` to find the `/dev` directory. Discovered and accessed `phpbash.php` at `http://10.10.10.68/dev/phpbash.php`, which provided a web shell as the `www-data` user. |
+| 3 | www-data | Reverse Shell | Upgraded the web shell to a proper reverse shell, gaining interactive access to the system as the `www-data` user. |
+| 4 | www-data -> scriptmanager | `sudo` Abuse | Ran `sudo -l` and found that `www-data` could run any command as the `scriptmanager` user without a password. Used `sudo -u scriptmanager /bin/bash` to escalate privileges to the `scriptmanager` user. |
+| 5 | scriptmanager -> root | Cron Job Manipulation | Found a directory `/scripts` owned by `scriptmanager`. Inside, there was a `test.py` script that was being executed by a cron job running as `root`. |
+| 6 | root | Reverse Shell | Modified `test.py` to contain a reverse shell payload. The cron job executed the modified script as `root`, granting a root shell and access to `root.txt`. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

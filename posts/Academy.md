@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Website Enumeration, Parameter Manipulation | Identified open ports 22 (SSH) and 80 (HTTP). Manipulated `roleid` during registration to gain admin access on `academy.htb`. |
+| 2 | (Web) | Virtual Host Enumeration, Debug Page Analysis | Discovered a new subdomain `dev-staging.academy.htb` via the admin panel, which revealed a Laravel debug page disclosing the `APP_KEY`. |
+| 3 | www-data | Laravel RCE (CVE-2018-15133) | Used the `APP_KEY` with a Metasploit module to exploit a deserialization vulnerability and gain a reverse shell as the `www-data` user. |
+| 4 | www-data | File Enumeration | Found the `.env` file containing the password `mySup3rP4s5w0rd!!`. |
+| 5 | cry0l1t3 | Password Reuse, SSH Login | Used `crackmapexec` to identify that the password from the `.env` file was reused for the user `cry0l1t3` and logged in via SSH. |
+| 6 | cry0l1t3 | Log Enumeration (`adm` group) | Used `aureport --tty` to read audit logs, finding the password for another user: `mrb3n:mrb3n_Ac@d3my!`. |
+| 7 | mrb3n | `sudo -l` | Switched to the `mrb3n` user and discovered they could run `/usr/bin/composer` as `root` without a password. |
+| 8 | root | Composer Privilege Escalation | Used a GTFOBins payload with `sudo /usr/bin/composer` to execute a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

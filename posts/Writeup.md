@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+
+### Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+| :--- | :--- | :--- | :--- |
+| 1 | `(unauthenticated)` | **Nmap** & **Directory Enumeration** | Discovered the `/writeup` directory, which was running "CMS Made Simple." The version was identified as 2.2.9.1 from the `CHANGELOG.txt` file. |
+| 2 | `(unauthenticated)` | **SQL Injection** | Exploited a time-based SQL injection vulnerability to dump the username (`jkr`), email (`jkr@writeup.htb`), and the salted MD5 password hash. |
+| 3 | `jkr` | **Hashcat** & **Password Cracking** | Used Hashcat with the `rockyou.txt` wordlist to crack the salted MD5 hash, revealing the password `raykayjay9`. This password was then used to log in as the user `jkr` via SSH. |
+| 4 | `root` | **Path Hijacking** | Identified a writable directory, `/usr/local/bin`, in the user's `PATH`. A custom `run-parts` script was created in this directory to execute a command that added the attacker's public SSH key to the `root` user's `authorized_keys` file. This granted root access via SSH. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

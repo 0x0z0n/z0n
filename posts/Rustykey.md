@@ -2,12 +2,33 @@
 
 ```
 OS: Windows
-Difficulty - Windows Hard
+Difficulty: Hard
+Hint: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `rr.parker` | `nmap`, `nxc`, `impacket-getTGT` | Gained initial access to Active Directory using provided credentials and Kerberos authentication. |
+| 2 | `rr.parker` | `nxc ldap`, `timeroast.py`, `hashcat` | Enumerated users via LDAP, exploited a Timeroasting vulnerability to dump hashes from computer accounts, and cracked the password for `IT-COMPUTER3$`. |
+| 3 | `IT-COMPUTER3$` | `bloodyAD`, `impacket-getTGT`, `evil-winrm` | Used `bloodyAD` to remove the IT group from `PROTECTED OBJECTS` and reset `bb.morgan`'s password. Logged in with `evil-winrm` as `bb.morgan` to obtain `user.txt`. |
+| 4 | `ee.reed` | `RunasCs`, `nc` | Found a PDF that hinted at the `SUPPORT` group's ability to modify the registry. Used `RunasCs` to escalate privileges to `ee.reed` and gain a PowerShell reverse shell. |
+| 5 | `ee.reed` | `reg add`, `msfvenom` | Performed a COM Hijack by creating a malicious DLL with `msfvenom` and modifying the `InprocServer32` registry key for 7-Zip. This granted a Meterpreter session as `mm.turner`. |
+| 6 | `mm.turner` | `Set-ADComputer` | Exploited Resource-based Constrained Delegation (RBCD) by using `mm.turner`'s permissions to configure the Domain Controller's computer object to delegate to `IT-COMPUTER3$`. |
+| 7 | `backupadmin` | `impacket-getST`, `impacket-wmiexec` | Used `impacket-getST` to impersonate `backupadmin` via Kerberos delegation and gained a shell with `impacket-wmiexec`. |
+| 8 | `administrator` | `impacket-secretsdump`, `impacket-getTGT`, `evil-winrm` | Performed a DCSync attack to dump all domain user hashes, including the `Administrator`'s. Used the `Administrator`'s hash to log in with `evil-winrm`, gaining full control over the domain controller. |
+
+
+
 As is common in real-life Windows penetration tests, you will start the RustyKey box with credentials for the following account: rr.parker/8#t5HE8L!W3A
 
-Nmap
+
+#### Nmap
+
+
 The Nmap scan reveals several open ports and services, indicating an Active Directory environment.
+
 ```
 [xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ nmap rustykey.htb -A
 PORT     STATE SERVICE       VERSION
@@ -400,24 +421,7 @@ rustykey\administrator
 ![BH Root](Pictures/htb_Rustykey_Root_flag.png)
 
 
-#### 🏁 Summary of Attack Chain
-
-```
-| Step | User / Access | Technique Used | Result |
-|---|---|---|---|
-| 1 | rr.parker | nmap, nxc, impacket-getTGT | Initial access to Active Directory services via Kerberos. Confirmed successful authentication with provided credentials after configuring krb5.conf. |
-| 2 | rr.parker | nxc ldap --users, timeroast.py, hashcat | Performed user enumeration via LDAP. Discovered computer account hashes by exploiting a Timeroasting vulnerability and cracked the password for IT-COMPUTER3$. |
-| 3 | IT-COMPUTER3$ | bloodyAD, impacket-getTGT, evil-winrm | Used bloodyAD to remove the IT group from PROTECTED OBJECTS, allowing a password reset for bb.morgan. Logged in via evil-winrm and obtained the user.txt flag. |
-| 4 | ee.reed | RunasCs, nc | Found a PDF mentioning that the SUPPORT group has temporary registry modification rights. Used RunasCs to get a PowerShell reverse shell as ee.reed. |
-| 5 | ee.reed | reg add, msfvenom | Performed a COM Hijack by creating a malicious DLL with msfvenom and modifying the InprocServer32 registry key for 7-Zip. This granted a Meterpreter session as mm.turner. |
-| 6 | mm.turner | Set-ADComputer | Exploited Resource-based Constrained Delegation (RBCD) by using mm.turner's permissions to configure the DC computer object to delegate to IT-COMPUTER3$. |
-| 7 | backupadmin | impacket-getST, impacket-wmiexec | Used impacket-getST to impersonate backupadmin via Kerberos delegation. Gained a shell with impacket-wmiexec as backupadmin. |
-| 8 | administrator | impacket-secretsdump, impacket-getTGT, evil-winrm | Performed a DCSync attack to dump all domain user hashes, including the Administrator's. Used the Administrator's hash to obtain a ticket and logged in with evil-winrm to gain full control of the domain controller. |
-```
-
-
-
-
-**Pwned! RustKey**
 
 -->
+
+**Pwned! RustKey**

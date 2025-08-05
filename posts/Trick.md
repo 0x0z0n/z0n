@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `(unauthenticated)` | DNS Zone Transfer & Subdomain Enumeration | An initial `nmap` scan revealed an open DNS port (53). A **DNS zone transfer** for `trick.htb` revealed a subdomain: `preprod-payroll.trick.htb`. Further enumeration with `wfuzz` using a wordlist and the naming convention `preprod-FUZZ.trick.htb` uncovered another subdomain: `preprod-marketing.trick.htb`.|
+| 2 | `(unauthenticated)` | SQL Injection | The `preprod-payroll.trick.htb` site had a login page. Using `sqlmap` on a saved request, a time-based blind SQL Injection was identified. This vulnerability was exploited to enumerate the database `payroll_db` and retrieve a table named `users`. The `users` table contained credentials for the `Administrator` user: `username` **Enemigosss** and `password` **SuperGucciRainbowCake**. |
+| 3 | `michael` | LFI, SMTP Abuse & Reverse Shell | The `preprod-marketing.trick.htb` subdomain was found to have a **Local File Inclusion (LFI)** vulnerability in the `page` parameter of `index.php`. This LFI was used to read `/etc/passwd`, revealing the user `michael`. Using the open SMTP port (25), an email was sent to `michael@localhost` containing a PHP payload. The LFI was then used to include `/var/mail/michael`, which was interpreted by PHP, writing a reverse shell script to a public web directory. Executing this web shell granted a reverse shell as the `michael` user. |
+| 4 | `root` | Sudo Privilege Escalation via Fail2Ban | As the `michael` user, it was discovered that the user could run `/etc/init.d/fail2ban restart` with **NOPASSWD** via `sudo`. The `michael` user was also part of the `security` group, which had write permissions on the `/etc/fail2ban/action.d` directory. By modifying a Fail2Ban configuration file in this directory to execute a command that sets the SUID bit on `/bin/bash` during a `ban` event, a privileged shell could be obtained. Triggering an SSH login failure caused Fail2Ban to execute the modified `actionban` command, giving the `michael` user a SUID shell. This SUID shell was then executed to gain a **root** shell. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

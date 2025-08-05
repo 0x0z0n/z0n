@@ -4,6 +4,20 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+#### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Directory & File Enumeration | Identified open port 80 (HTTP) and a web server running Bludit CMS version 3.9.2. Found a possible username `fergus` in `todo.txt`. |
+| 2 | (Web) | Authentication Bruteforce Bypass (X-Forwarded-For) | Used a script to bypass the IP-based bruteforce mitigation by setting a random `X-Forwarded-For` header. |
+| 3 | fergus | Password Cracking, Web Login | Bruteforced the login for user `fergus` and discovered the password `RolandDeschain`. Gained access to the Bludit admin panel. |
+| 4 | www-data | Bludit RCE (Authenticated File Upload) | Used a Metasploit module to exploit a directory traversal vulnerability, uploading a PHP reverse shell to `/bl-content/tmp/` and executing it to get a shell as `www-data`. |
+| 5 | www-data | Local File Enumeration, Hash Cracking | Found the `users.php` flat file database for Bludit, containing a hash for the user `hugo`. Cracked the unsalted hash `faca404...98d` to find the password `Password120`. |
+| 6 | hugo | SSH Login | Used the cracked password to switch to the `hugo` user on the system. |
+| 7 | hugo | Sudo Misconfiguration (CVE-2019-14287) | Ran `sudo -l` and identified a vulnerable sudo configuration `(ALL, !root) /bin/bash`. |
+| 8 | root | Privilege Escalation | Exploited the sudo misconfiguration by executing `sudo -u#-1 /bin/bash` to obtain a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

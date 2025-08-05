@@ -4,6 +4,20 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `shelly` | Nmap, Dirb, Shellshock (CVE-2014-6271) | An Nmap scan revealed ports 80 (HTTP) and 2222 (SSH) were open. Dirb identified a `/cgi-bin/` directory containing a `user.sh` script. The script was found to be vulnerable to Shellshock, as confirmed by the `http-shellshock.nse` Nmap script. The vulnerability was exploited by crafting a malicious `Cookie` header in an HTTP request to the `user.sh` script, which allowed for command injection. |
+| 2 | `shelly` | Reverse Shell | A reverse shell payload was injected into the vulnerable `Cookie` header, which was then executed by the web server. This granted a shell as the user `shelly`. |
+| 3 | `root` | `sudo` Misconfiguration (GTFOBins) | Upon gaining access as `shelly`, a `sudo -l` command revealed a misconfiguration allowing the user to run `/usr/bin/perl` as `root` without a password. This misconfiguration was exploited using a payload from GTFOBins, which executed a shell with root privileges. |
+| 4 | `root` | `LXD` Privilege Escalation (Alternative Method) | As an alternative path to root, it was noted that the user `shelly` was a member of the `lxd` group. This is a known privilege escalation vector. An Alpine Linux image was built, imported into LXD on the target machine, and configured to mount the host's root file system. A shell was then executed within the container, providing access to the host's root directory and the final flag. |
+| 5 | `root` | Final Flag | Both methods successfully led to a root shell, allowing retrieval of the final flag. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

@@ -4,6 +4,16 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Website Analysis, Burp Intercept | Identified open ports 22 (SSH) and 80 (HTTP). Discovered a "Bounty Report System" form on port 80 that processes base64-encoded XML, hinting at a potential XML External Entity (XXE) vulnerability. |
+| 2 | (Web) | XXE Injection, Local File Inclusion via PHP Filter | Confirmed the XXE vulnerability and used it with `php://filter` to read the contents of `/db.php`, which contained cleartext credentials for the `admin` database user: `m19RoAU0hP41A1sTsq6K`. |
+| 3 | development | Password Spraying, SSH Login | Performed a password spray against system users using the discovered password. This revealed that the password was reused for the `development` SSH user, allowing successful login. |
+| 4 | development | Sudo Misconfiguration, Code Review, `eval()` Abuse | Found a privileged Python script `/opt/skytrain_inc/ticketValidator.py` that could be run as root without a password. Analyzed the script and identified a vulnerable `eval()` function. Crafted a malicious input file to execute a command and gain a root shell. |
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```bash

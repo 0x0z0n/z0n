@@ -4,6 +4,16 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `ircd` | UnrealIRCd Backdoor Command Execution (CVE-2010-2075) | Found an UnrealIRCd service running on multiple ports. Discovered that a backdoor was present in version `3.2.8.1`, allowing for remote command execution by prepending a command with "AB". Used this to get a reverse shell as the `ircd` user. |
+| 2 | `djmardov` | Steganography & Password Re-use | Discovered a hidden file `.backup` in `djmardov`'s home directory containing a password clue (`UPupDOWNdownLRlrBAbaSSss`) and referencing a "steg backup". Used `steghide` with this password on an image found on the web server to extract a second password. Used this password to log in via SSH as the `djmardov` user. |
+| 3 | `root` | SUID Binary & Path Hijacking | Discovered an unusual SUID binary named `viewuser`. When executed, the binary attempted to run `/tmp/listusers` as `root` without specifying the full path. By creating a malicious script at `/tmp/listusers` containing a reverse shell, the `viewuser` binary executed the script with root privileges, granting a root shell. |
+
+
 ## Initial Enumeration
 Running nmap full scan (TCP) on the target shows the following
 ```

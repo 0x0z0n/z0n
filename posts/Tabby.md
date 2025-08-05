@@ -2,8 +2,21 @@
 ```
 Difficulty: Easy
 Operating System: Linux
-Hints: Trues
+Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `tomcat` | Nmap, LFI, Credential Disclosure | An Nmap scan revealed ports 22 (SSH), 80 (HTTP), and 8080 (Tomcat) were open. The website on port 80 was vulnerable to Local File Inclusion (LFI) through the `news.php?file=` parameter. The LFI was used to read `/usr/share/tomcat9/etc/tomcat-users.xml`, which contained credentials for the Tomcat Manager: `tomcat:$3cureP4s5w0rd123!`. |
+| 2 | `tomcat` | Tomcat WAR File Deployment, Reverse Shell | Despite the Tomcat Manager GUI being restricted, a WAR file containing a reverse shell payload was crafted using `msfvenom`. This file was then deployed to the Tomcat server using a `curl` command with the newly discovered credentials. Activating the deployed WAR file by accessing its URL triggered the reverse shell, granting an initial foothold as the `tomcat` user. |
+| 3 | `ash` | Password Reuse, Backup File | After gaining a shell as `tomcat`, a system scan with linPEAS identified a backup zip file at `/var/www/html/files/16162020_backup.zip`. The zip file was password-protected. `zip2john` and `john` were used to crack the password, which was found to be `admin@it`. This password was then reused to successfully log in as the user `ash` via `su`. |
+| 4 | `root` | `LXD` Privilege Escalation | A final scan with `linPEAS` as user `ash` revealed that `ash` was a member of the `lxd` group. This is a known privilege escalation vector. An Alpine Linux image was built on the attacking machine, transferred to the target, and imported into LXD. A new container was created with privileged settings and configured to mount the host's root file system. A shell was then executed within the container, providing root access to the host machine. |
+| 5 | `root` | Final Flag | With root access obtained from the LXD container, the final flag was retrieved from the host's `/root/` directory. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following results:
 ```

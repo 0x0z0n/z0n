@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | `giovanni` | Hidden Information Disclosure, Password Brute-Force | An Nmap scan revealed only port 80 (HTTP) was open, serving an Apache web server. Directory enumeration with `gobuster` found a `/moodle` directory. Manual enumeration of the main website revealed an interesting file, `images/5.png`. Upon inspecting the file with `xxd`, it was found to be an ASCII text file containing a partial password for a user named `Giovanni`: `Th4C00lTheacha`. A character brute-force with `wfuzz` against the Moodle login page successfully identified the missing character, revealing the full password: `Th4C00lTheacha#`. |
+| 2 | `www-data` | Moodle RCE, Reverse Shell | The Moodle version was identified as 3.4.1 by examining the Moodle documentation link at the bottom of a course page. This version is vulnerable to a known Remote Code Execution (RCE) exploit. An RCE payload was manually injected by creating a new quiz question and using the vulnerable formula field to execute a reverse shell. This granted a shell as the `www-data` user. An alternative, automated method using a public exploit script (`php/webapps/46551.php`) was also successful after modifying the payload to use a more reliable `bash` reverse shell. |
+| 3 | `giovanni` | Credential Reuse, MD5 Hash Crack | After gaining a shell as `www-data`, the Moodle configuration file `/var/www/html/moodle/config.php` was accessed. It contained database credentials: `root:Welkom1!`. These credentials were used to access the Moodle database and dump user information, including a username `Giovannibak` with an MD5 hash: `7a860966115182402ed06375cf0a22af`. The MD5 hash was easily cracked online to the password `expelled`. This password was then used to gain access to the `giovanni` user via `su`. |
+| 4 | `root` | `PATH` Hijacking, Cron Job Misconfiguration | As user `giovanni`, a directory `/home/giovanni/work` was found. A `pspy` scan revealed a cron job running as `root` that executed a script at `/usr/bin/backup.sh`. This script changed the directory to `/home/giovanni/work` and performed various operations, including a `chmod 777` on files within a subdirectory named `tmp`. This was a privilege escalation vulnerability. By replacing the `tmp` subdirectory with a symbolic link to `/etc/shadow`, the cron job was tricked into recursively changing the permissions of `/etc/shadow` to be world-writable. This allowed the attacker to modify the `root` user's password hash in `/etc/shadow` with a known password and then `su` to root. |
+| 5 | `root` | Final Flag | With a root shell obtained through the password change, the final flag was retrieved. |
+
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

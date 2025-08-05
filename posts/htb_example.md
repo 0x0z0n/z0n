@@ -4,6 +4,17 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Telnet and SNMP Enumeration | Found an open Telnet service on port 23 and an open SNMP service on port 161 (UDP). The Telnet service banner revealed `HP JetDirect`. |
+| 2 | `lp` | SNMP Password Disclosure & Telnet Login (User Flag) | Exploited an SNMP password disclosure vulnerability in HP JetDirect. Used `snmpwalk` to query the specific OID `.1.3.6.1.4.1.11.2.3.9.1.1.13.0`, which returned a hex-encoded password. Decoded the hex to `P@ssw0rd@123!!123`, and used this password to log in to the Telnet service. |
+| 3 | `lp` | Telnet Remote Command Execution | Discovered a command `exec` that allowed the execution of system commands within the Telnet session. Used a `netcat` payload with `exec` to get a reverse shell as the `lp` user. |
+| 4 | `root` | CUPS Local File Inclusion (Root Flag) | Found a locally running CUPS service on port 631. Used SSH port forwarding to access the CUPS administration page. Exploited a local file read vulnerability in CUPS versions less than 1.6.2. Used `cupsctl` to change the `ErrorLog` file path to `/etc/shadow` and `/root/root.txt`, then read the contents by navigating to the error log URL. This revealed the root hash and the root flag. |
+
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```

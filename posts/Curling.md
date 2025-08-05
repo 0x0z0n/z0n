@@ -4,6 +4,19 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
+
+### 🏁 Summary of Attack Chain
+
+| Step | User / Access | Technique Used | Result |
+|:---|:---|:---|:---|
+| 1 | (Local) | Nmap Scan, Directory & File Enumeration, Base64 Decoding | Identified open ports 22 (SSH) and 80 (HTTP) running Joomla 3.8.8. Found a `secret.txt` file which contained a base64-encoded string that decoded to a potential password: `Curling2018!`. |
+| 2 | (Web) | Password Spraying with `wfuzz` | Used `cewl` to create a wordlist and then `wfuzz` to perform a password spray against the Joomla administrator login page. The password `Curling2018!` worked with the username `Floris`. |
+| 3 | www-data | Joomla Vulnerability (Authenticated Arbitrary File Upload), Reverse Shell | Logged into the Joomla admin panel, edited the `protostar` template's `index.php` file to include a PHP web shell. Executed the web shell to download and run a reverse shell script, gaining a shell as the `www-data` user. |
+**| 4 | www-data | File Obfuscation, Steganography (Multiple layers) | Discovered a `password_backup` file in Floris's home directory. It was a multi-layered obfuscated file requiring a sequence of `xxd -r`, `bzip2`, `gzip`, and `tar` commands to extract a password. The final password was `5d<wdCbdZu)|hChXll`. >|
+| 5 | floris | SSH Login | Used the extracted password `5d<wdCbdZu)|hChXll` >to log in as the `floris` user via SSH. |
+| 6 | floris | Cron Job Misconfiguration, Local File Inclusion via `curl -K` | Discovered a cron job running as root that used `curl -K` with a user-writable input file. The cron job's configuration file was being updated by `cat /root/default.txt`, revealing the cron job itself. |
+| 7 | root | `sudoers` File Overwrite, Privilege Escalation | Exploited the cron job by modifying the `input` file to instruct `curl` to download a malicious `sudoers` file from a local web server and write it to `/etc/sudoers`. This granted the `floris` user `sudo` access, allowing a final `sudo su -` to gain a root shell. | 
+
 ## Initial Enumeration
 Running nmap scan (TCP) on the target shows the following
 ```
