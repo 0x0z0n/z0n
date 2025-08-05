@@ -41,9 +41,11 @@ This scan revealed several interesting PHP pages, including register.php, login.
 
 ![Burp ](Pictures/htb_Era_ID_Identified.png)
 ![54 ](Pictures/htb_Era_ID_54Identified.png)
-![150 ](Pictures/htb_Era_ID_150_Identified.png)
+
 
 Using burpsuite's Intruder to brute-force the id parameter, we discovered two valid IDs (54 and 150) that returned different content. One of these, ID 54, downloaded a file named site-backup-30-08-24.zip.
+
+![150 ](Pictures/htb_Era_ID_150_Identified.png)
 
 ![Database](Pictures/htb_Era_fuileupnzip.png)
 
@@ -346,8 +348,11 @@ If you successfully log in as admin, you can go back to download.php to find a w
 
 I have previously analyzed that there may be the use of pseudo-protocols, but after my attempts, the following URLs will not be directly echoed
 
-http://file.era.htb/?id=1&show=true&format=php://filter/read=convert.base64-encode/resource=/etc/passwd
+URL
 
+```
+http://file.era.htb/?id=1&show=true&format=php://filter/read=convert.base64-encode/resource=/etc/passwd
+```
 
 After trying, I found that Yuri's account can log in to the ftp service
 
@@ -469,7 +474,7 @@ This gave us a root shell, and we successfully retrieved root.txt.
 
 #### 🏁 Summary of Attack Chain
 
-| Step | User / Access | Technique Used | Result |
+| Step | User / Access                  | Technique Used | Result |
 |:---|:---|:---|:---|
 | 1 | (Local) | Nmap, Subdomain Fuzzing | Identified `era.htb` and found subdomain `file.era.htb` via `ffuf`. |
 | 2 | (Web) | Dirsearch, User Registration | Discovered `register.php`, allowing for new user account creation on `file.era.htb`. |
@@ -481,6 +486,9 @@ This gave us a root shell, and we successfully retrieved root.txt.
 | 8 | eric | Binary Analysis & Code Signing | Discovered the cron job was checking a `.text_sig` section of the `monitor` binary for integrity. |
 | 9 | eric -> root | Malicious Binary Replacement | Created a malicious `monitor` binary, signed it with the correct key to bypass the integrity check, and replaced the original binary. |
 | 10 | root | Root Shell | The cron job executed the malicious `monitor` binary as `root`, granting a reverse shell and the `root.txt` flag. |
+
+
+
 
 
 **Pwned! Era**
