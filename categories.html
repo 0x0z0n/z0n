@@ -19,14 +19,75 @@
 }
 
 html[data-theme="light"] {
-  --bg-color: #f4f4f4;
+  --bg-color: #f9fafe;
   --card-bg: #ffffff;
-  --text-color: #222;
-  --accent: #0066cc;
-  --tag-bg: #e0e0e0;
-  --tag-hover: #a5d8ff;
-  --border-glow: 0 0 8px #aadfff;
+  --text-color: #1c1c1c;
+  --accent: #007acc;
+  --tag-bg: #dbefff;
+  --tag-hover: #007acc;
+  --border-glow: 0 0 6px #007acc44, 0 0 12px #007acc22;
 }
+
+/* Sidebar */
+html[data-theme="light"] aside {
+  background: linear-gradient(to bottom, #f1f3f6, #e6e9ef);
+  box-shadow: inset -1px 0 0 #cfd8e0;
+}
+
+/* Sidebar nav links */
+html[data-theme="light"] nav a {
+  background: #f7f9fb;
+  color: var(--text-color);
+}
+
+html[data-theme="light"] nav a:hover {
+  background: #ddeeff;
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
+}
+
+/* Social icon hover */
+html[data-theme="light"] .social-icons a:hover {
+  color: var(--accent);
+}
+
+/* Category Button */
+html[data-theme="light"] .category-button {
+  background: var(--tag-bg);
+  color: #004466;
+  border: 1px solid #b3d7f0;
+}
+
+html[data-theme="light"] .category-button:hover {
+  background: var(--tag-hover);
+  color: #fff;
+}
+
+/* Category card */
+html[data-theme="light"] .category-card {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05), var(--border-glow);
+  border-left: 4px solid var(--accent);
+  color: var(--text-color);
+}
+
+/* Category card hover */
+html[data-theme="light"] .category-card:hover {
+  background: #eef7ff;
+  transform: translateY(-4px);
+  box-shadow: 0 0 15px #007acc66;
+}
+
+/* Category card title link */
+html[data-theme="light"] .category-card a {
+  color: var(--accent);
+}
+
+html[data-theme="light"] .category-card a:hover {
+  color: #005a9e;
+  text-shadow: 0 0 4px #aadfff;
+}
+
 
 
          body {

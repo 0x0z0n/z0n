@@ -18,14 +18,80 @@
 }
 
 html[data-theme="light"] {
-  --bg-color: #f4f4f4;
+  --bg-color: #f8fafc;
   --card-bg: #ffffff;
-  --text-color: #222;
-  --accent: #0066cc;
-  --tag-bg: #e0e0e0;
-  --tag-hover: #a5d8ff;
-  --border-glow: 0 0 8px #aadfff;
+  --text-color: #1c1c1c;
+  --accent: #0077cc;
+  --tag-bg: #e6f0fa;
+  --tag-hover: #0077cc;
+  --border-glow: 0 0 6px #0077cc55, 0 0 10px #0077cc33;
 }
+
+/* Sidebar Light Mode */
+html[data-theme="light"] aside {
+  background: linear-gradient(to bottom, #f0f3f8, #e4eaf2);
+  box-shadow: inset -1px 0 0 #d0d8e0;
+}
+
+/* Sidebar Navigation */
+html[data-theme="light"] nav a {
+  background: #f5f8fa;
+  color: var(--text-color);
+  border-left: 3px solid transparent;
+}
+
+html[data-theme="light"] nav a:hover {
+  background: #dceeff;
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
+}
+
+/* Social Icons Hover */
+html[data-theme="light"] .social-icons a:hover {
+  color: var(--accent);
+}
+
+/* Category Button Light */
+html[data-theme="light"] .category-button {
+  background-color: var(--tag-bg);
+  color: #004466;
+  border: 1px solid #b5d8f5;
+}
+
+html[data-theme="light"] .category-button:hover {
+  background-color: var(--tag-hover);
+  color: #fff;
+}
+
+/* Tag Styles */
+html[data-theme="light"] .tag {
+  background-color: var(--tag-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 6px #0077cc22;
+}
+
+html[data-theme="light"] .tag:hover {
+  background-color: var(--tag-hover);
+  color: #fff;
+}
+
+/* Input Search */
+html[data-theme="light"] input {
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  color: var(--text-color);
+}
+
+/* Footer */
+html[data-theme="light"] footer {
+  color: #777;
+}
+
+html {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
 
 
       body {
