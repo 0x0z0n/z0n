@@ -28,23 +28,6 @@ html[data-theme="light"] {
   --border-glow: 0 0 6px #007acc44, 0 0 12px #007acc22;
 }
 
-.theme-toggle {
-  position: fixed;
-  top: 18px;
-  right: 20px;
-  z-index: 999;
-  font-size: 1.4rem;
-  cursor: pointer;
-  color: #888;
-  transition: color 0.3s ease;
-}
-
-.theme-toggle:hover {
-  color: var(--accent);
-  transform: scale(1.1);
-}
-
-
 /* Sidebar */
 html[data-theme="light"] aside {
   background: linear-gradient(to bottom, #f1f3f6, #e6e9ef);
@@ -103,6 +86,63 @@ html[data-theme="light"] .category-card a {
 html[data-theme="light"] .category-card a:hover {
   color: #005a9e;
   text-shadow: 0 0 4px #aadfff;
+}
+
+
+.theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 999;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+
+.theme-toggle {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+#shooting-star {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  background: linear-gradient(45deg, white, #007acc);
+  border-radius: 50%;
+  box-shadow: 0 0 8px #fff;
+  opacity: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes shoot {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(600px, 300px) scale(0.2);
+    opacity: 0;
+  }
 }
 
 
@@ -331,44 +371,7 @@ html[data-theme="light"] .category-card a:hover {
   }
 }
 
-.theme-toggle {
-  text-align: center;
-  font-size: 1.4rem;
-  margin-top: 1.5rem;
-  cursor: pointer;
-  color: #888;
-  transition: color 0.3s ease;
-}
 
-.theme-toggle:hover {
-  color: var(--accent);
-  transform: scale(1.1);
-}
-
-#shooting-star {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 3px;
-  background: linear-gradient(45deg, white, #007acc);
-  border-radius: 50%;
-  box-shadow: 0 0 8px #fff;
-  opacity: 0;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-@keyframes shoot {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(600px, 300px) scale(0.2);
-    opacity: 0;
-  }
-}
 
       </style>
    </head>
