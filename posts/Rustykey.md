@@ -76,7 +76,7 @@ To improve client configuration, the /etc/krb5.conf file is modified.
 
 **Access Restricted by HackTheBox Rules**
 
-<!--
+
 
 A Kerberos ticket is requested for authentication.
 ```
@@ -421,7 +421,5 @@ rustykey\administrator
 ![BH Root](Pictures/htb_Rustykey_Root_flag.png)
 
 
-
--->
 
 **Pwned! RustKey**
