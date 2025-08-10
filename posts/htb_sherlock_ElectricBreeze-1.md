@@ -51,7 +51,7 @@ This vulnerability was later assigned the CVE identifier CVE-2024-39717, which i
 
 According to a CISA document, Volt Typhoon's main strategy for defense evasion is Living Off the Land (**LOTL**). This technique involves using native system tools and processes, which makes their activities difficult to distinguish from legitimate system administration and helps them avoid detection.
 
-![Document](https://www.cisa.gov/sites/default/files/2024-03/aa24-038a_csa_prc_state_sponsored_actors_compromise_us_critical_infrastructure_3.pdf)
+
 ![Evasion](Pictures/htb_sherlock_ElectricBreeze_Defence_Evasion.png)
 
 The CISA document also provides a specific example of this. In one incident, analysis of a PowerShell command indicated that event logs of successful logon events (event ID 4624) were being directed to a file named user.dat, which was likely used to analyze user authentication patterns within the network.
