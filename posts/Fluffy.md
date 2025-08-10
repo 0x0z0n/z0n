@@ -6,7 +6,7 @@ Operating System: Windows
 Hints: True
 ```
 
-### Fluffy: Summary of Attack Chain
+**🏁 Summary of Attack Chain**
 
 
 | Step | User / Access | Technique Used | Result |
@@ -53,6 +53,8 @@ responder -I tun0 -wvF
 
 Soon after, a user on the network accessed the malicious file, and Responder captured an NTLMv2 hash for the user p.agila. The hash was then cracked using john with the rockyou.txt wordlist, revealing the password: promXXXXXXXXXXX.
 
+
+<!--
 
 # Privilege Escalation to winrm_svc
 
@@ -102,7 +104,7 @@ This provided access to the user.txt flag.
 
 
 
-**Domain Administrator Compromise via ESC16**
+####Domain Administrator Compromise via ESC16
 
 
 Further enumeration with certipy revealed a critical vulnerability on the Certificate Authority (CA), specifically ESC16, which allows an attacker to exploit a misconfigured CA to impersonate other users.
@@ -162,6 +164,9 @@ certipy auth -dc-ip '10.10.11.69' -pfx 'administrator.pfx' -username 'administra
 The final command successfully yielded the NTLM hash for the administrator, which can be used for a full domain compromise.
 
 ![Root_Flag](Pictures/htb_fluffy_Root.png)
+
+
+-->
 
 
 **Pwned! Fluffy**
