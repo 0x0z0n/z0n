@@ -53,6 +53,7 @@ responder -I tun0 -wvF
 
 Soon after, a user on the network accessed the malicious file, and Responder captured an NTLMv2 hash for the user p.agila. The hash was then cracked using john with the rockyou.txt wordlist, revealing the password: promXXXXXXXXXXX.
 
+**Access Restricted by HackTheBox Rules**
 
 <!--
 
