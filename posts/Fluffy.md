@@ -31,6 +31,8 @@ Bash
 smbmap -H 10.10.11.69 -u 'j.fleischman' -p 'J0elTHEM4n1990!'
 ```
 
+![User_Flag](Pictures/htb_fluffy_smb_sharedir.png)
+
 The scan showed that the IT share had READ, WRITE permissions. Upon listing the contents of this share with smbclient, several files were found, including a PDF named Upgrade_Notice.pdf. A vulnerability search related to these files led to CVE-2025-24071, an NTLM hash leak vulnerability involving .library-ms files.
 
 I used a public proof-of-concept (PoC) to create a malicious .library-ms file and an associated ZIP file. The exploit was configured to direct hash requests to my attacking machine. I then uploaded these files to the IT share and started Responder to capture any incoming NTLM hashes.
@@ -45,11 +47,14 @@ smb: \> put docs.library-ms
 smb: \> put exploit.zip
 ```
 
+![User_Flag](Pictures/htb_fluffy_smb_expoit_c_and_u.png)
+
 **Running Responder on my machine**
 
 ```
 responder -I tun0 -wvF
 ```
+
 
 Soon after, a user on the network accessed the malicious file, and Responder captured an NTLMv2 hash for the user p.agila. The hash was then cracked using john with the rockyou.txt wordlist, revealing the password: promXXXXXXXXXXX.
 
