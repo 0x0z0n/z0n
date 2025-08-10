@@ -1,4 +1,58 @@
 [
+    {
+    "title": "HackTheBox: Fluffy",
+    "href": "posts/htb_fluffy.html",
+    "date": "2025-08-09",
+    "category": [
+        "HackTheBox",
+        "Windows",
+        "ActiveDirectory"
+    ],
+    "tags": [
+        "Nmap",
+        "SMBMap",
+        "SMBClient",
+        "CVE-2025-24071",
+        "Responder",
+        "JohnTheRipper",
+        "Bloodhound",
+        "ShadowCredentials",
+        "EvilWinRM",
+        "Certipy",
+        "ESC16",
+        "NTLMPasswordHash"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "j.fleischman",
+            "technique": "SMB Enumeration",
+            "result": "Used `smbmap` with initial credentials to find a writable share named `IT`.",
+            "mitigation": "Review and tighten SMB share permissions to follow the principle of least privilege. Remove write access for general users on public shares."
+        },
+        {
+            "step": 2,
+            "user": "p.agila",
+            "technique": "NTLM Hash Leak via CVE-2025-24071",
+            "result": "Uploaded a malicious `.library-ms` file to the `IT` share. Captured an NTLMv2 hash for user `p.agila` using `Responder` and cracked it with `John` to get the password.",
+            "mitigation": "Patch systems against known vulnerabilities like CVE-2025-24071. Implement network access controls to block SMB traffic from reaching the internet."
+        },
+        {
+            "step": 3,
+            "user": "winrm_svc",
+            "technique": "Shadow Credentials Attack",
+            "result": "Used `Bloodhound` to identify `GenericWrite` permissions for `p.agila` over `winrm_svc`. Performed a Shadow Credentials attack with `certipy` to gain the `winrm_svc` hash and a WinRM shell.",
+            "mitigation": "Regularly audit ACLs in Active Directory. Ensure that standard users and service accounts do not have excessive permissions over other accounts or groups."
+        },
+        {
+            "step": 4,
+            "user": "administrator",
+            "technique": "ESC16 Vulnerability",
+            "result": "Discovered the CA was vulnerable to ESC16. Chained the vulnerability with a UPN change attack on the `ca_svc` account to obtain a certificate as the `administrator` and retrieve their NTLM hash.",
+            "mitigation": "Ensure that the `Certificate Authority` security extension is enabled and properly configured. Audit CA configurations and permissions to prevent unauthorized certificate issuance."
+        }
+    ]
+},
    {
     "title": "HackTheBox: Era",
     "href": "posts/htb_Era.html",
