@@ -1,5 +1,39 @@
 [
     {
+      "title": "HackTheBox: ElectricBreeze-1",
+      "href": "posts/htb_sherlock_ElectricBreeze-1.html",
+      "date": "2025-08-10",
+      "category": [
+         "HackTheBox",
+         "Sherlock"
+      ],
+      "tags": [
+         "MITRE ATTACK",
+        "ThreatActor",
+        "VoltTyphoon",
+        "CredentialDumping",
+        "LSASS",
+        "NTDS",
+        "NTDS.dit",
+        "ZeroDay",
+        "WebShell",
+        "VersaMem",
+        "ApacheTomcat",
+        "Java",
+        "SHA256",
+        "VirusTotal",
+        "CVE",
+        "CVE-2024-39717",
+        "LivingOffTheLand",
+        "LOTL",
+        "CISA",
+        "PowerShell",
+        "LogAnalysis",
+        "Forensics"
+      ],
+      "attack_path": []
+   },
+   {
     "title": "HackTheBox: Fluffy",
     "href": "posts/htb_fluffy.html",
     "date": "2025-08-09",
