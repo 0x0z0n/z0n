@@ -296,7 +296,6 @@ certipy-ad auth -pfx administrator.pfx -dc-ip 10.10.11.72 -ldap-shell
 ```
 
 
-
 From this privileged position, I could add john to the Domain Admins group, dump all domain hashes by retrieving the NTDS.dit file, and access the administrator's profile to retrieve the root.txt flag, successfully rooting the machine.
 
 ![Root_Flag](Pictures/htb_tombwatcher_Root_flag.png)
@@ -304,4 +303,3 @@ From this privileged position, I could add john to the Domain Admins group, dump
 
 **Pwned! Tombwatcher**
 
--->
