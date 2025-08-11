@@ -252,7 +252,6 @@ After extract and enumerate the file, there simple encoded base64 password in wa
 
 Kerbrute : M.SchoolBus as the user has same privilege as the administrator.
 
-![Kerbrute](Pictures/htb_frizz_kerbrute_idnetified_mschool.png)
 
 Possible user from Users in f.frizzle.
 
@@ -340,7 +339,9 @@ From the BloodHound data earlier, we can see that M.SchoolBus had the same privi
 
 Use the github tool to create a GPO policy that enable us to go to /root.
 
+```
 https://github.com/byronkg/SharpGPOAbuse/tree/main/SharpGPOAbuse-master
+```
 
 Upload the file to the target machine.
 
