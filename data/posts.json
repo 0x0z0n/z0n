@@ -1,5 +1,64 @@
 [
     {
+    "title": "HackTheBox: TheFrizz",
+    "href": "posts/htb_thefrizz.html",
+    "date": "2025-08-11",
+    "category": [
+        "HackTheBox",
+        "Windows",
+        "Active Directory"
+    ],
+    "tags": [
+        "Nmap",
+        "Kerberos",
+        "Impacket",
+        "Hashcat",
+        "Gibbon-LMS",
+        "PHP Shell",
+        "GPOAbuse",
+        "Mimikatz",
+        "RunasCs",
+        "NTLMPasswordHash"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "w.webservice",
+            "technique": "Gibbon-LMS File Upload",
+            "result": "Exploited a file upload vulnerability in the Gibbon-LMS web application to gain a reverse shell as the `w.webservice` user.",
+            "mitigation": "Validate and sanitize all user-uploaded content. Implement strict file type and extension whitelisting on upload functionalities."
+        },
+        {
+            "step": 2,
+            "user": "f.frizzle",
+            "technique": "Database Credential Disclosure",
+            "result": "Discovered database credentials in the web application's configuration file. Dumped a salted SHA1 hash for the user `f.frizzle` from the `gibbonperson` table, cracked it, and used Kerberos to get an SSH shell.",
+            "mitigation": "Avoid storing plaintext or easily crackable credentials in application configuration files. Use stronger hashing algorithms with a larger salt."
+        },
+        {
+            "step": 3,
+            "user": "M.SchoolBus",
+            "technique": "Recycle Bin Enumeration & Base64 Decoding",
+            "result": "Found a compressed archive in the Recycle Bin that contained a base64-encoded password. Decoded the password and used `Kerbrute` to identify the associated user as `M.SchoolBus`.",
+            "mitigation": "Regularly audit and securely wipe sensitive data from the Recycle Bin. Implement strict access controls on system files and folders."
+        },
+        {
+            "step": 4,
+            "user": "M.SchoolBus",
+            "technique": "GPO Abuse (Group Policy Creator Owners)",
+            "result": "Leveraged `M.SchoolBus`'s `Group Policy Creator Owners` privileges to create a new GPO that added the user to the local Administrators group on the Domain Controller. This was followed by a `gpupdate /force` to apply the changes.",
+            "mitigation": "Audit and restrict membership of the `Group Policy Creator Owners` group. Ensure that only trusted accounts have permissions to create and modify GPOs that affect sensitive OUs like `Domain Controllers`."
+        },
+        {
+            "step": 5,
+            "user": "Administrator",
+            "technique": "Mimikatz & DCSync",
+            "result": "Used a `SYSTEM` shell obtained via `RunasCs` to run `Mimikatz` and perform a `DCSync` attack. This allowed the dumping of the NTLM hash for the `Administrator` account.",
+            "mitigation": "Implement strong password policies and regularly rotate privileged account credentials. Restrict the `DCSync` privilege to only a few, highly trusted accounts."
+        }
+    ]
+},
+{
       "title": "HackTheBox: ElectricBreeze-1",
       "href": "posts/htb_sherlock_ElectricBreeze-1.html",
       "date": "2025-08-10",
