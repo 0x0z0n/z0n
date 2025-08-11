@@ -317,7 +317,7 @@ Bash
 ssh M.SchoolBus@frizz.htb -K
 ```
 
-![Ticket](Picture/htb_frizz_kerbrute_idnetified_mschool_ticket.png)
+![Ticket](Pictures/htb_frizz_kerbrute_idnetified_mschool_ticket.png)
 
 
 GPO Abuse: Use PowerShell and a tool like SharpGPOAbuse to create a GPO, link it to the Domain Controllers OU, and add M.SchoolBus to the local administrators group.
@@ -332,7 +332,7 @@ Powershell
 Get-GPO -ALL | Select DisplayName, Id
 ```
 
-![View](Picture/htb_frizz_kerbrute_ALL_GPO.png)
+![View](Pictures/htb_frizz_kerbrute_ALL_GPO.png)
 
 From the BloodHound data earlier, we can see that M.SchoolBus had the same privilege as administrator which the user also able to create a GPO.
 
@@ -359,7 +359,7 @@ Powershell
 get-GPO -All
 ```
 
-![Create](Picture/htb_frizz_kerbrute_Ctreated_GPO.png)
+![Create](Pictures/htb_frizz_kerbrute_Ctreated_GPO.png)
 
 gpupdate /force
 
@@ -373,7 +373,7 @@ PowerShell
 
 Force a GPO update to apply the changes.
 
-![GPO_Abuse](Picture/htb_frizz_kerbrute_GPO_Abuse.png)
+![GPO_Abuse](Pictures/htb_frizz_kerbrute_GPO_Abuse.png)
 
 Use RunasCs.exe to execute a PowerShell reverse shell as the M.SchoolBus user.
 
@@ -385,11 +385,11 @@ PowerShell
 
 Set up a netcat listener to catch the reverse shell. This new shell will be running as NT AUTHORITY\SYSTEM.
 
-![RunCs](Picture/htb_frizz_Run.png)
+![RunCs](Pictures/htb_frizz_Run.png)
 
 Dump administrator credentials: With a SYSTEM shell, you can use Mimikatz to dump the credentials of the domain administrator.
 
-![Priv](Picture/htb_frizz_Priv.png)
+![Priv](Pictures/htb_frizz_Priv.png)
 
 Upload and run mimikatz.exe.
 
@@ -407,7 +407,7 @@ Bash
 impacket-wmiexec frizz.htb/administrator@frizzdc.frizz.htb -hashes :c457b5f1XXXXXXXXXXXXXXX93d0b -k -no-pass
 ```
 
-![Root_Flag](Picture/htb_frizz_Root_flag.png)
+![Root_Flag](Pictures/htb_frizz_Root_flag.png)
 
 You now have full administrative access to the domain controller and can retrieve the root flag.
 
