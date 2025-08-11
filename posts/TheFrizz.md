@@ -76,7 +76,7 @@ Set up a listener on your local machine to catch the reverse shell.
 Bash
 
 ```
-python3 penelope.py -l tun0 8888
+python3 penelope.py -i tun0 8888
 ```
 
 ![Web_Shell](Pictures/htb_frizz_Web_shell.png)
