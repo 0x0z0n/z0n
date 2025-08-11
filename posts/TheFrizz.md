@@ -339,9 +339,8 @@ From the BloodHound data earlier, we can see that M.SchoolBus had the same privi
 
 Use the github tool to create a GPO policy that enable us to go to /root.
 
-```
 https://github.com/byronkg/SharpGPOAbuse/tree/main/SharpGPOAbuse-master
-```
+
 
 Upload the file to the target machine.
 
