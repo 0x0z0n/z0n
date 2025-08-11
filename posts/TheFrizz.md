@@ -82,6 +82,10 @@ python3 penelope.py -l tun0 8888
 ![Web_Shell](Pictures/htb_frizz_Web_shell.png)
 
 
+**Access Restricted by HackTheBox Rules**
+
+<!--
+
 #### Enumerate the system:
 
  Once you have a shell, you will be the frizz\w.webservice user. The next step is to find credentials for other users.
@@ -410,5 +414,6 @@ impacket-wmiexec frizz.htb/administrator@frizzdc.frizz.htb -hashes :c457b5f1XXXX
 
 You now have full administrative access to the domain controller and can retrieve the root flag.
 
+-->
 
 **Pwned! TheFrizz**
