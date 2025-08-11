@@ -69,6 +69,7 @@ Crack Hash: Crack the dumped hash using John the Ripper with a wordlist.
 
 **Access Restricted by HackTheBox Rules**
 
+<!--
 
 Bash
 
@@ -300,6 +301,8 @@ From this privileged position, I could add john to the Domain Admins group, dump
 
 ![Root_Flag](Pictures/htb_tombwatcher_Root_flag.png)
 
+
+-->
 
 **Pwned! Tombwatcher**
 
