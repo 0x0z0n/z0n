@@ -9,7 +9,7 @@ Hints: True
 
 ### 🏁 Summary of Attack Chain
 
-| Step | User / Access | Technique Used | Result |
+| Step | User / Access | Technique / Tool Used | Result |
 | :--- | :--- | :--- | :--- |
 | 1 | `w.webservice` | **Curl**, **PHP Shell**, **Netcat** | Gained a reverse shell by exploiting a file upload vulnerability in the Gibbon-LMS application. |
 | 2 | `f.frizzle` | **MySQL**, **Hashcat**, **Kerberos** | Dumped user credentials from the MySQL database, cracked the hash for `f.frizzle`, and used Kerberos authentication to get an SSH shell as the domain user. |
