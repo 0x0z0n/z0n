@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/png" href="assets/tab.png" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
     <style>
       :root {
@@ -608,7 +609,7 @@ html[data-theme="light"] .search-box input {
       searchInput.addEventListener("input", filterPosts);
     </script>
     <script>
-  const toggle = document.querySelector(".theme-toggle");
+const toggle = document.querySelector(".theme-toggle");
 const icon = toggle.querySelector("i");
 const star = document.getElementById("shooting-star");
 
@@ -620,23 +621,37 @@ toggle.addEventListener("click", () => {
   const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", newTheme);
   localStorage.setItem("theme", newTheme);
-  icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
 
-  if (newTheme === "light") {
-    // Trigger shooting star animation
-    star.style.top = `${Math.random() * 40 + 10}px`;
-    star.style.left = `${Math.random() * 40 + 10}px`;
-    star.style.opacity = 1;
-    star.style.animation = "shoot 0.8s ease-out";
+  // Animate icon rotation + bounce
+  anime({
+    targets: icon,
+    rotate: '1turn',
+    scale: [0.6, 1.2, 1],
+    duration: 800,
+    easing: 'easeInOutBack',
+    complete: () => {
+      icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
+    }
+  });
 
-    setTimeout(() => {
-      star.style.animation = "";
+  // Shooting star effect (random path each time)
+  star.style.opacity = 1;
+  anime({
+    targets: star,
+    translateX: [0, 400 + Math.random() * 300],
+    translateY: [0, 200 + Math.random() * 200],
+    opacity: [1, 0],
+    scale: [1, 0.2],
+    duration: 900,
+    easing: 'easeOutExpo',
+    complete: () => {
+      star.style.transform = "";
       star.style.opacity = 0;
-    }, 800);
-  }
+    }
+  });
 });
-
 </script>
+
 <div id="shooting-star"></div>
 
   </body>
