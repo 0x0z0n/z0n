@@ -1,285 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Kshitij Raut | Resume</title>
-    <link rel="icon" type="image/png" href="assets/tab.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Font & Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
-<link rel="icon" type="image/png" href="assets/tab.png" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Kshitij Raut | Resume</title>
+  <link rel="icon" type="image/png" href="assets/tab.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-      :root {
-        --accent: #4caf50;
-        --text: #e0e0e0;
-        --bg: #0d0d0d;
-        --card: #1a1a1a;
-        --muted: #aaa;
-        --font-size: 14px;
-      }
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
 
+  <style>
+    :root {
+      --accent: #4caf50;
+      --text: #e0e0e0;
+      --bg: #0d0d0d;
+      --card: #1a1a1a;
+      --muted: #aaa;
+      --font-size: 14px;
+    }
+
+    body {
+      font-family: 'Fira Code', monospace;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      font-size: var(--font-size);
+      line-height: 1.5;
+    }
+
+    .resume-container {
+      max-width: 1000px;
+      margin: auto;
+      background: var(--card);
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2.3rem;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    header h2 {
+      font-size: 1rem;
+      color: var(--muted);
+      margin: 0.3rem 0;
+    }
+
+    .contact {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      font-size: 0.85rem;
+      margin-top: 0.6rem;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section h3 {
+      color: var(--accent);
+      font-size: 1.15rem;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 0.3rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .job, .edu {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+
+    .job-title, .edu-title {
+      font-weight: bold;
+    }
+
+    .job-description {
+      margin-top: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
+    li {
+      margin-bottom: 0.4rem;
+    }
+
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    /* Print Styles for A4 */
+    @media print {
       body {
-        font-family: 'Fira Code', monospace;
-        background: var(--bg);
-        color: var(--text);
-        margin: 0;
-        padding: 2rem;
-        font-size: var(--font-size);
-        line-height: 1.5;
+        background: #fff !important;
+        color: #000 !important;
+        padding: 1cm !important;
+        font-size: 12pt;
       }
-
       .resume-container {
-        max-width: 1000px;
-        margin: auto;
-        background: var(--card);
-        padding: 2.5rem;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+        background: #fff !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
       }
-
-      header {
-        text-align: center;
-        margin-bottom: 2.5rem;
-      }
-
-      header h1 {
-        font-size: 2.3rem;
-        color: var(--accent);
-        margin: 0;
-      }
-
-      header h2 {
-        font-size: 1rem;
-        color: var(--muted);
-        margin: 0.3rem 0;
-      }
-
-      .contact {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 1.2rem;
-        font-size: 0.85rem;
-        margin-top: 0.6rem;
-      }
-
-      .section {
-        margin-bottom: 1.7rem;
-      }
-
-      .section h3 {
-        color: var(--accent);
-        font-size: 1.15rem;
-        border-bottom: 1px solid var(--accent);
-        padding-bottom: 0.3rem;
-        margin-bottom: 0.8rem;
-      }
-
-      .job {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
-
-      .job-title {
-        font-weight: bold;
-      }
-
-      .job-description {
-        margin-top: 0.5rem;
-      }
-
-      .edu {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
-
-      .edu-title {
-        font-weight: bold;
-      }
-
-      ul {
-        padding-left: 1.2rem;
-      }
-
-      li {
-        margin-bottom: 0.4rem;
-      }
-
       a {
-        color: var(--text);
-        text-decoration: none;
+        color: #000 !important;
+        text-decoration: underline;
       }
+      header h1, header h2, .section h3 {
+        color: #000 !important;
+      }
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="resume-container">
+    <header>
+      <h1>Kshitij Raut</h1>
+      <h2>Cybersecurity Analyst</h2>
+      <div class="contact">
+        <span><i class="fas fa-envelope"></i> kshitijraut360@gmail.com</span>
+        <span><a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank"><i class="fab fa-linkedin"></i> /in/kshitijnraut</a></span>
+        <span><i class="fas fa-globe"></i> <a href="https://0x0z0n.github.io/z0n/" target="_blank">Portfolio</a></span>
+      </div>
+    </header>
 
+    <section class="section">
+      <h3>Summary</h3>
+      <p>Hello! I’m a <strong>Cybersecurity Analyst</strong> with experience in <strong>SOC</strong> and <strong>VAPT</strong>. I actively contribute to both offensive and defensive security operations and enjoy applying my skills in real-world security scenarios including CTFs. I'm focused on building resilient cybersecurity strategies to protect digital infrastructures.</p>
+    </section>
 
-    </style>
-  </head>
-  <body>
-    <div class="resume-container">
-      <header>
-        <h1>Kshitij Raut</h1>
-        <h2>Cybersecurity Analyst</h2>
-        <div class="contact">
-          <span>
-            <i class="fas fa-envelope"></i> kshitijraut360@gmail.com </span>
-          <span>
-              <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank">
-              <i class="fab fa-linkedin"></i> /in/kshitijnraut
-              </a>
-            </span>
-          <span>
-            <i class="fas fa-globe"></i>
-            <a href="https://0x0z0n.github.io/z0n/" target="_blank">Portfolio</a>
-          </span>
-        </div>
-      </header>
-      <section class="section">
-        <h3>Summary</h3>
-        <p> Hello! I’m a <strong>Cybersecurity Analyst</strong> with experience in <strong>SOC</strong> and <strong>VAPT</strong>. I actively contribute to both offensive and defensive security operations and enjoy applying my skills in real-world security scenarios including CTFs. I'm focused on building resilient cybersecurity strategies to protect digital infrastructures. </p>
-      </section>
-      <section class="section">
-        <h3>Skills</h3>
+    <section class="section">
+      <h3>Skills</h3>
+      <ul>
+        <li>Cybersecurity · SOC · VAPT</li>
+        <li>Microsoft Azure</li>
+        <li>Languages: English (Full Professional), Hindi, Marathi</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h3>Experience</h3>
+      <div class="job">
+        <div class="job-title">Cybersecurity Analyst (SE) – Tata Consultancy Services</div>
+        <div>March 2024 – Present (<span id="tcs-duration"></span>)</div>
+      </div>
+      <div class="job-description">
         <ul>
-          <li>Cybersecurity · SOC · VAPT</li>
-          <li>Microsoft Azure</li>
-          <li>Languages: English (Full Professional), Hindi, Marathi</li>
+          <li>Investigate triaged security alerts and events using SIEM and XDR tools daily.</li>
+          <li>Conduct in-depth investigations to determine the root cause and impact of incidents.</li>
+          <li>Proactively hunt for hidden threats and research TTPs.</li>
+          <li>Lead containment, eradication, and recovery efforts during incidents and provide detailed recommendations.</li>
+          <li>Conduct vulnerability scans and validate identified vulnerabilities.</li>
+          <li>Perform penetration tests to identify potential security gaps.</li>
+          <li>Develop custom scripts or payloads to test specific attack scenarios.</li>
+          <li>Prepare vulnerability assessment reports with remediation plans.</li>
+          <li>Collaborate with teams to implement corrective actions and ensure compliance with security standards.</li>
         </ul>
-      </section>
-      <section class="section">
-        <h3>Experience</h3>
-        <div class="job">
-          <div class="job-title">Cybersecurity Analyst (SE) – Tata Consultancy Services</div>
-          <div>March 2024 – Present ( <span id="tcs-duration"></span>) </div>
-        </div>
-        <div class="job-description">
-          <ul>
-            <li>Investigate triaged security alerts and events using SIEM and XDR tools daily.</li>
-            <li>Conduct in-depth investigations to determine the root cause and impact of incidents.</li>
-            <li>Proactively hunt for hidden threats and research TTPs.</li>
-            <li>Lead containment, eradication, and recovery efforts during incidents and provide detailed recommendations.</li>
-            <li>Conduct vulnerability scans and validate identified vulnerabilities.</li>
-            <li>Perform penetration tests to identify potential security gaps.</li>
-            <li>Develop custom scripts or payloads to test specific attack scenarios.</li>
-            <li>Prepare vulnerability assessment reports with remediation plans.</li>
-            <li>Collaborate with teams to implement corrective actions and ensure compliance with security standards.</li>
-          </ul>
-        </div>
-        </br>
-        <div class="job">
-          <div class="job-title">Cybersecurity & Digital Forensics Intern – Cyber Secured India</div>
-          <div>Dec 2023 – Mar 2024 (4 months)</div>
-        </div>
-        <div class="job-description">
-          <p>Internship Responsibilities: During my internship, I had the opportunity to gain practical experience and hands-on exposure in the Cybersecurity and Digital Forensics area.</p>
-          <ul>
-            <li>Weekly 36 hours of training and internship</li>
-            <li>Attended recorded sessions and solved assignments</li>
-            <li>Worked on live projects 4 hours on weekdays, 8 hours on weekends</li>
-            <li>Completed weekly assignments and project tasks</li>
-          </ul>
-          <p>
-            <strong>Certificate & Work :</strong>
-            <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank">Google Drive Link</a>
-          </p>
-        </div>
-      </section>
-      <section class="section">
-        <h3>Education</h3>
-        <div class="edu">
-          <div class="edu-title">Bachelor of Computer Science (Computer Science and Engineering)</div>
-          <div>2019 – 2023</div>
-        </div>
-        <p>Sant Gadge Baba University</p>
-        <p>CGPA: <strong>9.16</strong>
-        </p>
-      </section>
-      <section class="section">
-        <h3>Projects</h3>
+      </div>
+
+      <div class="job">
+        <div class="job-title">Cybersecurity & Digital Forensics Intern – Cyber Secured India</div>
+        <div>Dec 2023 – Mar 2024 (4 months)</div>
+      </div>
+      <div class="job-description">
+        <p>Internship Responsibilities: Hands-on exposure in Cybersecurity and Digital Forensics.</p>
         <ul>
-          <li>
-            <a href="https://0x0z0n.github.io/z0n/" target="_blank">
-              <strong>Portfolio Site:</strong>
-            </a> – Experiences and personal notes sharing site hosted with GitHub Pages.
-          </li>
-          <li>
-            <strong>SIEM Use Case Builder</strong> – Developed Azure Sentinel rules for detection
-          </li>
+          <li>Weekly 36 hours of training and internship</li>
+          <li>Attended recorded sessions and solved assignments</li>
+          <li>Worked on live projects 4 hours on weekdays, 8 hours on weekends</li>
+          <li>Completed weekly assignments and project tasks</li>
         </ul>
-      </section>
-      <section class="section">
-        <h3>Tools & Platforms</h3>
-        <ul>
-          <li> Blue Team Tools : · SentinelOne · Chronicle · Azure Sentinel · Microsoft Security Suite · Armis (OT) · JIRA · Remedy · AnyRun and Joe Sandbox <!--· Sysmon · Velociraptor · Wazuh · Suricata · Zeek · OSSEC · AlienVault USM · ELK Stack (Elasticsearch, Logstash, Kibana) · Graylog · Security Onion · CrowdStrike Falcon · Carbon Black · Cisco SecureX · QRadar · OpenVAS · GFI LanGuard · MISP · TheHive · Cortex · OpenAudit · Osquery · Nagios · Zabbix · NetWitness · NXLog · Kusto Query Language (KQL) · EventLog Analyzer · SolarWinds · Snort · Other Opensource Tools --></li>
-          <li> Red Team Tools : · Burp Suite · Nmap · Wireshark · Nikto · OWASP ZAP · Gobuster · Dirsearch · Wfuzz · SQLmap · Hydra · John the Ripper · Hashcat · Metasploit <!--· Recon-ng · Maltego · Aircrack-ng · Bettercap · Evilginx2 · BeEF · netcat · impacket · CrackMapExec · BloodHound · Rubeus · mimikatz · Responder · Enum4linux · smbclient · Ghidra · Radare2 · Binwalk · GDB · apktool · Drozer · Frida · JADX · ADB · Git · Kali Tools · OSINT · Sublist3r · Amass · Shodan · Censys · GHDB · WhatWeb · Wappalyzer · FFUF · Seclists · FCrackZip · Other Opensource Tools --></li>
-          </br>
-          <li>
-            <strong>HackTheBox Profile:</strong> https://app.hackthebox.com/profile/1761906
-          </li>
-          <li>
-            <strong>TryHackMe Profile:</strong> https://tryhackme.com/p/0x0z0n
-          </li>
-          <li>
-            <strong>CyberDefenders Profile:</strong> 
-            https://cyberdefenders.org/p/0x0z0n
-          </li>
-        </ul>
-      </section>
-      <!--
-      <details>
-        <summary> Cover Letter</summary>
-        <section class="section">
-          <p>
-            <strong>Date:</strong>
-            <span id="cover-date"></span>
-          </p>
-          <p>
-            <strong>To:</strong>
-            <br />Hiring Manager <br />Recruitment Team
-          </p>
-          <p>Dear Hiring Manager,</p>
-          <p> I am writing to express my enthusiasm for a cybersecurity opportunity at your organization. With a proactive mindset and a strong technical foundation in both offensive and defensive security, I am eager to contribute to your mission of securing critical systems and data. </p>
-          <p> At <strong>Tata Consultancy Services (TCS)</strong>, I work I have successfully managed client relationships and ensured the delivery of top-tier cybersecurity services. My responsibilities include identifying and managing IT security services, analysing security risks, and providing comprehensive security reports. These experiences have honed my ability to build trust with clients and deliver actionable insights that enhance their security posture. </p>
-          <p> Previously, I completed an internship at Cyber Secured India, where I applied forensic and investigative techniques in Platform based CTF Scenarios. </p>
-          <p>
-            <strong>Highlights of my profile include:</strong>
-          </p>
-          <ul>
-            <li>Hands-on experience with SOC operations, security event analysis, and VAPT engagements.</li>
-            <li>Proven value in VAPT: Discovered critical vulnerabilities and presented actionable remediation steps.</li>
-            <li>Practical use of tools like Wireshark, Sentinel, Nmap, and Burp Suite.</li>
-            <li>Active engagement in continuous learning via TryHackMe, HackTheBox, and cybersecurity communities.</li>
-          </ul>
-          <p> I am particularly drawn to environments that emphasize innovation, collaboration, and ethical security practices. I am confident that my skills and enthusiasm align well with your values. </p>
-          <p> Thank you for considering my application. <br />
-            <br />
-            <strong>Sincerely,</strong>
-            <br /> Kshitij Raut <br /> Pune, Maharashtra, India <br /> Email: <a href="mailto:kshitijraut360@gmail.com" style="color: var(--text); text-decoration: underline;">kshitijraut360@gmail.com</a>
-            <br /> LinkedIn: <a href="https://www.linkedin.com/in/kshitijnraut" target="_blank" style="color: var(--text); text-decoration: underline;">linkedin.com/in/kshitijnraut</a>
-          </p>
-        </section>
-      -->
-      </details>
-    </div>
-    <script>
-      document.getElementById("tcs-duration").textContent = (() => {
-        const start = new Date("2024-03-01");
-        const now = new Date();
-        const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-        const years = Math.floor(months / 12);
-        const remMonths = months % 12;
-        return `${years ? years + " yr" + (years > 1 ? "s" : "") : ""}${years && remMonths ? " " : ""}${remMonths ? remMonths + " mo" : ""}`;
-      })();
-      document.getElementById("cover-date").textContent = new Date().toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
-    </script>
-  </body>
+        <p><strong>Certificate & Work:</strong> <a href="https://drive.google.com/drive/folders/1yOQo9bXDMNMW0VY2qXeg-PsIlD_jG_Pj?usp=sharing" target="_blank">Google Drive Link</a></p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h3>Education</h3>
+      <div class="edu">
+        <div class="edu-title">Bachelor of Computer Science (CSE)</div>
+        <div>2019 – 2023</div>
+      </div>
+      <p>Sant Gadge Baba University</p>
+      <p>CGPA: <strong>9.16</strong></p>
+    </section>
+
+    <section class="section">
+      <h3>Projects</h3>
+      <ul>
+        <li><a href="https://0x0z0n.github.io/z0n/" target="_blank"><strong>Portfolio Site:</strong></a> – Personal site hosted on GitHub Pages.</li>
+        <li><strong>SIEM Use Case Builder</strong> – Developed Azure Sentinel rules for detection.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h3>Tools & Platforms</h3>
+      <ul>
+        <li>Blue Team Tools: SentinelOne, Chronicle, Azure Sentinel, Microsoft Security Suite, Armis, JIRA, Remedy, AnyRun, Joe Sandbox</li>
+        <li>Red Team Tools: Burp Suite, Nmap, Wireshark, Nikto, OWASP ZAP, Gobuster, Dirsearch, Wfuzz, SQLmap, Hydra, John the Ripper, Hashcat, Metasploit</li>
+        <li><strong>HackTheBox Profile:</strong> https://app.hackthebox.com/profile/1761906</li>
+        <li><strong>TryHackMe Profile:</strong> https://tryhackme.com/p/0x0z0n</li>
+        <li><strong>CyberDefenders Profile:</strong> https://cyberdefenders.org/p/0x0z0n</li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    document.getElementById("tcs-duration").textContent = (() => {
+      const start = new Date("2024-03-01");
+      const now = new Date();
+      const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+      const years = Math.floor(months / 12);
+      const remMonths = months % 12;
+      return `${years ? years + " yr" + (years > 1 ? "s" : "") : ""}${years && remMonths ? " " : ""}${remMonths ? remMonths + " mo" : ""}`;
+    })();
+  </script>
+</body>
 </html>
