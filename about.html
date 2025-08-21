@@ -1,133 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Kshitij Raut | Resume</title>
-  <link rel="icon" type="image/png" href="assets/tab.png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kshitij Raut | Resume</title>
+    <link rel="icon" type="image/png" href="assets/tab.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Font & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="assets/tab.png" />
 
-  <!-- Fonts & Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --accent: #4caf50;
+        --text: #e0e0e0;
+        --bg: #0d0d0d;
+        --card: #1a1a1a;
+        --muted: #aaa;
+        --font-size: 14px;
+      }
 
-  <style>
-    :root {
-      --accent: #4caf50;
-      --text: #222;
-      --bg: #fff;
-      --muted: #555;
-      --font-size: 12pt;
-    }
-
-    body {
-      font-family: 'Fira Code', monospace;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-      font-size: var(--font-size);
-      line-height: 1.5;
-    }
-
-    .resume-container {
-      width: 210mm;   /* A4 width */
-      min-height: 297mm; /* A4 height */
-      margin: auto;
-      padding: 20mm 25mm;
-      box-sizing: border-box;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 18pt;
-    }
-
-    header h1 {
-      font-size: 20pt;
-      color: var(--accent);
-      margin: 0;
-    }
-
-    header h2 {
-      font-size: 11pt;
-      color: var(--muted);
-      margin: 4pt 0;
-    }
-
-    .contact {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12pt;
-      font-size: 9pt;
-      margin-top: 4pt;
-    }
-
-    .section {
-      margin-bottom: 14pt;
-    }
-
-    .section h3 {
-      color: var(--accent);
-      font-size: 12pt;
-      border-bottom: 1px solid var(--accent);
-      padding-bottom: 2pt;
-      margin-bottom: 6pt;
-    }
-
-    .job, .edu {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
-
-    .job-title, .edu-title {
-      font-weight: bold;
-    }
-
-    ul {
-      padding-left: 15pt;
-      margin: 4pt 0;
-    }
-
-    li {
-      margin-bottom: 3pt;
-    }
-
-    a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    /* Print optimization */
-    @page {
-      size: A4;
-      margin: 15mm 15mm 20mm 15mm; /* top, right, bottom, left */
-    }
-
-    @media print {
       body {
-        background: #fff;
-        color: #000;
+        font-family: 'Fira Code', monospace;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 2rem;
+        font-size: var(--font-size);
+        line-height: 1.5;
       }
+
       .resume-container {
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
+        max-width: 1000px;
+        margin: auto;
+        background: var(--card);
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
       }
+
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      header h1 {
+        font-size: 2.3rem;
+        color: var(--accent);
+        margin: 0;
+      }
+
+      header h2 {
+        font-size: 1rem;
+        color: var(--muted);
+        margin: 0.3rem 0;
+      }
+
+      .contact {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+        font-size: 0.85rem;
+        margin-top: 0.6rem;
+      }
+
+      .section {
+        margin-bottom: 1.7rem;
+      }
+
+      .section h3 {
+        color: var(--accent);
+        font-size: 1.15rem;
+        border-bottom: 1px solid var(--accent);
+        padding-bottom: 0.3rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .job {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .job-title {
+        font-weight: bold;
+      }
+
+      .job-description {
+        margin-top: 0.5rem;
+      }
+
+      .edu {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .edu-title {
+        font-weight: bold;
+      }
+
+      ul {
+        padding-left: 1.2rem;
+      }
+
+      li {
+        margin-bottom: 0.4rem;
+      }
+
       a {
-        color: #000;
-        text-decoration: underline;
+        color: var(--text);
+        text-decoration: none;
       }
-    }
-  </style>
-</head>
-<body>
-  <div class="resume-container">
-    <h3>Summary</h3>
+
+
+    </style>
+  </head>
+  <body>
+    <div class="resume-container">
+      <header>
+        <h1>Kshitij Raut</h1>
+        <h2>Cybersecurity Analyst</h2>
+        <div class="contact">
+          <span>
+            <i class="fas fa-envelope"></i> kshitijraut360@gmail.com </span>
+          <span>
+              <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank">
+              <i class="fab fa-linkedin"></i> /in/kshitijnraut
+              </a>
+            </span>
+          <span>
+            <i class="fas fa-globe"></i>
+            <a href="https://0x0z0n.github.io/z0n/" target="_blank">Portfolio</a>
+          </span>
+        </div>
+      </header>
+      <section class="section">
+        <h3>Summary</h3>
         <p> Hello! I’m a <strong>Cybersecurity Analyst</strong> with experience in <strong>SOC</strong> and <strong>VAPT</strong>. I actively contribute to both offensive and defensive security operations and enjoy applying my skills in real-world security scenarios including CTFs. I'm focused on building resilient cybersecurity strategies to protect digital infrastructures. </p>
       </section>
       <section class="section">
