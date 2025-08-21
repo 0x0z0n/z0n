@@ -1,232 +1,643 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Optimized Cybersecurity Blog</title>
-  <!-- External CSS -->
-  <link rel="stylesheet" href="style.css">
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    /* Attack Path Enhancements */
-    .attack-path {
-      background: #000;
-      color: #00ff95;
-      font-family: monospace;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0,255,150,0.5);
-      position: relative;
-      white-space: pre-wrap;
-    }
-    .attack-path button.copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: transparent;
-      border: none;
-      color: #00ff95;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .attack-step {
-      margin: 0.25rem 0;
-      cursor: pointer;
-    }
-    .attack-step.collapsed > .details {
-      display: none;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>0x0z0n Blog | Home </title>
+    <link rel="icon" type="image/png" href="assets/tab.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="assets/tab.png" />
 
-    /* Search Highlight */
-    mark {
-      background: yellow;
-      color: black;
-      padding: 0 2px;
-    }
+    <style>
+      :root {
+  --bg-color: #0a0a0a;
+  --card-bg: #141414;
+  --text-color: #00ff95;
+  --accent: #00d0ff;
+  --tag-bg: #0f0f0f;
+  --tag-hover: #00ffcc;
+  --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
+}
 
-    /* Cytoscape modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(6px);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #111;
-      padding: 1rem;
-      border-radius: 10px;
-      width: 80%;
-      height: 80%;
-      position: relative;
-    }
-    .modal-content #cy {
-      width: 100%;
-      height: 100%;
-    }
-    .modal .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      color: #fff;
-      font-size: 1.5rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
+html[data-theme="light"] {
+  --bg-color: #f4f7f9;
+  --card-bg: #ffffff;
+  --text-color: #1a1a1a;
+  --accent: #007acc;
+  --tag-bg: #e3eff9;
+  --tag-hover: #007acc;
+  --border-glow: 0 0 4px #007acc55;
+}
+
+/* Post card fix */
+html[data-theme="light"] .post-card {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+/* Terminal block fix */
+html[data-theme="light"] .attack-path-terminal {
+  background-color: #f0f0f0;
+  color: #003b5b;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Tag buttons */
+html[data-theme="light"] .tag-link {
+  background: var(--tag-bg);
+  color: #005080;
+  border: 1px solid #c6dce8;
+}
+
+html[data-theme="light"] .tag-link:hover {
+  background: var(--tag-hover);
+  color: #ffffff;
+}
+
+/* Category buttons */
+html[data-theme="light"] .category-button {
+  background: #e8f1fb;
+  color: #005080;
+  border: 1px solid #b3d4ef;
+}
+
+html[data-theme="light"] .category-button:hover {
+  background: var(--tag-hover);
+  color: #ffffff;
+}
+
+/* Sidebar nav */
+html[data-theme="light"] aside {
+  background: linear-gradient(to bottom, #f0f0f0, #e8e8e8);
+  box-shadow: inset -1px 0 0 #ccc;
+}
+
+html[data-theme="light"] nav a {
+  background: #f6f6f6;
+  color: var(--text-color);
+}
+
+html[data-theme="light"] nav a:hover {
+  background: #e0e0e0;
+  border-left: 3px solid var(--accent);
+  color: var(--accent);
+}
+
+/* Social icons hover */
+html[data-theme="light"] .social-icons a:hover {
+  color: var(--accent);
+}
+
+/* Search box */
+html[data-theme="light"] .search-box input {
+  background: #ffffff;
+  color: var(--text-color);
+  border: 1px solid #ccc;
+  box-shadow: none;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 999;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+.theme-toggle {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+#shooting-star {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  background: linear-gradient(45deg, white, #007acc);
+  border-radius: 50%;
+  box-shadow: 0 0 8px #fff;
+  opacity: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes shoot {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(600px, 300px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+
+      body {
+        margin: 0;
+        font-family: 'Orbitron', system-ui, sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+      }
+
+      aside {
+        width: 250px;
+        background: linear-gradient(to bottom, #101010, #080808);
+        padding: 1.5rem 1rem;
+        height: 100vh;
+        box-shadow: inset -1px 0 0 #00d0ff33;
+        position: sticky;
+        top: 0;
+      }
+
+      aside img {
+        width: 100px;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto 1rem;
+        border: 2px solid #00d0ff;
+        box-shadow: var(--border-glow);
+      }
+
+      .site-title {
+        text-align: center;
+        margin: 0.5rem 0 0.2rem;
+        font-size: 1.4rem;
+      }
+
+      .site-subtitle {
+        text-align: center;
+        color: #888;
+        font-size: 0.8rem;
+      }
+
+      nav a {
+        display: block;
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 0.55rem 1rem;
+        border-radius: 8px;
+        margin: 0.4rem 0;
+        background: #161616;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+
+      nav a:hover {
+        background: #1e1e1e;
+        border-left: 3px solid var(--accent);
+        color: var(--accent);
+      }
+
+      .social-icons {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      .social-icons a {
+        margin: 0 0.5rem;
+        color: #999;
+        font-size: 1.4rem;
+        transition: 0.3s ease;
+      }
+
+      .social-icons a:hover {
+        color: var(--accent);
+        transform: scale(1.15);
+      }
+
+      main {
+        flex: 1;
+        padding: 2.5rem;
+        max-width: 1000px;
+        margin: auto;
+      }
+
+      .post-card {
+        background: rgba(20, 20, 20, 0.7);
+        /* transparent dark background */
+        backdrop-filter: blur(12px);
+        /* glassy blur effect */
+        -webkit-backdrop-filter: blur(12px);
+        /* Safari support */
+        padding: 1.8rem;
+        border: 1px solid #00ffcc33;
+        margin-bottom: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 208, 255, 0.15), var(--border-glow);
+        transition: 0.3s ease;
+      }
+
+      .post-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 0 20px #00d0ffcc;
+      }
+
+      .post-card h2 {
+        margin-top: 0;
+      }
+
+      .post-card h2 a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: color 0.3s ease, text-shadow 0.3s ease;
+      }
+
+      .post-card h2 a:hover {
+        color: #00ffcc;
+        text-shadow: 0 0 8px #00ffcc, 0 0 15px #00ffccbb;
+      }
+
+      .post-card a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .search-box {
+        margin-bottom: 2.5rem;
+        text-align: center;
+      }
+
+      .search-box input {
+        padding: 0.7rem 1.2rem;
+        width: 280px;
+        background: #0f0f0f;
+        color: #00ffcc;
+        border: 1px solid #00d0ff;
+        border-radius: 8px;
+        box-shadow: var(--border-glow);
+        font-size: 0.95rem;
+      }
+
+      .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .tag-link {
+        background: var(--tag-bg);
+        padding: 6px 12px;
+        color: #00d0ff;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.82rem;
+        border: 1px solid #00d0ff44;
+        transition: 0.2s ease-in-out;
+      }
+
+      .tag-link:hover {
+        background: var(--tag-hover);
+        color: #000;
+      }
+
+      .category-button {
+  display: inline-block;
+  background-color: #222;
+  border: 1px solid #00ffcc44;
+  color: #00ffcc;
+  padding: 6px 12px;
+  margin: 2px 4px 4px 0;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.2s ease-in-out;
+}
+
+.category-button:hover {
+  background-color: var(--tag-hover);
+  color: #000;
+}
+
+
+      footer {
+        text-align: center;
+        color: #555;
+        font-size: 0.8rem;
+        margin-top: 4rem;
+      }
+
+      /* Terminal style */
+      .attack-path-terminal {
+        background-color: #001100;
+        color: #00ff00;
+        font-family: monospace;
+        padding: 10px;
+        margin-top: 12px;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+        box-shadow: inset 0 0 6px #00ff0044;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .attack-path-terminal::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+      }
+
+      .attack-path-terminal:hover::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .attack-path-terminal::-webkit-scrollbar-track {
+        background: #001100;
+      }
+
+      .attack-path-terminal {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      @media (prefers-color-scheme: light) {
+        .attack-path-terminal {
+          scrollbar-width: thin;
+          -ms-overflow-style: auto;
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100%;
+    height: auto;
+    position: relative;
+    box-shadow: none;
+    padding: 1rem;
+    border-right: none;
+    border-bottom: 1px solid #00d0ff33;
+  }
+
+  main {
+    padding: 1.5rem 1rem;
+  }
+
+  .site-title {
+    font-size: 1.2rem;
+  }
+
+  .site-subtitle {
+    font-size: 0.75rem;
+  }
+
+  nav a {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .social-icons a {
+    font-size: 1.2rem;
+  }
+
+  .search-box input {
+    width: 90%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .post-card {
+    padding: 1.2rem;
+  }
+
+  .category-button,
+  .tag-link {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+  }
+
+  .attack-path-terminal {
+    font-size: 0.78rem;
+  }
+
+  .post-card h2 {
+    font-size: 1.1rem;
+  }
+
+  footer {
+    font-size: 0.7rem;
+  }
+}
+
+
+
+    </style>
+  </head>
+  <body>
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="profile">
-        <img src="profile.jpg" alt="Profile Picture">
-        <h1>XPl0RiZ0n</h1>
-        <p>Cybersecurity Researcher & CTF Enthusiast</p>
-      </div>
-      <nav class="nav-links">
-        <a href="#">Home</a>
-        <a href="#">Writeups</a>
-        <a href="#">Cheatsheets</a>
-        <a href="#">About</a>
-      </nav>
-      <div class="social-links">
-        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-      </div>
-      <div class="profile-links">
-        <a href="#">HTB</a> | <a href="#">THM</a> | <a href="#">CyberDefenders</a>
-      </div>
-    </aside>
+    <div class="theme-toggle" title="Toggle Theme">
+  <i class="fas fa-circle-half-stroke"></i>
+</div>
+
+    <aside>
+  <img src="assets/avatar.jpeg" alt="Profile" />
+  <div class="site-title">Kshitij Raut</div>
+  <div class="site-subtitle">Cyber Security Analyst</div>
+  <nav>
+    <a href="index.html">🏠 Home</a>
+    <a href="categories.html">📚 Categories</a>
+    <a href="tags.html">🏷️ Tags</a>
+    <a href="archives.html">🗃️ Archives</a>
+    <a href="about.html">ℹ️ About</a>
+  </nav>
+
+  <div class="social-icons">
+    <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
+      <i class="fab fa-linkedin"></i>
+    </a>
+    <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
+      <i class="fas fa-envelope"></i>
+    </a>
+    <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
+      <i class="fab fa-youtube"></i>
+    </a>
+    <a href="https://github.com/0x0z0n" target="_blank" title="GitHub">
+  <i class="fab fa-github"></i>
+</a>
+
+  </div>
+
+  <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #222;" />
+
+  <div class="profile-links">
+    <h3 style="font-size: 1rem; color: var(--accent); margin-bottom: 0.8rem; text-align: center;">🎯 Profile</h3>
+    <nav>
+      <a href="https://app.hackthebox.com/profile/1761906" target="_blank"><i class="fab fa-hackerrank"></i> HackTheBox</a>
+      <a href="https://tryhackme.com/p/0x0z0n" target="_blank"><i class="fas fa-terminal"></i> TryHackMe</a>
+      <a href="https://cyberdefenders.org/p/0x0z0n" target="_blank"><i class="fas fa-shield-alt"></i> CyberDefenders</a>
+    </nav>
+  </div>
+
+  <div class="cheatsheet-link" style="margin-top: 2rem; text-align: center;">
+    <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" target="_blank" class="category-button" style="display:inline-block; font-size: 0.85rem;">🧠 Cheatsheet</a>
+  </div>
+</aside>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main>
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search posts...">
+        <input type="text" id="searchInput" placeholder="Search posts..." />
       </div>
-      <div id="posts-container"></div>
+      <section id="posts"></section>
+      <footer>
+        <p>&copy; 2025 0x0z0n</p>
+      </footer>
     </main>
-  </div>
+    <!-- JavaScript -->
+    <script>
+      const searchInput = document.getElementById("searchInput");
+      const postsContainer = document.getElementById("posts");
+      let allPosts = [];
 
-  <!-- Attack Path Graph Modal -->
-  <div id="graphModal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn">&times;</span>
-      <div id="cy"></div>
-    </div>
-  </div>
-
-  <footer class="footer">
-    <p>© 2025 XPl0RiZ0n - All Rights Reserved.</p>
-  </footer>
-
-  <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
-  <script>
-    const postsContainer = document.getElementById('posts-container');
-    const searchInput = document.getElementById('searchInput');
-
-    // Load posts
-    fetch('data/posts.json')
-      .then(res => res.json())
-      .then(posts => {
-        renderPosts(posts);
-
-        // Search handler
-        searchInput.addEventListener('input', e => {
-          const query = e.target.value.toLowerCase();
-          const filtered = posts.filter(p =>
-            p.title.toLowerCase().includes(query) ||
-            p.category.toLowerCase().includes(query) ||
-            p.tags.some(t => t.toLowerCase().includes(query)) ||
-            p.date.toLowerCase().startsWith(query)
-          );
-          renderPosts(filtered, query);
-        });
-      });
-
-    // Render posts with highlights
-    function renderPosts(posts, query = '') {
-      postsContainer.innerHTML = '';
-      if (posts.length === 0) {
-        postsContainer.innerHTML = `<p>No results for <strong>${query}</strong></p>`;
-        return;
-      }
-      posts.forEach(post => {
-        const card = document.createElement('div');
-        card.className = 'post-card';
-
-        const title = highlight(post.title, query);
-        const category = highlight(post.category, query);
-
-        card.innerHTML = `
-          <h2><a href="${post.href}">${title}</a></h2>
-          <p class="category">${category}</p>
-          <p class="date">${post.date}</p>
-          <div class="tags">${post.tags.map(t => `<span>${highlight(t, query)}</span>`).join('')}</div>
-        `;
-
-        // Attack path
-        if (post.attack_path) {
-          const attackDiv = document.createElement('div');
-          attackDiv.className = 'attack-path';
-          attackDiv.innerHTML = `
-            <button class="copy-btn" title="Copy to clipboard"><i class="fa fa-copy"></i></button>
-            <pre>${post.attack_path}</pre>
-            <button class="graph-btn">View Graph</button>
-          `;
-          card.appendChild(attackDiv);
-
-          // Copy button
-          attackDiv.querySelector('.copy-btn').addEventListener('click', () => {
-            navigator.clipboard.writeText(post.attack_path);
-            alert('Copied to clipboard');
-          });
-
-          // Graph button
-          attackDiv.querySelector('.graph-btn').addEventListener('click', () => showGraph(post.attack_path));
+      function renderPosts(posts) {
+        postsContainer.innerHTML = "";
+        if (posts.length === 0) {
+          postsContainer.innerHTML = " < p > No posts found. < /p>";
+          return;
         }
+        posts.forEach(post => {
+          const article = document.createElement("article");
+          article.className = "post-card";
+          article.setAttribute("data-tags", post.tags.join(", "));
+          const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
+          // Prepare terminal view of attack_path if present
+          let attackPathText = "";
+          if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
+            attackPathText = post.attack_path.map(step => {
+              return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
+            }).join("\n");
+          }
+          article.innerHTML = `
+          
+      <h2>
+        <a href="${post.href}">${post.title}</a>
+      </h2>
+      <div>
+  <strong>Category:</strong><br/>
+  ${
+    categories
+      ? categories.split(', ').map(cat => {
+          const encoded = encodeURIComponent(cat.trim());
+          return `<a href="index.html?category=${encoded}" class="category-button">${cat.trim()}</a>`;
+        }).join('')
+      : `<span style="color:#888;">Uncategorized</span>`
+  }
+</div>
 
-        postsContainer.appendChild(card);
+
+      <p>
+        <strong>Date:</strong> ${post.date}
+      </p>
+      <p>
+        <strong>Tags:</strong>
+      </p>
+      <div class="tag-container">
+            ${post.tags.map(tag =>
+              `
+        <a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+            ).join("")}
+          
+      </div>
+          ${attackPathText ? `
+      <pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
+        `;
+          postsContainer.appendChild(article);
+        });
+      }
+
+      function filterPosts() {
+        const query = searchInput.value.trim().toLowerCase();
+        const filtered = allPosts.filter(post => post.title.toLowerCase().includes(query) || (Array.isArray(post.category) ? post.category.some(cat => cat.toLowerCase().includes(query)) : (post.category || "").toLowerCase().includes(query)) || post.tags.some(tag => tag.toLowerCase().includes(query)) || (post.date && post.date.startsWith(query)));
+        renderPosts(filtered);
+      }
+
+      function getParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+      fetch("data/posts.json").then(res => res.json()).then(data => {
+        allPosts = data;
+        const tagParam = getParam("tag");
+        const catParam = getParam("category");
+        const dateParam = getParam("date");
+        let filtered = allPosts;
+        if (tagParam) {
+          searchInput.value = tagParam;
+          filtered = allPosts.filter(post => post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase()));
+        } else if (catParam) {
+          searchInput.value = catParam;
+          filtered = allPosts.filter(post => Array.isArray(post.category) ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase()) : (post.category || "").toLowerCase() === catParam.toLowerCase());
+        } else if (dateParam) {
+          searchInput.value = dateParam;
+          filtered = allPosts.filter(post => post.date && post.date.startsWith(dateParam));
+        }
+        renderPosts(filtered);
       });
-    }
+      searchInput.addEventListener("input", filterPosts);
+    </script>
+    <script>
+  const toggle = document.querySelector(".theme-toggle");
+const icon = toggle.querySelector("i");
+const star = document.getElementById("shooting-star");
 
-    function highlight(text, query) {
-      if (!query) return text;
-      return text.replace(new RegExp(`(${query})`, 'gi'), '<mark>$1</mark>');
-    }
+const currentTheme = localStorage.getItem("theme") || "dark";
+document.documentElement.setAttribute("data-theme", currentTheme);
+icon.className = currentTheme === "light" ? "fas fa-sun" : "fas fa-moon";
 
-    // Cytoscape Graph
-    const modal = document.getElementById('graphModal');
-    const closeBtn = modal.querySelector('.close-btn');
-    closeBtn.onclick = () => modal.style.display = 'none';
+toggle.addEventListener("click", () => {
+  const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("theme", newTheme);
+  icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
 
-    function showGraph(attackPath) {
-      modal.style.display = 'flex';
-      const cy = cytoscape({
-        container: document.getElementById('cy'),
-        elements: parseAttackPath(attackPath),
-        style: [
-          { selector: 'node', style: { 'background-color': '#00ff95', 'label': 'data(id)' } },
-          { selector: 'edge', style: { 'width': 2, 'line-color': '#00d0ff', 'target-arrow-shape': 'triangle', 'target-arrow-color': '#00d0ff' } }
-        ],
-        layout: { name: 'breadthfirst' }
-      });
-    }
+  if (newTheme === "light") {
+    // Trigger shooting star animation
+    star.style.top = `${Math.random() * 40 + 10}px`;
+    star.style.left = `${Math.random() * 40 + 10}px`;
+    star.style.opacity = 1;
+    star.style.animation = "shoot 0.8s ease-out";
 
-    function parseAttackPath(path) {
-      const steps = path.split('\n').filter(Boolean);
-      const nodes = steps.map((s, i) => ({ data: { id: `Step${i+1}` } }));
-      const edges = steps.slice(0, -1).map((s, i) => ({ data: { source: `Step${i+1}`, target: `Step${i+2}` } }));
-      return { nodes, edges };
-    }
-  </script>
-</body>
+    setTimeout(() => {
+      star.style.animation = "";
+      star.style.opacity = 0;
+    }, 800);
+  }
+});
+
+</script>
+<div id="shooting-star"></div>
+
+  </body>
 </html>
