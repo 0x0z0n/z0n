@@ -50,9 +50,6 @@ Bash
 ntpdate voleur.htb
 ```
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
 
 Kerberos TGT Acquisition: The impacket-getTGT tool is used to request a Kerberos Ticket-Granting Ticket (TGT) for ryan.naylor, which is saved to a .ccache file. This ticket is then exported as the primary authentication method.
 
@@ -363,8 +360,7 @@ Mode                 LastWriteTime         Length Name
 e94XXXXXXXXXXXXXXXXXXXXXXXXXXXX0144
 *Evil-WinRM* PS C:\Users\svc_wxxxx\Desktop> 
 
-
--->
+```
 
 
 **Pwned! Voleur**

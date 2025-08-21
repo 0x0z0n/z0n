@@ -58,9 +58,6 @@ responder -I tun0 -wvF
 
 Soon after, a user on the network accessed the malicious file, and Responder captured an NTLMv2 hash for the user p.agila. The hash was then cracked using john with the rockyou.txt wordlist, revealing the password: promXXXXXXXXXXX.
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
 
 # Privilege Escalation to winrm_svc
 
@@ -171,8 +168,6 @@ The final command successfully yielded the NTLM hash for the administrator, whic
 
 ![Root_Flag](Pictures/htb_fluffy_Root.png)
 
-
--->
 
 
 **Pwned! Fluffy**

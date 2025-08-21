@@ -44,9 +44,6 @@ We added file.era.htb to our /etc/hosts file and then performed a directory scan
 
 
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
 
 Bash
 
@@ -492,8 +489,6 @@ nc -lnvp 1337
 
 This gave us a root shell, and we successfully retrieved root.txt.
 
-
--->
 
 
 

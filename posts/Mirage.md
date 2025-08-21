@@ -93,10 +93,6 @@ sudo nano /etc/krb5.conf
 ![Conf](Pictures/htb_Mirage_krb5.png)
 
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
-
 Next, we performed a DNS hijacking attack. We created a dnsupdate.txt file to delete the old DNS record for nats-svc.mirage.htb and add a new one pointing to our IP address.
 
 
@@ -517,6 +513,5 @@ evil-winrm -i dc01.mirage.htb -r mirage.htb
 
 
 
--->
 
 **Pwned! Mirage**

@@ -73,9 +73,6 @@ Gaining Access to the DEV Share
 
 ![Access](Pictures/HTB_Puppy_ADHR_Dev.png)
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
 
 Analyzing the BloodHound data, we find that the levi.james user has write permissions to the DEVELOPERS group. This is a crucial finding, as gaining membership in this group might grant access to the DEV share.
 
@@ -290,8 +287,6 @@ Once connected, navigate to the desktop and retrieve the flag
 This completes the penetration test, gaining full control of the domain.
 
 
-
--->
 
 
 **Pwned! Puppy**

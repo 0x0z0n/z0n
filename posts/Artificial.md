@@ -33,9 +33,6 @@ PORT   STATE SERVICE VERSION
 |_http-server-header: nginx/1.18.0 (Ubuntu)
 ```
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
 
 ## Foothold
 
@@ -282,6 +279,6 @@ ssh -i ./restore/root/.ssh/id_rsa root@artificial.htb
 
 ![**Pwned Artificial!!**](Pictures/Arificial.png)
 
--->
+
 
 
