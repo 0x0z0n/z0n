@@ -373,7 +373,6 @@ PowerShell
 
 Force a GPO update to apply the changes.
 
-![GPO_Abuse](Pictures/htb_frizz_kerbrute_GPO_Abuse.png)
 
 Use RunasCs.exe to execute a PowerShell reverse shell as the M.SchoolBus user.
 
