@@ -253,6 +253,6 @@ sudo npbackup-cli -c npbackup.conf -b -f
 The tool then outputted the backup contents, which included the contents of the root.txt file, granting full root access to the system.
 
 
-![Root_Flag](Pictures/htb_codetwo_root)
+![Root_Flag](Pictures/htb_codetwo_root.png)
 
 **Pwned! CodeTwo**
