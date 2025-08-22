@@ -5,6 +5,13 @@ Operating System: Linux
 Hints: TensorFlow RCE, Docker misuse, SQLite DB leak, local-only service  
 ```
 
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
+
+<!--
+
+
 #### 🏁 Summary of Attack Chain
 
 | Step | User / Access | Technique Used | Result |
@@ -282,3 +289,5 @@ ssh -i ./restore/root/.ssh/id_rsa root@artificial.htb
 
 
 
+
+-->

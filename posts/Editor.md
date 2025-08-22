@@ -6,6 +6,13 @@ Operating System: Linux
 Hints: True
 ```
 
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
+
+<!--
+
+
 #### 🏁 Summary of Attack Chain
 
 ```
@@ -217,3 +224,5 @@ Executing the command immediately dropped me into a root shell, allowing me to r
 
 
 **Pwned! Editor**
+
+-->
