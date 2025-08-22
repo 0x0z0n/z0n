@@ -215,22 +215,5 @@ export PATH=/tmp:$PATH
 
 Executing the command immediately dropped me into a root shell, allowing me to retrieve the root.txt flag from the /root directory.
 
-#### 🏁 Summary of Attack Chain
-
-```
-| Step | User / Access | Technique Used | Result |
-|:---|:---|:---|:---|
-| 1 | (Local) | Nmap, /etc/hosts | Identified open ports and domain `editor.htb` |
-| 2 | (Web) | XWiki Enumeration | Found XWiki version `15.10.8` and associated CVE-2025-24983 |
-| 3 | xwiki | Groovy Script Injection (CVE-2025-24983) | Executed remote command to download and run a reverse shell script |
-| 4 | xwiki | Shell Enumeration | Gained a shell as the `xwiki` user and identified user `oliver` |
-| 5 | xwiki -> oliver | File Enumeration | Found `oliver`'s SSH password (`theXXXXXXXeam99`) in `/usr/lib/xwiki/WEB-INF/hibernate.cfg.xml` |
-| 6 | oliver | SSH Login | Gained an SSH shell as `oliver` and retrieved `user.txt` |
-| 7 | oliver | Port Enumeration | Used `ss -tulnp` to find `netdata` service listening on `127.0.0.1:19999` |
-| 8 | oliver | SSH Local Port Forwarding | Forwarded port `19999` to `localhost` to access the `netdata` dashboard |
-| 9 | oliver | Netdata Vulnerability (CVE-2024-32019) | Identified a local privilege escalation vulnerability in `netdata` version `1.45.2` |
-| 10 | oliver -> root | Custom Executable & PATH Manipulation | Exploited `ndsudo` to run a malicious binary (`nvme`) with root privileges |
-| 11 | root | Root Shell | Gained a `root` shell and retrieved `root.txt` |
-```
 
 **Pwned! Editor**

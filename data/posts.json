@@ -1,5 +1,63 @@
 [
     {
+    "title": "HackTheBox: CodeTwo",
+    "href": "posts/htb_codetwo.html",
+    "date": "2025-08-22",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Nmap",
+        "SourceCodeAnalysis",
+        "js2py",
+        "CVE-2024-28397",
+        "RCE",
+        "ReverseShell",
+        "SQLite",
+        "PasswordCracking",
+        "Sudo",
+        "LPE"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Source Code Disclosure",
+            "result": "Discovered the Gunicorn web server on port 8000 and the `/download` endpoint that provided the application's source code.",
+            "mitigation": "Do not expose sensitive application files, such as source code, through web-accessible endpoints. Implement strict access controls on the web server."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "js2py Sandbox Escape (CVE-2024-28397)",
+            "result": "Analyzed the `app.py` source code, found the `/run_code` endpoint, and exploited a sandbox escape vulnerability in the `js2py` library to execute a remote shell.",
+            "mitigation": "Regularly patch and update all software libraries. Avoid using functions like `eval` on user-supplied input, as they are inherently insecure. Use a more robust sandboxing solution."
+        },
+        {
+            "step": 3,
+            "user": "app",
+            "technique": "File Enumeration & Password Cracking",
+            "result": "Gained a shell as the `app` user, located the `users.db` SQLite database, and cracked the MD5 password hash for the `marco` user.",
+            "mitigation": "Store credentials in a secure manner using a strong, salted hashing algorithm (e.g., Argon2, bcrypt). Restrict file permissions so sensitive files are not world-readable."
+        },
+        {
+            "step": 4,
+            "user": "marco",
+            "technique": "Sudo Misconfiguration",
+            "result": "Used the cracked password to SSH in as `marco`. Discovered `marco` could run `/usr/local/bin/npbackup-cli` as `root` without a password.",
+            "mitigation": "Follow the principle of least privilege. Audit `sudo` permissions regularly and ensure users can only run commands with the minimum necessary privileges."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "NPBackup-cli Exploitation",
+            "result": "Used the `--config-file` option of `npbackup-cli` to force a backup of the `/root` directory, which contained the `root.txt` flag.",
+            "mitigation": "Do not allow users to run commands with the `--config-file` or similar options if the configuration file can be controlled by the user. Enforce strict input validation."
+        }
+    ]
+},
+{
     "title": "HackTheBox: TheFrizz",
     "href": "posts/htb_thefrizz.html",
     "date": "2025-08-11",
