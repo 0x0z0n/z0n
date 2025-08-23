@@ -518,150 +518,96 @@ html[data-theme="light"] .search-box input {
     </main>
     <!-- JavaScript -->
     <script>
-  const searchInput = document.getElementById("searchInput");
-  const postsContainer = document.getElementById("posts");
-  let allPosts = [];
+      const searchInput = document.getElementById("searchInput");
+      const postsContainer = document.getElementById("posts");
+      let allPosts = [];
 
-  async function fetchPostContent(post) {
-    try {
-      const res = await fetch(post.href);
-      if (!res.ok) return "";
-      const text = await res.text();
-      return text.toLowerCase();
-    } catch (e) {
-      return "";
-    }
-  }
-
-  function renderPosts(posts) {
-    postsContainer.innerHTML = "";
-    if (posts.length === 0) {
-      postsContainer.innerHTML = "<p>No posts found.</p>";
-      return;
-    }
-
-    posts.forEach(post => {
-      const article = document.createElement("article");
-      article.className = "post-card";
-      article.setAttribute("data-tags", post.tags.join(", "));
-
-      const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
-
-      // Attack path terminal view
-      let attackPathText = "";
-      if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
-        attackPathText = post.attack_path.map(step => {
-          return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}
-Result: ${step.result}
-Mitigation: ${step.mitigation}\n`;
-        }).join("\n");
-      }
-
-      // Build UI
-      article.innerHTML = `
-        <h2><a href="${post.href}">${post.title}</a></h2>
-        <div>
-          <strong>Category:</strong><br/>
-          ${
-            categories
-              ? categories.split(", ").map(cat => {
-                  const encoded = encodeURIComponent(cat.trim());
-                  return `<a href="index.html?category=${encoded}" class="category-button">${cat.trim()}</a>`;
-                }).join("")
-              : `<span style="color:#888;">Uncategorized</span>`
-          }
-        </div>
-
-        <p><strong>Date:</strong> ${post.date}</p>
-        <p><strong>Tags:</strong></p>
-        <div class="tag-container">
-          ${post.tags.map(tag =>
-            `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-          ).join("")}
-        </div>
-
-        ${attackPathText ? `<pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
-      `;
-      postsContainer.appendChild(article);
-    });
-  }
-
-  async function filterPosts() {
-    const query = searchInput.value.trim().toLowerCase();
-    let filtered = [];
-
-    for (const post of allPosts) {
-      let match = false;
-
-      // Basic search
-      if (post.title.toLowerCase().includes(query)) match = true;
-      else if (Array.isArray(post.category) 
-        ? post.category.some(cat => cat.toLowerCase().includes(query)) 
-        : (post.category || "").toLowerCase().includes(query)) match = true;
-      else if (post.tags.some(tag => tag.toLowerCase().includes(query))) match = true;
-      else if (post.date && post.date.startsWith(query)) match = true;
-
-      // Attack path deep search
-      if (!match && Array.isArray(post.attack_path)) {
-        for (const step of post.attack_path) {
-          if (
-            (step.description && step.description.toLowerCase().includes(query)) ||
-            (step.result && step.result.toLowerCase().includes(query)) ||
-            (step.mitigation && step.mitigation.toLowerCase().includes(query))
-          ) {
-            match = true;
-            break;
-          }
+      function renderPosts(posts) {
+        postsContainer.innerHTML = "";
+        if (posts.length === 0) {
+          postsContainer.innerHTML = " < p > No posts found. < /p>";
+          return;
         }
+        posts.forEach(post => {
+          const article = document.createElement("article");
+          article.className = "post-card";
+          article.setAttribute("data-tags", post.tags.join(", "));
+          const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
+          // Prepare terminal view of attack_path if present
+          let attackPathText = "";
+          if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
+            attackPathText = post.attack_path.map(step => {
+              return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
+            }).join("\n");
+          }
+          article.innerHTML = `
+          
+      <h2>
+        <a href="${post.href}">${post.title}</a>
+      </h2>
+      <div>
+  <strong>Category:</strong><br/>
+  ${
+    categories
+      ? categories.split(', ').map(cat => {
+          const encoded = encodeURIComponent(cat.trim());
+          return `<a href="index.html?category=${encoded}" class="category-button">${cat.trim()}</a>`;
+        }).join('')
+      : `<span style="color:#888;">Uncategorized</span>`
+  }
+</div>
+
+
+      <p>
+        <strong>Date:</strong> ${post.date}
+      </p>
+      <p>
+        <strong>Tags:</strong>
+      </p>
+      <div class="tag-container">
+            ${post.tags.map(tag =>
+              `
+        <a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
+            ).join("")}
+          
+      </div>
+          ${attackPathText ? `
+      <pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
+        `;
+          postsContainer.appendChild(article);
+        });
       }
 
-      // Search inside .html/.md content if needed
-      if (!match && (post.href.endsWith(".html") || post.href.endsWith(".md"))) {
-        const content = await fetchPostContent(post);
-        if (content.includes(query)) match = true;
+      function filterPosts() {
+        const query = searchInput.value.trim().toLowerCase();
+        const filtered = allPosts.filter(post => post.title.toLowerCase().includes(query) || (Array.isArray(post.category) ? post.category.some(cat => cat.toLowerCase().includes(query)) : (post.category || "").toLowerCase().includes(query)) || post.tags.some(tag => tag.toLowerCase().includes(query)) || (post.date && post.date.startsWith(query)));
+        renderPosts(filtered);
       }
 
-      if (match) filtered.push(post);
-    }
-
-    renderPosts(filtered);
-  }
-
-  function getParam(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-  }
-
-  // Init
-  fetch("data/posts.json").then(res => res.json()).then(async data => {
-    allPosts = data;
-    const tagParam = getParam("tag");
-    const catParam = getParam("category");
-    const dateParam = getParam("date");
-
-    let filtered = allPosts;
-    if (tagParam) {
-      searchInput.value = tagParam;
-      filtered = allPosts.filter(post =>
-        post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase())
-      );
-    } else if (catParam) {
-      searchInput.value = catParam;
-      filtered = allPosts.filter(post =>
-        Array.isArray(post.category)
-          ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase())
-          : (post.category || "").toLowerCase() === catParam.toLowerCase()
-      );
-    } else if (dateParam) {
-      searchInput.value = dateParam;
-      filtered = allPosts.filter(post => post.date && post.date.startsWith(dateParam));
-    }
-    renderPosts(filtered);
-  });
-
-  searchInput.addEventListener("input", filterPosts);
-</script>
-
+      function getParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+      fetch("data/posts.json").then(res => res.json()).then(data => {
+        allPosts = data;
+        const tagParam = getParam("tag");
+        const catParam = getParam("category");
+        const dateParam = getParam("date");
+        let filtered = allPosts;
+        if (tagParam) {
+          searchInput.value = tagParam;
+          filtered = allPosts.filter(post => post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase()));
+        } else if (catParam) {
+          searchInput.value = catParam;
+          filtered = allPosts.filter(post => Array.isArray(post.category) ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase()) : (post.category || "").toLowerCase() === catParam.toLowerCase());
+        } else if (dateParam) {
+          searchInput.value = dateParam;
+          filtered = allPosts.filter(post => post.date && post.date.startsWith(dateParam));
+        }
+        renderPosts(filtered);
+      });
+      searchInput.addEventListener("input", filterPosts);
+    </script>
     <script>
 const toggle = document.querySelector(".theme-toggle");
 const icon = toggle.querySelector("i");
