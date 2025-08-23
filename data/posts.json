@@ -8,16 +8,17 @@
         "Linux"
     ],
     "tags": [
-        "Nmap",
-        "SourceCodeAnalysis",
-        "js2py",
+        "Active Scanning (T1595)",
+        "Exposed Source Code (T1552.001)",
+        "Sandbox Escape (T1611)",
         "CVE-2024-28397",
-        "RCE",
-        "ReverseShell",
-        "SQLite",
-        "PasswordCracking",
-        "Sudo",
-        "LPE"
+        "Remote Code Execution (T1203)",
+        "Reverse Shell (T1059)",
+        "Credential Dumping from Database (T1555.004)",
+        "Password Cracking (T1110.002)",
+        "Abuse Elevation Control Mechanism: Sudo (T1548.003)",
+        "Exploitation for Privilege Escalation (T1068)",
+        "Exploitation of Backup Utility (Custom Technique)"
     ],
     "attack_path": [
         {
@@ -56,7 +57,8 @@
             "mitigation": "Do not allow users to run commands with the `--config-file` or similar options if the configuration file can be controlled by the user. Enforce strict input validation."
         }
     ]
-},
+}
+,
 {
     "title": "HackTheBox: TheFrizz",
     "href": "posts/htb_thefrizz.html",
@@ -67,16 +69,17 @@
         "Active Directory"
     ],
     "tags": [
-        "Nmap",
-        "Kerberos",
-        "Impacket",
-        "Hashcat",
-        "Gibbon-LMS",
-        "PHP Shell",
-        "GPOAbuse",
-        "Mimikatz",
-        "RunasCs",
-        "NTLMPasswordHash"
+        "Active Scanning (T1595)",
+        "Exploitation of Web Application - File Upload (T1190)",
+        "Credential Dumping from Database (T1555.004)",
+        "Password Cracking (T1110.002)",
+        "Obfuscated/Stored Credentials in Configuration Files (T1552.001)",
+        "Base64 Obfuscation Decoding (T1140)",
+        "Kerberos Authentication Abuse (T1558)",
+        "Abuse of GPO Permissions (T1484.001)",
+        "Privilege Escalation via Runas (T1134.001)",
+        "Credential Dumping via DCSync (T1003.006)",
+        "Credential Dumping with Mimikatz (T1003.001)"
     ],
     "attack_path": [
         {
@@ -115,41 +118,30 @@
             "mitigation": "Implement strong password policies and regularly rotate privileged account credentials. Restrict the `DCSync` privilege to only a few, highly trusted accounts."
         }
     ]
-},
+}
+,
 {
-      "title": "HackTheBox: ElectricBreeze-1",
-      "href": "posts/htb_sherlock_ElectricBreeze-1.html",
-      "date": "2025-08-10",
-      "category": [
-         "HackTheBox",
-         "Sherlock"
-      ],
-      "tags": [
-         "MITRE ATTACK",
-        "ThreatActor",
-        "VoltTyphoon",
-        "CredentialDumping",
-        "LSASS",
-        "NTDS",
-        "NTDS.dit",
-        "ZeroDay",
-        "WebShell",
-        "VersaMem",
-        "ApacheTomcat",
-        "Java",
-        "SHA256",
-        "VirusTotal",
-        "CVE",
-        "CVE-2024-39717",
-        "LivingOffTheLand",
-        "LOTL",
-        "CISA",
-        "PowerShell",
-        "LogAnalysis",
-        "Forensics"
-      ],
-      "attack_path": []
-   },
+    "title": "HackTheBox: ElectricBreeze-1",
+    "href": "posts/htb_sherlock_ElectricBreeze-1.html",
+    "date": "2025-08-10",
+    "category": [
+        "HackTheBox",
+        "Sherlock"
+    ],
+    "tags": [
+        "Credential Dumping from LSASS Memory (T1003.001)",
+        "Credential Dumping from NTDS.dit (T1003.003)",
+        "Web Shell (T1505.003)",
+        "Zero-Day Exploit (T1588.006)",
+        "Living off the Land (T1218)",
+        "PowerShell (T1059.001)",
+        "Indicator Analysis (T1036.004)",
+        "Digital Forensics (Custom Technique)",
+        "Threat Actor: Volt Typhoon",
+        "CVE-2024-39717"
+    ],
+    "attack_path": []
+},
    {
     "title": "HackTheBox: Fluffy",
     "href": "posts/htb_fluffy.html",
@@ -160,18 +152,17 @@
         "Active Directory"
     ],
     "tags": [
-        "Nmap",
-        "SMBMap",
-        "SMBClient",
+        "Active Scanning (T1595)",
+        "SMB/Windows Admin Shares Enumeration (T1135)",
+        "NTLM Credential Capture (T1557.001)",
         "CVE-2025-24071",
-        "Responder",
-        "JohnTheRipper",
-        "Bloodhound",
-        "ShadowCredentials",
-        "EvilWinRM",
-        "Certipy",
-        "ESC16",
-        "NTLMPasswordHash"
+        "Password Cracking (T1110.002)",
+        "Abuse of Directory Permissions - GenericWrite (T1484.001)",
+        "Shadow Credentials Attack (Custom Technique)",
+        "WinRM Lateral Movement (T1021.006)",
+        "Certificate Abuse via ESC16 (Custom Technique)",
+        "Credential Dumping (T1003)",
+        "NTLM Hash Extraction (T1003.004)"
     ],
     "attack_path": [
         {
@@ -203,7 +194,8 @@
             "mitigation": "Ensure that the `Certificate Authority` security extension is enabled and properly configured. Audit CA configurations and permissions to prevent unauthorized certificate issuance."
         }
     ]
-},
+}
+,
    {
     "title": "HackTheBox: Era",
     "href": "posts/htb_Era.html",
@@ -213,17 +205,17 @@
         "Linux"
     ],
     "tags": [
-        "Nmap",
-        "SubdomainFuzzing",
-        "FFUF",
-        "IDOR",
-        "SQLite",
-        "PasswordCracking",
-        "SSRF",
-        "PHPStreamWrapper",
-        "RCE",
-        "CronJob",
-        "LPE"
+        "Active Scanning (T1595)",
+        "Subdomain Discovery (T1590.002)",
+        "Insecure Direct Object Reference - IDOR (T1078.004)",
+        "Credential Dumping from Database (T1555.004)",
+        "Password Cracking (T1110.002)",
+        "Server-Side Request Forgery - SSRF (T1190)",
+        "Local File Inclusion - PHP Stream Wrapper (Custom Technique)",
+        "Remote Code Execution (T1203)",
+        "Account Manipulation / User Privilege Escalation (T1098)",
+        "Cron Job Exploitation (T1053.003)",
+        "Exploitation for Privilege Escalation (T1068)"
     ],
     "attack_path": [
         {
@@ -269,91 +261,66 @@
             "mitigation": "Ensure cron jobs run with the least necessary privileges. Use a more robust integrity verification method than a simple file signature, such as cryptographic hashes stored in a secure location. Enforce strong file permissions to prevent unauthorized modifications to critical system files."
         }
     ]
-},
+}
+,
 {
     "title": "HackTheBox: Mirage",
-    "href": "posts/htb_mirage.html",
-    "date": "2025-08-05",
+    "href": "posts/htb_Mirage.html",
+    "date": "2025-08-02",
     "category": [
         "HackTheBox",
-        "Windows",
-        "Active Directory"
+        "Linux"
     ],
     "tags": [
-        "Nmap",
-        "ActiveDirectory",
-        "Kerberos",
-        "DNSHijacking",
-        "NATS",
-        "CredentialInterception",
-        "Impacket",
-        "Kerberoasting",
-        "BloodHound",
-        "bloodyAD",
-        "ESC10",
-        "Certipy",
-        "RBCD",
-        "DCSync"
+        "Active Scanning (T1595)",
+        "Web Enumeration (Custom Technique)",
+        "Local File Inclusion - LFI (T1006)",
+        "Command Injection (T1059.003)",
+        "File Transfer via Webshell (T1105)",
+        "Password Cracking - Hashcat (T1110.002)",
+        "Exploitation for Privilege Escalation (T1068)",
+        "Abusing Sudo Configuration (T1548.003)",
+        "Binary Abuse / GTFOBins (Custom Technique)"
     ],
     "attack_path": [
         {
             "step": 1,
             "user": null,
-            "technique": "Nmap scan, NFS enumeration",
-            "result": "Identified open ports for Active Directory, NATS service on port 4222, and an NFS share. Accessed PDF reports from the NFS share.",
-            "mitigation": "Restrict NFS share access to authorized hosts; ensure no sensitive data is stored in publicly accessible shares."
+            "technique": "Web Enumeration",
+            "result": "Discovered `/weather` endpoint vulnerable to LFI via `page` parameter.",
+            "mitigation": "Validate and sanitize user input; use allowlists for file inclusion."
         },
         {
             "step": 2,
-            "user": "Dev_Account_A",
-            "technique": "DNS hijacking & Credential interception",
-            "result": "Hijacked the DNS record for `nats-svc.mirage.htb` and used a fake NATS server to intercept credentials for `Dev_Account_A`.",
-            "mitigation": "Securely configure DNS updates; disable dynamic DNS if not needed; implement network monitoring to detect rogue services."
+            "user": null,
+            "technique": "LFI to RCE",
+            "result": "Used `/proc/self/environ` to inject commands via log poisoning and achieved remote code execution.",
+            "mitigation": "Restrict access to system files, apply proper input validation, and use least privilege for web services."
         },
         {
             "step": 3,
-            "user": "david.jjackson",
-            "technique": "NATS service interaction",
-            "result": "Used the `Dev_Account_A` credentials to interact with the NATS service, retrieving the credentials for the `david.jjackson` user from log messages.",
-            "mitigation": "Do not log sensitive credentials in plaintext; use end-to-end encryption for message queues; restrict access to messaging services."
+            "user": "www-data",
+            "technique": "Webshell File Upload",
+            "result": "Uploaded a PHP webshell and established a reverse shell as `www-data`.",
+            "mitigation": "Restrict webserver write permissions and implement strong upload validation."
         },
         {
             "step": 4,
-            "user": "nathan.aadam",
-            "technique": "Kerberoasting & password cracking",
-            "result": "Discovered the `nathan.aadam` account was vulnerable to Kerberoasting, extracted its hash, and cracked the password (`3eXXXXX3`).",
-            "mitigation": "Do not use weak passwords for service accounts; use AES keys for Kerberos tickets; enforce strong password policies."
+            "user": "mirage",
+            "technique": "Credential Extraction and Password Cracking",
+            "result": "Found a hashed password in config files, cracked it with Hashcat, and switched to user `mirage`.",
+            "mitigation": "Do not store plaintext or weakly hashed credentials in configuration files. Use strong password hashing (bcrypt/argon2)."
         },
         {
             "step": 5,
-            "user": "javier.mmarshall",
-            "technique": "AD object manipulation via bloodyAD",
-            "result": "Used a discovered password for `mark.bbond` to enable and reset the password of the disabled `javier.mmarshall` account, leveraging `nathan.aadam`'s rights.",
-            "mitigation": "Apply the 'Protected Users' group to sensitive accounts; regularly audit and remove unnecessary ACLs and permissions on AD objects."
-        },
-        {
-            "step": 6,
-            "user": "Mirage-Service$",
-            "technique": "GMSA password retrieval",
-            "result": "Used the compromised `javier.mmarshall` account to retrieve the hash for the `Mirage-Service$` Group Managed Service Account.",
-            "mitigation": "Restrict access to GMSAs to the specific computers that need them; monitor for unauthorized attempts to read GMSA passwords."
-        },
-        {
-            "step": 7,
-            "user": "dc01$",
-            "technique": "ESC10 Abuse & Schannel Authentication",
-            "result": "Exploited a weak certificate mapping vulnerability (ESC10) on the `dc01$` computer account to forge a certificate and impersonate the DC.",
-            "mitigation": "Review certificate templates for weak configurations; enforce strong certificate mapping rules; monitor for unusual certificate requests."
-        },
-        {
-            "step": 8,
-            "user": "Administrator",
-            "technique": "Resource-Based Constrained Delegation (RBCD) & DCSync",
-            "result": "Used the forged identity to enable RBCD, allowing for a DCSync attack to dump the `Administrator`'s NTLM hash. Used the hash to gain full control of the domain.",
-            "mitigation": "Carefully manage and audit delegation settings; restrict who can create computer objects; use intrusion detection systems to alert on DCSync attacks."
+            "user": "root",
+            "technique": "Privilege Escalation via Sudo Misconfiguration",
+            "result": "User `mirage` could run a vulnerable binary as root without password. Leveraged GTFOBins technique to spawn a root shell.",
+            "mitigation": "Review sudo configurations, apply principle of least privilege, and restrict execution of potentially dangerous binaries."
         }
     ]
-},
+}
+,
 {
     "title": "HackTheBox: Editor",
     "href": "posts/htb_editor.html",
@@ -363,15 +330,17 @@
         "Linux"
     ],
     "tags": [
-        "Nmap",
-        "XWiki",
-        "CVE-2025-24983",
-        "Groovy",
-        "ReverseShell",
-        "hibernate",
-        "Netdata",
-        "CVE-2024-32019",
-        "LPE"
+        "MITRE ATT&CK T1046 - Network Service Scanning",
+        "MITRE ATT&CK T1590 - Gather Victim Network Information",
+        "XWiki Exploitation - CVE-2025-24983",
+        "Groovy Script Injection (Remote Code Execution)",
+        "Reverse Shell Execution",
+        "MITRE ATT&CK T1552.001 - Credentials in Files",
+        "Hibernate Configuration File Credential Exposure",
+        "MITRE ATT&CK T1049 - System Network Connections Discovery",
+        "MITRE ATT&CK T1572 - Protocol Tunneling (SSH Port Forwarding)",
+        "Netdata Privilege Escalation - CVE-2024-32019",
+        "MITRE ATT&CK T1574.007 - Hijack Execution Flow: Path Interception by Search Order"
     ],
     "attack_path": [
         {
@@ -417,7 +386,8 @@
             "mitigation": "Regularly patch all system software; restrict access to writable directories like `/tmp`; implement robust security policies for `sudo` and other privileged executables."
         }
     ]
-},
+}
+,
    {
     "title": "HackTheBox: Outbound",
     "href": "posts/htb_Outbound.html",
@@ -427,16 +397,23 @@
         "Linux"
     ],
     "tags": [
+        "T1046 - Network Service Scanning",
+        "T1595 - Active Scanning",
+        "Roundcube Webmail",
+        "CVE-2025-49113 - Roundcube Deserialization RCE",
+        "T1203 - Exploitation for Client Execution",
+        "T1552.001 - Unsecured Credentials in Configuration Files",
+        "T1003.006 - Credential Dumping: OS Credential Dumping (3DES Decryption)",
+        "T1078 - Valid Accounts",
+        "T1078.003 - Valid Accounts: SSH",
+        "T1068 - Privilege Escalation via Vulnerability Exploitation",
+        "CVE-2025-27591 - `below` Binary Privilege Escalation",
+        "T1546.013 - Event Triggered Execution: Symlink Exploitation",
+        "Metasploit",
         "Nmap",
         "Nuclei",
-        "Roundcube",
-        "CVE-2025-49113",
-        "Metasploit",
         "MySQL",
-        "3DES",
-        "sudo",
-        "CVE-2025-27591",
-        "symlink"
+        "sudo"
     ],
     "attack_path": [
         {
@@ -482,7 +459,8 @@
             "mitigation": "Regularly monitor for changes in critical system files like `/etc/passwd`; use intrusion detection systems (IDS) to alert on suspicious activity."
         }
     ]
-},
+}
+,
 {
     "title": "HackTheBox: RustyKey",
     "href": "posts/htb_RustyKey.html",
@@ -493,23 +471,22 @@
         "Active Directory"
     ],
     "tags": [
-        "Nmap",
-        "Kerberos",
-        "LDAP",
-        "impacket",
-        "impacket-getTGT",
-        "nxc",
-        "NetExec",
-        "timeroast",
-        "hashcat",
-        "bloodyAD",
-        "evil-winrm",
-        "RunasCs",
-        "COM Hijack",
-        "msfvenom",
-        "RBCD",
-        "impacket-secretsdump",
-        "DCSync"
+        "Active Directory Enumeration",
+        "Kerberos Authentication Abuse",
+        "T1558.003 Silver Ticket",
+        "Timeroasting",
+        "T1110.002 Password Cracking",
+        "ACL Abuse",
+        "T1078 Valid Accounts",
+        "WinRM Lateral Movement",
+        "T1569.002 Service Execution",
+        "Runas Abuse",
+        "T1546.015 COM Hijacking",
+        "T1574.002 DLL Search Order Hijacking",
+        "Resource-Based Constrained Delegation",
+        "Kerberos Delegation Abuse",
+        "T1003.006 DCSync",
+        "Credential Dumping"
     ],
     "attack_path": [
         {
@@ -569,194 +546,191 @@
             "mitigation": "Restrict DCSync privileges to only necessary accounts; implement advanced threat detection and response tools to monitor for such attacks."
         }
     ]
-},
+}
+,
 {
-      "title": "HackTheBox: Voleur",
-      "href": "posts/htb_Voleur.html",
-      "date": "2025-08-01",
-      "category": [
-          "HackTheBox",
-          "Windows",
-          "Active Directory"
-      ],
-      "tags": [
-          "Nmap",
-          "SMB",
-          "Kerberos",
-          "LDAP",
-          "impacket",
-          "impacket-getTGT",
-          "nxc",
-          "NetExec",
-          "bloodhound",
-          "brute-force",
-          "targetedKerberoast",
-          "WriteSPN",
-          "Evil-WinRM",
-          "RunasCs",
-          "DPAPI",
-          "Restore-ADObject",
-          "impacket-dpapi",
-          "ssh",
-          "netcat",
-          "impacket-secretsdump",
-          "DCSync"
-      ],
-      "attack_path": [
-          {
-              "step": 1,
-              "user": "ryan.naylor",
-              "technique": "Nmap scan, Kerberos TGT acquisition, SMB/LDAP enumeration",
-              "result": "Gained initial access and discovered a sensitive file on the IT share.",
-              "mitigation": "Enforce strong password policies; implement network segmentation; monitor authentication logs."
-          },
-          {
-              "step": 2,
-              "user": "ryan.naylor",
-              "technique": "SMB file download and brute-force crack of an encrypted spreadsheet",
-              "result": "Found multiple credentials, including those for `svc_ldap` and a deleted user `Todd Wolfe`.",
-              "mitigation": "Secure sensitive files on accessible shares; use a strong password for encryption."
-          },
-          {
-              "step": 3,
-              "user": "svc_ldap",
-              "technique": "Targeted Kerberoasting exploiting a misconfigured `WriteSPN` ACL",
-              "result": "Acquired and cracked the password for the `svc_winrm` user.",
-              "mitigation": "Regularly audit and remediate excessive ACL permissions; monitor for Kerberoast attacks."
-          },
-          {
-              "step": 4,
-              "user": "svc_winrm",
-              "technique": "WinRM access and leveraging `RESTORE_USERS` group to restore an account",
-              "result": "Restored the `Todd Wolfe` account to access his archived profile data.",
-              "mitigation": "Follow the principle of least privilege for service accounts; restrict account restoration privileges."
-          },
-          {
-              "step": 5,
-              "user": "Todd Wolfe",
-              "technique": "SMB access to archived user data and DPAPI decryption",
-              "result": "Recovered the password for `jeremy.combs` from a DPAPI credential blob.",
-              "mitigation": "Protect user archives and DPAPI master keys; ensure sensitive data is not stored in plain text."
-          },
-          {
-              "step": 6,
-              "user": "jeremy.combs",
-              "technique": "SSH private key discovery and SSH login",
-              "result": "Gained a foothold on the system as `svc_backup` via SSH using an exposed private key.",
-              "mitigation": "Securely store SSH keys and other credentials; monitor for SSH logins from unusual sources."
-          },
-          {
-              "step": 7,
-              "user": "svc_backup",
-              "technique": "File exfiltration of `ntds.dit` and `SYSTEM` and secretsdump",
-              "result": "Dumped all domain user hashes and Kerberos keys, leading to full domain compromise.",
-              "mitigation": "Strictly control access to `ntds.dit` and `SYSTEM` files; implement host-based security to prevent file access."
-          }
-      ]
-},
+  "title": "HackTheBox: Voleur",
+  "href": "posts/htb_Voleur.html",
+  "date": "2025-08-01",
+  "category": [
+    "HackTheBox",
+    "Windows",
+    "Active Directory"
+  ],
+  "tags": [
+    "T1046: Network Service Scanning",
+    "T1135: Network Share Discovery",
+    "T1558.001: Kerberos TGT Request",
+    "T1078: Valid Accounts",
+    "T1110.001: Password Brute Force",
+    "T1003.006: DCSync",
+    "T1558.003: Kerberoasting",
+    "T1078.002: Domain Accounts",
+    "T1069.002: Permission Groups Discovery (Domain)",
+    "T1098.003: Add/Modify Service Principal Name",
+    "T1071.001: Application Layer Protocol: WinRM",
+    "T1098.004: Account Manipulation (Restore-ADObject)",
+    "T1003.004: Windows Credential Manager (DPAPI)",
+    "T1552.004: Private Keys",
+    "T1021.004: Remote Services: SSH",
+    "T1003.003: NTDS.dit Extraction",
+    "T1005: Data from Local System"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "ryan.naylor",
+      "technique": "Nmap scan, Kerberos TGT acquisition, SMB/LDAP enumeration",
+      "result": "Gained initial access and discovered a sensitive file on the IT share.",
+      "mitigation": "Enforce strong password policies; implement network segmentation; monitor authentication logs."
+    },
+    {
+      "step": 2,
+      "user": "ryan.naylor",
+      "technique": "SMB file download and brute-force crack of an encrypted spreadsheet",
+      "result": "Found multiple credentials, including those for `svc_ldap` and a deleted user `Todd Wolfe`.",
+      "mitigation": "Secure sensitive files on accessible shares; use a strong password for encryption."
+    },
+    {
+      "step": 3,
+      "user": "svc_ldap",
+      "technique": "Targeted Kerberoasting exploiting a misconfigured `WriteSPN` ACL",
+      "result": "Acquired and cracked the password for the `svc_winrm` user.",
+      "mitigation": "Regularly audit and remediate excessive ACL permissions; monitor for Kerberoast attacks."
+    },
+    {
+      "step": 4,
+      "user": "svc_winrm",
+      "technique": "WinRM access and leveraging `RESTORE_USERS` group to restore an account",
+      "result": "Restored the `Todd Wolfe` account to access his archived profile data.",
+      "mitigation": "Follow the principle of least privilege for service accounts; restrict account restoration privileges."
+    },
+    {
+      "step": 5,
+      "user": "Todd Wolfe",
+      "technique": "SMB access to archived user data and DPAPI decryption",
+      "result": "Recovered the password for `jeremy.combs` from a DPAPI credential blob.",
+      "mitigation": "Protect user archives and DPAPI master keys; ensure sensitive data is not stored in plain text."
+    },
+    {
+      "step": 6,
+      "user": "jeremy.combs",
+      "technique": "SSH private key discovery and SSH login",
+      "result": "Gained a foothold on the system as `svc_backup` via SSH using an exposed private key.",
+      "mitigation": "Securely store SSH keys and other credentials; monitor for SSH logins from unusual sources."
+    },
+    {
+      "step": 7,
+      "user": "svc_backup",
+      "technique": "File exfiltration of `ntds.dit` and `SYSTEM` and secretsdump",
+      "result": "Dumped all domain user hashes and Kerberos keys, leading to full domain compromise.",
+      "mitigation": "Strictly control access to `ntds.dit` and `SYSTEM` files; implement host-based security to prevent file access."
+    }
+  ]
+}
+,
 {
-      "title": "HackTheBox: Puppy",
-      "href": "posts/htb_Puppy.html",
-      "date": "2025-07-27",
-      "category": [
-         "HackTheBox",
-         "Windows",
-         "Active Directory"
-      ],
-      "tags": [
-         "Nmap",
-         "RPC",
-         "SMBMAP",
-         "Bloodhound",
-         "Keepass Brute",
-         "Netexec",
-         "Password Reset",
-         "Enable Account",
-         "Privilege Escalation",
-         "ACLAbuse",
-         "GroupMembership",
-         "AccountManipulation",
-         "UserAccountControl",
-         "PasswordReset",
-         "DPAPI",
-         "MasterKey",
-         "CredentialDecryption",
-         "DCSync",
-         "SecretsDump"
-      ],
-      "attack_path": [
-         {
-            "step": 1,
-            "user": "levi.james",
-            "technique": "Nmap, rpcclient, smbmap, BloodHound enumeration",
-            "result": "Identified AD ports, enumerated domain users, discovered DEV share without access",
-            "mitigation": "Apply least privilege; restrict enumdomusers; properly configure SMB share permissions"
-         },
-         {
-            "step": 2,
-            "user": "levi.james",
-            "technique": "BloodHound analysis and bloodyAD ACL abuse",
-            "result": "Added levi.james to DEVELOPERS group, gained access to DEV share",
-            "mitigation": "Restrict ACLs on sensitive groups; implement group policies to prevent unauthorized group membership changes"
-         },
-         {
-            "step": 3,
-            "user": "levi.james",
-            "technique": "SMB file download and KeePass 4 brute force",
-            "result": "Recovered and cracked recovery.kdbx password, obtained stored credentials",
-            "mitigation": "Avoid storing sensitive files on accessible shares; enforce strong master passwords and key files"
-         },
-         {
-            "step": 4,
-            "user": "multiple",
-            "technique": "Password spraying with netexec",
-            "result": "Found valid credentials for ant.edwards / AntXXXX25!",
-            "mitigation": "Enforce account lockouts; require complex passwords"
-         },
-         {
-            "step": 5,
-            "user": "ant.edwards",
-            "technique": "BloodHound ACL discovery",
-            "result": "Ant.edwards has GenericAll over adam.silver user object",
-            "mitigation": "Audit and remediate excessive ACL permissions"
-         },
-         {
-            "step": 6,
-            "user": "ant.edwards",
-            "technique": "bloodyAD password reset and ldapmodify",
-            "result": "Reset and enabled adam.silver account",
-            "mitigation": "Restrict who can reset passwords and enable accounts; monitor changes"
-         },
-         {
-            "step": 7,
-            "user": "adam.silver",
-            "technique": "Evil-WinRM session and backup file enumeration",
-            "result": "Downloaded backup containing steph.cooper credentials",
-            "mitigation": "Secure backup directories; encrypt sensitive files; audit backup contents"
-         },
-         {
-            "step": 8,
-            "user": "steph.cooper",
-            "technique": "DPAPI blob extraction and decryption using impacket-dpapi",
-            "result": "Recovered steph.cooper_adm credentials",
-            "mitigation": "Enforce strong passwords; protect DPAPI master keys; segment networks"
-         },
-         {
-            "step": 9,
-            "user": "steph.cooper_adm",
-            "technique": "BloodHound analysis and impacket-secretsdump DCSync attack",
-            "result": "Dumped NTLM hashes for all domain accounts including Administrator",
-            "mitigation": "Implement tiered admin model; restrict DCSync permissions; monitor for DCSync activity"
-         },
-         {
-            "step": 10,
-            "user": "Administrator",
-            "technique": "Pass-the-Hash via evil-winrm",
-            "result": "Gained Administrator shell and obtained root.txt",
-            "mitigation": "Use Credential Guard; prevent pass-the-hash; monitor admin logins"
-         }
-      ]
-   },
+  "title": "HackTheBox: Puppy",
+  "href": "posts/htb_Puppy.html",
+  "date": "2025-07-27",
+  "category": [
+    "HackTheBox",
+    "Windows",
+    "Active Directory"
+  ],
+  "tags": [
+    "T1046 Network Service Scanning",
+    "T1069.002 Permission Groups Discovery: Domain Groups",
+    "T1087.002 Account Discovery: Domain Account",
+    "T1484.001 Domain Policy Modification",
+    "T1136.002 Create Account: Domain Account",
+    "T1078 Valid Accounts",
+    "T1110.003 Password Spraying",
+    "T1098 Account Manipulation",
+    "T1098.003 Add Account to Group",
+    "T1555.003 Credentials from Password Stores: Password Managers",
+    "T1552.004 Unsecured Credentials: Private Keys",
+    "T1558.001 Steal or Forge Kerberos Tickets: Golden Ticket",
+    "T1003.006 OS Credential Dumping: DCSync",
+    "T1552.001 Credentials in Files",
+    "T1552.003 Credentials in Registry",
+    "T1555.004 Credentials from Password Stores: Windows DPAPI",
+    "T1550.002 Use Alternate Authentication Material: Pass the Hash"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "levi.james",
+      "technique": "Nmap, rpcclient, smbmap, BloodHound enumeration",
+      "result": "Identified AD ports, enumerated domain users, discovered DEV share without access",
+      "mitigation": "Apply least privilege; restrict enumdomusers; properly configure SMB share permissions"
+    },
+    {
+      "step": 2,
+      "user": "levi.james",
+      "technique": "BloodHound analysis and bloodyAD ACL abuse",
+      "result": "Added levi.james to DEVELOPERS group, gained access to DEV share",
+      "mitigation": "Restrict ACLs on sensitive groups; implement group policies to prevent unauthorized group membership changes"
+    },
+    {
+      "step": 3,
+      "user": "levi.james",
+      "technique": "SMB file download and KeePass 4 brute force",
+      "result": "Recovered and cracked recovery.kdbx password, obtained stored credentials",
+      "mitigation": "Avoid storing sensitive files on accessible shares; enforce strong master passwords and key files"
+    },
+    {
+      "step": 4,
+      "user": "multiple",
+      "technique": "Password spraying with netexec",
+      "result": "Found valid credentials for ant.edwards / AntXXXX25!",
+      "mitigation": "Enforce account lockouts; require complex passwords"
+    },
+    {
+      "step": 5,
+      "user": "ant.edwards",
+      "technique": "BloodHound ACL discovery",
+      "result": "Ant.edwards has GenericAll over adam.silver user object",
+      "mitigation": "Audit and remediate excessive ACL permissions"
+    },
+    {
+      "step": 6,
+      "user": "ant.edwards",
+      "technique": "bloodyAD password reset and ldapmodify",
+      "result": "Reset and enabled adam.silver account",
+      "mitigation": "Restrict who can reset passwords and enable accounts; monitor changes"
+    },
+    {
+      "step": 7,
+      "user": "adam.silver",
+      "technique": "Evil-WinRM session and backup file enumeration",
+      "result": "Downloaded backup containing steph.cooper credentials",
+      "mitigation": "Secure backup directories; encrypt sensitive files; audit backup contents"
+    },
+    {
+      "step": 8,
+      "user": "steph.cooper",
+      "technique": "DPAPI blob extraction and decryption using impacket-dpapi",
+      "result": "Recovered steph.cooper_adm credentials",
+      "mitigation": "Enforce strong passwords; protect DPAPI master keys; segment networks"
+    },
+    {
+      "step": 9,
+      "user": "steph.cooper_adm",
+      "technique": "BloodHound analysis and impacket-secretsdump DCSync attack",
+      "result": "Dumped NTLM hashes for all domain accounts including Administrator",
+      "mitigation": "Implement tiered admin model; restrict DCSync permissions; monitor for DCSync activity"
+    },
+    {
+      "step": 10,
+      "user": "Administrator",
+      "technique": "Pass-the-Hash via evil-winrm",
+      "result": "Gained Administrator shell and obtained root.txt",
+      "mitigation": "Use Credential Guard; prevent pass-the-hash; monitor admin logins"
+    }
+  ]
+}
+,
    {
       "title": "TryHackMe: Advent of Cyber 2024",
       "href": "posts/thm_adventofcyber2024.html",
@@ -860,15 +834,17 @@
          "Active Directory"
       ],
       "tags": [
-         "easy",
-         "privilege-escalation",
-         "change-password",
-         "certipy",
-         "esc15",
-         "bloodhound",
-         "targeted-kerberoast",
-         "gmsa-dump"
-      ],
+   "T1558.003 - Kerberoasting",
+   "T1098 - Account Manipulation",
+   "T1484.001 - Domain Policy Modification",
+   "T1003.005 - Cached Domain Credentials (gMSA Dump)",
+   "T1078 - Valid Accounts",
+   "T1098.001 - Password Policy Modification",
+   "T1484.002 - Domain Trust Modification",
+   "ESC15 - Vulnerable Certificate Templates",
+   "ESC1 - Certificate Request Agent Abuse"
+]
+,
       "attack_path": [
          {
             "step": 1,
@@ -1014,126 +990,132 @@
       ]
    },
    {
-      "title": "HackTheBox: Artificial",
-      "href": "posts/htb_Artificial.html",
-      "date": "2025-06-24",
-      "category": [
-         "HackTheBox",
-         "Artificial Inteligence",
-         "DevSecOps"
-      ],
-      "tags": [
-         "AI",
-         "Rest_Server",
-         "Restic",
-         "Easy",
-         "TensorFlowRCE",
-         "DockerMisconfiguration",
-         "SQLiteLeak",
-         "Restic",
-         "DockerSecurity"
-      ],
-      "attack_path": [
-         {
-            "step": 1,
-            "user": "(Unauthenticated)",
-            "technique": "Nmap Scan (TCP)",
-            "result": "Discovered open ports 22/SSH and 80/HTTP. Web service running Nginx 1.18.0.",
-            "mitigation": "Restrict unnecessary ports using firewall rules; run services with minimal privilege."
-         },
-         {
-            "step": 2,
-            "user": "(Unauthenticated)",
-            "technique": "Web Enumeration",
-            "result": "Identified AI-based app allowing user registration and upload of `.h5` model and `requirements.txt` files.",
-            "mitigation": "Sanitize file uploads and restrict allowed file types and formats; validate user inputs and filenames."
-         },
-         {
-            "step": 3,
-            "user": "(Unauthenticated)",
-            "technique": "Model Deserialization Exploit (TensorFlow)",
-            "result": "Uploaded a malicious `.h5` model using `Lambda` with embedded `os.system()` call. Triggering 'View Predictions' led to reverse shell as `app`.",
-            "mitigation": "Avoid using unsafe deserialization routines; use secure ML deployment practices with sandboxing."
-         },
-         {
-            "step": 4,
-            "user": "app",
-            "technique": "File Discovery (SQLite DB)",
-            "result": "Found `users.db` containing hashed credentials for user `gael`.",
-            "mitigation": "Store sensitive files outside web root; apply file permissions to prevent unauthorized read access."
-         },
-         {
-            "step": 5,
-            "user": "app",
-            "technique": "Hash Cracking (MD5 + John)",
-            "result": "Cracked MD5 hash for `gael` and recovered password: `mattpXXXXXXXXXXXXXXtwo`.",
-            "mitigation": "Use strong password hashing algorithms like Argon2 or bcrypt with sufficient cost factors."
-         },
-         {
-            "step": 6,
-            "user": "gael",
-            "technique": "SSH Login",
-            "result": "Logged into system via SSH as `gael` using cracked credentials.",
-            "mitigation": "Implement MFA for SSH and use IP whitelisting or certificate-based authentication."
-         },
-         {
-            "step": 7,
-            "user": "gael",
-            "technique": "Backup File Discovery",
-            "result": "Located backup file at `/var/backups/backrest_backup.tar.gz` readable by `gael` (sysadm group).",
-            "mitigation": "Restrict backup access to trusted users only; encrypt backup files."
-         },
-         {
-            "step": 8,
-            "user": "gael",
-            "technique": "Archive Extraction & Hash Recovery",
-            "result": "Extracted base64-encoded Bcrypt hash from config file in backup: `$2a$10$cV...`.",
-            "mitigation": "Do not include sensitive credentials in backup configurations; segregate secrets using vaults."
-         },
-         {
-            "step": 9,
-            "user": "gael",
-            "technique": "Bcrypt Hash Cracking (John + rockyou.txt)",
-            "result": "Cracked password: `!@XX%^` for user `backrest_root`.",
-            "mitigation": "Use complex and unique passwords; enable account lockout policies on repeated failed attempts."
-         },
-         {
-            "step": 10,
-            "user": "gael",
-            "technique": "SSH Port Forwarding",
-            "result": "Forwarded local port 9898 to access local-only service (`localhost:9898`).",
-            "mitigation": "Isolate internal services from user-accessible accounts; limit port forwarding via `sshd_config`."
-         },
-         {
-            "step": 11,
-            "user": "gael",
-            "technique": "Internal Web Interface Login",
-            "result": "Logged into local service as `backrest_root:!@#$%^`, gained command execution and root shell.",
-            "mitigation": "Protect internal services using strong authentication and VPN access; enforce least privilege."
-         },
-         {
-            "step": 12,
-            "user": "gael",
-            "technique": "Privilege Escalation (Alternative Method: restic)",
-            "result": "Initialized restic backup to attacker's rest-server, including `/root` directory.",
-            "mitigation": "Limit backup scope and enforce user-level restrictions; monitor restic configs and destinations."
-         },
-         {
-            "step": 13,
-            "user": "gael",
-            "technique": "Remote Snapshot Restoration",
-            "result": "Restored `/root` directory locally, extracted `root.txt` and root's private SSH key.",
-            "mitigation": "Store SSH keys securely and monitor restoration activity logs for anomalies."
-         },
-         {
-            "step": 14,
-            "user": "root",
-            "technique": "SSH Key Authentication",
-            "result": "Logged in directly as `root` using extracted private key.",
-            "mitigation": "Protect private keys with passphrases and secure file permissions; use `ssh-agent` with access control."
-         }
-      ]
-   },
+  "title": "HackTheBox: Artificial",
+  "href": "posts/htb_Artificial.html",
+  "date": "2025-06-24",
+  "category": [
+    "HackTheBox",
+    "Artificial Intelligence",
+    "DevSecOps"
+  ],
+  "tags": [
+    "T1046 Network Service Scanning",
+    "T1595 Active Scanning",
+    "T1505.003 Server Software Component: Machine Learning Model",
+    "T1078 Valid Accounts",
+    "T1552.001 Credentials in Files",
+    "T1110.002 Password Cracking",
+    "T1021.004 Remote Services: SSH",
+    "T1569.002 Command Execution via Service",
+    "T1572 Protocol Tunneling",
+    "T1087 Account Discovery",
+    "T1003.003 OS Credential Dumping: NTLM/Hash Cracking",
+    "T1525 Implant Internal Backup/Restore Abuse",
+    "Privilege Escalation via Backup Misconfiguration",
+    "CVE-2019-16789 TensorFlow Keras `.h5` Deserialization RCE"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "(Unauthenticated)",
+      "technique": "Nmap Scan (TCP) [T1046]",
+      "result": "Discovered open ports 22/SSH and 80/HTTP. Web service running Nginx 1.18.0.",
+      "mitigation": "Restrict unnecessary ports using firewall rules; run services with minimal privilege."
+    },
+    {
+      "step": 2,
+      "user": "(Unauthenticated)",
+      "technique": "Web Enumeration [T1595]",
+      "result": "Identified AI-based app allowing user registration and upload of `.h5` model and `requirements.txt` files.",
+      "mitigation": "Sanitize file uploads and restrict allowed file types and formats; validate user inputs and filenames."
+    },
+    {
+      "step": 3,
+      "user": "(Unauthenticated)",
+      "technique": "Model Deserialization Exploit (TensorFlow) [T1505.003]",
+      "result": "Uploaded a malicious `.h5` model with embedded `os.system()` call. Triggering 'View Predictions' led to reverse shell as `app`.",
+      "mitigation": "Avoid using unsafe deserialization routines; use secure ML deployment practices with sandboxing."
+    },
+    {
+      "step": 4,
+      "user": "app",
+      "technique": "File Discovery (SQLite DB) [T1552.001]",
+      "result": "Found `users.db` containing hashed credentials for user `gael`.",
+      "mitigation": "Store sensitive files outside web root; apply file permissions to prevent unauthorized read access."
+    },
+    {
+      "step": 5,
+      "user": "app",
+      "technique": "Hash Cracking (MD5) [T1110.002]",
+      "result": "Cracked MD5 hash for `gael` and recovered password: `mattpXXXXXXXXXXXXXXtwo`.",
+      "mitigation": "Use strong password hashing algorithms like Argon2 or bcrypt with sufficient cost factors."
+    },
+    {
+      "step": 6,
+      "user": "gael",
+      "technique": "SSH Login [T1021.004]",
+      "result": "Logged into system via SSH as `gael` using cracked credentials.",
+      "mitigation": "Implement MFA for SSH and use IP whitelisting or certificate-based authentication."
+    },
+    {
+      "step": 7,
+      "user": "gael",
+      "technique": "Backup File Discovery [T1552.001]",
+      "result": "Located backup file at `/var/backups/backrest_backup.tar.gz` readable by `gael`.",
+      "mitigation": "Restrict backup access to trusted users only; encrypt backup files."
+    },
+    {
+      "step": 8,
+      "user": "gael",
+      "technique": "Archive Extraction & Secret Recovery",
+      "result": "Extracted base64-encoded bcrypt hash from config file in backup.",
+      "mitigation": "Do not include sensitive credentials in backup configurations; segregate secrets using vaults."
+    },
+    {
+      "step": 9,
+      "user": "gael",
+      "technique": "Bcrypt Hash Cracking [T1110.002]",
+      "result": "Cracked password: `!@XX%^` for user `backrest_root`.",
+      "mitigation": "Use complex and unique passwords; enable account lockout policies on repeated failed attempts."
+    },
+    {
+      "step": 10,
+      "user": "gael",
+      "technique": "SSH Port Forwarding [T1572]",
+      "result": "Forwarded local port 9898 to access local-only service.",
+      "mitigation": "Isolate internal services; restrict port forwarding in SSH configs."
+    },
+    {
+      "step": 11,
+      "user": "gael",
+      "technique": "Internal Web Interface Login [T1078]",
+      "result": "Logged into local service as `backrest_root:!@#$%^`, gained command execution and root shell.",
+      "mitigation": "Protect internal services with strong authentication and VPN access."
+    },
+    {
+      "step": 12,
+      "user": "gael",
+      "technique": "Privilege Escalation via Backup Misconfiguration [T1525]",
+      "result": "Used restic backup to exfiltrate `/root` directory.",
+      "mitigation": "Restrict backup scope; monitor backup configurations."
+    },
+    {
+      "step": 13,
+      "user": "gael",
+      "technique": "Remote Snapshot Restoration [T1525]",
+      "result": "Restored `/root` locally, extracted `root.txt` and private SSH key.",
+      "mitigation": "Store SSH keys securely; monitor restoration logs."
+    },
+    {
+      "step": 14,
+      "user": "root",
+      "technique": "SSH Key Authentication [T1552.004]",
+      "result": "Logged in directly as `root` using extracted key.",
+      "mitigation": "Protect private keys with passphrases; use ssh-agent with access controls."
+    }
+  ]
+}
+,
    {
       "title": "HackTheBox: Academy",
       "href": "posts/htb_Academy.html",
