@@ -435,22 +435,6 @@ html {
         <p>&copy; 2025 0x0z0n</p>
       </footer>
     </main>
-    <div id="matrix-container" style="margin:2rem 0;"></div>
-    <script>
-  fetch("MITRE ATT&CK®.html")
-    .then(res => res.text())
-    .then(html => {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const matrix = doc.querySelector("#matrix-enterprise"); 
-      document.getElementById("matrix-container").appendChild(matrix);
-
-      // Load matrix.js behavior
-      const script = document.createElement("script");
-      script.src = "matrix.js";
-      document.body.appendChild(script);
-    });
-</script>
     <script>
       const tagList = document.getElementById("tagList");
       fetch("data/posts.json").then(res => res.json()).then(posts => {
@@ -480,29 +464,6 @@ html {
         });
       }
     </script>
-    <script>
-  function highlightMatrixTags(tags) {
-    const cells = document.querySelectorAll("#matrix-container td a");
-    cells.forEach(cell => {
-      tags.forEach(tag => {
-        if (cell.textContent.toLowerCase().includes(tag.toLowerCase())) {
-          cell.style.backgroundColor = "#00ff95";
-          cell.style.color = "#000";
-          cell.style.fontWeight = "bold";
-          cell.style.borderRadius = "4px";
-          cell.style.padding = "2px 4px";
-        }
-      });
-    });
-  }
-
-  // After tags are loaded
-  fetch("data/posts.json").then(res => res.json()).then(posts => {
-    let allTags = [];
-    posts.forEach(p => { if (p.tags) allTags.push(...p.tags); });
-    highlightMatrixTags([...new Set(allTags)]);
-  });
-</script>
     <script>
   const toggle = document.querySelector(".theme-toggle");
 const icon = toggle.querySelector("i");
