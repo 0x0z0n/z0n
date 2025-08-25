@@ -359,48 +359,24 @@ html[data-theme="light"] .entry:hover {
       }
 
       @media screen and (max-width: 768px) {
-  
+  body {
+    flex-direction: column;
+  }
 
-body {
-  margin: 0;
-  font-family: 'Orbitron', system-ui, sans-serif;
-  background: var(--bg-color);
-  color: var(--text-color);
-  display: flex;
-  min-height: 100vh;
-}
+  aside {
+    width: 100%;
+    height: auto;
+    position: relative;
+    box-shadow: none;
+    padding: 1rem;
+    border-right: none;
+    border-bottom: 1px solid #00d0ff33;
+  }
 
-/* Sidebar */
-aside {
-  flex: 0 0 20%;              /* takes ~20% of device width */
-  max-width: 250px;           /* never larger than 250px */
-  min-width: 180px;           /* never smaller than 180px */
-  background: linear-gradient(to bottom, #101010, #080808);
-  padding: 1.5rem 1rem;
-  box-shadow: inset -1px 0 0 #00d0ff33;
-  position: sticky;
-  top: 0;
-  transition: all 0.3s ease;
-}
+  main {
+    padding: 1.5rem 1rem;
+  }
 
-/* Sidebar image */
-aside img {
-  width: 80%;
-  max-width: 120px;
-  border-radius: 50%;
-  display: block;
-  margin: 0 auto 1rem;
-  border: 2px solid #00d0ff;
-  box-shadow: var(--border-glow);
-}
-
-/* Main content */
-main {
-  flex: 1;  /* fills remaining space automatically */
-  padding: 2rem;
-}
-
-  
   .site-title {
     font-size: 1.2rem;
   }

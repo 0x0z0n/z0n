@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
    <link rel="icon" type="image/png" href="assets/tab.png" />
-
+   
     <style>
       :root {
   --bg-color: #0a0a0a;
@@ -384,47 +384,50 @@ html[data-theme="light"] .search-box input {
       }
 
       @media screen and (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
 
+  aside {
+    width: 100%;
+    height: auto;
+    position: relative;
+    box-shadow: none;
+    padding: 1rem;
+    border-right: none;
+    border-bottom: 1px solid #00d0ff33;
+  }
 
-body {
-  margin: 0;
-  font-family: 'Orbitron', system-ui, sans-serif;
-  background: var(--bg-color);
-  color: var(--text-color);
-  display: flex;
-  min-height: 100vh;
+  main {
+    padding: 1.5rem 1rem;
+  }
+
+  .site-title {
+    font-size: 1.2rem;
+  }
+
+  .site-subtitle {
+    font-size: 0.75rem;
+  }
+
+  nav a {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.95rem;
+  }
+
+  .social-icons a {
+    font-size: 1.2rem;
+  }
+
+  .search-box input {
+    width: 90%;
+  }
 }
 
-/* Sidebar */
-aside {
-  flex: 0 0 20%;              /* takes ~20% of device width */
-  max-width: 250px;           /* never larger than 250px */
-  min-width: 180px;           /* never smaller than 180px */
-  background: linear-gradient(to bottom, #101010, #080808);
-  padding: 1.5rem 1rem;
-  box-shadow: inset -1px 0 0 #00d0ff33;
-  position: sticky;
-  top: 0;
-  transition: all 0.3s ease;
-}
-
-/* Sidebar image */
-aside img {
-  width: 80%;
-  max-width: 120px;
-  border-radius: 50%;
-  display: block;
-  margin: 0 auto 1rem;
-  border: 2px solid #00d0ff;
-  box-shadow: var(--border-glow);
-}
-
-/* Main content */
-main {
-  flex: 1;  /* fills remaining space automatically */
-  padding: 2rem;
-}
-
+@media screen and (max-width: 480px) {
+  .post-card {
+    padding: 1.2rem;
+  }
 
   .category-button,
   .tag-link {
