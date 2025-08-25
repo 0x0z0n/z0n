@@ -34,6 +34,14 @@ html[data-theme="light"] {
   --border-glow: 0 0 6px #007acc44, 0 0 12px #007acc22;
 }
 
+html, body {
+  -ms-overflow-style: none;   /* IE/Edge */
+  scrollbar-width: none;      /* Firefox */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;              /* Chrome/Safari */
+}
 
 .theme-toggle {
   position: fixed;
