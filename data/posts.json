@@ -1818,7 +1818,8 @@
     "date": "2025-07-14",
     "category": [
       "HackTheBox",
-      "Linux"
+      "Linux",
+      "Application Security"
     ],
     "tags": [
       "easy",
@@ -2051,7 +2052,8 @@
     "date": "2025-07-11",
     "category": [
       "HackTheBox",
-      "Linux"
+      "Linux",
+      "Application Security"
     ],
     "tags": [
       "easy",
@@ -2685,7 +2687,8 @@
     "date": "2025-07-04",
     "category": [
       "HackTheBox",
-      "Linux"
+      "Linux",
+      "Application Security"
     ],
     "tags": [
       "easy",
@@ -3184,7 +3187,8 @@
     "date": "2025-07-01",
     "category": [
       "HackTheBox",
-      "Linux"
+      "Linux",
+      "Application Security"
     ],
     "tags": [
       "easy",
