@@ -64,6 +64,7 @@
     "date": "2025-08-11",
     "category": [
       "HackTheBox",
+      "Application Security"
       "Windows",
       "Active Directory"
     ],
@@ -984,6 +985,7 @@
     "date": "2025-06-24",
     "category": [
       "HackTheBox",
+      "Application Security"
       "Artificial Intelligence",
       "DevSecOps"
     ],
