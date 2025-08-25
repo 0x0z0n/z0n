@@ -386,22 +386,22 @@ html[data-theme="light"] .search-box input {
       @media screen and (max-width: 768px) {
 
 
+/* Default: Desktop */
 body {
   margin: 0;
   font-family: 'Orbitron', system-ui, sans-serif;
   background: var(--bg-color);
   color: var(--text-color);
   display: flex;
-  flex-direction: row; /* default: sidebar + main side-by-side */
+  flex-direction: row;
   min-height: 100vh;
 }
 
-/* Sidebar */
 aside {
-  width: 250px;
+  width: 250px;  /* desktop fixed width */
   background: linear-gradient(to bottom, #101010, #080808);
   padding: 1.5rem 1rem;
-  min-height: 100vh; /* replaced height:100vh for better mobile handling */
+  min-height: 100vh;
   box-shadow: inset -1px 0 0 #00d0ff33;
   position: sticky;
   top: 0;
@@ -418,23 +418,23 @@ aside img {
   box-shadow: var(--border-glow);
 }
 
-/* ✅ Mobile fixes */
+/* ✅ Mobile Fix */
 @media screen and (max-width: 768px) {
   body {
     flex-direction: column; /* stack sidebar above content */
   }
 
   aside {
-    width: 100%;
-    position: relative; /* prevent sticky issues on Android */
-    min-height: auto;   /* let it shrink naturally */
+    width: 100% !important;  /* full width on mobile */
+    position: relative;
+    min-height: auto;
     text-align: center;
     padding: 1rem;
     box-shadow: inset 0 -1px 0 #00d0ff33;
   }
 
   aside img {
-    width: 80px; /* slightly smaller for mobile */
+    width: 80px;
   }
 }
 
