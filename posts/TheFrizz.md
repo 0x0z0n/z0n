@@ -7,11 +7,6 @@ Operating System: Windows
 Hints: True
 ```
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
-
-<!--
 
 
 ### 🏁 Summary of Attack Chain
@@ -419,5 +414,3 @@ You now have full administrative access to the domain controller and can retriev
 
 
 **Pwned! TheFrizz**
-
--->
