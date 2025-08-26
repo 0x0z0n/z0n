@@ -9,66 +9,150 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
 
-    <style>
-      :root {
-  --bg-color: #0d1117;          /* Dark background */
-  --card-bg: #161b22;           /* Section/card background */
-  --text-color: #c9d1d9;        /* Default text */
-  --accent: #32cd32;            /* Neon green */
-  --tag-bg: #0f0f0f;
-  --tag-hover: #28a428;
-  --border-glow: 0 0 6px #32cd3299; /* Softer glow */
-}
+     <style>
+  :root {
+    --bg-color: #0d1117;          /* Dark background */
+    --card-bg: #161b22;           /* Section/card background */
+    --text-color: #c9d1d9;        /* Default text */
+    --accent: #32cd32;            /* Neon green (primary accent) */
+    --tag-bg: #0f0f0f;            /* Subtle tag background */
+    --tag-hover: #28a428;         /* Darker green for hover */
+    --border-glow: 0 0 10px #32cd32, 0 0 20px #32cd3244;
+  }
 
-/* Headings */
-h1 {
-  color: var(--accent);
-  text-shadow: 0 0 4px var(--accent); /* reduced from 6px */
-  border-bottom: 2px solid var(--accent);
-}
+  html[data-theme="light"] {
+    --bg-color: #f7f9fb;
+    --card-bg: #ffffff;
+    --text-color: #1f1f1f;
+    --accent: #0066cc;
+    --tag-bg: #d7ebff;
+    --tag-hover: #004499;
+    --border-glow: 0 0 6px #007acc44, 0 0 12px #007acc22;
+  }
 
-/* Month labels */
-.month {
-  color: var(--accent);
-  text-shadow: 0 0 4px var(--accent); /* softer */
-}
+  html, body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
 
-/* Timeline dots */
-.entry::before {
-  background: var(--accent);
-  box-shadow: 0 0 5px var(--accent); /* was 8px */
-}
+  main {
+    flex: 1;
+    max-width: 1000px;
+    margin: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
 
-/* Links */
-.entry a {
-  color: #00ffcc;
-  text-shadow: 0 0 3px #00ffcc66; /* softer cyan glow */
-}
-.entry a:hover {
-  color: var(--accent);
-  text-shadow: 0 0 5px var(--accent); /* toned down */
-}
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--accent);
+    text-align: center;
+    margin: 0;
+    text-shadow: 0 0 6px var(--accent);
+    position: sticky;
+    top: 0;
+    background: var(--bg-color);
+    z-index: 10;
+    padding: 1rem 0;
+    border-bottom: 2px solid var(--accent);
+  }
 
-/* Date */
-.entry span {
-  color: #32cd32;
-  text-shadow: 0 0 3px #32cd3266; /* less glow */
-}
+  .timeline {
+    flex: 1;
+    overflow-y: auto;
+    border-left: 3px solid var(--accent);
+    margin: 1rem;
+    padding-left: 1rem;
+  }
 
-/* Hover background */
-.entry:hover {
-  background: rgba(22, 27, 34, 0.7); /* slightly darker blur */
-  box-shadow: 0 0 8px rgba(50, 205, 50, 0.25); /* was 12px & stronger */
-}
+  .month {
+    margin-top: 2rem;
+    font-size: 1.5rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-shadow: 0 0 6px var(--accent);
+  }
 
-/* Theme toggle icon */
-.theme-toggle {
-  color: var(--accent);
-  text-shadow: 0 0 5px var(--accent); /* reduced glow */
-}
+  .entry {
+    margin: 1rem 0;
+    padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+    border-radius: 10px;
+    position: relative;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+  }
 
-    </style>
-     
+  .entry::before {
+    content: '';
+    position: absolute;
+    left: -1.4rem;
+    top: 0.6rem;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+    transition: background 0.3s ease;
+  }
+
+  .entry a {
+    color: #00ffcc;  /* Cyan links */
+    text-decoration: none;
+    text-shadow: 0 0 4px #00ffcc88;
+    font-weight: 600;
+  }
+
+  .entry a:hover {
+    color: var(--accent);
+    text-shadow: 0 0 8px var(--accent);
+  }
+
+  .entry span {
+    display: inline-block;
+    width: 5.5rem;
+    color: #32cd32; /* Green for dates */
+    font-weight: 600;
+    text-shadow: 0 0 4px #32cd3288;
+  }
+
+  .entry:hover {
+    background: rgba(22, 27, 34, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(50, 205, 50, 0.4);
+    transition: all 0.3s ease;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    color: var(--accent);
+    cursor: pointer;
+    z-index: 20;
+    text-shadow: 0 0 8px var(--accent);
+  }
+
+  @media screen and (max-width: 768px) {
+    main {
+      padding: 0;
+    }
+    .timeline {
+      margin: 0.5rem;
+    }
+  }
+     </style>
+    
   </head>
   <body>
     <div class="theme-toggle" title="Toggle Theme">
