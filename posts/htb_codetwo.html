@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="assets/tab.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="HTB CodeTwo | Writeup">
-  <meta property="og:title" content="HTB CodeTwo Writeup">
+  <meta property="og:title" content="HTB CodeTwo | Writeup">
   <meta property="og:description" content="Hack The Box CodeTwo Writeup - Tags: SMB, MySQL abuse, privesc">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="0x0z0n">
@@ -49,9 +49,14 @@
       overflow-x: auto;
       border-radius: 6px;
       margin: 1.5rem 0;
-      position: relative;
+      position: relative; /* important */
     }
-    pre code { background: none; padding: 0; border-radius: 0; font-family: monospace; }
+    pre code { 
+      background: none; 
+      padding: 0; 
+      border-radius: 0; 
+      font-family: monospace; 
+    }
     .copy-btn {
       position: absolute;
       top: 0.5rem;
@@ -63,6 +68,7 @@
       padding: 0.2rem 0.5rem;
       cursor: pointer;
       font-size: 0.8rem;
+      z-index: 1;
     }
     table {
       width: 100%;
@@ -121,14 +127,33 @@
       transition: 0.2s;
       font-size: 0.75rem;
     }
-    .tooltip:hover::after {
-      opacity: 1;
-    }
+    .tooltip:hover::after { opacity: 1; }
+
     details summary {
       cursor: pointer;
       font-weight: bold;
       color: var(--accent);
       margin: 0.5rem 0;
+    }
+
+    /* Expand/Hide button styling */
+    .expand-btn {
+      background: var(--accent);
+      color: #111;
+      border: none;
+      border-radius: 4px;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .expand-btn:hover {
+      background: #3a9e40;
+    }
+    .details-content {
+      display: none;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
@@ -183,7 +208,8 @@ fetch("CodeTwo.md")
       btn.className = 'copy-btn';
       block.appendChild(btn);
       btn.addEventListener('click', () => {
-        navigator.clipboard.writeText(block.innerText).then(() => {
+        const code = block.querySelector("code") ? block.querySelector("code").innerText : block.innerText;
+        navigator.clipboard.writeText(code).then(() => {
           btn.textContent = '✔';
           setTimeout(() => btn.textContent = '📋', 1000);
         });
