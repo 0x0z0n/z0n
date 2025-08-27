@@ -1,5 +1,16 @@
 [
   {
+    "title": "Kusto Query Language (KQL)",
+    "href": "posts/KQL.html",
+    "date": "2025-08-27",
+    "category": [
+      "Misrosoft Security Suite",
+      "Kusto Query Language (KQL)",
+    ],
+    "tags": [],
+    "attack_path": []
+  },
+  {
     "title": "HackTheBox: CodeTwo",
     "href": "posts/htb_codetwo.html",
     "date": "2025-08-22",
