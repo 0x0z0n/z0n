@@ -1,5 +1,67 @@
 [
   {
+    "title": "HackTheBox: Previous",
+    "href": "posts/htb_previous.html",
+    "date": "2025-08-29",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Active Scanning (T1595)",
+        "Local File Inclusion (LFI)",
+        "Authentication Bypass (T1587)",
+        "LFI to RCE",
+        "Sudo Misconfiguration (T1548.003)",
+        "Exploitation for Privilege Escalation (T1068)",
+        "SUID Binary Creation"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port & Service Enumeration",
+            "result": "Identified nginx on port 80 and confirmed the web application is a Next.js instance by examining the home page title, 'PreviousJS'.",
+            "mitigation": "Ensure web server headers and page titles do not disclose specific software versions or frameworks, which could aid in targeted attacks."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Authentication Bypass & LFI",
+            "result": "Discovered a bypass for the Next.js authentication using the `X-Middleware-Subrequest` header and located an LFI vulnerability on the `/api/download` endpoint's `example` parameter.",
+            "mitigation": "Implement robust authentication and access control mechanisms that cannot be bypassed by manipulating HTTP headers. Validate all user input to prevent path traversal attacks."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Information Gathering via LFI",
+            "result": "Used the LFI to retrieve sensitive files like `/etc/passwd`, revealing the `node` and `nextjs` users. Accessed `/proc/self/environ` to identify the application's root directory as `/app`.",
+            "mitigation": "Configure web servers to restrict file access to specific, non-sensitive directories. Limit the application's file permissions to prevent it from reading system files."
+        },
+        {
+            "step": 4,
+            "user": "node",
+            "technique": "Sudo Misconfiguration",
+            "result": "After gaining a foothold, discovered the `node` user could run `/usr/bin/terraform` as `root` using `sudo -l` with a restricted command line.",
+            "mitigation": "Adhere to the principle of least privilege. Strictly define `sudo` rules to prevent powerful commands from being exploited, and avoid allowing user-controlled arguments like `-chdir`."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Privilege Escalation via Terraform",
+            "result": "Exploited the `terraform` sudo permission by creating a malicious provider binary and a custom configuration file. This forced Terraform to execute our payload as root.",
+            "mitigation": "Periodically audit and review all `sudo` permissions. Secure system binaries and prevent them from being used in ways that can lead to privilege escalation."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "System Access",
+            "result": "Our malicious provider script successfully created a SUID shell at `/tmp/rootsh`, allowing us to execute it as the `root` user and retrieve the flag.",
+            "mitigation": "Implement integrity checks for critical system binaries. Monitor for the creation of SUID files in unusual directories and investigate immediately."
+        }
+    ]
+},
+{
     "title": "Kusto Query Language (KQL)",
     "href": "posts/KQL.html",
     "date": "2025-08-27",
