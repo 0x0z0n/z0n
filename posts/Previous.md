@@ -6,6 +6,11 @@ Operating System: Linux
 Hints: True
 ```
 
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
+
+<!--
 
 ### 🏁 Summary of Attack Chain
 
@@ -363,3 +368,27 @@ Congratulations, you are now root! 🥳
 
 **Pwned! Previous**
 
+
+**8) cleanup (optional, good practice)**
+
+From the root shell (or after finishing), remove the SUID shell and provider artefacts:
+
+Bash
+
+```
+rm -f /tmp/rootsh
+rm -f /home/jeremy/privesc/terraform-provider-examples_v0.1_linux_amd64
+rm -f /home/jeremy/privesc/dev.tfrc
+
+```
+**Troubleshooting tips**
+
+dev.tfrc key mismatch → Terraform will complain Invalid provider namespace. Ensure the dev_overrides key exactly equals the source string from main.tf.
+
+provider not executable → make sure chmod +x was run.
+
+Terraform shows plugin protocol errors — expected; these errors don’t prevent the provider script from being executed.
+
+If /tmp/rootsh is not SUID — confirm your provider script ran (check timestamps, Terraform output). If it didn’t run, double-check TF_CLI_CONFIG_FILE export and the exact sudo command used.
+
+-->
