@@ -2,15 +2,16 @@
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>Kusto Query Language (KQL)</title>
+  <title>Kusto Query Langauage (KQL)</title>
   <link rel="icon" type="image/png" href="assets/tab.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Kusto Query Language (KQL)">
-  <meta property="og:title" content="Kusto Query Language (KQL)">
-  <meta property="og:description" content="Queries">
+  <meta name="description" content="Kusto Query Langauage (KQL)">
+  <meta property="og:title" content="Kusto Query Langauage (KQL)">
+  <meta property="og:description" content="Kusto Query Langauage (KQL)">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="0x0z0n">
   <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -28,27 +29,32 @@
       background: linear-gradient(180deg, #111, #0b0b0b);
       color: var(--text);
       font-family: 'Segoe UI', sans-serif;
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 3rem 2rem;
       line-height: 1.7;
+      font-size: 1rem;
     }
     a { color: var(--link-color); text-decoration: none; }
     a:hover { text-decoration: underline; }
     h1, h2, h3 {
       color: var(--accent);
-      margin-top: 2rem;
+      margin-top: 3rem;
+      margin-bottom: 1.5rem;
       border-bottom: 1px solid #333;
-      padding-bottom: 0.3rem;
+      padding-bottom: 0.6rem;
+    }
+    p {
+      margin: 1.5rem 0;
     }
     pre {
       background: #0d0d0d;
-      padding: 1rem;
+      padding: 1.5rem;
       border-left: 4px solid var(--accent);
       overflow-x: auto;
-      border-radius: 6px;
-      margin: 1.5rem 0;
-      position: relative; /* important */
+      border-radius: 8px;
+      margin: 2rem 0;
+      position: relative; /* needed for copy button */
     }
     pre code { 
       background: none; 
@@ -58,27 +64,35 @@
     }
     .copy-btn {
       position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
+      top: 0.6rem;
+      right: 0.6rem;
       background: var(--accent);
       color: #111;
       border: none;
       border-radius: 4px;
-      padding: 0.2rem 0.5rem;
+      padding: 0.3rem 0.6rem;
       cursor: pointer;
-      font-size: 0.8rem;
-      z-index: 1;
+      font-size: 0.85rem;
+      z-index: 2;
+      opacity: 0; /* hidden by default */
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    pre:hover .copy-btn {
+      opacity: 1; /* only visible when hovering over code block */
+    }
+    .copy-btn:hover {
+      transform: scale(1.1);
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 1.5rem 0;
+      margin: 2.5rem 0;
       background: var(--card);
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
     }
     th, td {
-      padding: 0.8rem 1rem;
+      padding: 1rem 1.2rem;
       text-align: left;
       border-bottom: 1px solid #333;
     }
@@ -86,22 +100,23 @@
     tr:hover { background: #2a2a2a; }
     #content img {
       max-width: 100%;
-      border-radius: 8px;
-      margin: 1rem auto;
+      border-radius: 10px;
+      margin: 2rem auto;
       display: block;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
     }
     #content blockquote {
       border-left: 4px solid var(--accent);
       background: #1a1a1a;
-      padding: 0.8rem 1rem;
-      margin: 1rem 0;
+      padding: 1.2rem 1.5rem;
+      margin: 2rem 0;
       font-style: italic;
       color: #ccc;
+      border-radius: 6px;
     }
     .back-link {
       display: inline-block;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
       font-weight: bold;
     }
     /* Tooltip for techniques */
@@ -118,13 +133,13 @@
       transform: translateX(-50%);
       background: var(--tooltip-bg);
       color: #fff;
-      padding: 0.4rem 0.6rem;
+      padding: 0.5rem 0.8rem;
       border-radius: 4px;
       white-space: nowrap;
       opacity: 0;
       pointer-events: none;
       transition: 0.2s;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
     }
     .tooltip:hover::after { opacity: 1; }
 
@@ -132,7 +147,7 @@
       cursor: pointer;
       font-weight: bold;
       color: var(--accent);
-      margin: 0.5rem 0;
+      margin: 0.8rem 0;
     }
 
     /* Expand/Hide button styling */
@@ -141,18 +156,18 @@
       color: #111;
       border: none;
       border-radius: 4px;
-      padding: 0.3rem 0.7rem;
+      padding: 0.4rem 0.8rem;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: bold;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.8rem;
     }
     .expand-btn:hover {
       background: #3a9e40;
     }
     .details-content {
       display: none;
-      margin-top: 0.5rem;
+      margin-top: 0.8rem;
     }
   </style>
 </head>
@@ -193,7 +208,7 @@ fetch("KQL.md")
             }
           });
 
-          cells[5].innerHTML = ''; // replace screenshots cell with button
+          cells[5].innerHTML = '';
           cells[5].appendChild(expandBtn);
           cells[5].appendChild(detailsDiv);
         }
