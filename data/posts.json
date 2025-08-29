@@ -12,7 +12,7 @@
         "Active Scanning (T1595)",
         "Local File Inclusion (LFI)",
         "Authentication Bypass (T1587)",
-        "LFI to RCE",
+        "Harrd Coded Credentials",
         "Sudo Misconfiguration (T1548.003)",
         "Exploitation for Privilege Escalation (T1068)",
         "SUID Binary Creation"
