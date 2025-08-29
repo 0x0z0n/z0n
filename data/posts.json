@@ -5,7 +5,8 @@
     "date": "2025-08-28",
     "category": [
         "HackTheBox",
-        "Linux"
+        "Linux",
+        "Application Security"
     ],
     "tags": [
         "Active Scanning (T1595)",
