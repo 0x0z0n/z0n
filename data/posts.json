@@ -11,8 +11,7 @@
     "tags": [
         "Active Scanning (T1595)",
         "Local File Inclusion (LFI)",
-        "Authentication Bypass (T1587)",
-        "Harrd Coded Credentials",
+        "Hard Coded Credentials (T0891)",
         "Sudo Misconfiguration (T1548.003)",
         "Exploitation for Privilege Escalation (T1068)",
         "SUID Binary Creation"
