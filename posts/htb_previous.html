@@ -146,11 +146,18 @@
     .details-content { display: none; margin-top: 0.8rem; }
 
     /* Timeline styles */
+    .table-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+    }
     .timeline {
+      flex-shrink: 0;
       position: relative;
-      margin: 2rem 0;
-      height: 250px;
+      height: auto;
+      min-height: 200px;
       width: 60px;
+      margin-top: 1rem;
     }
     .line {
       position: absolute;
@@ -172,7 +179,8 @@
     .progress-count {
       position: absolute;
       bottom: -2rem;
-      left: 60%;
+      left: 50%;
+      transform: translateX(-50%);
       font-weight: bold;
       color: white;
     }
@@ -206,7 +214,13 @@ fetch("Previous.md")
         <div class="marker" style="top:${percentage}%"></div>
         <div class="progress-count">${current} / ${total}</div>
       `;
-      document.getElementById("content").prepend(timeline);
+
+      // Wrap timeline + table in a flex container
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(timeline);
+      wrapper.appendChild(table);
 
       // Add expand/hide functionality
       rows.forEach(row => {
