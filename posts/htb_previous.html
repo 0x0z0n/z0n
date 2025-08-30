@@ -44,9 +44,7 @@
       border-bottom: 1px solid #333;
       padding-bottom: 0.6rem;
     }
-    p {
-      margin: 1.5rem 0;
-    }
+    p { margin: 1.5rem 0; }
     pre {
       background: #0d0d0d;
       padding: 1.5rem;
@@ -54,14 +52,9 @@
       overflow-x: auto;
       border-radius: 8px;
       margin: 2rem 0;
-      position: relative; /* needed for copy button */
+      position: relative;
     }
-    pre code { 
-      background: none; 
-      padding: 0; 
-      border-radius: 0; 
-      font-family: monospace; 
-    }
+    pre code { font-family: monospace; }
     .copy-btn {
       position: absolute;
       top: 0.6rem;
@@ -74,15 +67,11 @@
       cursor: pointer;
       font-size: 0.85rem;
       z-index: 2;
-      opacity: 0; /* hidden by default */
+      opacity: 0;
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
-    pre:hover .copy-btn {
-      opacity: 1; /* only visible when hovering over code block */
-    }
-    .copy-btn:hover {
-      transform: scale(1.1);
-    }
+    pre:hover .copy-btn { opacity: 1; }
+    .copy-btn:hover { transform: scale(1.1); }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -119,17 +108,11 @@
       margin-bottom: 2.5rem;
       font-weight: bold;
     }
-    /* Tooltip for techniques */
-    .tooltip {
-      position: relative;
-      cursor: help;
-      border-bottom: 1px dotted var(--link-color);
-    }
+    .tooltip { position: relative; cursor: help; border-bottom: 1px dotted var(--link-color); }
     .tooltip::after {
       content: attr(data-tip);
       position: absolute;
-      bottom: 125%;
-      left: 50%;
+      bottom: 125%; left: 50%;
       transform: translateX(-50%);
       background: var(--tooltip-bg);
       color: #fff;
@@ -142,15 +125,12 @@
       font-size: 0.8rem;
     }
     .tooltip:hover::after { opacity: 1; }
-
     details summary {
       cursor: pointer;
       font-weight: bold;
       color: var(--accent);
       margin: 0.8rem 0;
     }
-
-    /* Expand/Hide button styling */
     .expand-btn {
       background: var(--accent);
       color: #111;
@@ -162,12 +142,39 @@
       font-weight: bold;
       margin-bottom: 0.8rem;
     }
-    .expand-btn:hover {
-      background: #3a9e40;
+    .expand-btn:hover { background: #3a9e40; }
+    .details-content { display: none; margin-top: 0.8rem; }
+
+    /* Timeline styles */
+    .timeline {
+      position: relative;
+      margin: 2rem 0;
+      height: 250px;
+      width: 60px;
     }
-    .details-content {
-      display: none;
-      margin-top: 0.8rem;
+    .line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+    .marker {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+    .progress-count {
+      position: absolute;
+      bottom: -2rem;
+      left: 60%;
+      font-weight: bold;
+      color: white;
     }
   </style>
 </head>
@@ -186,6 +193,22 @@ fetch("Previous.md")
     if(tables.length) {
       const table = tables[0]; // assuming first table is attack chain
       const rows = table.querySelectorAll('tbody tr');
+
+      // Build timeline (relevant to steps)
+      const total = rows.length;
+      const current = total; // mark all completed
+      const percentage = (current / total) * 100;
+
+      const timeline = document.createElement('div');
+      timeline.className = 'timeline';
+      timeline.innerHTML = `
+        <div class="line"></div>
+        <div class="marker" style="top:${percentage}%"></div>
+        <div class="progress-count">${current} / ${total}</div>
+      `;
+      document.getElementById("content").prepend(timeline);
+
+      // Add expand/hide functionality
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
         if(cells.length >= 6) {
@@ -231,6 +254,5 @@ fetch("Previous.md")
     });
   });
 </script>
-
 </body>
 </html>
