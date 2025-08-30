@@ -153,7 +153,7 @@ pre:hover .copy-btn { opacity: 1; }
   scrollbar-color: var(--accent) #1a1a1a;
 }
 
-/* Step Box */
+/* Step Box (Left Panel) */
 .step {
   padding: 1rem;
   margin-bottom: 1rem;
@@ -170,21 +170,11 @@ pre:hover .copy-btn { opacity: 1; }
   border-left: 4px solid var(--accent);
   max-height: 500px; /* expanded */
 }
+.step strong { display: block; margin-bottom: 0.4rem; color: var(--accent); }
+.step small { font-size: 0.9rem; color: #bbb; }
 
-/* Step Title */
-.step-title {
-  font-weight: bold;
-  margin-bottom: 0.4rem;
-  color: var(--accent);
-}
-.step-meta {
-  font-size: 0.9rem;
-  color: #bbb;
-  line-height: 1.4;
-}
-
-/* Right Side Details */
-.details {
+/* Right Panel Details */
+.detail {
   margin-bottom: 3rem;
   padding: 1.2rem;
   background: var(--card);
@@ -193,17 +183,16 @@ pre:hover .copy-btn { opacity: 1; }
   transition: transform 0.3s ease, opacity 0.3s ease;
   opacity: 0.8;
 }
-.details.active {
+.detail.active {
   transform: scale(1.02);
   opacity: 1;
 }
-.details h3 {
+.detail h3 {
   margin-top: 0;
   border: none;
   padding-bottom: 0;
 }
-</style>
-
+  </style>
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back to Home</a>
@@ -216,77 +205,76 @@ fetch("Previous.md")
     document.getElementById("content").innerHTML = marked.parse(md);
 
     const table = document.querySelector('#content table');
-if (table) {
-  const rows = Array.from(table.querySelectorAll('tbody tr'));
+    if (table) {
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
 
-  // Create container
-  const container = document.createElement('div');
-  container.className = 'attackchain-container';
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'attackchain-container';
 
-  const left = document.createElement('div');
-  left.className = 'attackchain-left';
-  const right = document.createElement('div');
-  right.className = 'attackchain-right';
+      const left = document.createElement('div');
+      left.className = 'attackchain-left';
+      const right = document.createElement('div');
+      right.className = 'attackchain-right';
 
-  rows.forEach((row, idx) => {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 4) {
-      const step = idx + 1;
-      const user = cells[1].innerText.trim();
-      const tool = cells[2].innerText.trim();
-      const result = cells[3].innerHTML.trim();
+      rows.forEach((row, idx) => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 4) {
+          const step = idx + 1;
+          const user = cells[1].innerText.trim();
+          const tool = cells[2].innerText.trim();
+          const result = cells[3].innerHTML.trim();
 
-      // Left step summary
-      const stepDiv = document.createElement('div');
-      stepDiv.className = 'step';
-      stepDiv.dataset.index = idx;
-      stepDiv.innerHTML = `<strong>Step ${step}</strong><br>${user}<br><small>${tool}</small>`;
-      left.appendChild(stepDiv);
+          // Left step summary
+          const stepDiv = document.createElement('div');
+          stepDiv.className = 'step';
+          stepDiv.dataset.index = idx;
+          stepDiv.innerHTML = `<strong>Step ${step}</strong>${user}<br><small>${tool}</small>`;
+          left.appendChild(stepDiv);
 
-      // Right detail
-      const detailDiv = document.createElement('div');
-      detailDiv.className = 'detail';
-      detailDiv.dataset.index = idx;
-      detailDiv.innerHTML = `<h3>Step ${step} – ${user}</h3><div>${result}</div>`;
-      right.appendChild(detailDiv);
+          // Right detail
+          const detailDiv = document.createElement('div');
+          detailDiv.className = 'detail';
+          detailDiv.dataset.index = idx;
+          detailDiv.innerHTML = `<h3>Step ${step} – ${user}</h3><div>${result}</div>`;
+          right.appendChild(detailDiv);
+        }
+      });
+
+      container.appendChild(left);
+      container.appendChild(right);
+
+      // Replace old table
+      table.parentNode.replaceChild(container, table);
+
+      // Auto expand/collapse on scroll
+      const details = right.querySelectorAll('.detail');
+      const steps = left.querySelectorAll('.step');
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const idx = entry.target.dataset.index;
+            steps.forEach(s => s.classList.remove('active'));
+            details.forEach(d => d.classList.remove('active'));
+            steps[idx].classList.add('active');
+            details[idx].classList.add('active');
+            steps[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        });
+      }, { threshold: 0.5 });
+
+      details.forEach(detail => observer.observe(detail));
+
+      // Allow clicking on step (left) to scroll right
+      steps.forEach(step => {
+        step.addEventListener('click', () => {
+          const idx = step.dataset.index;
+          details[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
     }
   });
-
-  container.appendChild(left);
-  container.appendChild(right);
-
-  // Replace old table
-  table.parentNode.replaceChild(container, table);
-
-  // Auto expand/collapse on scroll
-  const details = right.querySelectorAll('.detail');
-  const steps = left.querySelectorAll('.step');
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const idx = entry.target.dataset.index;
-        steps.forEach(s => s.classList.remove('active'));
-        details.forEach(d => d.classList.remove('active'));
-        steps[idx].classList.add('active');
-        details[idx].classList.add('active');
-        steps[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      }
-    });
-  }, { threshold: 0.5 });
-
-  details.forEach(detail => observer.observe(detail));
-
-  // Allow clicking on step (left) to scroll right
-  steps.forEach(step => {
-    step.addEventListener('click', () => {
-      const idx = step.dataset.index;
-      details[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  });
-}
-
-
 </script>
 </body>
 </html>
