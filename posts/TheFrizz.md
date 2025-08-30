@@ -114,7 +114,11 @@ Bash
 ![DB](Pictures/htb_frizz_mysqldb.png)
 
 This will reveal the hashed password for the user f.frizzle:
+
+```
 067f746faca44f170c6cd9d7c4bdac6bXXXXXXXXXXXXXX84242b0b0c03:/aACFhiXXXXXXX489
+```
+
 
 ![Fiona](Pictures/htb_frizz_fiona_frizzle.png)
 
