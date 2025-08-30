@@ -10,7 +10,7 @@ Hints: True
 This challenge is currently active on HackTheBox.
 In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
 
-<!--
+
 
 ### 🏁 Summary of Attack Chain
 
@@ -391,4 +391,3 @@ Terraform shows plugin protocol errors — expected; these errors don’t preven
 
 If /tmp/rootsh is not SUID — confirm your provider script ran (check timestamps, Terraform output). If it didn’t run, double-check TF_CLI_CONFIG_FILE export and the exact sudo command used.
 
--->
