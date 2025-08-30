@@ -18,172 +18,147 @@
 
   <style>
     :root {
-      --accent: #4caf50;
-      --link-color: #ffeb3b;
-      --bg: #111;
-      --card: #1e1e1e;
-      --text: #eee;
-      --tooltip-bg: #222;
-    }
-    body {
-      background: linear-gradient(180deg, #111, #0b0b0b);
-      color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 3rem 2rem;
-      line-height: 1.7;
-      font-size: 1rem;
-    }
-    a { color: var(--link-color); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    h1, h2, h3 {
-      color: var(--accent);
-      margin-top: 3rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #333;
-      padding-bottom: 0.6rem;
-    }
-    p { margin: 1.5rem 0; }
-    pre {
-      background: #0d0d0d;
-      padding: 1.5rem;
-      border-left: 4px solid var(--accent);
-      overflow-x: auto;
-      border-radius: 8px;
-      margin: 2rem 0;
-      position: relative;
-    }
-    pre code { font-family: monospace; }
-    .copy-btn {
-      position: absolute;
-      top: 0.6rem;
-      right: 0.6rem;
-      background: var(--accent);
-      color: #111;
-      border: none;
-      border-radius: 4px;
-      padding: 0.3rem 0.6rem;
-      cursor: pointer;
-      font-size: 0.85rem;
-      z-index: 2;
-      opacity: 0;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-    }
-    pre:hover .copy-btn { opacity: 1; }
-    .copy-btn:hover { transform: scale(1.1); }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 2.5rem 0;
-      background: var(--card);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 1rem 1.2rem;
-      text-align: left;
-      border-bottom: 1px solid #333;
-    }
-    th { background: #222; color: var(--accent); }
-    tr:hover { background: #2a2a2a; }
-    #content img {
-      max-width: 100%;
-      border-radius: 10px;
-      margin: 2rem auto;
-      display: block;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-    }
-    #content blockquote {
-      border-left: 4px solid var(--accent);
-      background: #1a1a1a;
-      padding: 1.2rem 1.5rem;
-      margin: 2rem 0;
-      font-style: italic;
-      color: #ccc;
-      border-radius: 6px;
-    }
-    .back-link {
-      display: inline-block;
-      margin-bottom: 2.5rem;
-      font-weight: bold;
-    }
-    .tooltip { position: relative; cursor: help; border-bottom: 1px dotted var(--link-color); }
-    .tooltip::after {
-      content: attr(data-tip);
-      position: absolute;
-      bottom: 125%; left: 50%;
-      transform: translateX(-50%);
-      background: var(--tooltip-bg);
-      color: #fff;
-      padding: 0.5rem 0.8rem;
-      border-radius: 4px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: 0.2s;
-      font-size: 0.8rem;
-    }
-    .tooltip:hover::after { opacity: 1; }
-    details summary {
-      cursor: pointer;
-      font-weight: bold;
-      color: var(--accent);
-      margin: 0.8rem 0;
-    }
-    .expand-btn {
-      background: var(--accent);
-      color: #111;
-      border: none;
-      border-radius: 4px;
-      padding: 0.4rem 0.8rem;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: bold;
-      margin-bottom: 0.8rem;
-    }
-    .expand-btn:hover { background: #3a9e40; }
-    .details-content { display: none; margin-top: 0.8rem; }
+  --accent: #4caf50;
+  --link-color: #ffeb3b;
+  --bg: #111;
+  --card: #1e1e1e;
+  --text: #eee;
+  --tooltip-bg: #222;
+}
+body {
+  background: linear-gradient(180deg, #111, #0b0b0b);
+  color: var(--text);
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+a { color: var(--link-color); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3 {
+  color: var(--accent);
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.6rem;
+}
+p { margin: 1.5rem 0; }
+pre {
+  background: #0d0d0d;
+  padding: 1.5rem;
+  border-left: 4px solid var(--accent);
+  overflow-x: auto;
+  border-radius: 8px;
+  margin: 2rem 0;
+  position: relative;
+}
+pre code { font-family: monospace; }
+.copy-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: var(--accent);
+  color: #111;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { transform: scale(1.1); }
+#content img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 2rem auto;
+  display: block;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+}
+#content blockquote {
+  border-left: 4px solid var(--accent);
+  background: #1a1a1a;
+  padding: 1.2rem 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #ccc;
+  border-radius: 6px;
+}
+.back-link {
+  display: inline-block;
+  margin-bottom: 2.5rem;
+  font-weight: bold;
+}
+.tooltip { position: relative; cursor: help; border-bottom: 1px dotted var(--link-color); }
+.tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 125%; left: 50%;
+  transform: translateX(-50%);
+  background: var(--tooltip-bg);
+  color: #fff;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s;
+  font-size: 0.8rem;
+}
+.tooltip:hover::after { opacity: 1; }
 
-    /* Timeline styles */
-    .table-wrapper {
-      display: flex;
-      align-items: flex-start;
-      gap: 2rem;
-    }
-    .timeline {
-      flex-shrink: 0;
-      position: relative;
-      height: auto;
-      min-height: 200px;
-      width: 60px;
-      margin-top: 1rem;
-    }
-    .line {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--accent);
-    }
-    .marker {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 10px;
-      height: 20px;
-      background: var(--accent);
-      border-radius: 3px;
-    }
-    .progress-count {
-      position: absolute;
-      bottom: -2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-weight: bold;
-      color: white;
-    }
+/* === Attack Chain Layout === */
+.attackchain-container {
+  display: flex;
+  gap: 2rem;
+  margin: 3rem 0;
+}
+.attackchain-left {
+  flex: 0 0 40%;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding-right: 1rem;
+  border-right: 1px solid #333;
+}
+.attackchain-right {
+  flex: 1;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding-left: 1rem;
+}
+.step {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--card);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.step:hover { background: #2a2a2a; }
+.step.active {
+  background: rgba(76, 175, 80, 0.2);
+  border-left: 4px solid var(--accent);
+}
+.details {
+  margin-bottom: 3rem;
+  padding: 1rem;
+  background: var(--card);
+  border-radius: 6px;
+}
+.details h3 {
+  margin-top: 0;
+  border: none;
+  padding-bottom: 0;
+}
+
   </style>
 </head>
 <body>
@@ -198,57 +173,90 @@ fetch("Previous.md")
 
     // Find attack chain table
     const tables = document.querySelectorAll('#content table');
-    if(tables.length) {
-      const table = tables[0]; // assuming first table is attack chain
+    if (tables.length) {
+      const table = tables[0];
       const rows = table.querySelectorAll('tbody tr');
 
-      // Build timeline (relevant to steps)
-      const total = rows.length;
-      const current = total; // mark all completed
-      const percentage = (current / total) * 100;
+      // Create container
+      const container = document.createElement('div');
+      container.className = 'attackchain-container';
+      const left = document.createElement('div');
+      left.className = 'attackchain-left';
+      const right = document.createElement('div');
+      right.className = 'attackchain-right';
+      container.appendChild(left);
+      container.appendChild(right);
 
-      const timeline = document.createElement('div');
-      timeline.className = 'timeline';
-      timeline.innerHTML = `
-        <div class="line"></div>
-        <div class="marker" style="top:${percentage}%"></div>
-        <div class="progress-count">${current} / ${total}</div>
-      `;
+      // Insert before table
+      table.parentNode.insertBefore(container, table);
+      table.style.display = "none"; // hide original table
 
-      // Wrap timeline + table in a flex container
-      const wrapper = document.createElement('div');
-      wrapper.className = 'table-wrapper';
-      table.parentNode.insertBefore(wrapper, table);
-      wrapper.appendChild(timeline);
-      wrapper.appendChild(table);
-
-      // Add expand/hide functionality
-      rows.forEach(row => {
+      // Build panels
+      rows.forEach((row, idx) => {
         const cells = row.querySelectorAll('td');
-        if(cells.length >= 6) {
-          const commandsCell = cells[4].innerText.split(';').map(c => `<pre><code>${c.trim()}</code></pre>`).join('');
-          const screenshotsCell = cells[5].innerText.split(',').map(s => `<img src="${s.trim()}" alt="screenshot">`).join('');
-          const detailsDiv = document.createElement('div');
-          detailsDiv.className = 'details-content';
-          detailsDiv.innerHTML = commandsCell + screenshotsCell;
+        if (cells.length >= 6) {
+          // LEFT summary
+          const stepDiv = document.createElement('div');
+          stepDiv.className = 'step';
+          stepDiv.dataset.index = idx;
+          stepDiv.innerHTML = `
+            <div><b>Step ${cells[0].innerText.trim()}</b></div>
+            <div>User / Access: ${cells[1].innerText.trim()}</div>
+            <div>Tools: ${cells[2].innerText.trim()}</div>
+          `;
+          left.appendChild(stepDiv);
 
-          const expandBtn = document.createElement('button');
-          expandBtn.className = 'expand-btn';
-          expandBtn.textContent = 'Show';
-          expandBtn.addEventListener('click', () => {
-            if(detailsDiv.style.display === 'block') {
-              detailsDiv.style.display = 'none';
-              expandBtn.textContent = 'Show';
-            } else {
-              detailsDiv.style.display = 'block';
-              expandBtn.textContent = 'Hide';
+          // RIGHT details
+          const detailsDiv = document.createElement('div');
+          detailsDiv.className = 'details';
+          detailsDiv.id = `details-${idx}`;
+          detailsDiv.innerHTML = `
+            <h3>Result</h3>
+            <p>${cells[3].innerText.trim()}</p>
+            ${cells[4].innerText
+              .split(';')
+              .map(cmd => `<pre><code>${cmd.trim()}</code></pre>`)
+              .join('')}
+            ${cells[5].innerText
+              .split(',')
+              .map(s => `<img src="${s.trim()}" alt="screenshot">`)
+              .join('')}
+          `;
+          right.appendChild(detailsDiv);
+        }
+      });
+
+      // Scroll sync with IntersectionObserver
+      const detailBlocks = right.querySelectorAll('.details');
+      const summaries = left.querySelectorAll('.step');
+
+      const observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const idx = [...detailBlocks].indexOf(entry.target);
+              summaries.forEach(s => s.classList.remove('active'));
+              if (summaries[idx]) {
+                summaries[idx].classList.add('active');
+                summaries[idx].scrollIntoView({ block: 'nearest' });
+              }
             }
           });
+        },
+        { root: right, threshold: 0.5 }
+      );
 
-          cells[5].innerHTML = '';
-          cells[5].appendChild(expandBtn);
-          cells[5].appendChild(detailsDiv);
-        }
+      detailBlocks.forEach(d => observer.observe(d));
+
+      // Click on left step → scroll right panel
+      summaries.forEach((s, idx) => {
+        s.addEventListener('click', () => {
+          const target = document.getElementById(`details-${idx}`);
+          right.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+          });
+        });
       });
     }
 
@@ -267,6 +275,7 @@ fetch("Previous.md")
       });
     });
   });
+
 </script>
 </body>
 </html>
