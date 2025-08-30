@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <style>
+<style>
 :root {
   --accent: #4caf50;
   --link-color: #ffeb3b;
@@ -26,6 +26,7 @@
   --tooltip-bg: #222;
 }
 
+/* === Base Styles === */
 body {
   background: linear-gradient(180deg, #111, #0b0b0b);
   color: var(--text);
@@ -36,10 +37,8 @@ body {
   line-height: 1.7;
   font-size: 1rem;
 }
-
 a { color: var(--link-color); text-decoration: none; }
 a:hover { text-decoration: underline; }
-
 h1, h2, h3 {
   color: var(--accent);
   margin-top: 3rem;
@@ -47,9 +46,7 @@ h1, h2, h3 {
   border-bottom: 1px solid #333;
   padding-bottom: 0.6rem;
 }
-
 p { margin: 1.5rem 0; }
-
 pre {
   background: #0d0d0d;
   padding: 1.5rem;
@@ -60,7 +57,6 @@ pre {
   position: relative;
 }
 pre code { font-family: monospace; }
-
 .copy-btn {
   position: absolute;
   top: 0.6rem;
@@ -78,7 +74,6 @@ pre code { font-family: monospace; }
 }
 pre:hover .copy-btn { opacity: 1; }
 .copy-btn:hover { transform: scale(1.1); }
-
 #content img {
   max-width: 100%;
   border-radius: 10px;
@@ -86,7 +81,6 @@ pre:hover .copy-btn { opacity: 1; }
   display: block;
   box-shadow: 0 6px 16px rgba(0,0,0,0.5);
 }
-
 #content blockquote {
   border-left: 4px solid var(--accent);
   background: #1a1a1a;
@@ -96,13 +90,11 @@ pre:hover .copy-btn { opacity: 1; }
   color: #ccc;
   border-radius: 6px;
 }
-
 .back-link {
   display: inline-block;
   margin-bottom: 2.5rem;
   font-weight: bold;
 }
-
 .tooltip { position: relative; cursor: help; border-bottom: 1px dotted var(--link-color); }
 .tooltip::after {
   content: attr(data-tip);
@@ -128,7 +120,7 @@ pre:hover .copy-btn { opacity: 1; }
   margin: 3rem 0;
 }
 
-/* Left Side (Steps) */
+/* Left Panel = Table of Contents */
 .attackchain-left {
   flex: 0 0 40%;
   position: sticky;
@@ -137,23 +129,14 @@ pre:hover .copy-btn { opacity: 1; }
   overflow-y: auto;
   padding-right: 1rem;
   border-right: 1px solid #333;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) #1a1a1a;
 }
-
-/* Right Side (Details/Results) */
-.attackchain-right {
-  flex: 1;
-  position: sticky;
-  top: 80px;
-  height: calc(100vh - 100px);
-  overflow-y: auto;
-  padding-left: 1rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) #1a1a1a;
+.attackchain-left h2 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: var(--accent);
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
 }
-
-/* Step Box (Left Panel) */
 .step {
   padding: 1rem;
   margin-bottom: 1rem;
@@ -162,37 +145,49 @@ pre:hover .copy-btn { opacity: 1; }
   cursor: pointer;
   transition: background 0.3s, max-height 0.4s ease;
   overflow: hidden;
-  max-height: 70px; /* collapsed */
 }
 .step:hover { background: #2a2a2a; }
 .step.active {
-  background: rgba(76, 175, 80, 0.15);
+  background: rgba(76, 175, 80, 0.2);
   border-left: 4px solid var(--accent);
-  max-height: 500px; /* expanded */
 }
-.step strong { display: block; margin-bottom: 0.4rem; color: var(--accent); }
-.step small { font-size: 0.9rem; color: #bbb; }
+.step-header {
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+}
+.step-meta {
+  font-size: 0.9rem;
+  color: #aaa;
+}
 
-/* Right Panel Details */
-.detail {
+/* Collapsible animation */
+.step.collapsed {
+  max-height: 2.2rem;
+}
+.step.expanded {
+  max-height: 300px; /* adjust depending on content */
+}
+
+/* Right Panel = Detailed Results */
+.attackchain-right {
+  flex: 1;
+  position: relative;
+  padding-left: 1rem;
+}
+.details {
   margin-bottom: 3rem;
-  padding: 1.2rem;
+  padding: 1rem;
   background: var(--card);
   border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 0.8;
+  scroll-margin-top: 100px; /* offset for sticky top */
 }
-.detail.active {
-  transform: scale(1.02);
-  opacity: 1;
-}
-.detail h3 {
+.details h3 {
   margin-top: 0;
   border: none;
   padding-bottom: 0;
 }
-  </style>
+</style>
+
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back to Home</a>
