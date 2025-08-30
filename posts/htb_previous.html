@@ -17,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
-    :root {
+:root {
   --accent: #4caf50;
   --link-color: #ffeb3b;
   --bg: #111;
@@ -25,6 +25,7 @@
   --text: #eee;
   --tooltip-bg: #222;
 }
+
 body {
   background: linear-gradient(180deg, #111, #0b0b0b);
   color: var(--text);
@@ -35,8 +36,10 @@ body {
   line-height: 1.7;
   font-size: 1rem;
 }
+
 a { color: var(--link-color); text-decoration: none; }
 a:hover { text-decoration: underline; }
+
 h1, h2, h3 {
   color: var(--accent);
   margin-top: 3rem;
@@ -44,7 +47,9 @@ h1, h2, h3 {
   border-bottom: 1px solid #333;
   padding-bottom: 0.6rem;
 }
+
 p { margin: 1.5rem 0; }
+
 pre {
   background: #0d0d0d;
   padding: 1.5rem;
@@ -55,6 +60,7 @@ pre {
   position: relative;
 }
 pre code { font-family: monospace; }
+
 .copy-btn {
   position: absolute;
   top: 0.6rem;
@@ -72,6 +78,7 @@ pre code { font-family: monospace; }
 }
 pre:hover .copy-btn { opacity: 1; }
 .copy-btn:hover { transform: scale(1.1); }
+
 #content img {
   max-width: 100%;
   border-radius: 10px;
@@ -79,6 +86,7 @@ pre:hover .copy-btn { opacity: 1; }
   display: block;
   box-shadow: 0 6px 16px rgba(0,0,0,0.5);
 }
+
 #content blockquote {
   border-left: 4px solid var(--accent);
   background: #1a1a1a;
@@ -88,11 +96,13 @@ pre:hover .copy-btn { opacity: 1; }
   color: #ccc;
   border-radius: 6px;
 }
+
 .back-link {
   display: inline-block;
   margin-bottom: 2.5rem;
   font-weight: bold;
 }
+
 .tooltip { position: relative; cursor: help; border-bottom: 1px dotted var(--link-color); }
 .tooltip::after {
   content: attr(data-tip);
@@ -117,6 +127,8 @@ pre:hover .copy-btn { opacity: 1; }
   gap: 2rem;
   margin: 3rem 0;
 }
+
+/* Left Side (Steps) */
 .attackchain-left {
   flex: 0 0 40%;
   position: sticky;
@@ -125,7 +137,11 @@ pre:hover .copy-btn { opacity: 1; }
   overflow-y: auto;
   padding-right: 1rem;
   border-right: 1px solid #333;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) #1a1a1a;
 }
+
+/* Right Side (Details/Results) */
 .attackchain-right {
   flex: 1;
   position: sticky;
@@ -133,33 +149,61 @@ pre:hover .copy-btn { opacity: 1; }
   height: calc(100vh - 100px);
   overflow-y: auto;
   padding-left: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) #1a1a1a;
 }
+
+/* Step Box */
 .step {
   padding: 1rem;
   margin-bottom: 1rem;
   background: var(--card);
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s, max-height 0.4s ease;
+  overflow: hidden;
+  max-height: 70px; /* collapsed */
 }
 .step:hover { background: #2a2a2a; }
 .step.active {
-  background: rgba(76, 175, 80, 0.2);
+  background: rgba(76, 175, 80, 0.15);
   border-left: 4px solid var(--accent);
+  max-height: 500px; /* expanded */
 }
+
+/* Step Title */
+.step-title {
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+  color: var(--accent);
+}
+.step-meta {
+  font-size: 0.9rem;
+  color: #bbb;
+  line-height: 1.4;
+}
+
+/* Right Side Details */
 .details {
   margin-bottom: 3rem;
-  padding: 1rem;
+  padding: 1.2rem;
   background: var(--card);
   border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0.8;
+}
+.details.active {
+  transform: scale(1.02);
+  opacity: 1;
 }
 .details h3 {
   margin-top: 0;
   border: none;
   padding-bottom: 0;
 }
+</style>
 
-  </style>
 </head>
 <body>
   <a href="../index.html" class="back-link">← Back to Home</a>
@@ -171,110 +215,77 @@ fetch("Previous.md")
   .then(md => {
     document.getElementById("content").innerHTML = marked.parse(md);
 
-    // Find attack chain table
-    const tables = document.querySelectorAll('#content table');
-    if (tables.length) {
-      const table = tables[0];
-      const rows = table.querySelectorAll('tbody tr');
+    const table = document.querySelector('#content table');
+if (table) {
+  const rows = Array.from(table.querySelectorAll('tbody tr'));
 
-      // Create container
-      const container = document.createElement('div');
-      container.className = 'attackchain-container';
-      const left = document.createElement('div');
-      left.className = 'attackchain-left';
-      const right = document.createElement('div');
-      right.className = 'attackchain-right';
-      container.appendChild(left);
-      container.appendChild(right);
+  // Create container
+  const container = document.createElement('div');
+  container.className = 'attackchain-container';
 
-      // Insert before table
-      table.parentNode.insertBefore(container, table);
-      table.style.display = "none"; // hide original table
+  const left = document.createElement('div');
+  left.className = 'attackchain-left';
+  const right = document.createElement('div');
+  right.className = 'attackchain-right';
 
-      // Build panels
-      rows.forEach((row, idx) => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 6) {
-          // LEFT summary
-          const stepDiv = document.createElement('div');
-          stepDiv.className = 'step';
-          stepDiv.dataset.index = idx;
-          stepDiv.innerHTML = `
-            <div><b>Step ${cells[0].innerText.trim()}</b></div>
-            <div>User / Access: ${cells[1].innerText.trim()}</div>
-            <div>Tools: ${cells[2].innerText.trim()}</div>
-          `;
-          left.appendChild(stepDiv);
+  rows.forEach((row, idx) => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length >= 4) {
+      const step = idx + 1;
+      const user = cells[1].innerText.trim();
+      const tool = cells[2].innerText.trim();
+      const result = cells[3].innerHTML.trim();
 
-          // RIGHT details
-          const detailsDiv = document.createElement('div');
-          detailsDiv.className = 'details';
-          detailsDiv.id = `details-${idx}`;
-          detailsDiv.innerHTML = `
-            <h3>Result</h3>
-            <p>${cells[3].innerText.trim()}</p>
-            ${cells[4].innerText
-              .split(';')
-              .map(cmd => `<pre><code>${cmd.trim()}</code></pre>`)
-              .join('')}
-            ${cells[5].innerText
-              .split(',')
-              .map(s => `<img src="${s.trim()}" alt="screenshot">`)
-              .join('')}
-          `;
-          right.appendChild(detailsDiv);
-        }
-      });
+      // Left step summary
+      const stepDiv = document.createElement('div');
+      stepDiv.className = 'step';
+      stepDiv.dataset.index = idx;
+      stepDiv.innerHTML = `<strong>Step ${step}</strong><br>${user}<br><small>${tool}</small>`;
+      left.appendChild(stepDiv);
 
-      // Scroll sync with IntersectionObserver
-      const detailBlocks = right.querySelectorAll('.details');
-      const summaries = left.querySelectorAll('.step');
-
-      const observer = new IntersectionObserver(
-        entries => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const idx = [...detailBlocks].indexOf(entry.target);
-              summaries.forEach(s => s.classList.remove('active'));
-              if (summaries[idx]) {
-                summaries[idx].classList.add('active');
-                summaries[idx].scrollIntoView({ block: 'nearest' });
-              }
-            }
-          });
-        },
-        { root: right, threshold: 0.5 }
-      );
-
-      detailBlocks.forEach(d => observer.observe(d));
-
-      // Click on left step → scroll right panel
-      summaries.forEach((s, idx) => {
-        s.addEventListener('click', () => {
-          const target = document.getElementById(`details-${idx}`);
-          right.scrollTo({
-            top: target.offsetTop,
-            behavior: 'smooth'
-          });
-        });
-      });
+      // Right detail
+      const detailDiv = document.createElement('div');
+      detailDiv.className = 'detail';
+      detailDiv.dataset.index = idx;
+      detailDiv.innerHTML = `<h3>Step ${step} – ${user}</h3><div>${result}</div>`;
+      right.appendChild(detailDiv);
     }
+  });
 
-    // Copy buttons for pre/code blocks
-    document.querySelectorAll('pre').forEach(block => {
-      const btn = document.createElement('button');
-      btn.textContent = '📋';
-      btn.className = 'copy-btn';
-      block.appendChild(btn);
-      btn.addEventListener('click', () => {
-        const code = block.querySelector("code") ? block.querySelector("code").innerText : block.innerText;
-        navigator.clipboard.writeText(code).then(() => {
-          btn.textContent = '✔';
-          setTimeout(() => btn.textContent = '📋', 1000);
-        });
-      });
+  container.appendChild(left);
+  container.appendChild(right);
+
+  // Replace old table
+  table.parentNode.replaceChild(container, table);
+
+  // Auto expand/collapse on scroll
+  const details = right.querySelectorAll('.detail');
+  const steps = left.querySelectorAll('.step');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = entry.target.dataset.index;
+        steps.forEach(s => s.classList.remove('active'));
+        details.forEach(d => d.classList.remove('active'));
+        steps[idx].classList.add('active');
+        details[idx].classList.add('active');
+        steps[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }, { threshold: 0.5 });
+
+  details.forEach(detail => observer.observe(detail));
+
+  // Allow clicking on step (left) to scroll right
+  steps.forEach(step => {
+    step.addEventListener('click', () => {
+      const idx = step.dataset.index;
+      details[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
+}
+
 
 </script>
 </body>
