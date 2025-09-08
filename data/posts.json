@@ -1,13 +1,12 @@
 [
   {
     "title": "HackTheBox: Guardian",
-    "href": "posts/htb_guardian.html",
+    "href": "posts/htb_Guardian.html",
     "date": "2025-08-28",
     "category": [
         "HackTheBox",
         "Linux",
-        "Web Application Security",
-        "Active Directory"
+        "Application Security"
     ],
     "tags": [
         "Subdomain Enumeration",
