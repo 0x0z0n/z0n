@@ -626,7 +626,7 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 
    * Create a small shell script that will escalate privileges by setting the SUID bit on `/bin/bash`.
 
-   ![Exploitation](Pictures/htb_guardian_Root_logic_priv.png)
+   
 
    <!-- end list -->
 
@@ -639,7 +639,7 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
    ```
 
    * Create a new Apache configuration file (`evil.inc`) in `/home/mark/confs/` that executes your script.
-
+![Exploitation](Pictures/htb_guardian_Root_logic_priv.png)
    <!-- end list -->
 
    ```bash
