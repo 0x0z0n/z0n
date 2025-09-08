@@ -135,7 +135,7 @@ Hints: True
       * Upload the `.xlsx` file to the portal's upload endpoint.
 
 
-3.  **CSRF (Admin):** When the Admin user views the uploaded spreadsheet, the XSS payload will fire, sending their session cookie to your listener.
+3.  **CSRF (Teacher):** When the Admin user views the uploaded spreadsheet, the XSS payload will fire, sending their session cookie to your listener.
       * Set up a netcat listener on your machine: `python -m http.server 80`.
       * The listener will capture the Teacher's `PHPSESSID`.
       ![Teacher_Owned](Pictures/htb_guardian_techer_session.png)
