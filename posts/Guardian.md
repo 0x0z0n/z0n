@@ -588,6 +588,7 @@ To elevate privileges from the **jamil** user to the **mark** user, you must exp
 ![Owned_Mark](Pictures/htb_guardian_owned_mark.png)
 
 View sudo
+
 ```
 mark@guardian:~$ sudo -l
 Matching Defaults entries for mark on guardian:
