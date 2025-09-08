@@ -1,5 +1,83 @@
 [
   {
+    "title": "HackTheBox: Guardian",
+    "href": "posts/htb_guardian.html",
+    "date": "2025-08-28",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Web Application Security",
+        "Active Directory"
+    ],
+    "tags": [
+        "Subdomain Enumeration",
+        "Information Disclosure (T1592)",
+        "Credential Reuse (T1550)",
+        "Cross-Site Scripting (XSS) (T1059)",
+        "Cross-Site Request Forgery (CSRF) (T1587)",
+        "Password Cracking (T1110.002)",
+        "Privilege Escalation (T1068)",
+        "SUID Binary Creation"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Enumeration & Information Gathering",
+            "result": "Discovered the 'portal.guardian.htb' subdomain from the main website's source code. The portal's help page disclosed the default student password format 'GUXXXX'.",
+            "mitigation": "Review public-facing web content to prevent unintentional information disclosure. Avoid hardcoding sensitive information like credentials or password formats."
+        },
+        {
+            "step": 2,
+            "user": "GU0142023",
+            "technique": "Credential Reuse & Information Gathering",
+            "result": "Used a student ID from the main site with the default password to log in. Brute-forcing a chat feature's 'chat_users' parameter led to a chat log revealing Gitea credentials for 'jamil.enockson'.",
+            "mitigation": "Implement robust credential policies and multi-factor authentication. Secure web application parameters and restrict user enumeration."
+        },
+        {
+            "step": 3,
+            "user": "jamil.enockson",
+            "technique": "Code Review",
+            "result": "Gained access to the Gitea repository, which exposed the source code for the student portal. The 'config.php' file contained the database credentials ('root:Gu4rd14nXXXXXXXXXXXXXXXX') and a password salt.",
+            "mitigation": "Adhere to best practices for secrets management. Never store credentials or other sensitive information in source code or version control systems."
+        },
+        {
+            "step": 4,
+            "user": "admin (via XSS)",
+            "technique": "Cross-Site Scripting (XSS) & Session Hijacking",
+            "result": "Exploited an XSS vulnerability in the spreadsheet upload feature by creating a malicious '.xlsx' file. When the admin viewed the file, their session cookie was sent to our listener.",
+            "mitigation": "Sanitize and validate all user-supplied input, especially file uploads. Implement a robust Content Security Policy (CSP) and use HttpOnly cookies to prevent client-side script access."
+        },
+        {
+            "step": 5,
+            "user": "attacker (via CSRF)",
+            "technique": "Cross-Site Request Forgery (CSRF)",
+            "result": "Analyzed the Gitea source code to identify a CSRF vulnerability where the token was never removed after use. Crafted a malicious HTML file with a valid token to create a new admin account.",
+            "mitigation": "Implement robust anti-CSRF token mechanisms that invalidate a token after each use. Ensure state-changing requests are properly protected with unique, per-session tokens."
+        },
+        {
+            "step": 6,
+            "user": "jamil",
+            "technique": "Password Cracking & Credential Reuse",
+            "result": "Used the database credentials from the code review to dump the 'users' table. Cracked the salted SHA256 hash for 'jamil.enockson' to find the password 'copperhouse56', which also granted SSH access as the user 'jamil'.",
+            "mitigation": "Force users to use strong, unique passwords and regularly rotate them. Implement a secure hashing algorithm with a unique salt for each password."
+        },
+        {
+            "step": 7,
+            "user": "mark",
+            "technique": "Privilege Escalation via Sudo",
+            "result": "Discovered that the 'jamil' user could run '/opt/scripts/utilities/utilities.py' as 'mark' via 'sudo -l'. Exploited group-write permissions on a dependency file ('status.py') to inject a reverse shell, granting a shell as 'mark'.",
+            "mitigation": "Apply the principle of least privilege. Strictly define sudo rules and avoid allowing powerful commands. Ensure script files and their dependencies have appropriate permissions to prevent unauthorized modification."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Binary Exploitation & Privilege Escalation",
+            "result": "Found that 'mark' could run '/usr/local/bin/safeapache2ctl' as 'root'. The binary had a flawed logic, allowing a malicious shared object file to be loaded via the '-f' flag. This granted a root shell.",
+            "mitigation": "Periodically audit and review all sudo permissions. Ensure system binaries are secure and cannot be exploited for privilege escalation. Implement integrity checks for critical system files."
+        }
+    ]
+},{
     "title": "HackTheBox: Previous",
     "href": "posts/htb_previous.html",
     "date": "2025-08-28",
