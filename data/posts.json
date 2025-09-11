@@ -1,5 +1,55 @@
 [
-  {
+  
+{
+    "title": "HackTheBox: Soulmate",
+    "href": "posts/htb_Soulmate.html",
+    "date": "2025-09-11",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security"
+    ],
+    "tags": [
+        "Subdomain Enumeration (T1583.003)",
+        "Exploiting Public-Facing Application (T1190)",
+        "Authentication Bypass (T1078.003)",
+        "Information Disclosure (T1592)",
+        "Credential Access (T1552.001)",
+        "Reverse Shell (T1059.004)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Enumeration & Subdomain Fuzzing",
+            "description": "Initial reconnaissance began with an **Nmap** scan to identify open ports, finding **22 (SSH)**, **80 (HTTP)**, and **8000 (HTTP-alt)**. A **Dirsearch** scan on the web server on port 80 revealed standard web application pages like `login.php` and `register.php`. The crucial step was **subdomain fuzzing** using `ffuf`, which exposed the `ftp.soulmate.htb` subdomain, pointing to an FTP service.",
+            "mitigation": "Regularly scan for and secure open ports. Ensure that all subdomains are properly configured and not exposing unnecessary services. Implement strict firewall rules to limit access to services that should only be available internally."
+        },
+        {
+            "step": 2,
+            "user": "z0n",
+            "technique": "Authentication Bypass",
+            "description": "The `ftp.soulmate.htb` subdomain was found to be running a vulnerable version of **CrushFTP**. A quick search led to a publicly available exploit for **CVE-2025-31161**, an authentication bypass vulnerability. This exploit was used to create a new user account, `hyh`, with a chosen password, granting initial access to the FTP panel.",
+            "mitigation": "Keep all software, especially public-facing services, updated to their latest versions to patch known vulnerabilities. Regularly monitor for newly disclosed CVEs related to your installed software."
+        },
+        {
+            "step": 3,
+            "user": "ben",
+            "technique": "Credential Access & Reverse Shell",
+            "description": "After gaining access to the FTP panel, a user management module was discovered. Through this module, the password for the existing user `ben` was changed. Logging in as `ben` revealed write access to the `/webProd` directory, which was the web root. A PHP **reverse shell** payload was uploaded to this directory, and executing it granted a low-privilege shell as the **`www-data`** user.",
+            "mitigation": "Adhere to the principle of least privilege. User accounts should only have the permissions necessary for their role. Restrict file uploads to non-executable directories and perform thorough validation on uploaded file types."
+        },
+        {
+            "step": 4,
+            "user": "root",
+            "technique": "Information Disclosure & Privilege Escalation",
+            "description": "From the `www-data` shell, a manual search of the file system revealed a custom Erlang script at `/usr/local/lib/erlang_login/start.escript`. This script contained a **hardcoded password** for the `ben` user, `HousXXXXXXXXXXXX`, which was used to gain SSH access. From the `ben` user's shell, a local port scan revealed an Erlang-based SSH service on port **2222**. Connecting to it with `nc` provided an interactive shell where executing `os:cmd(\"whoami\").` revealed that the service was running as **`root`**, completing the privilege escalation.",
+            "mitigation": "Never hardcode sensitive information like passwords in scripts or configuration files. Utilize a secure secrets management system. For privilege escalation, regularly audit custom services and binaries to ensure they are not exploitable and are running with the lowest possible privileges."
+        }
+    ]
+}
+  ,{
     "title": "HackTheBox: Guardian",
     "href": "posts/htb_Guardian.html",
     "date": "2025-08-28",
