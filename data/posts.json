@@ -1434,7 +1434,7 @@
 {
     "title": "HackTheBox: Environment",
     "href": "posts/htb_Environment.html",
-    "date": "2024-06-17",
+    "date": "2028-05-08",
     "category": [
         "HackTheBox",
         "Linux",
@@ -5319,6 +5319,69 @@
       }
     ]
   },
+  {
+    "title": "HackTheBox: Administrator",
+    "href": "posts/htb_Administrator.html",
+    "date": "2025-01-26",
+    "category": [
+        "HackTheBox",
+        "Windows"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Active Directory Enumeration (T1069.002)",
+        "Lateral Movement (T1021)",
+        "Password Spraying (T1110.003)",
+        "Password Cracking (T1110)",
+        "Targeted Kerberoasting (T1558.003)",
+        "DCSync (T1003.006)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port & Credentialed Enumeration",
+            "description": "Initial enumeration with **Nmap** revealed a Windows Active Directory environment. With the provided credentials for the `Olivia` account, **`crackmapexec`** was used to enumerate users and identify other accounts like `Michael` and `Benjamin`.",
+            "mitigation": "Limit public-facing services and conduct regular security audits. Enforce strong password policies to prevent credentials from being easily guessed or reused."
+        },
+        {
+            "step": 2,
+            "user": "Michael",
+            "technique": "Lateral Movement via Password Reset",
+            "description": "After analyzing domain relationships with **BloodHound**, a password reset chain was discovered: `Olivia` could reset `Michael`'s password, and `Michael` could reset `Benjamin`'s. **`bloodyAD`** was used to execute this chain and gain access to `Benjamin`'s account.",
+            "mitigation": "Implement the principle of least privilege. Regularly audit and review user permissions, especially those granting password reset rights. Utilize multi-factor authentication for sensitive accounts."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Password Cracking",
+            "description": "Using `Benjamin`'s new credentials, the **FTP** service was accessed, and an encrypted Password Safe file, `Backup.psafe3`, was downloaded. The file's master password was cracked offline using **`pwsafe2john`** and **`john`**, which revealed credentials for several users, including `Emily`.",
+            "mitigation": "Encrypt sensitive data at rest and ensure it is not stored in publicly accessible locations like an FTP share. Enforce strong master passwords for encrypted files."
+        },
+        {
+            "step": 4,
+            "user": "Emily",
+            "technique": "Privilege Escalation via Targeted Kerberoasting",
+            "description": "Leveraging **BloodHound**'s insights, it was discovered that `Emily` had write permissions to `Ethan`'s account. This was exploited by performing a **Targeted Kerberoasting** attack using `targetedKerberoast.py` to obtain a crackable Kerberos hash for the `Ethan` user.",
+            "mitigation": "Enforce the principle of least privilege for service accounts and users. Regularly audit permissions to identify and revoke excessive rights, particularly those related to writing user attributes."
+        },
+        {
+            "step": 5,
+            "user": "Administrator",
+            "technique": "DCSync Attack",
+            "description": "The cracked hash for `Ethan` was used to perform a **DCSync** attack with **`impacket-secretsdump`**. This technique abuses directory replication permissions to request and dump all user password hashes from the domain controller, including the NTLM hash for the `Administrator` account.",
+            "mitigation": "Implement fine-grained password policies and restrict directory replication permissions to only essential accounts. Monitor for unusual replication requests from non-domain controller accounts."
+        },
+        {
+            "step": 6,
+            "user": "Administrator",
+            "technique": "Hash-Based Login",
+            "description": "With the `Administrator`'s NTLM hash, a high-privileged shell was obtained on the domain controller using **`evil-winrm`**. This granted full administrative access and allowed for the retrieval of the final `root.txt` flag.",
+            "mitigation": "Use account logging and monitoring to detect suspicious login attempts, especially those using NTLM hashes. Consider disabling NTLM and enforcing Kerberos where possible."
+        }
+    ]
+},
 {
     "title": "HackTheBox: Backfire",
     "href": "posts/htb_Backfire.html",
