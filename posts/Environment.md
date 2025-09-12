@@ -1,11 +1,10 @@
 # Environment
 
-### 💻 Box Info
-
-| OS | Difficulty |
-| :-- | :--- |
-| **Linux** | **Medium** |
-
+```
+Difficulty: Medium
+Operating System: Linux
+Hints: True
+```
 
 ### 🏁 Summary of Attack Chain
 
