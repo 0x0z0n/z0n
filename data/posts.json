@@ -5318,5 +5318,314 @@
         ]
       }
     ]
-  }
+  },
+{
+    "title": "HackTheBox: Backfire",
+    "href": "posts/htb_Backfire.html",
+    "date": "2025-01-25",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Service Enumeration (T1046)",
+        "SSRF (T1210)",
+        "WebSocket Hijacking",
+        "Authentication Bypass (T1078)",
+        "Remote Code Execution (RCE) (T1059)",
+        "Persistence (T1505)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port & Service Enumeration",
+            "description": "Performed **Nmap** scan which revealed open ports: `22/tcp` (SSH), `443/tcp` (HTTPS), `5000/tcp` (filtered), and `8000/tcp` (HTTP). Identified that visiting `backfire.htb:8000` provided two files: `havoc.yaml` and `disable_tls.patch`.",
+            "mitigation": "Regularly scan exposed services and restrict service exposure to public internet where unnecessary."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Configuration Analysis",
+            "description": "Analyzed the `havoc.yaml` file and discovered plaintext credentials for users `ilya` and `sergej`. Attempted to connect to Havoc server but failed due to TLS requirement.",
+            "mitigation": "Avoid storing sensitive credentials in plaintext within configuration files. Use secure credential management solutions."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Vulnerability Research & Script Combining",
+            "description": "Identified public proof-of-concept scripts targeting **Havoc Framework SSRF & WebSocket command injection vulnerabilities**. Combined the two scripts to forge an agent registration and then upgrade to WebSocket communication for command injection.",
+            "mitigation": "Keep all frameworks and services updated. Harden WebSocket implementations and apply strict authentication checks."
+        },
+        {
+            "step": 4,
+            "user": "ilya",
+            "technique": "Agent Forging and WebSocket Injection",
+            "description": "Used the combined scripts to register a fake agent, open a socket, upgrade protocol to WebSocket, authenticate using known credentials, and execute commands through a crafted payload. Retrieved the `user.txt` flag after successful injection.",
+            "mitigation": "Authenticate and validate all incoming agent registrations. Avoid running insecure default configurations in production."
+        },
+        {
+            "step": 5,
+            "user": "ilya",
+            "technique": "Persistence via SSH Key Injection",
+            "description": "Appended attacker's public SSH key to `~/.ssh/authorized_keys` in the `ilya` account to maintain persistent access after the rebound shell disconnected.",
+            "mitigation": "Monitor for unauthorized additions to authorized_keys. Restrict use of shared accounts."
+        },
+        {
+            "step": 6,
+            "user": "sergej",
+            "technique": "Intranet Port Proxying & Admin User Creation",
+            "description": "SSH tunneled local ports `7096` and `5000` to access the HardHatC2 interface. Crafted a valid JWT using a known secret to bypass authentication and created a new `TeamLead` user `sth_pentest` with administrative privileges.",
+            "mitigation": "Use unique secrets per deployment. Enforce strict JWT validation and implement multi-factor authentication."
+        },
+        {
+            "step": 7,
+            "user": "sergej",
+            "technique": "Privilege Escalation via iptables Comment Injection",
+            "description": "Identified `iptables` privilege that allowed adding rules with comments. Injected a public SSH key into the iptables comment and then exported rules to `/root/.ssh/authorized_keys` to escalate to root.",
+            "mitigation": "Restrict iptables command execution to administrators only. Validate inputs in commands to prevent injection of arbitrary data."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Root Flag Retrieval",
+            "description": "Used the persistent SSH access to connect as root and retrieve the `root.txt` flag.",
+            "mitigation": "Implement proper privilege separation and auditing of critical file modifications."
+        }
+    ]
+},{
+    "title": "HackTheBox: Alert",
+    "href": "posts/htb_Alert.html",
+    "date": "2025-01-19",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Service Enumeration (T1046)",
+        "Cross-Site Scripting (XSS) (T1190)",
+        "Local File Inclusion (LFI) (T1505.003)",
+        "Password Cracking (T1110)",
+        "SSH Tunneling (T1090)",
+        "Cron Job Manipulation (T1053.001)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port & Subdomain Enumeration",
+            "description": "Initial enumeration with **Nmap** revealed open ports `22` (SSH) and `80` (HTTP). The web server on port `80` allowed markdown file uploads, suggesting a potential XSS vulnerability. A subsequent **`ffuf`** scan for subdomains discovered `statistics.alert.htb`.",
+            "mitigation": "Perform regular vulnerability scans and audits to identify open ports and services. Secure web applications to prevent information disclosure through subdomain enumeration."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "XSS to LFI Chaining",
+            "description": "Exploited a **stored XSS** vulnerability by uploading a malicious markdown file. The payload used JavaScript to force the administrator's browser to visit an internal `messages` page and exfiltrate the HTML content. This revealed a **Local File Inclusion (LFI)** vulnerability via a `file` parameter in `messages.php`.",
+            "mitigation": "Implement a strong Content Security Policy (CSP) to mitigate XSS attacks. Sanitize and validate all user-submitted content to prevent the execution of malicious scripts."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Directory Traversal & Password Cracking",
+            "description": "A new XSS payload was used to exploit the LFI, using directory traversal (`../../`) to read the Apache `.htpasswd` file from the `statistics` subdomain. This file contained the hash for the user `albert`. **John the Ripper** was used to crack the hash, yielding the password for `albert`.",
+            "mitigation": "Restrict file access permissions to prevent directory traversal. Avoid storing sensitive files in web-accessible directories and use secure authentication mechanisms."
+        },
+        {
+            "step": 4,
+            "user": "albert",
+            "technique": "Initial Shell Access via SSH",
+            "description": "The cracked password was used to log into the machine via **SSH** as `albert`. The `user.txt` flag was located and retrieved.",
+            "mitigation": "Enforce a robust password policy to prevent weak passwords that are easily crackable with common wordlists. Implement account lockout policies for failed login attempts."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Privilege Escalation via Cron Job",
+            "description": "Enumeration with `linpeas` revealed a local service on port `8080` and a writable directory `/opt/Website_Monitor/`. A cron job was found to execute PHP files in this directory as **root**. A reverse shell payload was crafted and placed in this directory.",
+            "mitigation": "Adhere to the principle of least privilege. Ensure that cron jobs and scripts run with the minimum necessary permissions. Regularly audit cron jobs and file permissions to prevent unauthorized modifications."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "SSH Tunneling & Reverse Shell",
+            "description": "An **SSH tunnel** was used to forward the local port `8080` to the attacker's machine. A Netcat listener was set up to catch the shell. When the cron job executed the malicious PHP file, a reverse shell was initiated, granting `root` privileges and allowing for the retrieval of the `root.txt` flag.",
+            "mitigation": "Monitor for unusual network activity, such as outbound connections from internal services. Implement intrusion detection systems to alert on suspicious behavior like unexpected reverse shells."
+        }
+    ]
+},
+{
+    "title": "HackTheBox: Cicada",
+    "href": "posts/htb_Cicada.html",
+    "date": "2025-01-15",
+    "category": [
+        "HackTheBox",
+        "Windows"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Service Enumeration (T1046)",
+        "SMB Enumeration (T1046)",
+        "RID Brute Force (T1087.001)",
+        "File Analysis (T1589.001)",
+        "Password Discovery (T1552.001)",
+        "Privilege Escalation (T1068)",
+        "SeBackupPrivilege Exploitation (T1046)",
+        "Pass-the-Hash (T1550.002)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port & Service Enumeration",
+            "description": "Initial enumeration began with a **TCP Nmap** scan, revealing open ports, including `445`, which runs the **SMB** (Server Message Block) service. A subsequent **`smbclient`** connection to the host confirmed the presence of an unsecured share, where a file containing a **default password** was discovered.",
+            "mitigation": "Regularly audit network shares to ensure they are properly secured and do not allow unauthorized or anonymous access. Remove any sensitive information, especially passwords, from public-facing files."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "RID Brute-Forcing",
+            "description": "Used **`enum4linux-ng`** to perform a **RID brute-force** attack, which successfully enumerated a valid username `Michael.wrightson`. This user, combined with the default password, was used to discover another user, `david`, on the system.",
+            "mitigation": "Restrict or disable anonymous access to RID lookups. Implement strong account lockout policies to prevent brute-force attacks on user accounts."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "File Analysis & Password Discovery",
+            "description": "Authenticated to the SMB share using the newly found `david` credentials. Explored the directories and located a **PowerShell backup script**. Analysis of the script revealed a hardcoded, plaintext password for a new user, `emily.oscars`.",
+            "mitigation": "Avoid storing plaintext passwords in scripts or configuration files. Use a secure vault or secrets management solution to handle credentials. Implement code review processes to catch such vulnerabilities."
+        },
+        {
+            "step": 4,
+            "user": "emily.oscars",
+            "technique": "Initial Shell Access",
+            "description": "Gained an initial foothold by using the `emily.oscars` credentials with **`evil-winrm`**. This granted a low-privileged shell on the machine, from which the `user.txt` flag was retrieved.",
+            "mitigation": "Enforce strong password policies that require a mix of characters and regularly audit privileged accounts. Monitor and log remote access attempts to detect suspicious activity."
+        },
+        {
+            "step": 5,
+            "user": "Administrator",
+            "technique": "Privilege Escalation",
+            "description": "Identified the `SeBackupPrivilege` from a `whoami /all` check. This privilege was exploited by using **`evil-winrm`** to download the `SAM` and `SYSTEM` registry hives. The **`pypykatz`** tool was then used to extract the `Administrator` account's NTLM hash. The hash was used for a **pass-the-hash** attack, logging in as `Administrator` and retrieving the `root.txt` flag.",
+            "mitigation": "Regularly audit user privileges to ensure the principle of least privilege is followed. Disable unnecessary privileges. Ensure privileged registry hives are not accessible, even with backup privileges."
+        }
+    ]
+},
+{
+    "title": "HackTheBox: LinkVortex",
+    "href": "posts/htb_LinkVortex.html",
+    "date": "2025-01-14",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Subdomain Enumeration (T1583.003)",
+        "Git Leak (T1592)",
+        "Information Disclosure (T1592)",
+        "Password Reuse (T1078.001)",
+        "Credential Access (T1078)",
+        "File Read Vulnerability (T1592.001)",
+        "Privilege Escalation (T1068)",
+        "Sudo Misconfiguration (T1548.003)",
+        "Symbolic Link Exploitation"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Subdomain Fuzzing",
+            "description": "Initial reconnaissance with **Nmap** identified open ports `22` (SSH) and `80` (HTTP). The HTTP server was running **Apache**. Subdomain fuzzing with **ffuf** revealed the existence of `dev.linkvortex.htb`.",
+            "mitigation": "Ensure proper firewall rules are in place to only expose necessary services. Use a wildcard DNS entry to prevent easy subdomain discovery."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Git Leak Exploitation",
+            "description": "A directory scan on the `dev.linkvortex.htb` subdomain revealed a publicly accessible `.git` directory. The entire Git repository was cloned using **GitHack**, providing access to all files, including past commits and configuration files.",
+            "mitigation": "Do not expose `.git` directories on production or development web servers. Remove all sensitive files before deploying to a public-facing environment."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Information Disclosure & Credential Harvesting",
+            "description": "Analysis of the leaked Git repository exposed sensitive files, including a `config.production.json`. This file contained credentials for the `Ghost CMS` (`admin`:`OctopiFociPilfer45`) and `SMTP` credentials (`bob`:`fibber-talented-worth`).",
+            "mitigation": "Use environment variables or a secrets management system to store credentials. Avoid hardcoding sensitive information in configuration files."
+        },
+        {
+            "step": 4,
+            "user": "bob",
+            "technique": "SSH Login",
+            "description": "The leaked `SMTP` credentials from the `config.production.json` file were used to log in via **SSH** as the user `bob`, successfully gaining access to a user shell on the machine.",
+            "mitigation": "Employ unique credentials for different services. Do not reuse passwords across multiple platforms."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Privilege Escalation via Sudo Misconfiguration",
+            "description": "Running `sudo -l` revealed that `bob` could execute `/usr/bin/bash /opt/ghost/clean_symlink.sh *.png` with `sudo` privileges. The script was vulnerable to a symbolic link chain attack, which allowed for the bypass of its path filtering and the reading of arbitrary files, including `/root/root.txt`.",
+            "mitigation": "Apply the principle of least privilege by strictly limiting `sudo` permissions. Ensure scripts that handle files are robustly secured against symbolic link attacks and other file manipulation techniques."
+        }
+    ]
+},
+{
+    "title": "HackTheBox: Underpass",
+    "href": "posts/htb_Underpass.html",
+    "date": "2025-01-14",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Service Enumeration (T1046)",
+        "SNMP Enumeration (T1046)",
+        "Information Disclosure (T1592)",
+        "Password Cracking (T1110)",
+        "Privilege Escalation (T1068)",
+        "Sudo Misconfiguration (T1548.003)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port & Service Enumeration",
+            "description": "Initial enumeration began with a **TCP Nmap** scan, revealing open ports `22` (SSH) and `80` (HTTP). A subsequent **UDP scan** discovered port `161`, which was running the **SNMP** (Simple Network Management Protocol) service.",
+            "mitigation": "Perform regular vulnerability scans and audits to identify and secure all open ports. Ensure that non-essential services like SNMP are not publicly exposed."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "SNMP & Directory Enumeration",
+            "description": "Using `snmp-check`, host and user information (`steve@underpass.htb`) were revealed, along with the mention of a **daloradius** server. A **directory brute-force** of the `/daloradius` path led to the discovery of the `docker-compose.yml` file, which contained sensitive credentials for the database.",
+            "mitigation": "Avoid storing plaintext credentials in configuration files. Implement a secure secrets management system. Conduct thorough reviews of public-facing files to prevent information disclosure."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Credential Access & Password Cracking",
+            "description": "The default credentials for `daloradius` were found in the online documentation, granting access to the operator panel. The user list in the panel contained a user with an **MD5 password hash**. **John the Ripper** was used to crack this hash, yielding the password `underwaterfriends` for the user `svcMosh`.",
+            "mitigation": "Never use default credentials. Enforce strong password policies for all user accounts and use a robust hashing algorithm like Argon2 or bcrypt to store credentials."
+        },
+        {
+            "step": 4,
+            "user": "svcMosh",
+            "technique": "SSH Login & Privileged Command Discovery",
+            "description": "The cracked password was used to log into the machine via **SSH** as `svcMosh`. Running `sudo -l` revealed that `svcMosh` could execute the `/usr/bin/mosh-server` command with `sudo` privileges without a password.",
+            "mitigation": "Practice the principle of least privilege. Audit `sudo` permissions regularly to ensure users can only run commands necessary for their role and avoid configurations that allow passwordless `sudo`."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Privilege Escalation via `mosh-server`",
+            "description": "The `sudo` misconfiguration was exploited by using the `mosh` command with the `--server` flag (`mosh --server=\"sudo /usr/bin/mosh-server\" localhost`). This allowed the user to execute `mosh-server` with `root` privileges on the local machine, resulting in a **privileged shell**.",
+            "mitigation": "Restrict the use of privileged binaries. Implement proper security configurations and conduct regular security audits of all system settings and files."
+        }
+    ]
+}
 ]
