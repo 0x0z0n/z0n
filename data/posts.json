@@ -1321,10 +1321,64 @@
       }
     ]
   },
+{
+    "title": "HackTheBox: Eureka",
+    "href": "posts/htb_Eureka.html",
+    "date": "2025-04-29",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Information Disclosure (T1592)",
+        "Credential Access (T1552.001)",
+        "SSRF (T0801)",
+        "Command Injection (T1059.004)",
+        "Privilege Escalation (T1068)",
+        "Cron Job (T1053.003)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Enumeration & Information Disclosure",
+            "description": "Initial reconnaissance with Nmap and Nuclei revealed open ports and an exposed `/actuator/heapdump` endpoint. Downloading this **Java heap dump** provided multiple plaintext credentials, including for SSH and an internal Eureka service.",
+            "mitigation": "Restrict access to all API endpoints, especially those that expose sensitive application data. Implement proper authentication and authorization for all services. Avoid storing credentials in plaintext within application memory or configuration files."
+        },
+        {
+            "step": 2,
+            "user": "oscar190",
+            "technique": "SSH Access & Port Forwarding",
+            "description": "Used the discovered credentials (`oscar190:0sc@r190_S0l!dP@sswd`) to gain an initial shell via SSH. Further enumeration showed an internal service on port 8761, which was the Eureka server. An SSH port forward (`ssh -L 8761:127.0.0.1:8761 oscar190@furni.htb`) was used to access this service locally.",
+            "mitigation": "Enforce strong password policies and multi-factor authentication for SSH. Use network segmentation to prevent direct access to internal services from the internet or less-privileged users."
+        },
+        {
+            "step": 3,
+            "user": "miranda-wise",
+            "technique": "Service-Side Request Forgery (SSRF)",
+            "description": "The **Eureka server** was exploited by registering a fake microservice. Since Eureka is a service discovery tool, the legitimate application attempted to communicate with our fake service instance, effectively performing an **SSRF** and disclosing login credentials for the `miranda-wise` user.",
+            "mitigation": "Configure Eureka to require authentication for service registration. Implement stricter security policies for inter-service communication to prevent unauthorized data exposure. Regularly audit and monitor API calls to the service registry."
+        },
+        {
+            "step": 4,
+            "user": "root",
+            "technique": "Command Injection & Cron Job Manipulation",
+            "description": "After switching to the `miranda-wise` user, a thorough filesystem search revealed a script (`log_analyse.sh`) with a **command injection vulnerability**. The `miranda-wise` user, being part of the `developers` group, had write permissions to the log file that the script processed. A malicious payload was injected into this log file, which would create a SUID binary of `/bin/bash`.",
+            "mitigation": "Perform regular code audits to identify and patch command injection vulnerabilities. Adhere to the principle of least privilege, ensuring scripts run with the minimal required permissions. Implement file integrity monitoring to detect unauthorized modifications to sensitive files."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Cron Job Execution",
+            "description": "The system had a cron job that executed the `log_analyse.sh` script as the **`root`** user. This execution triggered the payload in the log file, creating the SUID binary. Running the new binary (`/tmp/bash`) granted a privileged shell, allowing access to the `root.txt` flag.",
+            "mitigation": "Use robust logging and alerting to identify suspicious activity, such as the creation of new scheduled tasks or file permission changes. Avoid processing untrusted input in privileged scripts. "
+        }
+    ]
+},
   {
     "title": "HackTheBox: Planning",
     "href": "posts/htb_Planning.html",
-    "date": "2025-05-26",
+    "date": "2025-05-12",
     "category": [
         "HackTheBox",
         "Linux",
@@ -1374,6 +1428,62 @@
             "technique": "Cron Job Execution",
             "description": "The newly created cron job was executed by the system, running as the **`root`** user. This granted a final privileged shell, allowing access to the `root.txt` flag.",
             "mitigation": "Implement file integrity monitoring to detect unauthorized changes to system files and cron jobs. Use robust logging and alerting to identify suspicious activity, such as the creation of new scheduled tasks."
+        }
+    ]
+},
+{
+    "title": "HackTheBox: Environment",
+    "href": "posts/htb_Environment.html",
+    "date": "2024-06-17",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security"
+    ],
+    "tags": [
+        "Reconnaissance (T1592)",
+        "Application Login Bypass (T1078)",
+        "Web Shell (T1505.003)",
+        "File Upload Vulnerability (T1614)",
+        "Credential Access (T1552.001)",
+        "Privilege Escalation (T1068)",
+        "Environment Variables (T1562.004)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Enumeration & Information Disclosure",
+            "description": "Initial reconnaissance with **Nmap** and **Dirsearch** identified open ports 22 (SSH) and 80 (HTTP). The web server on port 80 hosted a Laravel application. An attempted login revealed an information disclosure vulnerability, leaking a portion of the application's source code within the error message.",
+            "mitigation": "Configure web servers to not display verbose error messages or stack traces to users. Use a custom error page to prevent information leakage that could aid attackers."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Application Login Bypass",
+            "description": "The leaked source code indicated that if the application's environment was set to `preprod`, it would automatically log in a user with `user_id = 1`. This was a known Laravel vulnerability. I bypassed the login by adding a query string parameter `--env=preprod` to the URL, gaining access to the admin panel without credentials.",
+            "mitigation": "Regularly audit application code for insecure configurations, especially those that can be manipulated by user input. Avoid hardcoding logic that grants privileged access based on non-validated parameters."
+        },
+        {
+            "step": 3,
+            "user": "www-data",
+            "technique": "File Upload Vulnerability",
+            "description": "Within the admin panel, a file upload feature was found. I attempted to upload a webshell. The server downloaded the file instead of executing it. A bypass was discovered by adding a dot at the end of the filename (`.php.`), which bypassed the file extension validation and tricked the server into executing the PHP code. This granted a reverse shell as the `www-data` user.",
+            "mitigation": "Implement strict file type validation using magic bytes, not just file extensions. Use a robust file-naming scheme and store uploaded files outside of the web-accessible directory. Ensure proper server configuration to prevent misinterpretation of file extensions."
+        },
+        {
+            "step": 4,
+            "user": "hish",
+            "technique": "GPG Key Decryption & Credential Access",
+            "description": "Enumeration of the `hish` user's home directory revealed a GPG-encrypted file, `keyvault.gpg`, and the `.gnupg` directory with the necessary keys. The `www-data` user had read permissions on these files. By copying the GPG home directory to a writable location, I decrypted the file and recovered `hish`'s password from the plaintext content.",
+            "mitigation": "Enforce the principle of least privilege, ensuring user files and keys are not readable by other users, especially by unprivileged web server users. Store passwords and secrets in a secure vault, not in encrypted files with easily accessible keys."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Sudo Environment Variable Bypass",
+            "description": "After gaining SSH access as `hish`, I checked `sudo` permissions. The `hish` user could run `/usr/bin/systeminfo` as `root` while keeping the `BASH_ENV` environment variable. By setting `BASH_ENV` to a shell script containing a privileged `bash -p` command, I exploited this configuration to obtain a root shell.",
+            "mitigation": "Carefully audit `sudoers` files for insecure configurations, especially those that allow environment variables to be preserved. Follow the principle of least privilege, and avoid granting users the ability to run privileged commands with retained environment variables."
         }
     ]
 },
