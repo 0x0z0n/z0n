@@ -339,7 +339,8 @@
     "date": "2025-08-10",
     "category": [
       "HackTheBox",
-      "Sherlock"
+      "Sherlock",
+      "Analysis"
     ],
     "tags": [
       "Credential Dumping from LSASS Memory (T1003.001)",
@@ -942,7 +943,7 @@
     "date": "2025-07-20",
     "category": [
       "TryHackMe",
-      "Adentures"
+      "Analysis"
     ],
     "tags": [
       "Exiftool",
@@ -990,7 +991,7 @@
     "date": "2025-07-20",
     "category": [
       "TryHackMe",
-      "Adentures"
+      "Analysis"
     ],
     "tags": [
       "PromptInjection",
