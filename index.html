@@ -520,7 +520,7 @@ html[data-theme="light"] .search-box input {
       function renderPosts(posts) {
         postsContainer.innerHTML = "";
         if (posts.length === 0) {
-          postsContainer.innerHTML = " < p > No posts found. < /p>";
+          postsContainer.innerHTML = "No posts found.";
           return;
         }
         posts.forEach(post => {
