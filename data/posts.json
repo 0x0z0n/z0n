@@ -1322,6 +1322,62 @@
     ]
   },
   {
+    "title": "HackTheBox: Planning",
+    "href": "posts/htb_Planning.html",
+    "date": "2025-05-26",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "DevSecOps"
+    ],
+    "tags": [
+        "Subdomain Enumeration (T1583.003)",
+        "Exploiting Public-Facing Application (T1190)",
+        "Information Disclosure (T1592)",
+        "Credential Access (T1552.001)",
+        "Reverse Shell (T1059.004)",
+        "Privilege Escalation (T1068)",
+        "Cron Job (T1053.003)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Enumeration & Subdomain Fuzzing",
+            "description": "Initial reconnaissance began with an **Nmap** scan to identify open ports, finding **22 (SSH)** and **80 (HTTP)**. The web server on port 80 redirected to `planning.htb`, requiring a host file entry. Using `ffuf`, a **subdomain fuzzing** scan revealed `grafana.planning.htb` as a key entry point.",
+            "mitigation": "Regularly scan for and secure open ports. Ensure all subdomains are properly configured and not exposing unnecessary services. Implement strict firewall rules to limit access."
+        },
+        {
+            "step": 2,
+            "user": "root",
+            "technique": "Exploiting Public-Facing Application & Docker Escape",
+            "description": "A **Grafana** instance was running on the discovered subdomain. Using the provided credentials, a vulnerability in Grafana v11.0.0 (**CVE-2024-9264**) was exploited to gain a shell. The shell was inside a Docker container, but by checking environment variables (`env`), plaintext credentials for the host user `enzo` were found (`enzo:RioTecRANDEntANT!`).",
+            "mitigation": "Keep all software, especially public-facing services, updated. Utilize a secure secrets management system and avoid storing sensitive information like passwords in environment variables."
+        },
+        {
+            "step": 3,
+            "user": "enzo",
+            "technique": "SSH Access & Port Forwarding",
+            "description": "The discovered credentials were used to **SSH** into the host machine as `enzo`, providing access to the user flag. Further enumeration revealed a local service on port 8000. **SSH port forwarding** (`ssh -L 8000:127.0.0.1:8000 enzo@planning.htb`) was used to access the service from the local machine.",
+            "mitigation": "Enforce strong password policies and multi-factor authentication for SSH. Restrict access to internal services by implementing proper network segmentation and firewalls."
+        },
+        {
+            "step": 4,
+            "user": "root",
+            "technique": "Information Disclosure & Cron Job Manipulation",
+            "description": "The web service on port 8000 required credentials. A manual search of the filesystem revealed a `crontab.db` file containing the password `P4ssw0rdS0pRi0T3c` for a Grafana backup. This password was used with the username `root` to log into the web interface, which was a cron job management panel. A new cron job with a **reverse shell** command was added.",
+            "mitigation": "Avoid storing sensitive information in plaintext files. Regularly audit configuration and database files for hardcoded secrets. Follow the principle of least privilege, ensuring services and applications do not have unnecessary write access or the ability to create new privileged tasks."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Cron Job Execution",
+            "description": "The newly created cron job was executed by the system, running as the **`root`** user. This granted a final privileged shell, allowing access to the `root.txt` flag.",
+            "mitigation": "Implement file integrity monitoring to detect unauthorized changes to system files and cron jobs. Use robust logging and alerting to identify suspicious activity, such as the creation of new scheduled tasks."
+        }
+    ]
+},
+  {
     "title": "HackTheBox: Academy",
     "href": "posts/htb_Academy.html",
     "date": "2025-07-20",
