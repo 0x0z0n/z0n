@@ -1434,7 +1434,7 @@
 {
     "title": "HackTheBox: Environment",
     "href": "posts/htb_Environment.html",
-    "date": "2028-05-08",
+    "date": "2025-05-08",
     "category": [
         "HackTheBox",
         "Linux",
@@ -5318,7 +5318,151 @@
         ]
       }
     ]
-  },
+  },{
+    "title": "HackTheBox: BigBang",
+    "href": "posts/htb_BigBang.html",
+    "date": "2025-02-01",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security",
+        "DevSecOps",
+        "Android"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Service Enumeration (T1046)",
+        "Password Cracking (T1110)",
+        "Web Application Enumeration (T1595)",
+        "Local File Inclusion (T1140)",
+        "Command Injection (T1059)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Service Enumeration",
+            "description": "Performed enumeration using **netstat** to identify services listening only on localhost: ports `3000` (Grafana) and `9090` (custom Python app). Also identified MySQL on port `3306`, SSH (`22`), and HTTP (`80`).",
+            "mitigation": "Restrict access to internal services using firewall rules or bind them to internal networks only."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Grafana Database Access",
+            "description": "Discovered Grafana data stored in `/opt/data/grafana.db`. Copied the database locally and extracted user data. Found `developer` account with a password hash and salt stored in the user table.",
+            "mitigation": "Secure sensitive data storage and avoid reusing credentials across services."
+        },
+        {
+            "step": 3,
+            "user": "developer",
+            "technique": "Password Hash Cracking",
+            "description": "Used a custom script to convert Grafana hash and salt into a hashcat-compatible format. Cracked the `developer` password using **hashcat** and `rockyou.txt`. Password was revealed as `bigbang`.",
+            "mitigation": "Enforce strong password policies and use multi-factor authentication."
+        },
+        {
+            "step": 4,
+            "user": "developer",
+            "technique": "SSH Access & Privilege Enumeration",
+            "description": "Used the cracked password to SSH into the box as `developer`. Discovered an APK file `satellite-app.apk` in the home directory.",
+            "mitigation": "Avoid storing sensitive files like APKs in user home directories without proper permissions."
+        },
+        {
+            "step": 5,
+            "user": "developer",
+            "technique": "APK Reversal & API Analysis",
+            "description": "Reversed `satellite-app.apk` using **jadx** to analyze its code. Identified API endpoints at `/login` and `/command`, and a Bearer token authentication mechanism.",
+            "mitigation": "Obfuscate sensitive API logic and enforce strong token security."
+        },
+        {
+            "step": 6,
+            "user": "developer",
+            "technique": "Authentication Token Retrieval",
+            "description": "Obtained an authentication token by submitting `developer` credentials (`bigbang`) to the `/login` endpoint. Saved token for further exploitation.",
+            "mitigation": "Use rate limiting, monitoring, and strong credential policies to protect login endpoints."
+        },
+        {
+            "step": 7,
+            "user": "developer",
+            "technique": "Command Injection via API",
+            "description": "Exploited a command injection vulnerability in the `/command` endpoint by injecting a newline character to execute arbitrary commands, e.g., `ping` to confirm code execution and later to copy `/bin/bash` to `/tmp/0xdf` with SetUID permissions.",
+            "mitigation": "Sanitize and validate all input parameters. Avoid using shell=True in subprocess calls with user-supplied data."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Privilege Escalation via SetUID Bash",
+            "description": "Executed the SetUID bash binary to obtain a root shell. Verified by running `id` and `cat /root/root.txt` to read the flag.",
+            "mitigation": "Restrict use of SetUID binaries and regularly audit files with elevated privileges."
+        }
+    ]
+}
+,
+{
+    "title": "HackTheBox: Instant",
+    "href": "posts/htb_Instant.html",
+    "date": "2025-01-29",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security",
+        "Android"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "APK Analysis (T1498.001)",
+        "JWT Token Manipulation (T1098.001)",
+        "Directory Traversal (T1059.004)",
+        "File Exfiltration (T1021.002)",
+        "SSH Key Abuse (T1078)",
+        "Password Decryption (T1003)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Subdomain Enumeration",
+            "description": "Initial enumeration with **Nmap** revealed ports `22` (SSH) and `80` (HTTP). The website offered an Android application package (**APK**), which was decompiled to discover two subdomains, `mywalletv1.instant.htb` and `swagger-ui.instant.htb`, in the `network_security_config.xml` file.",
+            "mitigation": "Perform regular security audits of all application files, including those embedded in mobile applications, to prevent the leakage of internal information and hostnames. Restrict public access to non-essential subdomains."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "JWT Token Manipulation",
+            "description": "The **`swagger-ui`** subdomain hosted an API. A hardcoded, privileged JWT token for the `Admin` role was discovered within the decompiled APK source code, granting access to protected API endpoints.",
+            "mitigation": "Avoid hardcoding sensitive information like JWT tokens, API keys, or credentials directly into application code. Use a secure configuration management system to store secrets."
+        },
+        {
+            "step": 3,
+            "user": "shirohige",
+            "technique": "Arbitrary File Read via Directory Traversal",
+            "description": "A **directory traversal** vulnerability was found in the `/api/v1/admin/read/log` API endpoint. This flaw was exploited to read arbitrary files from the server's file system, which was used to first enumerate the `/etc/passwd` file and then exfiltrate the `shirohige` user's private SSH key from `/home/shirohige/.ssh/id_rsa`.",
+            "mitigation": "Implement robust input validation and sanitization on all file-related parameters to prevent directory traversal attacks. Use a whitelist approach to restrict file access to an allowed set of directories."
+        },
+        {
+            "step": 4,
+            "user": "shirohige",
+            "technique": "SSH Key-Based Login",
+            "description": "The exfiltrated SSH private key was used to successfully log in to the server as the `shirohige` user, gaining the initial foothold and access to the `user.txt` flag.",
+            "mitigation": "Regularly rotate SSH keys and ensure they are not stored in locations accessible to unprivileged users. Monitor for unusual login attempts."
+        },
+        {
+            "step": 5,
+            "user": "root",
+            "technique": "Password Decryption",
+            "description": "A `Solar-Putty` backup file (`sessions-backup.dat`) was discovered in the `/opt` directory. The contents of the file were decrypted using a publicly available Python script, which revealed the cleartext password for the `root` user.",
+            "mitigation": "Do not store credentials, especially those for administrative accounts, in configuration or backup files. If storage is necessary, use a secure, encrypted vault and restrict access to the highest-privileged users. Encrypt sensitive data at rest and in transit."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "User Switching",
+            "description": "The decrypted `root` password was used with the `su` command to switch to the `root` user, granting full administrative privileges and allowing for the retrieval of the final `root.txt` flag.",
+            "mitigation": "Enforce strong password policies for all users, especially administrators. Implement multi-factor authentication (MFA) to prevent unauthorized access even if a password is leaked or cracked."
+        }
+    ]
+},
   {
     "title": "HackTheBox: Administrator",
     "href": "posts/htb_Administrator.html",
