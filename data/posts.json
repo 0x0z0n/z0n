@@ -5319,6 +5319,239 @@
       }
     ]
   },{
+    "title": "HackTheBox: Nocturnal",
+    "href": "posts/htb_Nocturnal.html",
+    "date": "2025-04-20",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Username Enumeration (T1087)",
+        "File Analysis (T1005)",
+        "Password Cracking (T1110)",
+        "Command Injection (T1059)",
+        "SSH Local Port Forwarding (T1572)",
+        "CVE-2023-46818 Exploit (T1210)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Service Enumeration",
+            "description": "Performed enumeration using **Nmap** and discovered HTTP (port 80) and SSH (port 22) services.",
+            "mitigation": "Restrict public service exposure and enforce proper firewall rules."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Username Enumeration",
+            "description": "Used **ffuf** to enumerate valid usernames via the URL parameter on `view.php`. Discovered `admin`, `amanda`, and `tobias`.",
+            "mitigation": "Implement proper authentication error messages and rate-limiting to prevent username enumeration."
+        },
+        {
+            "step": 3,
+            "user": "amanda",
+            "technique": "File Analysis",
+            "description": "Downloaded `privacy.odt` from Amanda’s account, decompressed it, and extracted Amanda's password.",
+            "mitigation": "Secure sensitive files and encrypt stored data."
+        },
+        {
+            "step": 4,
+            "user": "tobias",
+            "technique": "Database Backup & Password Cracking",
+            "description": "Logged into backend using Amanda’s credentials, created a backup, downloaded the database, and cracked Tobias's password from the hashes.",
+            "mitigation": "Avoid password reuse and implement strong hashing algorithms for credential storage."
+        },
+        {
+            "step": 5,
+            "user": "www-data",
+            "technique": "Command Injection via Backup Function",
+            "description": "Exploited insufficient input sanitization in the zip backup password field using URL encoding (`%0a`, `%09`) to execute shell commands and exfiltrate the database.",
+            "mitigation": "Properly sanitize and validate all user inputs before command execution."
+        },
+        {
+            "step": 6,
+            "user": "N/A",
+            "technique": "SSH Local Port Forwarding",
+            "description": "Forwarded intranet service on port 8080 via SSH tunnel to access internal ISPConfig service locally.",
+            "mitigation": "Restrict internal services from being accessed remotely and use VPNs for admin access."
+        },
+        {
+            "step": 7,
+            "user": "root",
+            "technique": "ISPConfig CVE-2023-46818 Exploit",
+            "description": "Exploited a code injection vulnerability in ISPConfig (CVE-2023-46818) to execute commands as root and gain full system access.",
+            "mitigation": "Keep software up-to-date and apply vendor security patches promptly."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Root Flag Retrieval",
+            "description": "After gaining root shell, retrieved the root flag from `/root/root.txt`.",
+            "mitigation": "Audit privileged accounts and implement proper access control."
+        }
+    ]
+}
+,{
+    "title": "HackTheBox: Code",
+    "href": "posts/htb_Code.html",
+    "date": "2025-03-31",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "SSTI Injection (T1505)",
+        "Reverse Shell (T1059)",
+        "Credential Dumping (T1003)",
+        "Password Cracking (T1110)",
+        "Sudo Exploitation (T1166)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Service Enumeration",
+            "description": "Performed enumeration using **Nmap** to discover open ports. Identified ports `22` (SSH) and `5000` (Python Gunicorn HTTP service).",
+            "mitigation": "Close unused ports and restrict access to services using firewalls and network segmentation."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "SSTI Injection",
+            "description": "Discovered a Python code editor web application at port `5000`. Found an SSTI vulnerability allowing injection of Python expressions by bypassing keyword filtering. Used the following payload to execute system commands: `print(''.__class__.__bases__[0].__subclasses__()[80].__init__.__globals__['__builtins__']['eval']('__import__(\"os\").popen(\"ls /\").read()'))`.",
+            "mitigation": "Disable arbitrary code execution features and sanitize user input properly."
+        },
+        {
+            "step": 3,
+            "user": "www-data",
+            "technique": "Reverse Shell Deployment",
+            "description": "Used the SSTI vulnerability to download and execute a reverse shell script hosted on attacker machine, resulting in a shell as `www-data`.",
+            "mitigation": "Restrict external network access and disable arbitrary code execution."
+        },
+        {
+            "step": 4,
+            "user": "www-data",
+            "technique": "Credential Dumping",
+            "description": "Found `database.db` in `/app/instance/`. Extracted user Martin's password hash for later cracking.",
+            "mitigation": "Store secrets securely and limit file access permissions."
+        },
+        {
+            "step": 5,
+            "user": "www-data",
+            "technique": "Password Hash Cracking",
+            "description": "Used **John the Ripper** with rockyou.txt to crack Martin's password hash from the `database.db`. Recovered the password for `martin`.",
+            "mitigation": "Enforce strong password policies and multi-factor authentication."
+        },
+        {
+            "step": 6,
+            "user": "martin",
+            "technique": "SSH Access",
+            "description": "Logged in as `martin` using the cracked password. Found `user.txt` in `/home/martin/`.",
+            "mitigation": "Avoid password reuse and monitor SSH logins."
+        },
+        {
+            "step": 7,
+            "user": "root",
+            "technique": "Sudo Script Exploitation",
+            "description": "Ran `sudo -l` as `martin`, found `backy.sh` could be run without a password. The script processes a JSON file and performs a backup operation, allowing directory traversal via specially crafted JSON input. Crafted `task.json` to back up `/root/` directory.",
+            "mitigation": "Avoid NOPASSWD sudo rules for scripts. Validate input properly."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Privilege Escalation & Root Flag Retrieval",
+            "description": "After running the vulnerable script with crafted `task.json`, obtained the root flag from the backed-up data.",
+            "mitigation": "Restrict script usage and validate file paths rigorously."
+        }
+    ]
+}
+,{
+    "title": "HackTheBox: Dog",
+    "href": "posts/htb_Dog.html",
+    "date": "2025-05-12",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Git Repository Exposure (T1595)",
+        "Credential Disclosure (T1552)",
+        "CMS Module Upload (T1505)",
+        "Reverse Shell (T1059)",
+        "Credential Reuse (T1110)",
+        "Custom Sudo Command (T1548)",
+        "Command Injection (T1059)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Service Enumeration",
+            "description": "Performed enumeration using **Nmap** and discovered HTTP (port 80), SSH (port 22), and an exposed `.git` repository in the web root.",
+            "mitigation": "Disable directory listing and restrict access to sensitive directories like `.git`."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Git Repository Dumping",
+            "description": "Used **git-dumper** to download the full `.git` repository. Discovered the existence of a user `tiffany` and database credentials: `root:BackDropJ2024DS2024`.",
+            "mitigation": "Prevent exposing `.git` directories by disabling access at the webserver level."
+        },
+        {
+            "step": 3,
+            "user": "tiffany",
+            "technique": "CMS Admin Login",
+            "description": "Logged into Backdrop CMS admin dashboard using credentials:\n- Username: `tiffany`\n- Password: `BackDropJ2024DS2024`",
+            "mitigation": "Use strong, unique credentials and implement rate-limiting on login endpoints."
+        },
+        {
+            "step": 4,
+            "user": "www-data",
+            "technique": "Malicious Module Upload",
+            "description": "Uploaded a custom Backdrop CMS module containing a reverse shell payload. Enabled the module to trigger code execution and obtain a reverse shell as `www-data`.",
+            "mitigation": "Restrict module upload functionality to trusted sources and validate uploaded content."
+        },
+        {
+            "step": 5,
+            "user": "johncusack",
+            "technique": "Credential Reuse",
+            "description": "Extracted a user `johncusack` and attempted login. Successfully logged in using the same database password `BackDropJ2024DS2024`.",
+            "mitigation": "Avoid password reuse across services and implement multi-factor authentication."
+        },
+        {
+            "step": 6,
+            "user": "root",
+            "technique": "Sudo with Custom CLI Tool",
+            "description": "Discovered a custom CLI tool `/usr/local/bin/bee` configured in `sudoers` for `johncusack`. The tool executes arbitrary PHP code via eval-like function.",
+            "mitigation": "Avoid granting unrestricted sudo rights for custom scripts. Audit and remove unsafe eval-like constructs."
+        },
+        {
+            "step": 7,
+            "user": "root",
+            "technique": "Arbitrary Code Execution via eval",
+            "description": "Executed the following command to spawn a root shell:\n```bash\nsudo /usr/local/bin/bee eval 'system("/bin/bash");'\n```",
+            "mitigation": "Restrict and audit use of eval functionality. Enforce proper input validation."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Root Flag Retrieval",
+            "description": "After gaining root shell, retrieved the root flag from `/root/root.txt`.",
+            "mitigation": "Implement regular audits of privileged accounts and commands."
+        }
+    ]
+}
+,{
     "title": "HackTheBox: Titanic",
     "href": "posts/htb_Titanic.html",
     "date": "2025-02-19",
