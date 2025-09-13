@@ -5319,6 +5319,83 @@
       }
     ]
   },{
+    "title": "HackTheBox: Cat",
+    "href": "posts/htb_Cat.html",
+    "date": "2025-03-03",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Git Repository Exposure (T1609)",
+        "Cross-Site Scripting (XSS) (T1192)",
+        "SQL Injection (T1505.003)",
+        "Password Harvesting (T1110)",
+        "Insecure Log Management (T1071.001)",
+        "Local Port Forwarding (T1572)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning",
+            "description": "Performed initial enumeration with **Nmap**. Found open ports `22` (SSH) and `80` (HTTP). The HTTP service redirected to a WordPress site running at `cat.htb`.",
+            "mitigation": "Restrict unnecessary services, block unused ports with firewalls, and apply regular security assessments."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Git Repository Leak",
+            "description": "Discovered a `.git` directory exposed at `http://cat.htb/.git/`. Used **`git-dumper`** to retrieve the full repository, revealing the application's source code.",
+            "mitigation": "Ensure `.git` directories are not publicly accessible by configuring web server rules and removing version control data from production environments."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Cross-Site Scripting (XSS)",
+            "description": "Identified an XSS injection point in `view_cat.php`. The username parameter was directly output without sanitization. Crafted a malicious image upload to inject a payload that sent cookies to an external server when viewed by the administrator.",
+            "mitigation": "Always sanitize user input and apply proper Content Security Policy (CSP). Avoid direct output of user-provided content."
+        },
+        {
+            "step": 4,
+            "user": "rosa",
+            "technique": "SQL Injection on SQLite",
+            "description": "Located a vulnerable endpoint in `accept_cat.php` that concatenated SQL queries without sanitizing input. Used **`sqlmap`** to automate blind SQL injection and dumped the `users` table, retrieving credentials for the `rosa` user.",
+            "mitigation": "Use prepared statements with parameterized queries. Avoid direct concatenation of user inputs in SQL statements."
+        },
+        {
+            "step": 5,
+            "user": "axel",
+            "technique": "Credential Harvesting via Apache Logs",
+            "description": "The web login used HTTP GET, which caused credentials to appear in Apache logs. Extracted `axel`'s password from the logs, then logged in to obtain `user.txt`.",
+            "mitigation": "Transmit sensitive data using POST, and enable HTTPS. Ensure sensitive data is not logged."
+        },
+        {
+            "step": 6,
+            "user": "N/A",
+            "technique": "Local Port Forwarding",
+            "description": "Discovered an internal service running on port `3000`. Forwarded this port over SSH to local machine for further inspection, revealing a **Gitea service (version 1.22.0)**.",
+            "mitigation": "Restrict internal services to localhost or VPN. Implement network segmentation."
+        },
+        {
+            "step": 7,
+            "user": "N/A",
+            "technique": "Stored XSS in Gitea (CVE-2024-6886)",
+            "description": "Exploited a known Stored XSS vulnerability in Gitea 1.22.0. Injected a crafted payload into the mail system, causing the administrator to execute arbitrary JavaScript which accessed the employee-management repository and exfiltrated sensitive data.",
+            "mitigation": "Apply latest security patches and avoid using vulnerable software versions. Sanitize user inputs rigorously."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Sensitive Data Exposure",
+            "description": "The index.php of the employee-management repository contained the password needed for root escalation. Retrieved it and used it to obtain `root.txt`.",
+            "mitigation": "Avoid storing sensitive information in source files. Use environment variables or secure vaults."
+        }
+    ]
+}
+,{
     "title": "HackTheBox: BigBang",
     "href": "posts/htb_BigBang.html",
     "date": "2025-02-01",
