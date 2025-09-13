@@ -5319,6 +5319,92 @@
       }
     ]
   },{
+    "title": "HackTheBox: Heal",
+    "href": "posts/htb_Heal.html",
+    "date": "2025-09-13",
+    "category": [
+        "HackTheBox",
+        "Linux"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Subdomain Enumeration (T1590)",
+        "Directory Fuzzing (T1083)",
+        "Arbitrary File Read (T1005)",
+        "Password Cracking (T1110)",
+        "Remote Code Execution (T1059)",
+        "SSH Local Port Forwarding (T1572)",
+        "Consul RCE Exploit (T1210)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning & Service Enumeration",
+            "description": "Performed enumeration using **Nmap** and discovered HTTP (port 80) and SSH (port 22) services running on the target.",
+            "mitigation": "Restrict public service exposure and enforce firewall rules."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Subdomain Enumeration",
+            "description": "Used **ffuf** to enumerate subdomains. Discovered `api.heal.htb` and `take-survey.heal.htb` and added them to `/etc/hosts` for further access.",
+            "mitigation": "Restrict DNS responses and prevent unauthorized subdomain exposure."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Directory Fuzzing",
+            "description": "Performed **dirsearch** on `take-survey.heal.htb` and found admin panel and phpMyAdmin directories.",
+            "mitigation": "Restrict access to sensitive admin directories and enforce authentication."
+        },
+        {
+            "step": 4,
+            "user": "ralph",
+            "technique": "Arbitrary File Read & Credential Discovery",
+            "description": "Exploited `/download` route to read `/etc/passwd` and Rails config/database files, extracting Ralph's password hash and later cracking it.",
+            "mitigation": "Validate and sanitize all file download inputs to prevent path traversal."
+        },
+        {
+            "step": 5,
+            "user": "ron",
+            "technique": "SSH Login Using Discovered Credentials",
+            "description": "Used Ralph’s password to log in as `ron` via SSH since the same password worked for multiple users.",
+            "mitigation": "Enforce unique passwords and implement MFA for SSH logins."
+        },
+        {
+            "step": 6,
+            "user": "www-data",
+            "technique": "LimeSurvey Plugin Upload & RCE",
+            "description": "Uploaded a malicious LimeSurvey plugin (modified for v6.0 compatibility) containing a PHP reverse shell. Activated the plugin to execute commands and access database configurations.",
+            "mitigation": "Restrict plugin uploads to trusted sources and validate uploaded content."
+        },
+        {
+            "step": 7,
+            "user": "ron",
+            "technique": "SSH Local Port Forwarding",
+            "description": "Forwarded internal Consul port 8500 via SSH to local machine for local exploitation of services.",
+            "mitigation": "Restrict internal services from being exposed externally and use VPNs for access."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "HashiCorp Consul RCE Exploit",
+            "description": "Exploited **HashiCorp Consul v1.19.2 RCE** using the forwarded local port to spawn a root shell.",
+            "mitigation": "Keep services up-to-date, review ACL tokens, and patch known vulnerabilities."
+        },
+        {
+            "step": 9,
+            "user": "root",
+            "technique": "Root Flag Retrieval",
+            "description": "After obtaining root shell via Consul RCE, retrieved the root flag from `/root/root.txt`.",
+            "mitigation": "Audit privileged accounts and implement proper access control for critical systems."
+        }
+    ]
+}
+
+  ,{
     "title": "HackTheBox: Nocturnal",
     "href": "posts/htb_Nocturnal.html",
     "date": "2025-04-20",
