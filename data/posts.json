@@ -5319,6 +5319,84 @@
       }
     ]
   },{
+    "title": "HackTheBox: Titanic",
+    "href": "posts/htb_Titanic.html",
+    "date": "2025-02-19",
+    "category": [
+        "HackTheBox",
+        "Linux",
+        "Application Security"
+    ],
+    "tags": [
+        "Port Scanning (T1046)",
+        "Directory Traversal (T1105)",
+        "Subdomain Fuzzing (T1595)",
+        "Database Dumping (T1213)",
+        "Password Cracking (T1110)",
+        "Local File Inclusion (T1140)",
+        "Code Injection (T1059)",
+        "Privilege Escalation (T1068)"
+    ],
+    "attack_path": [
+        {
+            "step": 1,
+            "user": "N/A",
+            "technique": "Port Scanning",
+            "description": "Performed initial enumeration using **Nmap** to discover open ports. Identified ports `22` (SSH) and `80` (HTTP).",
+            "mitigation": "Close unused ports and restrict access to SSH with firewalls and IP whitelisting."
+        },
+        {
+            "step": 2,
+            "user": "N/A",
+            "technique": "Directory Traversal to Read Files",
+            "description": "Analyzed HTTP requests using **Burp Suite** and found a vulnerable `ticket` parameter in `download` endpoint. Used it to read `/home/developer/user.txt` via directory traversal: `../../../../../../../home/developer/user.txt`.",
+            "mitigation": "Validate and sanitize file path parameters to prevent directory traversal attacks."
+        },
+        {
+            "step": 3,
+            "user": "N/A",
+            "technique": "Subdomain Fuzzing & Gitea Discovery",
+            "description": "Added `dev.titanic.htb` to `/etc/hosts`. Found an internal Gitea service version `1.22.1` running at the subdomain.",
+            "mitigation": "Restrict access to internal services and disable subdomain exposure unless required."
+        },
+        {
+            "step": 4,
+            "user": "N/A",
+            "technique": "Gitea Database Dumping",
+            "description": "Abused the same directory traversal in `download` to exfiltrate the Gitea SQLite database file: `../../../../../../home/developer/gitea/data/gitea/gitea.db`.",
+            "mitigation": "Harden web application endpoints and avoid exposing internal files."
+        },
+        {
+            "step": 5,
+            "user": "developer",
+            "technique": "Password Cracking (pbkdf2)",
+            "description": "Extracted password hash and salt from the Gitea database. Used a custom Python script to brute-force the developer's password from a dictionary file (`rockyou.txt`).",
+            "mitigation": "Use strong password policies and enforce multi-factor authentication."
+        },
+        {
+            "step": 6,
+            "user": "developer",
+            "technique": "SSH Access",
+            "description": "Logged in as `developer` using the cracked password. Found `user.txt` in `/home/developer/`.",
+            "mitigation": "Restrict credential reuse and monitor login attempts."
+        },
+        {
+            "step": 7,
+            "user": "root",
+            "technique": "ImageMagick Arbitrary Code Execution",
+            "description": "Analyzed `/opt/scripts/identify_image.sh`. Discovered a vulnerability in how `libxcb.so.1` could be loaded by ImageMagick when processing images. Compiled a malicious shared library to exfiltrate `root.txt` to `/tmp/rootflag`.",
+            "mitigation": "Use updated versions of vulnerable libraries. Sanitize environment variables and use secure temp directories."
+        },
+        {
+            "step": 8,
+            "user": "root",
+            "technique": "Root Flag Retrieval",
+            "description": "After the vulnerable script executed, retrieved `root.txt` from `/tmp/rootflag`.",
+            "mitigation": "Use strict file and process permissions, and audit scheduled or automated scripts."
+        }
+    ]
+}
+,{
     "title": "HackTheBox: Cat",
     "href": "posts/htb_Cat.html",
     "date": "2025-03-03",
