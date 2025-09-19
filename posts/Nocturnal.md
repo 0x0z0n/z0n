@@ -34,8 +34,7 @@ Hints: True
 | 22/tcp | open  | ssh     | OpenSSH 8.2p1 Ubuntu 4ubuntu0.12 |
 | 80/tcp | open  | http    | nginx 1.18.0 (Ubuntu)            |
 
-* HTTP title: `Welcome to Nocturnal`
-* Cookie `PHPSESSID` is **not httponly**.
+
 
 ---
 
@@ -149,10 +148,3 @@ ssh tobias@nocturnal.htb -L 9090:127.0.0.1:8080
 * Always sanitize user input properly for command execution.
 * Backup files and database exports can leak credentials if not protected.
 * Internal services can provide privilege escalation paths when exposed internally.
-
-```
-
-This Markdown keeps the **attack flow structured**, includes **commands, outputs, and vulnerabilities**, and separates **user** and **root** stages.  
-
-If you want, I can also **add a small attack-chain table at the top** for quick reference like your other HTB writeups. It would make it even cleaner. Do you want me to do that?
-```
