@@ -1,6 +1,83 @@
 [
   
 {
+   "title": "HackTheBox: Expressway",
+   "href": "posts/htb_Expressway.html",
+   "date": "2025-09-26",
+   "category": [
+      "HackTheBox",
+      "Linux",
+      "Network"
+   ],
+   "tags": [
+      "Network Service Discovery (T1046)",
+      "UDP Scanning (T1046.002)",
+      "IKEv1 Aggressive Mode PSK Crack",
+      "Credential Access (T1552)",
+      "SSH Login (T1078)",
+      "Exploit Public-Facing Service (T1190)",
+      "Privilege Escalation (T1068)",
+      "Sudo Chroot / NSS Abuse (CVE-2025-32463)"
+   ],
+   "attack_path": [
+      {
+         "step": 1,
+         "user": "N/A",
+         "technique": "TCP + UDP Reconnaissance",
+         "description": "Initial discovery with `nmap -sVC` returned only **22/tcp (SSH)**. An expanded UDP scan (`nmap -sU --top-ports 100`) revealed **500/udp (isakmp)** and **4500/udp (nat-t-ike)** — indicating an IPsec/IKE endpoint — plus TFTP (69/udp) and DHCP (68/udp).",
+         "mitigation": "Don’t expose unused UDP services. Restrict UDP-only services (IKE/TFTP/DHCP) with ACLs and firewall rules. Monitor and alert on unusual IKE activity."
+      },
+      {
+         "step": 2,
+         "user": "N/A",
+         "technique": "IKE Enumeration (ike-scan Aggressive Mode)",
+         "description": "Ran `ike-scan -M --aggressive` which returned an Aggressive Mode handshake and an ID of `ike@expressway.htb` plus a 20-byte verification hash and SA parameters (3DES/SHA1/modp1024). Aggressive Mode leaks the ID and enough context to enable offline PSK verification.",
+         "mitigation": "Disable IKEv1 Aggressive Mode; prefer IKEv2 with certificate auth. If PSKs are required, enforce long, high-entropy secrets and rotate them."
+      },
+      {
+         "step": 3,
+         "user": "N/A",
+         "technique": "Offline PSK Cracking (psk-crack / hashcat -m 530)",
+         "description": "Exported the Aggressive-mode blob (including the ID) and cracked the PSK offline using `psk-crack` with a wordlist (rockyou). The PSK was recovered because it was a human-memorable password present in the list.",
+         "mitigation": "Use high-entropy PSKs or, better, certificate-based authentication. Do not reuse VPN PSKs as user passwords; enforce unique credentials per service."
+      },
+      {
+         "step": 4,
+         "user": "ike",
+         "technique": "Credential Use / SSH Login",
+         "description": "Reused the cracked PSK as credentials (SSH/VPN) and obtained a shell as the `ike` user. Verified user context and collected initial system information and files.",
+         "mitigation": "Block trivial credential reuse by enforcing password policies and MFA where applicable. Log and alert on external logins using VPN/SSH credentials."
+      },
+      {
+         "step": 5,
+         "user": "ike",
+         "technique": "Local Enumeration",
+         "description": "Enumerated local binaries and packages. `sudo --version` revealed **Sudo 1.9.17**, which is vulnerable to **CVE-2025-32463** (chroot/NSS handling). This pointed to a local privilege escalation vector via `sudo -R` handling.",
+         "mitigation": "Keep sudo up to date. Monitor for use of `sudo -R` and unexpected chroot invocations. Limit which users can run `sudo` and audit `sudoers` entries."
+      },
+      {
+         "step": 6,
+         "user": "ike",
+         "technique": "Exploit Preparation — Malicious libnss + chroot tree",
+         "description": "Prepared a PoC: compiled a shared object (`libnss_/kai_ht.so.2`) with an `-init` function that elevates privileges and spawns a shell, created a fake chroot tree (`pentest/etc/nsswitch.conf`) pointing to the malicious `kai_ht` NSS module, and copied minimal required config files into the chroot.",
+         "mitigation": "Disallow writing libraries or sensitive files in world-writable directories. Enforce file integrity monitoring and restrict compilation/execution of arbitrary native code by non-privileged users."
+      },
+      {
+         "step": 7,
+         "user": "ike → root",
+         "technique": "Sudo chroot / NSS Abuse (CVE-2025-32463)",
+         "description": "Executed the PoC: `sudo -R pentest pentest`. The vulnerable chroot handling caused the chrooted environment to load the attacker-controlled NSS library, whose initializer executed `setreuid(0,0); setregid(0,0); execl(\"/bin/bash\", ...)`, yielding a root shell.",
+         "mitigation": "Apply vendor patches that address CVE-2025-32463. Avoid `sudo -R` patterns where possible. Ensure the runtime does not load attacker-controlled shared objects during privilege operations."
+      },
+      {
+         "step": 8,
+         "user": "root",
+         "technique": "Post-exploit / Flag Retrieval",
+         "description": "With a root shell obtained via the PoC, the attacker read sensitive files and retrieved `root.txt`, completing full system compromise.",
+         "mitigation": "Harden host monitoring for suspicious root shells, unusual `sudo` usage, and creation of shared objects in transient directories. Employ host-based detection to flag privilege escalation attempts and anomalous binary loading."
+      }
+   ]
+},{
     "title": "HackTheBox: Soulmate",
     "href": "posts/htb_Soulmate.html",
     "date": "2025-09-11",
