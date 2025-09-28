@@ -1,6 +1,93 @@
 [
   
 {
+  "title": "HackTheBox: HackNet",
+  "href": "posts/htb_HackNet.html",
+  "date": "2025-09-28",
+  "category": [
+    "HackTheBox",
+    "Linux",
+    "Web"
+  ],
+  "tags": [
+    "Network Service Discovery (T1046)",
+    "Web Application Fingerprinting",
+    "Server-Side Template Leakage",
+    "Credential Harvesting (T1555)",
+    "Cache Poisoning (Django FileBasedCache)",
+    "Untrusted Deserialization (Pickle) (T1203)",
+    "Post-Exploitation Enumeration",
+    "Credential Reuse / Key Import",
+    "GPG Key Abuse",
+    "Privilege Escalation / Root Access"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Nmap / Recon",
+      "description": "Performed an initial host scan (`nmap -A`) and discovered `22/tcp` (OpenSSH) and `80/tcp` (HTTP — nginx). The HTTP title and application responses indicated a Django-based social network (\"HackNet\").",
+      "mitigation": "Limit unnecessary service exposure; firewall unused ports; present minimal server banners and use up-to-date service software."
+    },
+    {
+      "step": 2,
+      "user": "N/A",
+      "technique": "Application fingerprinting (Django)",
+      "description": "Enumerated web endpoints and application behavior (register, profile edits, like, likes listing). Confirmed app used Django templates (DTL) and identified endpoints that render user-controlled fields into views.",
+      "mitigation": "Harden application endpoints, perform secure code review, and avoid rendering raw user content in templates. Implement strict output encoding and context-aware escaping."
+    },
+    {
+      "step": 3,
+      "user": "attacker (web)",
+      "technique": "Template-context leakage (rendered `users`)",
+      "description": "Controlled a username to include `{{ users }}` / `{{ users.values }}` such that the template rendered internal QuerySet contents in the likes list. This leaked structured user records (field dictionaries) into HTML (e.g., inside `img` title attributes).",
+      "mitigation": "Disallow or sanitize template-sensitive characters in usernames and user-supplied fields. Use a whitelist for profile content and avoid dumping raw context objects to the UI."
+    },
+    {
+      "step": 4,
+      "user": "attacker (web)",
+      "technique": "Automated scraping of leaked fields",
+      "description": "Automated liking of posts and scraped the likes pages for the rendered content (e.g., `img` title attributes) to extract `'email'` and `'password'` fields from `users.values`, harvesting many site credentials programmatically.",
+      "mitigation": "Sanitize or redact sensitive fields before rendering. Implement rate-limiting and anomaly detection on repetitive actions (likes, profile edits) and monitor for automated scraping behavior."
+    },
+    {
+      "step": 5,
+      "user": "attacker",
+      "technique": "Credentials enumeration / access",
+      "description": "Validated harvested credentials; some email prefixes mapped to site/login accounts. Used valid credentials to access site functionality, locate interesting paths and files, and identify potential local users and assets (user.txt).",
+      "mitigation": "Enforce strong password policies, MFA, unique secrets per service, and logging/alerting on credential reuse or suspicious login patterns."
+    },
+    {
+      "step": 6,
+      "user": "attacker (www-data?)",
+      "technique": "Cache poisoning — Django FileBasedCache + Pickle",
+      "description": "Identified `@cache_page(60)` on the `explore` view which used Django's FileBasedCache. Generated a malicious pickle payload (custom object with `__reduce__` returning `os.system(cmd)`), wrote it into `.djcache` files in the cache directory (`/var/tmp/django_cache`), and then triggered the cached view to force Django to deserialize the payload, resulting in RCE (reverse shell).",
+      "mitigation": "Do not use pickle/untrusted deserialization for caching. Ensure cache directories are not writable by unprivileged users. Use safe serializers (JSON) or server-side controls that prevent untrusted file writes. Restrict web process permissions and enforce strict filesystem ACLs."
+    },
+    {
+      "step": 7,
+      "user": "sandy (discovered)",
+      "technique": "Post-exploitation enumeration — discovery of user files & keys",
+      "description": "After obtaining a shell, enumerated web and home directories. Found the `sandy` user and discovered an armored GPG private key (`armored_key.asc`) and encrypted backup files under `/var/www/HackNet/backups`.",
+      "mitigation": "Avoid storing private keys or sensitive backups in web-accessible or world-writable locations. Use proper file permissions and secret management solutions (vaults)."
+    },
+    {
+      "step": 8,
+      "user": "attacker (with imported key)",
+      "technique": "GPG private key import & bulk decrypt",
+      "description": "Imported the discovered GPG key into the attacker environment and used the discovered passphrase hint to decrypt backup `.gpg` files. Searched decrypted SQL/backups for plaintext credentials and other secrets (database credentials, root credentials, SSH keys).",
+      "mitigation": "Protect private keys with strong passphrases and avoid reusing passphrases across accounts. Limit backup storage access and use per-backup encryption keys stored securely off-host. Audit and monitor key imports and GPG operations."
+    },
+    {
+      "step": 9,
+      "user": "root",
+      "technique": "Credential reuse / SSH login → root",
+      "description": "Used recovered credentials or decrypted SSH keys to authenticate as a privileged account (or directly as root), obtaining root access and retrieving `root.txt`, completing full system compromise.",
+      "mitigation": "Harden SSH and root access with key rotation, limited root login, multi-factor authentication, and monitoring for suspicious key usage. Maintain least privilege and segregate credentials across services."
+    }
+  ]
+},
+{
    "title": "HackTheBox: Expressway",
    "href": "posts/htb_Expressway.html",
    "date": "2025-09-26",
