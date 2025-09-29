@@ -1,6 +1,101 @@
 [
   
 {
+  "title": "HackTheBox: Imagery",
+  "href": "posts/htb_Imagery.html",
+  "date": "2025-09-29",
+  "category": [
+    "HackTheBox",
+    "Linux",
+    "Application Security"
+  ],
+  "tags": [
+    "Network Service Discovery (T1046)",
+    "Stored XSS",
+    "Credential Harvesting (T1555)",
+    "Local File Inclusion (LFI)",
+    "Hash Cracking",
+    "Command Injection",
+    "Web Shell / Post-Exploitation",
+    "Backup Brute-force / Decryption",
+    "Credential Reuse",
+    "Sudo Misconfiguration (NOPASSWD)",
+    "Post-Exploitation Enumeration"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Nmap / Recon",
+      "description": "Performed service/version scan and discovered OpenSSH on 22/tcp and a Werkzeug HTTP service on 8000/tcp serving an Image Gallery application.",
+      "mitigation": "Minimise exposed services; keep service versions up to date and hide/limit verbose server banners."
+    },
+    {
+      "step": 2,
+      "user": "attacker (web)",
+      "technique": "Stored XSS (bug report)",
+      "description": "Submitted a stored XSS payload to the bug report page which, when viewed by an admin, exfiltrated the admin session cookie to an attacker-controlled listener.",
+      "mitigation": "Sanitise and encode user-supplied content; implement CSP; set HttpOnly on session cookies so JavaScript cannot read them."
+    },
+    {
+      "step": 3,
+      "user": "attacker (web) → admin",
+      "technique": "Path traversal (LFI) on admin log endpoint",
+      "description": "Used the stolen admin cookie to access an admin endpoint that reads files via a `log_identifier` parameter and performed path traversal to retrieve `db.json`, exposing stored user records and password hashes.",
+      "mitigation": "Canonicalise and whitelist file paths; validate and restrict admin-facing endpoints; enforce least privilege for admin interfaces."
+    },
+    {
+      "step": 4,
+      "user": "local (attacker)",
+      "technique": "Credential harvesting & offline cracking",
+      "description": "Saved extracted password hashes and cracked them offline using wordlists to recover valid web credentials (e.g., `testuser`).",
+      "mitigation": "Use strong, salted password hashing; enforce strong passwords and MFA; monitor and rate-limit authentication failures."
+    },
+    {
+      "step": 5,
+      "user": "attacker (web -> testuser)",
+      "technique": "Command injection in image transform",
+      "description": "Logged in as a normal user and manipulated image transform parameters to inject shell commands into the image processing workflow, resulting in a reverse shell as the web user.",
+      "mitigation": "Avoid shelling out with user-controlled input; sanitize and validate all parameters passed to image processing; run processors with least privilege in isolated sandboxes."
+    },
+    {
+      "step": 6,
+      "user": "attacker (www-data/webshell)",
+      "technique": "Filesystem enumeration & backup discovery",
+      "description": "From the web shell enumerated `/var/backup` and discovered an encrypted backup archive (`web_*.zip.aes`), which was downloaded for offline attack.",
+      "mitigation": "Restrict backup locations and permissions; do not store sensitive backups in paths accessible by web processes; encrypt with secure key management and separate keys from host."
+    },
+    {
+      "step": 7,
+      "user": "local (attacker)",
+      "technique": "Backup brute-force / decryption & historical DB retrieval",
+      "description": "Brute-forced or decrypted the archive offline, extracted an historical `db.json` containing older user hashes (including `mark`), and prepared hashes for cracking.",
+      "mitigation": "Use unique per-backup keys, enforce strong passphrases, and avoid storing plaintext or old credentials inside backups."
+    },
+    {
+      "step": 8,
+      "user": "local (attacker)",
+      "technique": "Offline hash cracking → credential recovery",
+      "description": "Cracked `mark`'s historical hash offline (wordlist attack) and validated credentials against the system to obtain `mark`'s account access.",
+      "mitigation": "Rotate credentials, enforce strong password policies and MFA, and detect anomalous login activity and credential reuse."
+    },
+    {
+      "step": 9,
+      "user": "mark",
+      "technique": "Local user access & enumeration",
+      "description": "Switched to `mark` on the host (or authenticated as `mark`) and performed local enumeration; found `sudo -l` shows `NOPASSWD` for `/usr/local/bin/charcol`, indicating a possible privilege escalation vector requiring safe assessment.",
+      "mitigation": "Avoid granting `NOPASSWD` broadly; restrict `sudo` to specific commands and arguments; ensure privileged binaries and their paths are root-owned and not writable by unprivileged users."
+    },
+    {
+      "step": 10,
+      "user": "root (impact)",
+      "technique": "Potential privilege escalation (identified)",
+      "description": "The chain culminated in finding a plausible privilege escalation target (sudo misconfiguration). Root access was identified as achievable with further safe, authorised investigation.",
+      "mitigation": "Harden sudo policies, audit privileged binaries and directories for improper permissions, implement monitoring for unexpected `sudo` usage, and apply principle of least privilege across accounts and services."
+    }
+  ]
+},
+{
   "title": "HackTheBox: HackNet",
   "href": "posts/htb_HackNet.html",
   "date": "2025-09-28",
