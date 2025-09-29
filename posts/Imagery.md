@@ -6,6 +6,11 @@ Operating System: Linux
 Hints: True
 ```
 
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
+
+<!--
 
 #### 🏁 Summary of Attack Chain
 
@@ -179,8 +184,6 @@ Capture the user flag.
 
 ## Priviledge Escalation
 
-![File ](Pictures/htb_imagerysudol.png)
-
 
 ---
 
@@ -218,6 +221,8 @@ User mark may run the following commands on Imagery:
 ```
 
 Attempts to inspect `/usr/local/bin/charcol` returned permission denied for reading and executing as the current user. You also showed contents of `/tmp` containing a `shell` file and the `root.txt` value present.
+
+![File ](Pictures/htb_imagerysudol.png)
 
 ---
 
@@ -344,3 +349,4 @@ Use this template when writing a report that documents the *investigation* and *
 * **Backups**: Protect backups with strong encryption and secure key management; avoid storing historical credentials in plaintext within backups.
 * **Logging & monitoring**: Monitor for anomalous requests (admin log reads, suspicious transform parameters, outbound HTTP to unknown hosts).
 
+-->
