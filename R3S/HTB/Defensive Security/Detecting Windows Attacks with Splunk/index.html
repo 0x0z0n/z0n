@@ -1,0 +1,1127 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="detecting-windows-attacks-with-splunk">Detecting Windows Attacks with Splunk</h1>
+<h2 id="detecting-common-user-domain-recon">Detecting Common User/Domain Recon</h2>
+<h3 id="domain-reconnaissance">Domain Reconnaissance</h3>
+<p><code>Active Directory (AD) domain reconnaissance</code> represents a pivotal stage in the cyberattack lifecycle. During this phase, adversaries endeavor to gather information about the target environment, seeking to comprehend its architecture, network topology, security measures, and potential vulnerabilities.</p>
+<p>While conducting AD domain reconnaissance, attackers focus on identifying crucial components such as Domain Controllers, user accounts, groups, trust relationships, organizational units (OUs), group policies, and other vital objects. By gaining insights into the AD environment, attackers can potentially pinpoint high-value targets, escalate their privileges, and move laterally within the network.</p>
+<p><strong>User/Domain Reconnaissance Using Native Windows Executables</strong></p>
+<p>An example of AD domain reconnaissance is when an adversary executes the <code>net group</code> command to obtain a list of <code>Domain Administrators</code>.</p>
+<p><img src="storage\modules\233\image63.png" alt=""></p>
+<p>Common native tools/commands utilized for domain reconnaissance include:</p>
+<ul>
+<li><code>whoami /all</code></li>
+<li><code>wmic computersystem get domain</code></li>
+<li><code>net user /domain</code></li>
+<li><code>net group "Domain Admins" /domain</code></li>
+<li><code>arp -a</code></li>
+<li><code>nltest /domain_trusts</code></li>
+</ul>
+<p>For detection, administrators can employ PowerShell to monitor for unusual scripts or cmdlets and process command-line monitoring.</p>
+<p><strong>User/Domain Reconnaissance Using BloodHound/SharpHound</strong></p>
+<p><a href="https://github.com/SpecterOps/BloodHound">BloodHound</a> is an open-source domain reconnaissance tool created to analyze and visualize the Active Directory (AD) environment. It is frequently employed by attackers to discern attack paths and potential security risks within an organization's AD infrastructure. BloodHound leverages graph theory and relationship mapping to elucidate trust relationships, permissions, and group memberships within the AD domain.</p>
+<p><img src="storage\modules\233\image1.png" alt=""></p>
+<p><a href="https://github.com/BloodHoundAD/SharpHound">Sharphound</a> is a C# data collector for BloodHound. An example of usage includes an adversary running Sharphound with all collection methods (<code>-c all</code>).</p>
+<p><img src="storage\modules\233\image56.png" alt=""></p>
+<p><strong>BloodHound Detection Opportunities</strong></p>
+<p>Under the hood, the BloodHound collector executes numerous LDAP queries directed at the Domain Controller, aiming to amass information about the domain.</p>
+<p><img src="storage\modules\233\image45.png" alt=""></p>
+<p>However, monitoring LDAP queries can be a challenge. By default, the Windows Event Log does not record them. The best option Windows can suggest is employing <code>Event 1644</code> - the LDAP performance monitoring log. Even with it enabled, BloodHound may not generate many of the expected events.</p>
+<p><img src="storage\modules\233\image81.png" alt=""></p>
+<p>A more reliable approach is to utilize the Windows ETW provider <code>Microsoft-Windows-LDAP-Client</code>. As showcased previously in the <code>SOC Analyst</code> path, <a href="https://github.com/mandiant/SilkETW">SilkETW &amp; SilkService</a> are versatile C# wrappers for ETW, designed to simplify the intricacies of ETW, providing an accessible interface for research and introspection. <code>SilkService</code> supports output to the Windows Event Log, which streamlines log digestion. Another useful feature is the ability to employ <code>Yara</code> rules for hunting suspicious LDAP queries.</p>
+<p><img src="storage\modules\233\image57.png" alt=""></p>
+<p>In addition, Microsoft's ATP team has compiled a <a href="https://techcommunity.microsoft.com/t5/microsoft-defender-for-endpoint/hunting-for-reconnaissance-activities-using-ldap-search-filters/ba-p/824726">list of LDAP filters frequently used by reconnaissance tools</a>.</p>
+<p><img src="storage\modules\233\image59.png" alt=""></p>
+<p>Armed with this list of LDAP filters, BloodHound activity can be detected more efficiently.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-user-domain-recon-with-splunk">Detecting User/Domain Recon With Splunk</h3>
+<p>You'll observe that a specific timeframe is given when identifying each attack. This is done to concentrate on the relevant events, avoiding the overwhelming volume of unrelated events.</p>
+<p>Now let's explore how we can identify the recon techniques previously discussed, using Splunk.</p>
+<p><strong>Detecting Recon By Targeting Native Windows Executables</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690447949 latest=1690450687</code></p>
+<p>Detecting Common User/Domain Recon</p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=main <span class="hljs-keyword">source</span>=<span class="hljs-string">"XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"</span> EventID=<span class="hljs-number">1</span> earliest=<span class="hljs-number">1690447949</span> latest=<span class="hljs-number">1690450687</span>
+| <span class="hljs-built_in">search</span> process_name IN (arp.<span class="hljs-keyword">exe</span>,chcp.<span class="hljs-keyword">com</span>,ipconfig.<span class="hljs-keyword">exe</span>,net.<span class="hljs-keyword">exe</span>,net1.<span class="hljs-keyword">exe</span>,nltest.<span class="hljs-keyword">exe</span>,ping.<span class="hljs-keyword">exe</span>,systeminfo.<span class="hljs-keyword">exe</span>,whoami.<span class="hljs-keyword">exe</span>) OR (process_name IN (cmd.<span class="hljs-keyword">exe</span>,powershell.<span class="hljs-keyword">exe</span>) AND process IN (*arp*,*chcp*,*ipconfig*,*net*,*net1*,*nltest*,*ping*,*systeminfo*,*whoami*))
+| stats <span class="hljs-built_in">values</span>(process) <span class="hljs-keyword">as</span> process, <span class="hljs-built_in">min</span>(_time) <span class="hljs-keyword">as</span> _time by parent_process, parent_process_id, dest, user
+| where mvcount(process) &gt; <span class="hljs-number">3</span>
+</code></pre>
+<p><img src="storage\modules\233\2.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>Filtering by Index and Source</code>: The search begins by selecting events from the main index where the source is <code>XmlWinEventLog:Microsoft-Windows-Sysmon/Operational</code>, which is the XML-formatted Windows Event Log for Sysmon (System Monitor) events. Sysmon is a service and device driver that logs system activity to the event log.</li>
+<li><code>EventID Filter</code>: The search is further filtered to only select events with an <code>Event ID</code> of <code>1</code>. In Sysmon, Event ID 1 corresponds to <code>Process Creation</code> events, which log data about newly created processes.</li>
+<li><code>Time Range Filter</code>: The search restricts the time range of events to those occurring between the Unix timestamps 1690447949 and 1690450687. These timestamps represent the earliest and latest times in which the events occurred.</li>
+<li><code>Process Name Filter</code>: The search then filters events to only include those where the process_name field is one of a list of specific process names (e.g., <code>arp.exe</code>, <code>chcp.com</code>, <code>ipconfig.exe</code>, etc.) or where the <code>process_name</code> field is <code>cmd.exe</code> or <code>powershell.exe</code> and the process field contains certain substrings. This step is looking for events that involve certain system or network-related commands, as well as events where these commands were run from a Command Prompt or PowerShell session.</li>
+<li><code>Statistics</code>: The stats command is used to aggregate events based on the fields <code>parent_process</code>, <code>parent_process_id</code>, <code>dest</code>, and <code>user</code>. For each unique combination of these fields, the search calculates the following statistics:<ul>
+<li><code>values(process) as process</code>: This captures all unique values of the <code>process field</code> as a multivalue field named <code>process</code>.</li>
+<li><code>min(_time) as _time</code>: This captures the earliest time (<code>_time</code>) that an event occurred within each group.</li>
+</ul>
+</li>
+<li><code>Filtering by Process Count</code>: The where command is used to filter the results to only include those where the count of the process field is greater than <code>3</code>. This step is looking for instances where multiple processes (more than three) were executed by the same parent process.</li>
+</ul>
+<p><strong>Detecting Recon By Targeting BloodHound</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690195896 latest=1690285475</code></p>
+<p>Detecting Common User/Domain Recon</p>
+<pre><code class="lang-shell-session">index=main earliest=1690195896 latest=1690285475 source="WinEventLog:SilkService-Log"
+| spath input=Message 
+| <span class="hljs-keyword">rename</span> XmlEventData.* <span class="hljs-keyword">as</span> * 
+| <span class="hljs-keyword">table</span> _time, ComputerName, ProcessName, ProcessId, DistinguishedName, SearchFilter
+| <span class="hljs-keyword">sort</span> <span class="hljs-number">0</span> _time
+| <span class="hljs-keyword">search</span> SearchFilter=<span class="hljs-string">"*(samAccountType=805306368)*"</span>
+| stats <span class="hljs-keyword">min</span>(_time) <span class="hljs-keyword">as</span> _time, <span class="hljs-keyword">max</span>(_time) <span class="hljs-keyword">as</span> maxTime, <span class="hljs-keyword">count</span>, <span class="hljs-keyword">values</span>(SearchFilter) <span class="hljs-keyword">as</span> SearchFilter <span class="hljs-keyword">by</span> ComputerName, ProcessName, ProcessId
+| <span class="hljs-keyword">where</span> <span class="hljs-keyword">count</span> &gt; <span class="hljs-number">10</span>
+| <span class="hljs-keyword">convert</span> ctime(maxTime)
+</code></pre>
+<p><img src="storage\modules\233\1.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>Filtering by Index and Source</code>: The search starts by selecting events from the main index where the source is <code>WinEventLog:SilkService-Log</code>. This source represents Windows Event Log data gathered by <code>SilkETW</code>.</li>
+<li><code>Time Range Filter</code>: The search restricts the time range of events to those occurring between the Unix timestamps 1690195896 and 1690285475. These timestamps represent the earliest and latest times in which the events occurred.</li>
+<li><code>Path Extraction</code>: The <code>spath</code> command is used to extract fields from the <code>Message</code> field, which likely contains structured data such as <code>XML</code> or <code>JSON</code>. The <code>spath</code> command automatically identifies and extracts fields based on the data structure.</li>
+<li><code>Field Renaming</code>: The <code>rename</code> command is used to rename fields that start with <code>XmlEventData.</code> to the equivalent field names without the <code>XmlEventData.</code> prefix. This is done for easier reference to the fields in later stages of the search.</li>
+<li><code>Tabulating Results</code>: The <code>table</code> command is used to display the results in a tabular format with the following columns: <code>_time</code>, <code>ComputerName</code>, <code>ProcessName</code>, <code>ProcessId</code>, <code>DistinguishedName</code>, and <code>SearchFilter</code>. The <code>table</code> command only includes these fields in the output.</li>
+<li><code>Sorting</code>: The <code>sort</code> command is used to sort the results based on the <code>_time</code> field in ascending order (from oldest to newest). The <code>0</code> argument means that there is no limit on the number of results to sort.</li>
+<li><code>Search Filter</code>: The search command is used to filter the results to only include events where the <code>SearchFilter</code> field contains the string <code>*(samAccountType=805306368)*</code>. This step is looking for events related to LDAP queries with a specific filter condition.</li>
+<li><code>Statistics</code>: The <code>stats</code> command is used to aggregate events based on the fields <code>ComputerName</code>, <code>ProcessName</code>, and <code>ProcessId</code>. For each unique combination of these fields, the search calculates the following statistics:<ul>
+<li><code>min(_time) as _time</code>: The earliest time (<code>_time</code>) that an event occurred within each group.</li>
+<li><code>max(_time) as maxTime</code>: The latest time (<code>_time</code>) that an event occurred within each group.</li>
+<li><code>count</code>: The number of events within each group.</li>
+<li><code>values(SearchFilter) as SearchFilter</code>: All unique values of the <code>SearchFilter</code> field within each group.</li>
+</ul>
+</li>
+<li><code>Filtering by Event Count</code>: The <code>where</code> command is used to filter the results to only include those where the <code>count</code> field is greater than <code>10</code>. This step is looking for instances where the same process on the same computer made more than ten search queries with the specified filter condition.</li>
+<li><code>Time Conversion</code>: The <code>convert</code> command is used to convert the <code>maxTime</code> field from Unix timestamp format to human-readable format (<code>ctime</code>).</li>
+</ul>
+<h2 id="detecting-password-spraying">Detecting Password Spraying</h2>
+<h3 id="password-spraying">Password Spraying</h3>
+<p>Unlike traditional brute-force attacks, where an attacker tries numerous passwords for a single user account, <code>password spraying</code> distributes the attack across multiple accounts using a limited set of commonly used or easily guessable passwords. The primary goal is to evade account lockout policies typically instituted by organizations. These policies usually lock an account after a specified number of unsuccessful login attempts to thwart brute-force attacks on individual accounts. However, password spraying lowers the chance of triggering account lockouts, as each user account receives only a few password attempts, making the attack less noticeable.</p>
+<p>An example of password spraying using the <a href="https://github.com/Greenwolf/Spray">Spray</a> tool can be seen below.</p>
+<p><img src="storage\modules\233\image47.png" alt=""></p>
+<p><strong>Password Spraying Detection Opportunities</strong></p>
+<p>Detecting password spraying through Windows logs involves the analysis and monitoring of specific event logs to identify patterns and anomalies indicative of such an attack. A common pattern is multiple failed logon attempts with <code>Event ID 4625 - Failed Logon</code> from different user accounts but originating from the same source IP address within a short time frame.</p>
+<p>Other event logs that may aid in password spraying detection include:</p>
+<ul>
+<li><code>4768 and ErrorCode 0x6 - Kerberos Invalid Users</code></li>
+<li><code>4768 and ErrorCode 0x12 - Kerberos Disabled Users</code></li>
+<li><code>4776 and ErrorCode 0xC000006A - NTLM Invalid Users</code></li>
+<li><code>4776 and ErrorCode 0xC0000064 - NTLM Wrong Password</code></li>
+<li><code>4648 - Authenticate Using Explicit Credentials</code></li>
+<li><code>4771 - Kerberos Pre-Authentication Failed</code></li>
+</ul>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-password-spraying-with-splunk">Detecting Password Spraying With Splunk</h3>
+<p>Now let's explore how we can identify password spraying attempts, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690280680 latest=1690289489</code></p>
+<p>Detecting Password Spraying</p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690280680</span> latest=<span class="hljs-number">1690289489</span> source=<span class="hljs-string">"WinEventLog:Security"</span> EventCode=<span class="hljs-number">4625</span>
+| <span class="hljs-type">bin</span> span=<span class="hljs-number">15</span>m _time
+| <span class="hljs-type">stats</span> values(user) <span class="hljs-built_in">as</span> Users, dc(user) <span class="hljs-built_in">as</span> dc_user <span class="hljs-built_in">by</span> src, Source_Network_Address, dest, EventCode, Failure_Reason
+</code></pre>
+<p><img src="storage\modules\233\3.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>Filtering by Index, Source, and EventCode</code>: The search starts by selecting events from the main index where the source is <code>WinEventLog:Security</code> and the <code>EventCode</code> is <code>4625</code>. This EventCode represents failed logon attempts in the Windows Security Event Log.</li>
+<li><code>Time Range Filter</code>: The search restricts the time range of events to those occurring between the Unix timestamps 1690280680 and 1690289489. These timestamps represent the earliest and latest times in which the events occurred.</li>
+<li><code>Time Binning</code>: The <code>bin</code> command is used to create <code>time buckets of 15 minutes</code> duration for each event based on the <code>_time</code> field. This step groups the events into 15-minute intervals, which can be useful for analyzing patterns or trends over time.</li>
+<li><code>Statistics</code>: The <code>stats</code> command is used to aggregate events based on the fields <code>src</code>, <code>Source_Network_Address</code>, <code>dest</code>, <code>EventCode</code>, and <code>Failure_Reason</code>. For each unique combination of these fields, the search calculates the following statistics:<ul>
+<li><code>values(user) as Users</code>: All unique values of the <code>user</code> field within each group.</li>
+<li><code>dc(user) as dc_user</code>: The distinct count of unique values of the <code>user</code> field within each group. This represents the number of different users associated with the failed logon attempts in each group.</li>
+</ul>
+</li>
+</ul>
+<h2 id="detecting-responder-like-attacks">Detecting Responder-like Attacks</h2>
+<h3 id="llmnr-nbt-ns-mdns-poisoning">LLMNR/NBT-NS/mDNS Poisoning</h3>
+<p><code>LLMNR (Link-Local Multicast Name Resolution) and NBT-NS (NetBIOS Name Service) poisoning</code>, also referred to as NBNS spoofing, are network-level attacks that exploit inefficiencies in these name resolution protocols. Both <code>LLMNR</code> and <code>NBT-NS</code> are used to resolve hostnames to IP addresses on local networks when the fully qualified domain name (FQDN) resolution fails. However, their lack of built-in security mechanisms renders them susceptible to spoofing and poisoning attacks.</p>
+<p>Typically, attackers employ the <a href="https://github.com/lgandx/Responder">Responder</a> tool to execute LLMNR, NBT-NS, or mDNS poisoning.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>A victim device sends a name resolution query for a mistyped hostname (e.g., <code>fileshrae</code>).</li>
+<li>DNS fails to resolve the mistyped hostname.</li>
+<li>The victim device sends a name resolution query for the mistyped hostname using LLMNR/NBT-NS.</li>
+<li>The attacker's host responds to the LLMNR (UDP 5355)/NBT-NS (UDP 137) traffic, pretending to know the identity of the requested host. This effectively poisons the service, directing the victim to communicate with the adversary-controlled system.</li>
+</ul>
+<p><img src="storage\modules\233\image68.png" alt=""></p>
+<p>The result of a successful attack is the acquisition of the victim's NetNTLM hash, which can be either cracked or relayed in an attempt to gain access to systems where these credentials are valid.</p>
+<p><strong>Responder Detection Opportunities</strong></p>
+<p>Detecting LLMNR, NBT-NS, and mDNS poisoning can be challenging. However, organizations can mitigate the risk by implementing the following measures:</p>
+<ul>
+<li>Deploy network monitoring solutions to detect unusual LLMNR and NBT-NS traffic patterns, such as an elevated volume of name resolution requests from a single source.</li>
+<li>Employ a honeypot approach - name resolution for non-existent hosts should fail. If an attacker is present and spoofing LLMNR/NBT-NS/mDNS responses, name resolution will succeed. <a href="https://www.praetorian.com/blog/a-simple-and-effective-way-to-detect-broadcast-name-resolution-poisoning-bnrp/">https://www.praetorian.com/blog/a-simple-and-effective-way-to-detect-broadcast-name-resolution-poisoning-bnrp/</a></li>
+</ul>
+<p><img src="storage\modules\233\image22.png" alt=""></p>
+<p>A PowerShell script similar to the above can be automated to run as a scheduled task to aid in detection. Logging this activity might pose a challenge, but the <code>New-EventLog</code> PowerShell cmdlet can be used.</p>
+<pre><code class="lang-powershell-session">PS C:\Users\Administrator&gt; <span class="hljs-keyword">New</span>-EventLog -LogName Application -<span class="hljs-keyword">Source</span> LLMNRDetection
+</code></pre>
+<p>To create an event, the <code>Write-EventLog</code> cmdlet should be used:</p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\Users\Administrator&gt; <span class="hljs-keyword">Write</span>-EventLog -LogName Application -Source LLMNRDetection -EventId <span class="hljs-number">19001</span> -<span class="hljs-keyword">Message</span> $msg -EntryType Warning
+</code></pre>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-responder-like-attacks-with-splunk">Detecting Responder-like Attacks With Splunk</h3>
+<p>Now let's explore how we can identify the Responder-like attacks previously discussed, using Splunk and logs from a PowerShell script similar to the one above.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690290078 latest=1690291207</code></p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690290078</span> <span class="hljs-attr">latest=1690291207</span> <span class="hljs-attr">SourceName=LLMNRDetection</span>
+| table _time, ComputerName, SourceName, Message
+</code></pre>
+<p><img src="storage\modules\233\4.png" alt=""></p>
+<hr>
+<p><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90022">Sysmon Event ID 22</a> can also be utilized to track DNS queries associated with non-existent/mistyped file shares.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690290078 latest=1690291207</code></p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690290078</span> <span class="hljs-attr">latest=1690291207</span> <span class="hljs-attr">EventCode=22</span> 
+| table _time, Computer, user, Image, QueryName, QueryResults
+</code></pre>
+<p><img src="storage\modules\233\89.png" alt=""></p>
+<hr>
+<p>Additionally, remember that <a href="https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4648">Event 4648</a> can be used to detect explicit logons to rogue file shares which attackers might use to gather legitimate user credentials.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690290814 latest=1690291207</code></p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690290814</span> latest=<span class="hljs-number">1690291207</span> EventCode IN (<span class="hljs-number">4648</span>) 
+| table _time, EventCode, source, name, user, Target_Server_Name, Message
+| sort <span class="hljs-number">0</span> _time
+</code></pre>
+<p><img src="storage\modules\233\6.png" alt=""></p>
+<h2 id="detecting-kerberoasting-as-reproasting">Detecting Kerberoasting/AS-REProasting</h2>
+<h3 id="kerberoasting">Kerberoasting</h3>
+<p><code>Kerberoasting</code> is a technique targeting service accounts in Active Directory environments to extract and crack their password hashes. The attack exploits the way Kerberos service tickets are encrypted and the use of weak or easily crackable passwords for service accounts. Once an attacker successfully cracks the password hashes, they can gain unauthorized access to the targeted service accounts and potentially move laterally within the network.</p>
+<p>An example of a Kerberoasting attack is using the <a href="https://github.com/GhostPack/Rubeus">Rubeus</a> <code>kerberoast</code> module.</p>
+<p><img src="storage\modules\233\image76.png" alt=""></p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li><code>Identify Target Service Accounts</code>: The attacker enumerates Active Directory to identify service accounts with <code>Service Principal Names (SPNs)</code> set. Service accounts are often associated with services running on the network, such as SQL Server, Exchange, or other applications. The following is a code snippet from <code>Rubeus</code> that is related to this step. <img src="storage\modules\233\image2.png" alt=""></li>
+<li><code>Request TGS Tickets</code>: The attacker uses the identified service accounts to request <code>Ticket Granting Service (TGS)</code> tickets from the <code>Key Distribution Center (KDC)</code>. These TGS tickets contain encrypted service account password hashes. The following is a code snippet from <code>Rubeus</code> that is related to this step. <img src="storage\modules\233\image87.png" alt=""></li>
+<li><code>Offline Brute-Force Attack</code>: The attacker employs offline brute-force techniques, utilizing password cracking tools like <code>Hashcat</code> or <code>John the Ripper</code>, to attempt to crack the encrypted password hashes.</li>
+</ul>
+<p><strong>Benign Service Access Process &amp; Related Events</strong></p>
+<p>When a user connects to an <code>MSSQL (Microsoft SQL Server)</code> database using a service account with an <code>SPN</code>, the following steps occur in the Kerberos authentication process:</p>
+<ul>
+<li><code>TGT Request</code>: The user (client) initiates the authentication process by requesting a Ticket Granting Ticket (TGT) from the Key Distribution Center (KDC), typically part of the Active Directory domain controller.</li>
+<li><code>TGT Issue</code>: The KDC verifies the user's identity (usually through a password hash) and issues a TGT encrypted with the user's secret key. The TGT is valid for a specific period and allows the user to request service tickets without needing to re-authenticate.</li>
+<li><code>Service Ticket Request</code>: The client sends a service ticket request (TGS-REQ) to the KDC for the MSSQL server's SPN using the TGT obtained in the previous step.</li>
+<li><code>Service Ticket Issue</code>: The KDC validates the client's TGT and, if successful, issues a service ticket (TGS) encrypted with the service account's secret key, containing the client's identity and a session key. The client then receives the TGS.</li>
+<li><code>Client Connection</code>: The client connects to the MSSQL server and sends the TGS to the server as part of the authentication process.</li>
+<li><code>MSSQL Server Validates the TGS</code>: The MSSQL server decrypts the TGS using its own secret key to obtain the session key and client identity. If the TGS is valid and the session key is correct, the MSSQL server accepts the client's connection and grants access to the requested resources. <img src="storage\modules\233\image25.png" alt=""></li>
+</ul>
+<p>Note that the steps mentioned above can also be observed during network traffic analysis:</p>
+<p><img src="storage\modules\233\image8.png" alt=""></p>
+<p>During the Kerberos authentication process, several security-related events are generated in the Windows Event Log when a user connects to an MSSQL server:</p>
+<ul>
+<li><code>Event ID 4768 (Kerberos TGT Request)</code>: Occurs when the client workstation requests a TGT from the KDC, generating this event in the Security log on the domain controller.</li>
+<li><code>Event ID 4769 (Kerberos Service Ticket Request)</code>: Generated after the client receives the TGT and requests a TGS for the MSSQL server's SPN.</li>
+<li><code>Event ID 4624 (Logon)</code>: Logged in the Security log on the MSSQL server, indicating a successful logon once the client initiates a connection to the MSSQL server and logs in using the service account with the SPN to establish the connection. <img src="storage\modules\233\image66.png" alt=""></li>
+</ul>
+<p><strong>Kerberoasting Detection Opportunities</strong></p>
+<p>Since the initial phase of Kerberoasting involves identifying target service accounts, monitoring LDAP activity, as explained in the domain reconnaissance section, can help in identifying suspicious LDAP queries.</p>
+<p>An alternative approach focuses on the difference between benign service access and a Kerberoasting attack. In both scenarios, TGS tickets for the service will be requested, but only in the case of benign service access will the user connect to the server and present the TGS ticket.</p>
+<p><img src="storage\modules\233\image18.png" alt=""></p>
+<p>Detection logic entails finding all events for TGS requests and logon events from the same user, then identifying instances where a TGS request is present without a subsequent logon event. In the case of IIS service access using a service account with an SPN, an additional <code>4648 (A logon was attempted using explicit credentials)</code> event will be generated as a logon event.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-kerberoasting-with-splunk">Detecting Kerberoasting With Splunk</h3>
+<p>Now let's explore how we can identify Kerberoasting, using Splunk.</p>
+<p><strong>Benign TGS Requests</strong></p>
+<p>First, let's see some benign TGS requests in Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690388417 latest=1690388630</code></p>
+<p>Detecting Kerberoasting/AS-REProasting</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690388417</span> <span class="hljs-attr">latest=1690388630</span> <span class="hljs-attr">EventCode=4648</span> OR (<span class="hljs-attr">EventCode=4769</span> AND <span class="hljs-attr">service_name=iis_svc)</span> 
+| dedup RecordNumber 
+| rex <span class="hljs-attr">field=user</span> <span class="hljs-string">"(?&lt;username&gt;[^@]+)"</span>
+| table _time, ComputerName, EventCode, name, username, Account_Name, Account_Domain, src_ip, service_name, Ticket_Options, Ticket_Encryption_Type, Target_Server_Name, Additional_Information
+</code></pre>
+<p><img src="storage\modules\233\7.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index=main earliest=1690388417 latest=1690388630</code>: This filters the search to only include events from the main index that occurred between the specified earliest and latest epoch timestamps.</li>
+<li><code>EventCode=4648 OR (EventCode=4769 AND service_name=iis_svc)</code>: This further filters the search to only include events with an <code>EventCode</code> of <code>4648</code> <code>or</code> an <code>EventCode</code> of <code>4769</code> with a <code>service_name</code> of <code>iis_svc</code>.</li>
+<li><code>| dedup RecordNumber</code>: This removes duplicate events based on the <code>RecordNumber</code> field.</li>
+<li><code>| rex field=user "(?&lt;username&gt;[^@]+)"</code>: This extracts the <code>username</code> portion of the <code>user</code> field using a regular expression and stores it in a new field called <code>username</code>.</li>
+<li><code>| table _time, ComputerName, EventCode, name, username, Account_Name, Account_Domain, src_ip, service_name, Ticket_Options, Ticket_Encryption_Type, Target_Server_Name, Additional_Information</code>: This displays the specified fields in tabular format.</li>
+</ul>
+<p><strong>Detecting Kerberoasting - SPN Querying</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690448444 latest=1690454437</code></p>
+<p>Detecting Kerberoasting/AS-REProasting</p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=main earliest=<span class="hljs-number">1690448444</span> latest=<span class="hljs-number">1690454437</span> <span class="hljs-keyword">source</span>=<span class="hljs-string">"WinEventLog:SilkService-Log"</span> 
+| spath <span class="hljs-built_in">input</span>=Message 
+| <span class="hljs-built_in">rename</span> XmlEventData.* <span class="hljs-keyword">as</span> * 
+| table _time, ComputerName, ProcessName, DistinguishedName, SearchFilter 
+| <span class="hljs-built_in">search</span> SearchFilter=<span class="hljs-string">"*(&amp;(samAccountType=805306368)(servicePrincipalName=*)*"</span>
+</code></pre>
+<p><img src="storage\modules\233\8.png" alt=""></p>
+<p><strong>Detecting Kerberoasting - TGS Requests</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690450374 latest=1690450483</code></p>
+<p>Detecting Kerberoasting/AS-REProasting</p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690450374</span> latest=<span class="hljs-number">1690450483</span> EventCode=<span class="hljs-number">4648</span> OR (EventCode=<span class="hljs-number">4769</span> AND service_name=iis_svc)
+| <span class="hljs-type">dedup</span> RecordNumber
+| <span class="hljs-type">rex</span> <span class="hljs-built_in">field</span>=user <span class="hljs-string">"(?&lt;username&gt;[^@]+)"</span>
+| <span class="hljs-type">bin</span> span=<span class="hljs-number">2</span>m _time 
+| <span class="hljs-type">search</span> username!=*$ 
+| <span class="hljs-type">stats</span> values(EventCode) <span class="hljs-built_in">as</span> Events, values(service_name) <span class="hljs-built_in">as</span> service_name, values(Additional_Information) <span class="hljs-built_in">as</span> Additional_Information, values(Target_Server_Name) <span class="hljs-built_in">as</span> Target_Server_Name <span class="hljs-built_in">by</span> _time, username
+| <span class="hljs-type">where</span> !<span class="hljs-keyword">match</span>(Events,<span class="hljs-string">"4648"</span>)
+</code></pre>
+<p><img src="storage\modules\233\9.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index=main earliest=1690450374 latest=1690450483 EventCode=4648 OR (EventCode=4769 AND service_name=iis_svc)</code>: Filters the search to only include events from the <code>main</code> index that occurred between the specified earliest and latest epoch timestamps. It further filters the search to only include events with an <code>EventCode</code> of <code>4648</code> or an <code>EventCode</code> of <code>4769</code> with a <code>service_name</code> of <code>iis_svc</code>.</li>
+<li><code>| dedup RecordNumber</code>: Removes duplicate events based on the <code>RecordNumber</code> field.</li>
+<li><code>| rex field=user "(?&lt;username&gt;[^@]+)"</code>: Extracts the <code>username</code> portion of the <code>user</code> field using a regular expression and stores it in a new field called <code>username</code>.</li>
+<li><code>| bin span=2m _time</code>: Bins the events into 2-minute intervals based on the <code>_time</code> field.</li>
+<li><code>| search username!=*$</code>: Filters out events where the <code>username</code> field ends with a <code>$</code>.</li>
+<li><code>| stats values(EventCode) as Events, values(service_name) as service_name, values(Additional_Information) as Additional_Information, values(Target_Server_Name) as Target_Server_Name by _time, username</code>: Groups the events by the <code>_time</code> and <code>username</code> fields, and creates new fields that contain the <code>unique</code> values of the <code>EventCode</code>, <code>service_name</code>, <code>Additional_Information</code>, and <code>Target_Server_Name</code> fields within each group.</li>
+<li><code>| where !match(Events,"4648")</code>: Filters out events that have the value <code>4648</code> in the Events field.</li>
+</ul>
+<p><strong>Detecting Kerberoasting Using Transactions - TGS Requests</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690450374 latest=1690450483</code></p>
+<p>Detecting Kerberoasting/AS-REProasting</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690450374</span> <span class="hljs-attr">latest=1690450483</span> <span class="hljs-attr">EventCode=4648</span> OR (<span class="hljs-attr">EventCode=4769</span> AND <span class="hljs-attr">service_name=iis_svc)</span>
+| dedup RecordNumber
+| rex <span class="hljs-attr">field=user</span> <span class="hljs-string">"(?&lt;username&gt;[^@]+)"</span>
+| search username!=*$ 
+| transaction username <span class="hljs-attr">keepevicted=true</span> <span class="hljs-attr">maxspan=5s</span> <span class="hljs-attr">endswith=(EventCode=4648)</span> <span class="hljs-attr">startswith=(EventCode=4769)</span> 
+| where <span class="hljs-attr">closed_txn=0</span> AND <span class="hljs-attr">EventCode</span> = <span class="hljs-number">4769</span>
+| table _time, EventCode, service_name, username
+</code></pre>
+<p><img src="storage\modules\233\10.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<p>This Splunk search query is different from the previous query primarily due to the use of the <code>transaction</code> command, which groups events into transactions based on specified fields and criteria.</p>
+<ul>
+<li><code>index=main earliest=1690450374 latest=1690450483 EventCode=4648 OR (EventCode=4769 AND service_name=iis_svc)</code>: Filters the search to only include events from the <code>main</code> index that occurred between the specified earliest and latest epoch timestamps. It further filters the search to only include events with an <code>EventCode</code> of <code>4648</code> or an <code>EventCode</code> of <code>4769</code> with a <code>service_name</code> of <code>iis_svc</code>.</li>
+<li><code>| dedup RecordNumber</code>: Removes duplicate events based on the <code>RecordNumber</code> field.</li>
+<li><code>| rex field=user "(?&lt;username&gt;[^@]+)"</code>: Extracts the <code>username</code> portion of the <code>user</code> field using a regular expression and stores it in a new field called <code>username</code>.</li>
+<li><code>| search username!=*$</code>: Filters out events where the <code>username</code> field ends with a <code>$</code>.</li>
+<li><code>| transaction username keepevicted=true maxspan=5s endswith=(EventCode=4648) startswith=(EventCode=4769)</code>: Groups events into <code>transactions</code> based on the <code>username</code> field. The <code>keepevicted=true</code> option includes events that do not meet the transaction criteria. The <code>maxspan=5s</code> option sets the maximum time duration of a transaction to 5 seconds. The <code>endswith=(EventCode=4648)</code> and <code>startswith=(EventCode=4769)</code> options specify that transactions should start with an event with <code>EventCode 4769</code> and end with an event with <code>EventCode 4648</code>.</li>
+<li><code>| where closed_txn=0 AND EventCode = 4769</code>: Filters the results to only include transactions that are not closed (<code>closed_txn=0</code>) and have an <code>EventCode</code> of <code>4769</code>.</li>
+<li><code>| table _time, EventCode, service_name, username</code>: Displays the remaining events in tabular format with the specified fields.</li>
+</ul>
+<p>This query focuses on identifying events with an <code>EventCode</code> of <code>4769</code> that are part of an incomplete transaction (i.e., they did not end with an event with <code>EventCode 4648</code> within the <code>5</code>-second window).</p>
+<h3 id="as-reproasting">AS-REPRoasting</h3>
+<p><code>ASREPRoasting</code> is a technique used in Active Directory environments to target user accounts without pre-authentication enabled. In Kerberos, pre-authentication is a security feature requiring users to prove their identity before the TGT is issued. However, certain user accounts, such as those with unconstrained delegation, do not have pre-authentication enabled, making them susceptible to ASREPRoasting attacks.</p>
+<p><img src="storage\modules\233\image40.png" alt=""></p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li><code>Identify Target User Accounts</code>: The attacker identifies user accounts without pre-authentication enabled. The following is a code snippet from <code>Rubeus</code> that is related to this step. <img src="storage\modules\233\image13.png" alt=""></li>
+<li><code>Request AS-REQ Service Tickets</code>: The attacker initiates an AS-REQ service ticket request for each identified target user account. The following is a code snippet from <code>Rubeus</code> that is related to this step. <img src="storage\modules\233\image24.png" alt=""></li>
+<li><code>Offline Brute-Force Attack</code>: The attacker captures the encrypted TGTs and employs offline brute-force techniques to attempt to crack the password hashes.</li>
+</ul>
+<p><strong>Kerberos Pre-Authentication</strong></p>
+<p><code>Kerberos pre-authentication</code> is an additional security mechanism in the Kerberos authentication protocol enhancing user credentials protection during the authentication process. When a user tries to access a network resource or service, the client sends an authentication request AS-REQ to the KDC.</p>
+<p>If pre-authentication is enabled, this request also contains an encrypted timestamp (<code>pA-ENC-TIMESTAMP</code>). The KDC attempts to decrypt this timestamp using the user password hash and, if successful, issues a TGT to the user.</p>
+<p><img src="storage\modules\233\image79.png" alt=""></p>
+<p>When pre-authentication is disabled, there is no timestamp validation by the KDC, allowing users to request a TGT ticket without knowing the user password.</p>
+<p><img src="storage\modules\233\image78.png" alt=""></p>
+<p><strong>AS-REPRoasting Detection Opportunities</strong></p>
+<p>Similar to Kerberoasting, the initial phase of AS-REPRoasting involves identifying user accounts with unconstrained delegation enabled or accounts without pre-authentication, which can be detected by LDAP monitoring.</p>
+<p>Kerberos authentication <code>Event ID 4768 (TGT Request)</code> contains a <code>PreAuthType</code> attribute in the additional information part of the event indicating whether pre-authentication is enabled for an account.</p>
+<h3 id="detecting-as-reproasting-with-splunk">Detecting AS-REPRoasting With Splunk</h3>
+<p>Now let's explore how we can identify AS-REPRoasting, using Splunk.</p>
+<p><strong>Detecting AS-REPRoasting - Querying Accounts With Pre-Auth Disabled</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690392745 latest=1690393283</code></p>
+<p>Detecting Kerberoasting/AS-REProasting</p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=main earliest=<span class="hljs-number">1690392745</span> latest=<span class="hljs-number">1690393283</span> <span class="hljs-keyword">source</span>=<span class="hljs-string">"WinEventLog:SilkService-Log"</span> 
+| spath <span class="hljs-built_in">input</span>=Message 
+| <span class="hljs-built_in">rename</span> XmlEventData.* <span class="hljs-keyword">as</span> * 
+| table _time, ComputerName, ProcessName, DistinguishedName, SearchFilter 
+| <span class="hljs-built_in">search</span> SearchFilter=<span class="hljs-string">"*(samAccountType=805306368)(userAccountControl:1.2.840.113556.1.4.803:=4194304)*"</span>
+</code></pre>
+<p><img src="storage\modules\233\11.png" alt=""></p>
+<p><strong>Detecting AS-REPRoasting - TGT Requests For Accounts With Pre-Auth Disabled</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690392745 latest=1690393283</code></p>
+<p>Detecting Kerberoasting/AS-REProasting</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690392745</span> <span class="hljs-attr">latest=1690393283</span> <span class="hljs-attr">source="WinEventLog:Security"</span> <span class="hljs-attr">EventCode=4768</span> <span class="hljs-attr">Pre_Authentication_Type=0</span>
+| rex <span class="hljs-attr">field=src_ip</span> <span class="hljs-string">"(\:\:ffff\:)?(?&lt;src_ip&gt;[0-9\.]+)"</span>
+| table _time, src_ip, user, Pre_Authentication_Type, Ticket_Options, Ticket_Encryption_Type
+</code></pre>
+<p><img src="storage\modules\233\12.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index=main earliest=1690392745 latest=1690393283 source="WinEventLog:Security" EventCode=4768 Pre_Authentication_Type=0</code>: Filters the search to only include events from the <code>main</code> index that occurred between the specified earliest and latest epoch timestamps. It further filters the search to only include events with a source of <code>WinEventLog:Security</code>, an <code>EventCode</code> of <code>4768</code>, and a <code>Pre_Authentication_Type</code> of <code>0</code>.</li>
+<li><code>| rex field=src_ip "(\:\:ffff\:)?(?&lt;src_ip&gt;[0-9\.]+)"</code>: Uses a regular expression to extract the <code>src_ip</code> (source IP address) field. The expression matches an optional <code>"::ffff:"</code> prefix followed by an IP address in dotted decimal notation. This step handles IPv4-mapped IPv6 addresses by extracting the IPv4 portion.</li>
+<li><code>| table _time, src_ip, user, Pre_Authentication_Type, Ticket_Options, Ticket_Encryption_Type</code>: Displays the remaining events in tabular format with the specified fields.</li>
+</ul>
+<h2 id="detecting-pass-the-hash">Detecting Pass-the-Hash</h2>
+<h3 id="pass-the-hash">Pass-the-Hash</h3>
+<p><code>Pass-the-Hash</code> is a technique utilized by attackers to authenticate to a networked system using the <code>NTLM</code> hash of a user's password instead of the plaintext password. The attack capitalizes on the way Windows stores password hashes in memory, enabling adversaries with administrative access to capture the hash and reuse it for lateral movement within the network.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker employs tools such as <code>Mimikatz</code> to extract the <code>NTLM</code> hash of a user currently logged onto the compromised system. Note that local administrator privileges are required on the system to extract the user's hash. <img src="storage\modules\233\image65.png" alt=""></li>
+<li>Armed with the <code>NTLM</code> hash, the attacker can authenticate as the targeted user on other systems or network resources without needing to know the actual password. <img src="storage\modules\233\image52.png" alt=""></li>
+<li>Utilizing the authenticated session, the attacker can move laterally within the network, gaining unauthorized access to other systems and resources. <img src="storage\modules\233\image62.png" alt=""></li>
+</ul>
+<p><strong>Windows Access Tokens &amp; Alternate Credentials</strong></p>
+<p>An <code>access token</code> is a data structure that defines the security context of a process or thread. It contains information about the associated user account's identity and privileges. When a user logs on, the system verifies the user's password by comparing it with information stored in a security database. If the password is authenticated, the system generates an access token. Subsequently, any process executed on behalf of that user possesses a copy of this access token. (<strong>Source</strong>: <a href="https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens">https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens</a>)</p>
+<p><code>Alternate Credentials</code> provide a way to supply different login credentials (username and password) for specific actions or processes without altering the user's primary login session. This permits a user or process to execute certain commands or access resources as a different user without logging out or switching user accounts. The <code>runas</code> command is a Windows command-line tool that allows users to execute commands as another user. When the <code>runas</code> command is executed, a new access token is generated, which can be verified with the <code>whoami</code> command.</p>
+<p><img src="storage\modules\233\image15.png" alt=""></p>
+<p>The <code>runas</code> command also contains an interesting flag <code>/netonly</code>. This flag indicates that the specified user information is for remote access only. Even though the <code>whoami</code> command returns the original username, the spawned <code>cmd.exe</code> can still access the Domain Controller root folder.</p>
+<p><img src="storage\modules\233\image5.png" alt=""></p>
+<p>Each <code>access token</code> references a <code>LogonSession</code> generated at user logon. This <code>LogonSession</code> security structure contains such information as Username, Domain, and AuthenticationID (<code>NTHash/LMHash</code>), and is used when the process attempts to access remote resources. When the <code>netonly</code> flag is used, the process has the same <code>access token</code> but a different <code>LogonSession</code>.</p>
+<p><img src="storage\modules\233\image34.png" alt=""></p>
+<p><strong>Pass-the-Hash Detection Opportunities</strong></p>
+<p>From the Windows Event Log perspective, the following logs are generated when the <code>runas</code> command is executed:</p>
+<ul>
+<li>When <code>runas</code> command is executed without the <code>/netonly</code> flag - <code>Event ID 4624 (Logon)</code> with <code>LogonType 2 (interactive)</code>. <img src="storage\modules\233\image38.png" alt=""></li>
+<li>When <code>runas</code> command is executed with the <code>/netonly</code> flag - <code>Event ID 4624 (Logon)</code> with <code>LogonType 9 (NewCredentials)</code>. <img src="storage\modules\233\image32.png" alt=""></li>
+</ul>
+<p>Simple detection would involve looking for <code>Event ID 4624</code> and <code>LogonType 9</code>, but as mentioned before, there could be some false positives related to <code>runas</code> usage.</p>
+<p>The main difference between <code>runas</code> with the <code>netonly</code> flag and the <code>Pass-the-Hash</code> attack is that in the latter case, <code>Mimikatz</code> will access the <code>LSASS</code> process memory to change <code>LogonSession</code> credential materials. Thus, initial detection can be enhanced by correlating <code>User Logon with NewCredentials</code> events with <code>Sysmon Process Access Event Code 10</code>.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-pass-the-hash-with-splunk">Detecting Pass-the-Hash With Splunk</h3>
+<p>Now let's explore how we can identify Pass-the-Hash, using Splunk.</p>
+<p>Before we move on to reviewing the searches, please consult <a href="https://blog.netwrix.com/2021/11/30/how-to-detect-pass-the-hash-attacks">this</a> source to gain a better understanding of where the search part <code>Logon_Process=seclogo</code> originated from.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690450689 latest=1690451116</code></p>
+<p>Detecting Pass-the-Hash</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690450708</span> <span class="hljs-attr">latest=1690451116</span> <span class="hljs-attr">source="WinEventLog:Security"</span> <span class="hljs-attr">EventCode=4624</span> <span class="hljs-attr">Logon_Type=9</span> <span class="hljs-attr">Logon_Process=seclogo</span>
+| table _time, ComputerName, EventCode, user, Network_Account_Domain, Network_Account_Name, Logon_Type, Logon_Process
+</code></pre>
+<p><img src="storage\modules\233\13.png" alt=""></p>
+<hr>
+<p>As already mentioned, we can enhance the search above by adding LSASS memory access to the mix as follows.</p>
+<p>Detecting Pass-the-Hash</p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690450689</span> latest=<span class="hljs-number">1690451116</span> (source=<span class="hljs-string">"XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"</span> EventCode=<span class="hljs-number">10</span> TargetImage=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>Windows<span class="hljs-subst">\\</span>system32<span class="hljs-subst">\\</span>lsass.exe"</span> SourceImage!=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>ProgramData<span class="hljs-subst">\\</span>Microsoft<span class="hljs-subst">\\</span>Windows Defender<span class="hljs-subst">\\</span>platform<span class="hljs-subst">\\</span>*<span class="hljs-subst">\\</span>MsMpEng.exe"</span>) OR (source=<span class="hljs-string">"WinEventLog:Security"</span> EventCode=<span class="hljs-number">4624</span> Logon_Type=<span class="hljs-number">9</span> Logon_Process=seclogo)
+| sort _time, RecordNumber
+| transaction host maxspan=<span class="hljs-number">1</span>m endswith=(EventCode=<span class="hljs-number">4624</span>) startswith=(EventCode=<span class="hljs-number">10</span>)
+| stats count by _time, Computer, SourceImage, SourceProcessId, Network_Account_Domain, Network_Account_Name, Logon_Type, Logon_Process
+| fields - count
+</code></pre>
+<p><img src="storage\modules\233\14.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index=main earliest=1690450689 latest=1690451116</code>: Filters the search to only include events from the <code>main</code> index that occurred between the specified earliest and latest epoch timestamps.</li>
+<li><code>(source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=10 TargetImage="C:\\Windows\\system32\\lsass.exe" SourceImage!="C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\*\\MsMpEng.exe")</code>: Filters the search to only include <code>Sysmon</code> operational log events with an <code>EventCode</code> of <code>10</code> (Process Access). It further narrows down the results to events where the <code>TargetImage</code> is <code>C:\Windows\system32\lsass.exe</code> (indicating that the <code>lsass.exe</code> process is being accessed) and the <code>SourceImage</code> is not a known legitimate process from the Windows Defender directory.</li>
+<li><code>OR (source="WinEventLog:Security" EventCode=4624 Logon_Type=9 Logon_Process=seclogo)</code>: Filters the search to also include Security event log events with an <code>EventCode</code> of <code>4624</code> (Logon), <code>Logon_Type</code> of <code>9</code> (NewCredentials), and <code>Logon_Process</code> of <code>seclogo</code>.</li>
+<li><code>| sort _time, RecordNumber</code>: Sorts the events based on the <code>_time</code> field and then the <code>RecordNumber</code> field.</li>
+<li><code>| transaction host maxspan=1m endswith=(EventCode=4624) startswith=(EventCode=10)</code>: Groups related events based on the <code>host</code> field, with a maximum time span of <code>1</code> minute between the start and end events. This command is used to associate process access events targeting <code>lsass.exe</code> with remote logon events.</li>
+<li><code>| stats count by _time, Computer, SourceImage, SourceProcessId, Network_Account_Domain, Network_Account_Name, Logon_Type, Logon_Process</code>: Aggregates the events based on the specified fields, counting the number of occurrences for each combination of field values.</li>
+<li><code>| fields - count</code>: Removes the <code>count</code> field from the results.</li>
+</ul>
+<h2 id="detecting-pass-the-ticket">Detecting Pass-the-Ticket</h2>
+<h3 id="pass-the-ticket">Pass-the-Ticket</h3>
+<p><code>Pass-the-Ticket (PtT)</code> is a lateral movement technique used by attackers to move laterally within a network by abusing Kerberos TGT (Ticket Granting Ticket) and TGS (Ticket Granting Service) tickets. Instead of using NTLM hashes, PtT leverages Kerberos tickets to authenticate to other systems and access network resources without needing to know the users' passwords. This technique allows attackers to move laterally and gain unauthorized access across multiple systems.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker gains administrative access to a system, either through an initial compromise or privilege escalation.</li>
+<li>The attacker uses tools such as <code>Mimikatz</code> or <code>Rubeus</code> to extract valid TGT or TGS tickets from the compromised system's memory. <img src="storage\modules\233\image9.png" alt=""></li>
+<li>The attacker submits the extracted ticket for the current logon session. The attacker can now authenticate to other systems and network resources without needing plaintext passwords. <img src="storage\modules\233\image41.png" alt=""> <img src="storage\modules\233\image10.png" alt=""></li>
+</ul>
+<p><strong>Kerberos Authentication Process</strong></p>
+<p><code>Kerberos</code> is a network authentication protocol used to securely authenticate users and services within a Windows Active Directory (AD) environment. The following steps occur in the Kerberos authentication process:</p>
+<ul>
+<li>The user (client) initiates the authentication process by requesting a Ticket Granting Ticket (TGT) from the Key Distribution Center (KDC), typically part of the Active Directory domain controller.</li>
+<li>The KDC verifies the user's identity (usually through a password) and issues a TGT encrypted with the user's secret key. The TGT is valid for a specific period and allows the user to request service tickets without needing to re-authenticate.</li>
+<li>The client sends a service ticket request (TGS-REQ) to the KDC for the service using the TGT obtained in the previous step.</li>
+<li>The KDC validates the client's TGT and, if successful, issues a service ticket (TGS) encrypted with the service account's secret key and containing the client's identity and a session key. The client then receives the service ticket (TGS) from the KDC.</li>
+<li>The client connects to the server and sends the TGS to the server as part of the authentication process.</li>
+</ul>
+<p><img src="storage\modules\233\image25.png" alt=""></p>
+<p><strong>Related Windows Security Events</strong></p>
+<p>During user access to network resources, several Windows Event Logs are generated to record the logon process and related activities.</p>
+<ul>
+<li><code>Event ID 4648 (Explicit Credential Logon Attempt)</code>: This event is logged when explicit credentials (e.g., username and password) are provided during logon.</li>
+<li><code>Event ID 4624 (Logon)</code>: This event indicates that a user has successfully logged on to the system.</li>
+<li><code>Event ID 4672 (Special Logon)</code>: This event is logged when a user's logon includes special privileges, such as running applications as an administrator.</li>
+<li><code>Event ID 4768 (Kerberos TGT Request)</code>: This event is logged when a client requests a Ticket Granting Ticket (TGT) during the Kerberos authentication process.</li>
+<li><code>Event ID 4769 (Kerberos Service Ticket Request)</code>: When a client requests a Service Ticket (TGS Ticket) to access a remote service during the Kerberos authentication process, Event ID 4769 is generated.</li>
+</ul>
+<p><img src="storage\modules\233\image14.png" alt=""></p>
+<p><strong>Pass-the-Ticket Detection Opportunities</strong></p>
+<p>Detecting Pass-the-Ticket attacks can be challenging, as attackers are leveraging valid Kerberos tickets instead of traditional credential hashes. The key distinction is that when the Pass-the-Ticket attack is executed, the Kerberos Authentication process will be partial. For example, an attacker imports a TGT ticket into a logon session and requests a TGS ticket for a remote service. From the Domain Controller perspective, the imported TGT was never requested before from the attacker’s system, so there won't be an associated Event ID 4768.</p>
+<p><img src="storage\modules\233\image61.png" alt=""></p>
+<p>This approach can be converted into the following Splunk detection: Look for <code>Event ID 4769 (Kerberos Service Ticket Request)</code> <code>or</code> <code>Event ID 4770 (Kerberos Service Ticket was renewed)</code> without a prior <code>Event ID 4768 (Kerberos TGT Request)</code> from the same system within a specific time window.</p>
+<p>Another approach is looking for mismatches between Service and Host IDs (in <code>Event ID 4769</code>) and the actual Source and Destination IPs (in <code>Event ID 3</code>). Note that there will be several legitimate mismatches, but unusual hostnames or services should be investigated further.</p>
+<p>Also, in cases where an attacker imports a TGS ticket into the logon session, it is important to review <code>Event ID 4771 (Kerberos Pre-Authentication Failed)</code> for mismatches between Pre-Authentication type and Failure Code. For example, <code>Pre-Authentication type 2 (Encrypted Timestamp)</code> with <code>Failure Code 0x18 (Pre-authentication information was invalid)</code> would indicate that the client sent a Kerberos AS-REQ with a pre-authentication encrypted timestamp, but the KDC couldn’t decrypt it.</p>
+<p>It is essential to understand that these detection opportunities should be enhanced with behavior-based detection. In other words, context is vital. Looking for Event IDs <code>4769</code>, <code>4770</code>, or <code>4771</code> alone will likely generate many false positives. Correlate the event logs with user and system behavior patterns, and consider whether there are any suspicious activities associated with the user or system involved in the logs.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-pass-the-ticket-with-splunk">Detecting Pass-the-Ticket With Splunk</h3>
+<p>Now let's explore how we can identify Pass-the-Ticket, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690451665 latest=1690451745</code></p>
+<p>Detecting Pass-the-Ticket</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690392405</span> <span class="hljs-attr">latest=1690451745</span> <span class="hljs-attr">source="WinEventLog:Security"</span> user!=*$ EventCode IN (<span class="hljs-number">4768</span>,<span class="hljs-number">4769</span>,<span class="hljs-number">4770</span>) 
+| rex <span class="hljs-attr">field=user</span> <span class="hljs-string">"(?&lt;username&gt;[^@]+)"</span>
+| rex <span class="hljs-attr">field=src_ip</span> <span class="hljs-string">"(\:\:ffff\:)?(?&lt;src_ip_4&gt;[0-9\.]+)"</span>
+| transaction username, src_ip_4 <span class="hljs-attr">maxspan=10h</span> <span class="hljs-attr">keepevicted=true</span> <span class="hljs-attr">startswith=(EventCode=4768)</span>
+| where <span class="hljs-attr">closed_txn=0</span>
+| search NOT <span class="hljs-attr">user="*$@*"</span>
+| table _time, ComputerName, username, src_ip_4, service_name, category
+</code></pre>
+<p><img src="storage\modules\233\15\_.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index=main earliest=1690392405 latest=1690451745 source="WinEventLog:Security" user!=*$ EventCode IN (4768,4769,4770)</code>: This command filters events from the <code>main</code> index that fall within the specified time range. It selects events from the <code>WinEventLog:Security</code> source, where the <code>user</code> field does not end with a dollar (<code>$</code>) and the <code>EventCode</code> is one of <code>4768</code>, <code>4769</code>, or <code>4770</code>.</li>
+<li><code>| rex field=user "(?&lt;username&gt;[^@]+)"</code>: This command extracts the <code>username</code> from the <code>user</code> field using a regular expression. It assigns the extracted value to a new field called <code>username</code>.</li>
+<li><code>| rex field=src_ip "(\:\:ffff\:)?(?&lt;src_ip_4&gt;[0-9\.]+)"</code>: This command extracts the IPv4 address from the <code>src_ip</code> field, even if it's originally recorded as an IPv6 address. It assigns the extracted value to a new field called <code>src_ip_4</code>.</li>
+<li><code>| transaction username, src_ip_4 maxspan=10h keepevicted=true startswith=(EventCode=4768)</code>: This command groups events into transactions based on the <code>username</code> and <code>src_ip_4</code> fields. A transaction begins with an event that has an <code>EventCode</code> of <code>4768</code>. The <code>maxspan=10h</code> parameter sets a maximum duration of <code>10</code> hours for a transaction. The <code>keepevicted=true</code> parameter ensures that open transactions without an ending event are included in the results.</li>
+<li><code>| where closed_txn=0</code>: This command filters the results to include only open transactions, which do not have an ending event.</li>
+<li><code>| search NOT user="*$@*"</code>: This command filters out results where the <code>user</code> field ends with an asterisk (<code>*</code>) and contains an at sign (<code>@</code>).</li>
+<li><code>| table _time, ComputerName, username, src_ip_4, service_name, category</code>: This command displays the specified fields in a table format.</li>
+</ul>
+<h2 id="detecting-overpass-the-hash">Detecting Overpass-the-Hash</h2>
+<h3 id="overpass-the-hash">Overpass-the-Hash</h3>
+<p>Adversaries may utilize the <code>Overpass-the-Hash</code> technique to obtain Kerberos TGTs by leveraging stolen password hashes to move laterally within an environment or to bypass typical system access controls. Overpass-the-Hash (also known as <code>Pass-the-Key</code>) allows authentication to occur via Kerberos rather than NTLM. Both NTLM hashes or AES keys can serve as a basis for requesting a Kerberos TGT.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker employs tools such as Mimikatz to extract the NTLM hash of a user who is currently logged in to the compromised system. The attacker must have at least local administrator privileges on the system to be able to extract the hash of the user. <img src="storage\modules\233\image65.png" alt=""></li>
+<li>The attacker uses a tool such as Rubeus to craft a raw AS-REQ request for a specified user to request a TGT ticket. This step does not require elevated privileges on the host to request the TGT, which makes it a stealthier approach than the Mimikatz Pass-the-Hash attack. <img src="storage\modules\233\image3.png" alt=""></li>
+<li>Analogous to the Pass-the-Ticket technique, the attacker submits the requested ticket for the current logon session.</li>
+</ul>
+<p><strong>Overpass-the-Hash Detection Opportunities</strong></p>
+<p><code>Mimikatz</code>'s Overpass-the-Hash attack leaves the same artifacts as the Pass-the-Hash attack, and can be detected using the same strategies.</p>
+<p><code>Rubeus</code>, however, presents a somewhat different scenario. Unless the requested TGT is used on another host, Pass-the-Ticket detection mechanisms may not be effective, as Rubeus sends an AS-REQ request directly to the Domain Controller (DC), generating <code>Event ID 4768 (Kerberos TGT Request)</code>. However, communication with the DC (<code>TCP/UDP port 88</code>) from an unusual process can serve as an indicator of a potential Overpass-the-Hash attack.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-overpass-the-hash-with-splunk-targeting-rubeus-">Detecting Overpass-the-Hash With Splunk (Targeting Rubeus)</h3>
+<p>Now let's explore how we can identify Overpass-the-Hash, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690443407 latest=1690443544</code></p>
+<p>Detecting Overpass-the-Hash</p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690443407</span> latest=<span class="hljs-number">1690443544</span> source=<span class="hljs-string">"XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"</span> (EventCode=<span class="hljs-number">3</span> dest_port=<span class="hljs-number">88</span> Image!=*lsass.exe) OR EventCode=<span class="hljs-number">1</span>
+| <span class="hljs-type">eventstats</span> values(process) <span class="hljs-built_in">as</span> process <span class="hljs-built_in">by</span> process_id
+| <span class="hljs-type">where</span> EventCode=<span class="hljs-number">3</span>
+| <span class="hljs-type">stats</span> count <span class="hljs-built_in">by</span> _time, Computer, dest_ip, dest_port, Image, process
+| <span class="hljs-type">fields</span> - count
+</code></pre>
+<p><img src="storage\modules\233\16.png" alt=""></p>
+<h2 id="detecting-golden-tickets-silver-tickets">Detecting Golden Tickets/Silver Tickets</h2>
+<h3 id="golden-ticket">Golden Ticket</h3>
+<p>A <code>Golden Ticket</code> attack is a potent method where an attacker forges a Ticket Granting Ticket (TGT) to gain unauthorized access to a Windows Active Directory domain as a domain administrator. The attacker creates a TGT with arbitrary user credentials and then uses this forged ticket to impersonate a domain administrator, thereby gaining full control over the domain. The Golden Ticket attack is stealthy and persistent, as the forged ticket has a long validity period and remains valid until it expires or is revoked.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker extracts the NTLM hash of the KRBTGT account using a <code>DCSync</code> attack (alternatively, they can use <code>NTDS.dit</code> and <code>LSASS process dumps</code> on the Domain Controller). <img src="storage\modules\233\image74.png" alt=""></li>
+<li>Armed with the <code>KRBTGT</code> hash, the attacker forges a TGT for an arbitrary user account, assigning it domain administrator privileges. <img src="storage\modules\233\image17.png" alt=""></li>
+<li>The attacker injects the forged TGT in the same manner as a Pass-the-Ticket attack.</li>
+</ul>
+<p><strong>Golden Ticket Detection Opportunities</strong></p>
+<p>Detecting Golden Ticket attacks can be challenging, as the TGT can be forged offline by an attacker, leaving virtually no traces of <code>Mimikatz</code> execution. One option is to monitor common methods of extracting the <code>KRBTGT</code> hash:</p>
+<ul>
+<li><code>DCSync attack</code></li>
+<li><code>NTDS.dit file access</code></li>
+<li><code>LSASS memory read on the domain controller (Sysmon Event ID 10)</code></li>
+</ul>
+<p>From another standpoint, a Golden Ticket is just another ticket for Pass-the-Ticket detection.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-golden-tickets-with-splunk-yet-another-ticket-to-be-passed-approach-">Detecting Golden Tickets With Splunk (Yet Another Ticket To Be Passed Approach)</h3>
+<p>Now let's explore how we can identify Golden Tickets, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690451977 latest=1690452262</code></p>
+<p>Detecting Golden Tickets/Silver Tickets</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690451977</span> <span class="hljs-attr">latest=1690452262</span> <span class="hljs-attr">source="WinEventLog:Security"</span> user!=*$ EventCode IN (<span class="hljs-number">4768</span>,<span class="hljs-number">4769</span>,<span class="hljs-number">4770</span>) 
+| rex <span class="hljs-attr">field=user</span> <span class="hljs-string">"(?&lt;username&gt;[^@]+)"</span>
+| rex <span class="hljs-attr">field=src_ip</span> <span class="hljs-string">"(\:\:ffff\:)?(?&lt;src_ip_4&gt;[0-9\.]+)"</span>
+| transaction username, src_ip_4 <span class="hljs-attr">maxspan=10h</span> <span class="hljs-attr">keepevicted=true</span> <span class="hljs-attr">startswith=(EventCode=4768)</span>
+| where <span class="hljs-attr">closed_txn=0</span>
+| search NOT <span class="hljs-attr">user="*$@*"</span>
+| table _time, ComputerName, username, src_ip_4, service_name, category
+</code></pre>
+<p><img src="storage\modules\233\17.png" alt=""></p>
+<h3 id="silver-ticket">Silver Ticket</h3>
+<p>Adversaries who possess the password hash of a target service account (e.g., <code>SharePoint</code>, <code>MSSQL</code>) may forge Kerberos Ticket Granting Service (TGS) tickets, also known as <code>Silver Tickets</code>. Silver tickets can be used to impersonate any user, but they are more limited in scope than Golden Tickets, as they only allow adversaries to access a specific resource (e.g., <code>MSSQL</code>) and the system hosting the resource.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker extracts the NTLM hash of the targeted service account (or the computer account for <code>CIFS</code> access) using tools like <code>Mimikatz</code> or other credential dumping techniques.</li>
+<li>Generate a Silver Ticket: Using the extracted NTLM hash, the attacker employs tools like <code>Mimikatz</code> to create a forged TGS ticket for the specified service. <img src="storage\modules\233\image37.png" alt=""></li>
+<li>The attacker injects the forged TGT in the same manner as a Pass-the-Ticket attack. <img src="storage\modules\233\image77.png" alt=""></li>
+</ul>
+<p><strong>Silver Ticket Detection Opportunities</strong></p>
+<p>Detecting forged service tickets (TGS) can be challenging, as there are no simple indicators of attack. In both Golden Ticket and Silver Ticket attacks, arbitrary users can be used, <code>including non-existent ones</code>. <code>Event ID 4720 (A user account was created)</code> can help identify newly created users. Subsequently, we can compare this user list with logged-in users.</p>
+<p>Because there is no validation for user permissions, users can be granted administrative permissions. <code>Event ID 4672 (Special Logon)</code> can be employed to detect anomalously assigned privileges.</p>
+<h3 id="detecting-silver-tickets-with-splunk">Detecting Silver Tickets With Splunk</h3>
+<p>Now let's explore how we can identify Silver Tickets, using Splunk.</p>
+<p><strong>Detecting Silver Tickets With Splunk Through User Correlation</strong></p>
+<p>Let's first create a list of users (<code>users.csv</code>) leveraging <code>Event ID 4720 (A user account was created)</code> as follows.</p>
+<p>Detecting Golden Tickets/Silver Tickets</p>
+<pre><code class="lang-shell-session">index=main latest=<span class="hljs-number">1690448444</span> EventCode=<span class="hljs-number">4720</span>
+| <span class="hljs-type">stats</span> min(_time) <span class="hljs-built_in">as</span> _time, values(EventCode) <span class="hljs-built_in">as</span> EventCode <span class="hljs-built_in">by</span> user
+| <span class="hljs-type">outputlookup</span> users.csv
+</code></pre>
+<p><strong>Note</strong>: <code>users.csv</code> can be downloaded from the <code>Resources</code> section of this module (upper right corner) and uploaded to Splunk by clicking <code>Settings</code> -&gt; <code>Lookups</code> -&gt; <code>Lookup table files</code> -&gt; <code>New Lookup Table File</code>.</p>
+<p>Let's now compare the list above with logged-in users as follows.</p>
+<p><strong>Timeframe</strong>: <code>latest=1690545656</code></p>
+<p>Detecting Golden Tickets/Silver Tickets</p>
+<pre><code class="lang-shell-session">index=main latest=<span class="hljs-number">1690545656</span> EventCode=<span class="hljs-number">4624</span>
+| <span class="hljs-type">stats</span> min(_time) <span class="hljs-built_in">as</span> firstTime, values(ComputerName) <span class="hljs-built_in">as</span> ComputerName, values(EventCode) <span class="hljs-built_in">as</span> EventCode <span class="hljs-built_in">by</span> user
+| <span class="hljs-type">eval</span> last24h = <span class="hljs-number">1690451977</span>
+| <span class="hljs-type">where</span> firstTime &gt; last24h
+```| <span class="hljs-type">eval</span> last24h=relative_time(now(),<span class="hljs-string">"-24h@h"</span>)```
+| <span class="hljs-type">convert</span> ctime(firstTime)
+| <span class="hljs-type">convert</span> ctime(last24h)
+| <span class="hljs-type">lookup</span> users.csv user <span class="hljs-built_in">as</span> user OUTPUT EventCode <span class="hljs-built_in">as</span> Events
+| <span class="hljs-type">where</span> isnull(Events)
+</code></pre>
+<p><img src="storage\modules\233\18.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index=main latest=1690545656 EventCode=4624</code>: This command filters events from the <code>main</code> index that occur before a specified timestamp and have an <code>EventCode</code> of <code>4624</code>, indicating a successful login.</li>
+<li><code>| stats min(_time) as firstTime, values(ComputerName) as ComputerName, values(EventCode) as EventCode by user</code>: This command calculates the earliest login time for each user, groups them by the <code>user</code> field, and creates a table with columns <code>firstTime</code>, <code>ComputerName</code>, and <code>EventCode</code>.</li>
+<li><code>| eval last24h = 1690451977</code>: This command defines a variable <code>last24h</code> and assigns it a specific <code>timestamp</code> value. This value represents a time threshold for filtering the results.</li>
+<li><code>| where firstTime &gt; last24h</code>: This command filters the results to include only logins that occurred after the time threshold defined in <code>last24h</code>.</li>
+<li><code>| eval last24h=relative_time(now(),"-24h@h")</code>: This command (commented out) would redefine the <code>last24h</code> variable to be exactly 24 hours before the current time. Note that this line is commented out with backticks, so it will not be executed in this search.</li>
+<li><code>| convert ctime(firstTime)</code>: This command converts the <code>firstTime</code> field from epoch time to a human-readable format.</li>
+<li><code>| convert ctime(last24h)</code>: This command converts the <code>last24h</code> field from epoch time to a human-readable format.</li>
+<li><code>| lookup users.csv user as user OUTPUT EventCode as Events</code>: This command performs a <code>lookup</code> using the <code>users.csv</code> file, matches the <code>user</code> field from the search results with the <code>user</code> field in the CSV file, and outputs the <code>EventCode</code> column from the CSV file as a new field called <code>Events</code>.</li>
+<li><code>| where isnull(Events)</code>: This command filters the results to include only those where the <code>Events</code> field is null. This indicates that the user was not found in the <code>users.csv</code> file.</li>
+</ul>
+<p><strong>Detecting Silver Tickets With Splunk By Targeting Special Privileges Assigned To New Logon</strong></p>
+<p><strong>Timeframe</strong>: <code>latest=1690545656</code></p>
+<p>Detecting Golden Tickets/Silver Tickets</p>
+<pre><code class="lang-shell-session">index=main latest=<span class="hljs-number">1690545656</span> EventCode=<span class="hljs-number">4672</span>
+| stats min(_time) <span class="hljs-keyword">as</span> firstTime, values(ComputerName) <span class="hljs-keyword">as</span> ComputerName by Account_Name
+| eval last24h = <span class="hljs-number">1690451977</span> 
+```| eval last24h=relative_time(now(),<span class="hljs-string">"-24h@h"</span>) ```
+| <span class="hljs-keyword">where</span> firstTime &gt; last24h 
+| table firstTime, ComputerName, Account_Name 
+| convert ctime(firstTime)
+</code></pre>
+<p><img src="storage\modules\233\19.png" alt=""></p>
+<h2 id="detecting-unconstrained-delegation-constrained-delegation-attacks">Detecting Unconstrained Delegation/Constrained Delegation Attacks</h2>
+<h3 id="unconstrained-delegation">Unconstrained Delegation</h3>
+<p><code>Unconstrained Delegation</code> is a privilege that can be granted to User Accounts or Computer Accounts in an Active Directory environment, allowing a service to authenticate to another resource on behalf of <code>any</code> user. This might be necessary when, for example, a web server requires access to a database server to make changes on a user's behalf.</p>
+<p><img src="storage\modules\233\image49.png" alt=""></p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker identifies systems on which Unconstrained Delegation is enabled for service accounts. <img src="storage\modules\233\image19.png" alt=""></li>
+<li>The attacker gains access to a system with Unconstrained Delegation enabled.</li>
+<li>The attacker extracts Ticket Granting Ticket (TGT) tickets from the memory of the compromised system using tools such as <code>Mimikatz</code>. <img src="storage\modules\233\image3.png" alt=""></li>
+</ul>
+<p><strong>Kerberos Authentication With Unconstrained Delegation</strong></p>
+<p>When Unconstrained Delegation is enabled, the main difference in Kerberos Authentication is that when a user requests a TGS ticket for a remote service, the Domain Controller will embed the user's TGT into the service ticket. When connecting to the remote service, the user will present not only the TGS ticket but also their own TGT. When the service needs to authenticate to another service on behalf of the user, it will present the user's TGT ticket, which the service received with the TGS ticket.</p>
+<p><img src="storage\modules\233\image51.png" alt=""></p>
+<p><strong>Unconstrained Delegation Attack Detection Opportunities</strong></p>
+<p>PowerShell commands and LDAP search filters used for Unconstrained Delegation discovery can be detected by monitoring PowerShell script block logging (<code>Event ID 4104</code>) and LDAP request logging.</p>
+<p>The main goal of an Unconstrained Delegation attack is to retrieve and reuse TGT tickets, so Pass-the-Ticket detection can be used as well.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-unconstrained-delegation-attacks-with-splunk">Detecting Unconstrained Delegation Attacks With Splunk</h3>
+<p>Now let's explore how we can identify Unconstrained Delegation attacks, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690544538 latest=1690544540</code></p>
+<p>Detecting Unconstrained Delegation/Constrained Delegation Attacks</p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690544538</span> latest=<span class="hljs-number">1690544540</span> source=<span class="hljs-string">"WinEventLog:Microsoft-Windows-PowerShell/Operational"</span> EventCode=<span class="hljs-number">4104</span> <span class="hljs-keyword">Message</span>=<span class="hljs-string">"*TrustedForDelegation*"</span> <span class="hljs-keyword">OR</span> <span class="hljs-keyword">Message</span>=<span class="hljs-string">"*userAccountControl:1.2.840.113556.1.4.803:=524288*"</span> 
+| table _time, ComputerName, EventCode, <span class="hljs-keyword">Message</span>
+</code></pre>
+<p><img src="storage\modules\233\20.png" alt=""></p>
+<h3 id="constrained-delegation">Constrained Delegation</h3>
+<p><code>Constrained Delegation</code> is a feature in Active Directory that allows services to delegate user credentials only to specified resources, reducing the risk associated with Unconstrained Delegation. Any user or computer accounts that have service principal names (SPNs) set in their <code>msDS-AllowedToDelegateTo</code> property can impersonate any user in the domain to those specific SPNs.</p>
+<p><img src="storage\modules\233\image26.png" alt=""></p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker identifies systems where Constrained Delegation is enabled and determines the resources to which they are allowed to delegate. <img src="storage\modules\233\image35.png" alt=""></li>
+<li>The attacker gains access to the TGT of the principal (user or computer). The TGT can be extracted from memory (Rubeus dump) or requested with the principal's hash. <img src="storage\modules\233\image64.png" alt=""></li>
+<li>The attacker uses the S4U technique to impersonate a high-privileged account to the targeted service (requesting a TGS ticket). <img src="storage\modules\233\image48.png" alt=""></li>
+<li>The attacker injects the requested ticket and accesses targeted services as the impersonated user. <img src="storage\modules\233\image60.png" alt=""></li>
+</ul>
+<p><strong>Kerberos Protocol Extensions - Service For User</strong></p>
+<p><code>Service for User to Self (S4U2self)</code> and <code>Service for User to Proxy (S4U2proxy)</code> allow a service to request a ticket from the Key Distribution Center (KDC) on behalf of a user. S4U2self allows a service to obtain a TGS for itself on behalf of a user, while S4U2proxy allows the service to obtain a TGS on behalf of a user for a second service.</p>
+<p>S4U2self was designed to enable a user to request a TGS ticket when another method of authentication was used instead of Kerberos. Importantly, this TGS ticket can be requested on behalf of any user, for example, an Administrator.</p>
+<p><img src="storage\modules\233\image29.png" alt=""></p>
+<p>S4U2proxy was designed to take a forwardable ticket and use it to request a TGS ticket to any SPN specified in the <code>msds-allowedtodelegateto</code> options for the user specified in the S4U2self part.</p>
+<p>With a combination of S4U2self and S4U2proxy, an attacker can impersonate any user to service principal names (SPNs) set in <code>msDS-AllowedToDelegateTo</code> properties.</p>
+<p><strong>Constrained Delegation Attack Detection Opportunities</strong></p>
+<p>Similar to Unconstrained Delegation, it is possible to detect PowerShell commands and LDAP requests aimed at discovering vulnerable Constrained Delegation users and computers.</p>
+<p>To request a TGT ticket for a principal, as well as a TGS ticket using the S4U technique, Rubeus makes connections to the Domain Controller. This activity can be detected as an unusual process network connection to TCP/UDP port <code>88</code> (Kerberos).</p>
+<h3 id="detecting-constrained-delegation-attacks-with-splunk">Detecting Constrained Delegation Attacks With Splunk</h3>
+<p>Now let's explore how we can identify Constrained Delegation attacks, using Splunk.</p>
+<p><strong>Detecting Constrained Delegation Attacks - Leveraging PowerShell Logs</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690544553 latest=1690562556</code></p>
+<p>Detecting Unconstrained Delegation/Constrained Delegation Attacks</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690544553</span> <span class="hljs-attr">latest=1690562556</span> <span class="hljs-attr">source="WinEventLog:Microsoft-Windows-PowerShell/Operational"</span> <span class="hljs-attr">EventCode=4104</span> <span class="hljs-attr">Message="*msDS-AllowedToDelegateTo*"</span> 
+| table _time, ComputerName, EventCode, Message
+</code></pre>
+<p><img src="storage\modules\233\21.png" alt=""></p>
+<p><strong>Detecting Constrained Delegation Attacks - Leveraging Sysmon Logs</strong></p>
+<p><strong>Timeframe</strong>: <code>earliest=1690562367 latest=1690562556</code></p>
+<p>Detecting Unconstrained Delegation/Constrained Delegation Attacks</p>
+<pre><code class="lang-shell-session">index=main earliest=<span class="hljs-number">1690562367</span> latest=<span class="hljs-number">1690562556</span> source=<span class="hljs-string">"XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"</span> 
+| <span class="hljs-type">eventstats</span> values(process) <span class="hljs-built_in">as</span> process <span class="hljs-built_in">by</span> process_id
+| <span class="hljs-type">where</span> EventCode=<span class="hljs-number">3</span> AND dest_port=<span class="hljs-number">88</span>
+| <span class="hljs-type">table</span> _time, Computer, dest_ip, dest_port, Image, process
+</code></pre>
+<p><img src="storage\modules\233\22.png" alt=""></p>
+<h2 id="detecting-dcsync-dcshadow">Detecting DCSync/DCShadow</h2>
+<h3 id="dcsync">DCSync</h3>
+<p><code>DCSync</code> is a technique exploited by attackers to extract password hashes from Active Directory Domain Controllers (DCs). This method capitalizes on the <code>Replication Directory Changes</code> permission typically granted to domain controllers, enabling them to read all object attributes, including password hashes. Members of the Administrators, Domain Admins, and Enterprise Admin groups, or computer accounts on the domain controller, have the capability to execute DCSync to extract password data from Active Directory. This data may encompass both current and historical hashes of potentially valuable accounts, such as KRBTGT and Administrators.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker secures administrative access to a domain-joined system or escalates privileges to acquire the requisite rights to request replication data.</li>
+<li>Utilizing tools such as Mimikatz, the attacker requests domain replication data by using the DRSGetNCChanges interface, effectively mimicking a legitimate domain controller. <img src="storage\modules\233\image73.png" alt=""></li>
+<li>The attacker may then craft Golden Tickets, Silver Tickets, or opt to employ Pass-the-Hash/Overpass-the-Hash attacks.</li>
+</ul>
+<p><strong>DCSync Detection Opportunities</strong></p>
+<p><code>DS-Replication-Get-Changes</code> operations can be recorded with <code>Event ID 4662</code>. However, an additional <code>Audit Policy Configuration</code> is needed since it is not enabled by default (Computer Configuration/Windows Settings/Security Settings/Advanced Audit Policy Configuration/DS Access).</p>
+<p><img src="storage\modules\233\image72.png" alt=""></p>
+<p>Seek out events containing the property <code>{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}</code>, corresponding to <code>DS-Replication-Get-Changes</code>, as Event <code>4662</code> solely consists of GUIDs.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="http://\[Target">http://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<h3 id="detecting-dcsync-with-splunk">Detecting DCSync With Splunk</h3>
+<p>Now let's explore how we can identify DCSync, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690544278 latest=1690544280</code></p>
+<p>Detecting DCSync/DCShadow</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690544278</span> <span class="hljs-attr">latest=1690544280</span> <span class="hljs-attr">EventCode=4662</span> <span class="hljs-attr">Message="*Replicating</span> Directory Changes*<span class="hljs-string">"
+| rex field=Message "</span>(?P&lt;property&gt;Replicating Directory Changes.*)<span class="hljs-string">"
+| table _time, user, object_file_name, Object_Server, property</span>
+</code></pre>
+<p><img src="storage\modules\233\23.png" alt=""></p>
+<h3 id="dcshadow">DCShadow</h3>
+<p><code>DCShadow</code> is an advanced tactic employed by attackers to enact unauthorized alterations to Active Directory objects, encompassing the creation or modification of objects without producing standard security logs. The assault harnesses the <code>Directory Replicator (Replicating Directory Changes)</code> permission, customarily granted to domain controllers for replication tasks. DCShadow is a clandestine technique enabling attackers to manipulate Active Directory data and establish persistence within the network. Registration of a rogue DC necessitates the creation of new server and <code>nTDSDSA</code> objects in the Configuration partition of the AD schema, which demands Administrator privileges (either Domain or local to the DC) or the <code>KRBTGT</code> hash.</p>
+<p><strong>Attack Steps:</strong></p>
+<ul>
+<li>The attacker secures administrative access to a domain-joined system or escalates privileges to acquire the necessary rights to request replication data.</li>
+<li>The attacker registers a rogue domain controller within the domain, leveraging the <code>Directory Replicator</code> permission, and executes changes to AD objects, such as modifying user groups to Domain Administrator groups. <img src="storage\modules\233\image43.png" alt=""></li>
+<li>The rogue domain controller initiates replication with the legitimate domain controllers, disseminating the changes throughout the domain. <img src="storage\modules\233\image42.png" alt=""></li>
+</ul>
+<p><strong>DCShadow Detection Opportunities</strong></p>
+<p>To emulate a Domain Controller, DCShadow must implement specific modifications in Active Directory:</p>
+<ul>
+<li><code>Add a new nTDSDSA object</code></li>
+<li><code>Append a global catalog ServicePrincipalName to the computer object</code></li>
+</ul>
+<p><code>Event ID 4742 (Computer account was changed)</code> logs changes related to computer objects, including <code>ServicePrincipalName</code>.</p>
+<h3 id="detecting-dcshadow-with-splunk">Detecting DCShadow With Splunk</h3>
+<p>Now let's explore how we can identify DCShadow, using Splunk.</p>
+<p><strong>Timeframe</strong>: <code>earliest=1690623888 latest=1690623890</code></p>
+<p>Detecting DCSync/DCShadow</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=main</span> <span class="hljs-attr">earliest=1690623888</span> <span class="hljs-attr">latest=1690623890</span> <span class="hljs-attr">EventCode=4742</span> 
+| rex <span class="hljs-attr">field=Message</span> <span class="hljs-string">"(?P&lt;gcspn&gt;XX\/[a-zA-Z0-9\.\-\/]+)"</span> 
+| table _time, ComputerName, Security_ID, Account_Name, user, gcspn 
+| search <span class="hljs-attr">gcspn=*</span>
+</code></pre>
+<p><img src="storage\modules\233\24\_.png" alt=""></p>
+<h2 id="creating-custom-splunk-applications">Creating Custom Splunk Applications</h2>
+<h3 id="how-to-create-a-custom-splunk-application">How To Create A Custom Splunk Application</h3>
+<ol>
+<li><code>Access Splunk Web</code>: Open your web browser and navigate to Splunk Web.</li>
+<li><code>Go to Manage Apps</code>: From the menu bar at the top, select <code>Apps</code> and then choose <code>Manage Apps</code>. <img src="storage\modules\233\image46.png" alt=""></li>
+<li><code>Create a New App</code>: On the <code>Apps</code> page, click on <code>Create app</code>.</li>
+<li><code>Enter App Details</code>: On the <code>Add new</code> page, complete the properties for your new app:<ul>
+<li><code>Name</code>: Enter the name for your app, for example, <code>&lt;Your app name&gt;</code>.</li>
+<li><code>Folder name</code>: Specify the folder name, which should be similar to <code>&lt;App_name&gt;</code>. This will correspond to the app's directory under <code>$SPLUNK_HOME/etc/apps/</code>.</li>
+<li><code>Version</code>: Input "1.0.0".</li>
+<li><code>Description</code>: Provide a description for your app, for instance, <code>&lt;App description&gt;</code>.</li>
+<li><code>Template</code>: Choose <code>barebones</code> from the drop-down menu. <img src="storage\modules\233\image20.png" alt=""></li>
+</ul>
+</li>
+<li><code>Save the App</code>: Click on <code>Save</code>. You can verify that your app has been created by going to the <code>Apps</code> menu. Your new app should now be listed there. Also, if you navigate to the Splunk Web home page, you'll find your app listed under the <code>Apps</code> list as <code>Academy hackthebox - Detection of Active Directory Attacks</code>. <img src="storage\modules\233\image7.png" alt=""> <img src="storage\modules\233\image36.png" alt=""></li>
+<li><code>Explore the Directory Structure</code>: Use a file browser to navigate to <code>$SPLUNK_HOME/etc/apps</code>. Here you'll find your app directory, which includes the following folders:<ul>
+<li><code>/bin</code>: This is where scripts are stored.</li>
+<li><code>/default</code>: This directory holds files for configuration, views, dashboards, and app navigation.</li>
+<li><code>/local</code>: This directory contains user-modified versions of files for configuration, views, dashboards, and app navigation.</li>
+<li><code>/metadata</code>: This directory holds permissions files. <img src="storage\modules\233\image30.png" alt=""></li>
+</ul>
+</li>
+<li><p><code>View the Navigation File</code>: The navigation configuration file is an XML file. Using a text editor, open <code>$SPLUNK_HOME/etc/apps/&lt;your app&gt;/default/data/ui/nav/default.xml</code>. Here you'll find the default navigation definition for an app:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">  <span class="hljs-tag">&lt;<span class="hljs-name">nav</span> <span class="hljs-attr">search_view</span>=<span class="hljs-string">"search"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">view</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"search"</span> <span class="hljs-attr">default</span>=<span class="hljs-string">'true'</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">view</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"analytics_workspace"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">view</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"datasets"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">view</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"reports"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">view</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"alerts"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">view</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"dashboards"</span> /&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">nav</span>&gt;</span>
+</code></pre>
+<p>In this XML, the top-level nav tag acts as the parent. The <code>search_view</code> attribute designates the default view for searches. In this case, the <code>search</code> view is employed, which is inherited from the <code>Search &amp; Reporting</code> app. The next level in the XML hierarchy corresponds to items displayed on the app bar. The list of view tags denotes different views to show. Each of the views corresponds to a view from the Search &amp; Reporting app. The attribute <code>default='true'</code> indicates the view to use as the app home page – here, the <code>search</code> view serves as the home page.</p>
+</li>
+<li><p><code>Create Your First Dashboard</code>: Go to <code>dashboards</code> and click on <code>Create New Dashboard</code>. Enter the dashboard name, provide a description if necessary, set permissions, and select <code>Classic Dashboards</code>. <img src="storage\modules\233\image50.png" alt=""></p>
+<p><img src="storage\modules\233\image54.png" alt=""></p>
+</li>
+<li><p><code>Configure the Dashboard</code>: You'll now see the dashboard editor page, where you can configure panels, inputs, etc., to facilitate your monitoring process. Add time input for the dashboard and adjust the default time range to suit your needs. Next, add a statistical table panel, select a time range for the Shared Time Picker, add the Content Title (e.g., <code>"&lt;Panel name&gt;"</code>), and input the Search String. To use input in searches, enclose the input token with dollar signs, like <code>$user$</code>. Click <code>Add to Dashboard</code> when ready. Save your changes. <img src="storage\modules\233\image4.png" alt=""></p>
+<p><img src="storage\modules\233\image83.png" alt=""></p>
+<p><img src="storage\modules\233\image27.png" alt=""></p>
+<p><img src="storage\modules\233\image12.png" alt=""></p>
+</li>
+<li><code>Dashboard Storage</code>: All dashboards you've created in your app are stored at <code>"&lt;AppPath&gt;/local/data/ui/views/dashboard_title.xml"</code>. To add your dashboard to the navigation bar, simply append the dashboard title to the navigation default page XML: <code>"&lt;AppPath&gt;/local/data/ui/nav/default.xml"</code>. <img src="storage\modules\233\image21.png" alt=""></li>
+<li><code>Restart Splunk</code>: Reboot your Splunk instance. Once restarted, you should see your dashboard in the navigation bar. <img src="storage\modules\233\image55.png" alt=""></li>
+<li><code>Grouping Dashboards</code>: If you wish to group multiple dashboards under a single entry in the navigation bar, use the collection tag. <img src="storage\modules\233\image58.png" alt=""></li>
+</ol>
+<h3 id="updating-exploring-the-academy-hackthebox-detection-of-active-directory-attacks-splunk-application">Updating &amp; Exploring The "Academy hackthebox - Detection of Active Directory Attacks" Splunk Application</h3>
+<p><code>Detection-of-Active-Directory-Attacks.tar.gz.tar</code> can be downloaded from the <code>Resources</code> section of this module (upper right corner) and used to update the existing <code>Academy hackthebox - Detection of Active Directory Attacks</code> Splunk Application by clicking <code>Apps</code> -&gt; <code>Manage Apps</code> -&gt; <code>Install app from file</code> -&gt; <code>Browse</code> -&gt; ✓ <code>Upgrade app. Checking this will overwrite the app if it already exists.</code> -&gt; <code>Upload</code>.</p>
+<p>Now, take some time to explore this custom Splunk application and see how it can significantly improve our monitoring capabilities.</p>
+<h2 id="detecting-rdp-brute-force-attacks">Detecting RDP Brute Force Attacks</h2>
+<p>We often encounter <code>Remote Desktop Protocol (RDP) brute force attacks</code> as a favorite vector for attackers to gain initial foothold in a network. The concept of an RDP brute force attack is relatively straightforward: attackers attempt to login into a Remote Desktop session by systematically guessing and trying different passwords until they find the correct one. This method exploits the fact that many users often have weak or default passwords that are easy to guess.</p>
+<p><strong>How RDP Traffic Looks Like</strong></p>
+<p><img src="storage\modules\233\100.png" alt=""></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting RDP Brute Force Attacks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/rdp_bruteforce</code></li>
+<li><strong>Related Splunk Index</strong>: <code>rdp_bruteforce</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:rdp:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-rdp-brute-force-attacks-with-splunk-zeek-logs">Detecting RDP Brute Force Attacks With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify RDP brute force attacks, using Splunk and Zeek logs.</p>
+<p>Detecting RDP Brute Force Attacks</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"rdp_bruteforce"</span> sourcetype=<span class="hljs-string">"bro:rdp:json"</span>
+| bin _time span=<span class="hljs-number">5</span>m
+| stats <span class="hljs-built_in">count</span> values(cookie) <span class="hljs-keyword">by</span> _time, <span class="hljs-built_in">id</span>.orig_h, <span class="hljs-built_in">id</span>.resp_h
+| <span class="hljs-keyword">where</span> <span class="hljs-built_in">count</span>&gt;<span class="hljs-number">30</span>
+</code></pre>
+<p><img src="storage\modules\233\101.png" alt=""></p>
+<h2 id="detecting-beaconing-malware">Detecting Beaconing Malware</h2>
+<p><code>Malware beaconing</code> is a technique we frequently encounter in our cybersecurity investigations. It refers to the periodic communication initiated by malware-infected systems with their respective command and control (C2) servers. The beacons, typically small data packets, are sent at regular intervals, much like a lighthouse sends out a regular signal.</p>
+<p>In our analysis of beaconing behavior, we often observe several distinct patterns. The beaconing intervals can be fixed, jittered (varied slightly from a fixed pattern), or follow a more complex schedule based on the malware's specific objectives. We've encountered malware that uses various protocols for beaconing, including HTTP/HTTPS, DNS, and even ICMP (ping).</p>
+<p>In this section, we will concentrate on detecting the beaconing behavior associated with a widely recognized Command and Control (C2) framework known as <code>Cobalt Strike</code> (in its default configuration).</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Beaconing Malware</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/cobaltstrike_beacon</code></li>
+<li><strong>Related Splunk Index</strong>: <code>cobaltstrike_beacon</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:http:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-beaconing-malware-with-splunk-zeek-logs">Detecting Beaconing Malware With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify beaconing, using Splunk and Zeek logs.</p>
+<p>Detecting Beaconing Malware</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"cobaltstrike_beacon"</span> sourcetype=<span class="hljs-string">"bro:http:json"</span> 
+| sort <span class="hljs-number">0</span> _time
+| streamstats current=f last(_time) as prevtime <span class="hljs-keyword">by</span> src, dest, dest_port
+| <span class="hljs-built_in">eval</span> timedelta = _time - prevtime
+| eventstats <span class="hljs-built_in">avg</span>(timedelta) as <span class="hljs-built_in">avg</span>, <span class="hljs-built_in">count</span> as total <span class="hljs-keyword">by</span> src, dest, dest_port
+| <span class="hljs-built_in">eval</span> <span class="hljs-built_in">upper</span>=<span class="hljs-built_in">avg</span>*<span class="hljs-number">1.1</span>
+| <span class="hljs-built_in">eval</span> <span class="hljs-built_in">lower</span>=<span class="hljs-built_in">avg</span>*<span class="hljs-number">0.9</span>
+| <span class="hljs-built_in">where</span> timedelta &gt; <span class="hljs-built_in">lower</span> AND timedelta &lt; <span class="hljs-built_in">upper</span>
+| stats <span class="hljs-built_in">count</span>, values(<span class="hljs-built_in">avg</span>) as TimeInterval <span class="hljs-keyword">by</span> src, dest, dest_port, total
+| <span class="hljs-built_in">eval</span> prcnt = (<span class="hljs-built_in">count</span>/total)*<span class="hljs-number">100</span>
+| <span class="hljs-built_in">where</span> prcnt &gt; <span class="hljs-number">90</span> AND total &gt; <span class="hljs-number">10</span>
+</code></pre>
+<p><img src="storage\modules\233\102.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index="cobaltstrike_beacon" sourcetype="bro:http:json"</code>: Selects the data from the <code>cobaltstrike_beacon</code> index and filters events of type <code>bro:http:json</code>, which represent Zeek HTTP logs.</li>
+<li><code>| sort 0 _time</code>: Sorts the events in ascending order based on their timestamp (<code>_time</code>).</li>
+<li><code>| streamstats current=f last(_time) as prevtime by src, dest, dest_port</code>: For each event, calculates the previous event's timestamp (<code>prevtime</code>) grouped by source IP (<code>src</code>), destination IP (<code>dest</code>), and destination port (<code>dest_port</code>).</li>
+<li><code>| eval timedelta = _time - prevtime</code>: Computes the time difference (<code>timedelta</code>) between the current and previous events' timestamps.</li>
+<li><code>| eventstats avg(timedelta) as avg, count as total by src, dest, dest_port</code>: Calculates the average time difference (<code>avg</code>) and the total number of events (<code>total</code>) for each combination of <code>src</code>, <code>dest</code>, and <code>dest_port</code>.</li>
+<li><code>| eval upper=avg*1.1</code>: Sets an upper limit for the time difference by adding a <code>10%</code> margin to the average.</li>
+<li><code>| eval lower=avg*0.9</code>: Sets a lower limit for the time difference by subtracting a <code>10%</code> margin from the average.</li>
+<li><code>| where timedelta &gt; lower AND timedelta &lt; upper</code>: Filters the events where the time difference falls within the defined upper and lower limits.</li>
+<li><code>| stats count, values(avg) as TimeInterval by src, dest, dest_port, total</code>: Counts the number of events and extracts the average time interval for each combination of <code>src</code>, <code>dest</code>, <code>dest_port</code>, and <code>total</code>.</li>
+<li><code>| eval prcnt = (count/total)*100</code>: Calculates the percentage (<code>prcnt</code>) of events within the defined time interval limits.</li>
+<li><code>| where prcnt &gt; 90 AND total &gt; 10</code>: Filters the results to only include those where more than <code>90%</code> of the events fall within the defined time interval limits, and there are more than <code>10</code> total events.</li>
+</ul>
+<h2 id="detecting-nmap-port-scanning">Detecting Nmap Port Scanning</h2>
+<p><code>Port scanning with Nmap</code> is a key technique in the toolkit of attackers and penetration testers alike. In essence, what we're doing with Nmap is probing networked systems for open ports - these are the 'gates' through which data passes in and out of a system. Open ports can be likened to doors that might be unlocked in a building - doors that attackers could potentially use to gain access.</p>
+<p>When we use Nmap for port scanning, we're basically initiating a series of connection requests. We systematically attempt to establish a TCP handshake with each port in the target's address space. If the connection is successful, it indicates that the port is open. This is where it gets interesting. When we connect to an open port, the service listening on that port might send back a "banner" - this is essentially a little bit of data that tells us what service is running, and maybe even what version it's running.</p>
+<p>But let's clear up a misconception - when we're talking about Nmap sending data to the scanning port, we're not actually sending any real data. Aside from the actual TCP handshake itself, the payload of the packets Nmap sends is zero. We're not sending any extra data; we're just trying to initiate a connection.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Nmap Port Scanning</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/cobaltstrike_beacon</code></li>
+<li><strong>Related Splunk Index</strong>: <code>cobaltstrike_beacon</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:conn:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-nmap-port-scanning-with-splunk-zeek-logs">Detecting Nmap Port Scanning With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify Nmap port scanning, using Splunk and Zeek logs.</p>
+<p>Detecting Nmap Port Scanning</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"cobaltstrike_beacon"</span> sourcetype=<span class="hljs-string">"bro:conn:json"</span> orig_bytes=<span class="hljs-number">0</span> dest_ip IN (<span class="hljs-number">192.168</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>/<span class="hljs-number">16</span>, <span class="hljs-number">172.16</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>/<span class="hljs-number">12</span>, <span class="hljs-number">10.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>/<span class="hljs-number">8</span>) 
+| bin span=<span class="hljs-number">5</span>m _time 
+| stats dc(dest_port) as num_dest_port by _time, src_ip, dest_ip 
+| where num_dest_port &gt;= <span class="hljs-number">3</span>
+</code></pre>
+<p><img src="storage\modules\233\104.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index="cobaltstrike_beacon</code>": This restricts the search to logs stored in the <code>cobaltstrike_beacon</code> index.</li>
+<li><code>orig_bytes=0</code>: This part of the search filter focuses on network events where the original bytes sent are <code>zero</code>.</li>
+<li><code>dest_ip IN (192.168.0.0/16, 172.16.0.0/12, 10.0.0.0/8)</code>: This restricts the search to network events where the destination IP address is within the private IP address ranges, which are commonly used in internal networks.</li>
+<li><code>| bin span=5m _time</code>: This command bins the events into <code>5</code>-minute intervals based on the <code>_time</code> field, which is the timestamp of each event.</li>
+<li><code>| stats dc(dest_port) as num_dest_port by _time, src_ip, dest_ip</code>: The <code>stats</code> command is used to aggregate data. The <code>dc(dest_port)</code> function counts the distinct number of destination ports accessed for each combination of <code>_time</code>, <code>src_ip</code>, and <code>dest_ip</code>. The result is stored in a new field called <code>num_dest_port</code>.</li>
+<li><code>| where num_dest_port &gt;= 3</code>: This part of the search filters the results to only show those records where the distinct count of destination ports (<code>num_dest_port</code>) is <code>three</code> or greater. This is based on the assumption that scanning three or more ports within a short time frame is a potential indicator of a port scan.</li>
+</ul>
+<h2 id="detecting-kerberos-brute-force-attacks">Detecting Kerberos Brute Force Attacks</h2>
+<p>When adversaries perform <code>Kerberos-based user enumeration</code>, they send an AS-REQ (Authentication Service Request) message to the Key Distribution Center (KDC), which is responsible for handling Kerberos authentication. This message includes the username they're trying to validate. They pay close attention to the response they receive, as it reveals valuable information about the existence of the specified user account.</p>
+<p>A valid username will prompt the server to <code>return a TGT</code> or raise an error like <code>KRB5KDC_ERR_PREAUTH_REQUIRED</code>, indicating that preauthentication is required. On the other hand, an invalid username will be met with a Kerberos error code <code>KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN</code> in the AS-REP (Authentication Service Response) message. By examining the responses to their AS-REQ messages, adversaries can quickly determine which usernames are valid on the target system.</p>
+<p><strong>How Kerberos Brute Force Attacks Look Like On The Wire</strong></p>
+<p><img src="storage\modules\233\107.png" alt=""></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Kerberos Brute Force Attacks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/kerberos_bruteforce</code></li>
+<li><strong>Related Splunk Index</strong>: <code>kerberos_bruteforce</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:kerberos:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-kerberos-brute-force-attacks-with-splunk-zeek-logs">Detecting Kerberos Brute Force Attacks With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify Kerberos brute force attacks, using Splunk and Zeek logs.</p>
+<p>Detecting Kerberos Brute Force Attacks</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"kerberos_bruteforce"</span> sourcetype=<span class="hljs-string">"bro:kerberos:json"</span>
+error_msg!=KDC_ERR_PREAUTH_REQUIRED
+success=<span class="hljs-string">"false"</span> request_type=AS
+| bin _time span=<span class="hljs-number">5</span>m
+| stats <span class="hljs-built_in">count</span> dc(client) <span class="hljs-keyword">as</span> <span class="hljs-string">"Unique users"</span> values(error_msg) <span class="hljs-keyword">as</span> <span class="hljs-string">"Error messages"</span> <span class="hljs-keyword">by</span> _time, <span class="hljs-built_in">id</span>.orig_h, <span class="hljs-built_in">id</span>.resp_h
+| <span class="hljs-keyword">where</span> <span class="hljs-built_in">count</span>&gt;<span class="hljs-number">30</span>
+</code></pre>
+<p><img src="storage\modules\233\108.png" alt=""></p>
+<h2 id="detecting-kerberoasting">Detecting Kerberoasting</h2>
+<p>In 2016, a number of blog posts and articles emerged discussing the tactic of querying Service Principal Name (SPN) accounts and their corresponding tickets, an attack that came to be known as <code>Kerberoasting</code>. By possessing just one legitimate user account and its password, an attacker could retrieve the SPN tickets and attempt to break them offline.</p>
+<p>After examining numerous resources on kerberoasting, it is evident that <code>RC4</code> is utilized for ticket encryption behind the scenes. We will exploit this underpinning as a detection point in this section.</p>
+<p><strong>Evidence Source</strong>: <a href="https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/t1208-kerberoasting">https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/t1208-kerberoasting</a></p>
+<p><strong>How Kerberoasting Traffic Looks Like</strong></p>
+<p><img src="storage\modules\233\109.png" alt=""></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Kerberoasting</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/kerberoast</code></li>
+<li><strong>Related Splunk Index</strong>: <code>kerberoast</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:kerberos:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-kerberoasting-with-splunk-zeek-logs">Detecting Kerberoasting With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify Kerberoasting, using Splunk and Zeek logs.</p>
+<p>Detecting Kerberoasting</p>
+<pre><code class="lang-shell-session"><span class="hljs-title">index</span>=<span class="hljs-string">"kerberoast"</span>  source<span class="hljs-keyword">type</span>="bro:kerberos:json"
+<span class="hljs-title">request_type</span>=<span class="hljs-type">TGS</span> cipher=<span class="hljs-string">"rc4-hmac"</span> 
+<span class="hljs-title">forwardable</span>=<span class="hljs-string">"true"</span> renewable=<span class="hljs-string">"true"</span>
+| table _time, id.orig_h, id.resp_h, request_<span class="hljs-keyword">type</span>, cipher, forwardable, renewable, client, service
+</code></pre>
+<p><img src="storage\modules\233\110.png" alt=""></p>
+<h2 id="detecting-golden-tickets">Detecting Golden Tickets</h2>
+<p>Previously in this section, we covered <code>Golden Tickets</code>. Unfortunately, Zeek lacks the ability to trustworthily identify Golden Tickets. Therefore, we will concentrate our Splunk search on uncovering anomalies in Kerberos ticket creation.</p>
+<p>In a Golden Ticket or Pass-the-Ticket attack, the attacker bypasses the usual Kerberos authentication process, which involves the AS-REQ and AS-REP messages.</p>
+<p>In a typical Kerberos authentication process, a client begins by sending an AS-REQ (Authentication Service Request) message to the Key Distribution Center (KDC), specifically the Authentication Service (AS), requesting a Ticket Granting Ticket (TGT). The KDC responds with an AS-REP (Authentication Service Response) message, which includes the TGT if the client's credentials are valid. The client can then use the TGT to request service tickets (Ticket Granting Service tickets, or TGS) for specific services on the network.</p>
+<ul>
+<li>In a Golden Ticket attack, the attacker generates a forged TGT, which grants them access to any service on the network without having to authenticate with the KDC. Since the attacker has a forged TGT, they can directly request TGS tickets without going through the AS-REQ and AS-REP process.</li>
+<li>In a Pass-the-Ticket attack, the attacker steals a valid TGT or TGS ticket from a legitimate user (for example, by compromising their machine) and then uses that ticket to access services on the network as if they were the legitimate user. Again, since the attacker already has a valid ticket, they can bypass the AS-REQ and AS-REP process.</li>
+</ul>
+<p><strong>How Golden Ticket Traffic Looks Like</strong></p>
+<p><img src="storage\modules\233\111.png" alt=""></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Golden Tickets</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/golden_ticket_attack</code></li>
+<li><strong>Related Splunk Index</strong>: <code>golden_ticket_attack</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:kerberos:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-golden-tickets-with-splunk-zeek-logs">Detecting Golden Tickets With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify Golden Tickets, using Splunk and Zeek logs.</p>
+<p>Detecting Golden Tickets</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"golden_ticket_attack"</span> sourcetype=<span class="hljs-string">"bro:kerberos:json"</span>
+| <span class="hljs-keyword">where</span> client!=<span class="hljs-string">"-"</span>
+| bin _time span=<span class="hljs-number">1</span>m 
+| stats values(client), values(request_type) <span class="hljs-keyword">as</span> request_types, dc(request_type) <span class="hljs-keyword">as</span> unique_request_types <span class="hljs-keyword">by</span> _time, <span class="hljs-built_in">id</span>.orig_h, <span class="hljs-built_in">id</span>.resp_h
+| <span class="hljs-keyword">where</span> request_types==<span class="hljs-string">"TGS"</span> AND unique_request_types==<span class="hljs-number">1</span>
+</code></pre>
+<p><img src="storage\modules\233\112.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index="golden_ticket_attack" sourcetype="bro:kerberos:json"</code>: This line specifies the data source the query is searching. It's looking for events in the <code>golden_ticket_attack</code> index where the <code>sourcetype</code> (data format) is <code>bro:kerberos:json</code>.</li>
+<li><code>| where client!="-"</code>: This line filters out events where the <code>client</code> field is equal to <code>-</code>. This is to remove noise from the data by excluding events where the client information is not available.</li>
+<li><code>| bin _time span=1m</code>: This line divides the data into <code>one-minute</code> intervals based on the <code>_time</code> field, which is the timestamp of each event. This is used to analyze patterns of activity within each one-minute window.</li>
+<li><code>| stats values(client), values(request_type) as request_types, dc(request_type) as unique_request_types by _time, id.orig_h, id.resp_h</code>: This line aggregates the data by the minute, source IP address (<code>id.orig_h</code>), and destination IP address (<code>id.resp_h</code>). It calculates the following for each combination of these grouping fields:<ul>
+<li><code>values(client)</code>: All the unique client values associated with the events.</li>
+<li><code>values(request_type) as request_types</code>: All the unique request types associated with the events.</li>
+<li><code>dc(request_type) as unique_request_types</code>: The distinct count of request types.</li>
+</ul>
+</li>
+<li><code>| where request_types=="TGS" AND unique_request_types==1</code>: This line filters the results to only show those where the only request type is <code>TGS</code> (Ticket Granting Service), and there's only one unique request type.</li>
+</ul>
+<h2 id="detecting-cobalt-strike-s-psexec">Detecting Cobalt Strike's PSExec</h2>
+<p>Cobalt Strike's <code>psexec</code> command is an implementation of the popular PsExec tool, which is a part of Microsoft's Sysinternals Suite. It's a lightweight telnet-replacement that lets you execute processes on other systems. Cobalt Strike's version is utilized to execute payloads on remote systems, as part of the post-exploitation process.</p>
+<p>When the <code>psexec</code> command is invoked within Cobalt Strike, the following steps occur:</p>
+<ul>
+<li><code>Service Creation</code>: The tool first creates a new service on the target system. This service is responsible for executing the desired payload. The service is typically created with a random name to avoid easy detection.</li>
+<li><code>File Transfer</code>: Cobalt Strike then transfers the payload to the target system, often to the <code>ADMIN$</code> share. This is typically done using the SMB protocol.</li>
+<li><code>Service Execution</code>: The newly created service is then started, which in turn executes the payload. This payload can be a shellcode, an executable, or any other file type that can be executed.</li>
+<li><code>Service Removal</code>: After the payload has been executed, the service is stopped and deleted from the target system to minimize traces of the intrusion.</li>
+<li><code>Communication</code>: If the payload is a beacon or another type of backdoor, it will typically establish communication back to the Cobalt Strike team server, allowing for further commands to be sent and executed on the compromised system.</li>
+</ul>
+<p>Cobalt Strike's <code>psexec</code> works over port 445 (SMB), and it requires local administrator privileges on the target system. Therefore, it's often used after initial access has been achieved and privileges have been escalated.</p>
+<p><strong>How Cobalt Strike PSExec Traffic Looks Like</strong></p>
+<p><img src="storage\modules\233\113.png" alt=""></p>
+<p><strong>Image Source</strong>: <a href="https://thedfirreport.com/2021/08/29/cobalt-strike-a-defenders-guide/">https://thedfirreport.com/2021/08/29/cobalt-strike-a-defenders-guide/</a></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/cobalt_strike_psexec</code></li>
+<li><strong>Related Splunk Index</strong>: <code>cobalt_strike_psexec</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:smb_files:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-cobalt-strike-s-psexec-with-splunk-zeek-logs">Detecting Cobalt Strike's PSExec With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify Cobalt Strike's PSExec, using Splunk and Zeek logs.</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"cobalt_strike_psexec"</span>
+sourcetype=<span class="hljs-string">"bro:smb_files:json"</span>
+<span class="hljs-built_in">action</span>=<span class="hljs-string">"SMB::FILE_OPEN"</span> 
+<span class="hljs-built_in">name</span> <span class="hljs-built_in">IN</span> (<span class="hljs-string">"*.exe"</span>, <span class="hljs-string">"*.dll"</span>, <span class="hljs-string">"*.bat"</span>)
+path <span class="hljs-built_in">IN</span> (<span class="hljs-string">"*\\c$"</span>, <span class="hljs-string">"*\\ADMIN$"</span>)
+<span class="hljs-built_in">size</span>&gt;<span class="hljs-number">0</span>
+</code></pre>
+<p><img src="storage\modules\233\114.png" alt=""></p>
+<h2 id="detecting-zerologon">Detecting Zerologon</h2>
+<p>The <code>Zerologon</code> vulnerability, also known as CVE-2020-1472, is a critical flaw in the implementation of the Netlogon Remote Protocol, specifically in the cryptographic algorithm used by the protocol. The vulnerability can be exploited by an attacker to impersonate any computer, including the domain controller, and execute remote procedure calls on their behalf. Let's dive into the technical details of this flaw.</p>
+<p>At the heart of Zerologon is the cryptographic issue in the way Microsoft's Netlogon Remote Protocol authenticates users and machines in a Windows domain. When a client wants to authenticate against the domain controller, it uses a protocol called MS-NRPC, a part of Netlogon, to establish a secure channel.</p>
+<p>During this process, the client and the server generate a session key, which is computed from the machine account's password. This key is then used to derive an initialization vector (IV) for the AES-CFB8 encryption mode. In a secure configuration, the IV should be unique and random for each encryption operation. However, due to the flawed implementation in the Netlogon protocol, the IV is set to a fixed value of all zeros.</p>
+<p>The attacker can exploit this cryptographic weakness by attempting to authenticate against the domain controller using a session key consisting of all zeros, effectively bypassing the authentication process. This allows the attacker to establish a secure channel with the domain controller without knowing the machine account's password.</p>
+<p>Once this channel is established, the attacker can utilize the NetrServerPasswordSet2 function to change the computer account's password to any value, including a blank password. This effectively gives the attacker full control over the domain controller and, by extension, the entire Active Directory domain.</p>
+<p>The Zerologon vulnerability is particularly dangerous due to its simplicity and the level of access it provides to attackers. Exploiting this flaw requires only a few Netlogon messages, and it can be executed within seconds.</p>
+<p><strong>How Zerologon Looks Like From A Network Perspective</strong></p>
+<p><img src="storage\modules\233\116.png" alt=""></p>
+<p><strong>Image Source</strong>: <a href="https://www.trendmicro.com/en\_us/what-is/zerologon.html">https://www.trendmicro.com/en_us/what-is/zerologon.html</a></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Zerologon</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/zerologon</code></li>
+<li><strong>Related Splunk Index</strong>: <code>zerologon</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:dce_rpc:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-zerologon-with-splunk-zeek-logs">Detecting Zerologon With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify Zerologon, using Splunk and Zeek logs.</p>
+<p>Detecting Zerologon</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"zerologon"</span> endpoint=<span class="hljs-string">"netlogon"</span> sourcetype=<span class="hljs-string">"bro:dce_rpc:json"</span>
+| bin _time span=<span class="hljs-number">1</span>m
+| <span class="hljs-keyword">where</span> operation == <span class="hljs-string">"NetrServerReqChallenge"</span> OR operation == <span class="hljs-string">"NetrServerAuthenticate3"</span> OR operation == <span class="hljs-string">"NetrServerPasswordSet2"</span>
+| stats <span class="hljs-built_in">count</span> values(operation) <span class="hljs-keyword">as</span> operation_values dc(operation) <span class="hljs-keyword">as</span> unique_operations <span class="hljs-keyword">by</span> _time, <span class="hljs-built_in">id</span>.orig_h, <span class="hljs-built_in">id</span>.resp_h
+| <span class="hljs-keyword">where</span> unique_operations &gt;= <span class="hljs-number">2</span> AND <span class="hljs-built_in">count</span>&gt;<span class="hljs-number">100</span>
+</code></pre>
+<p><img src="storage\modules\233\117.png" alt=""></p>
+<h2 id="detecting-exfiltration-http-">Detecting Exfiltration (HTTP)</h2>
+<p><code>Data exfiltration</code> inside the POST body is a technique that attackers employ to extract sensitive information from a compromised system by disguising it as legitimate web traffic. It involves transmitting the stolen data from the compromised system to an external server controlled by the attacker using HTTP POST requests. Since POST requests are commonly used for legitimate purposes, such as form submissions and file uploads, this method of data exfiltration can be difficult to detect.</p>
+<p>To exfiltrate the data, the attackers send it as the body of an HTTP POST request to their command and control (C2) server. They often use seemingly innocuous URLs and headers to further disguise the malicious traffic. The C2 server receives the POST request, extracts the data from the body, and decodes or decrypts it for further analysis and exploitation.</p>
+<p>To detect data exfiltration via POST body, we can employ network monitoring and analysis tools to aggregate all data sent to specific IP addresses and ports. By analyzing the aggregated data, we can identify patterns and anomalies that may indicate data exfiltration attempts.</p>
+<p>In this section, we will monitor the volume of outgoing traffic from our network to specific IP addresses and ports. If we observe unusually large or frequent data transfers to a specific destination, it may indicate data exfiltration.</p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Exfiltration (HTTP)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/cobaltstrike_exfiltration_http</code></li>
+<li><strong>Related Splunk Index</strong>: <code>cobaltstrike_exfiltration_http</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:http:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-http-exfiltration-with-splunk-zeek-logs">Detecting HTTP Exfiltration With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify HTTP exfiltration, using Splunk and Zeek logs.</p>
+<p>Detecting Exfiltration (HTTP)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"cobaltstrike_exfiltration_http"</span> sourcetype=<span class="hljs-string">"bro:http:json"</span> method=POST
+| <span class="hljs-type">stats</span> <span class="hljs-built_in">sum</span>(request_body_len) <span class="hljs-built_in">as</span> TotalBytes <span class="hljs-built_in">by</span> src, dest, dest_port
+| <span class="hljs-type">eval</span> TotalBytes = TotalBytes/<span class="hljs-number">1024</span>/<span class="hljs-number">1024</span>
+</code></pre>
+<p><img src="storage\modules\233\118.png" alt=""></p>
+<h2 id="detecting-exfiltration-dns-">Detecting Exfiltration (DNS)</h2>
+<p>Attackers employ <code>DNS-based exfiltration</code> due to its reliability, stealthiness, and the fact that DNS traffic is often allowed by default in network firewall rules. By embedding data within DNS queries and responses, attackers can bypass security controls and exfiltrate data covertly. Below is a detailed explanation of this technique and detection methods:</p>
+<p><strong>How DNS Exfiltration Works:</strong></p>
+<ul>
+<li><code>Initial Compromise</code>: The attacker gains access to the victim's network, typically through malware, phishing, or exploiting vulnerabilities.</li>
+<li><code>Data Identification and Preparation</code>: The attacker locates the data they want to exfiltrate and prepares it for transmission. This usually involves encoding or encrypting the data and splitting it into small chunks.</li>
+<li><code>Exfiltration via DNS</code>: The attacker sends the data in the subdomains of DNS queries, utilizing techniques such as DNS tunneling or fast flux. They typically use a domain under their control or a compromised domain for this purpose. The attacker's DNS server receives the queries, extracts the data, and reassembles it.</li>
+<li><code>Data Retrieval and Analysis</code>: After exfiltration, the attacker decodes or decrypts the data and analyzes it.</li>
+</ul>
+<p><strong>How DNS Exfiltration Traffic Looks Like</strong></p>
+<p><img src="storage\modules\233\119.png" alt=""></p>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<p>Detecting Exfiltration (DNS)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /u</span><span class="hljs-symbol">:htb-student</span> /<span class="hljs-symbol">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> /<span class="hljs-symbol">v:</span>[Target IP] /dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/dns_exf</code></li>
+<li><strong>Related Splunk Index</strong>: <code>dns_exf</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:dns:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-dns-exfiltration-with-splunk-zeek-logs">Detecting DNS Exfiltration With Splunk &amp; Zeek Logs</h3>
+<p>Now let's explore how we can identify DNS exfiltration, using Splunk and Zeek logs.</p>
+<p>Detecting Exfiltration (DNS)</p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=dns_exf sourcetype=<span class="hljs-string">"bro:dns:json"</span>
+| eval len_query=<span class="hljs-built_in">len</span>(query)
+| <span class="hljs-built_in">search</span> len_query&gt;=<span class="hljs-number">40</span> <span class="hljs-built_in">AND</span> query!=<span class="hljs-string">"*.ip6.arpa*"</span> <span class="hljs-built_in">AND</span> query!=<span class="hljs-string">"*amazonaws.com*"</span> <span class="hljs-built_in">AND</span> query!=<span class="hljs-string">"*._googlecast.*"</span> <span class="hljs-built_in">AND</span> query!=<span class="hljs-string">"_ldap.*"</span>
+| bin _<span class="hljs-built_in">time</span> span=<span class="hljs-number">24</span>h
+| stats <span class="hljs-built_in">count</span>(query) as req_by_day by _<span class="hljs-built_in">time</span>, id.orig_h, id.resp_h
+| where req_by_day&gt;<span class="hljs-number">60</span>
+| table _<span class="hljs-built_in">time</span>, id.orig_h, id.resp_h, req_by_day
+</code></pre>
+<p><img src="storage\modules\233\120.png" alt=""></p>
+<h2 id="detecting-ransomware">Detecting Ransomware</h2>
+<p><code>Ransomware</code> leverage an array of techniques to accomplish their goals. In the following analysis, we'll explore two of these methods, examining their inner workings and explaining how to detect them through network monitoring efforts.</p>
+<ol>
+<li><code>File Overwrite Approach</code>: Ransomware employs this tactic by accessing files through the SMB protocol, encrypting them, and then directly overwriting the original files with their encrypted versions (again through the SMB protocol). The malicious actors behind ransomware prefer this method for its efficiency, as it requires fewer actions and leaves less trace of their activity. To detect this approach, security teams should look for excessive file overwrite operations on the system. <img src="storage\modules\233\121.png" alt=""></li>
+<li><code>File Renaming Approach</code>: In this approach, ransomware actors use the SMB protocol to read files, they then encrypt them and they finally rename the encrypted files by appending a unique extension (again through the SMB protocol), often indicative of the ransomware strain. The renaming signals that the files have been held hostage, making it easier for analysts and administrators to recognize an attack. Detection involves monitoring for an unusual number of files being renamed with the same extension, particularly those associated with known ransomware variants. <img src="storage\modules\233\122.png" alt=""></li>
+</ol>
+<p>Let's now navigate to the bottom of this section and click on "Click here to spawn the target system!". Then, access the Splunk interface at <a href="https://\[Target">https://\[Target</a> IP]:8000 and launch the Search &amp; Reporting Splunk application. The vast majority of searches covered from this point up to end of this section can be replicated inside the target, offering a more comprehensive grasp of the topics presented.</p>
+<p>Additionally, we can access the spawned target via RDP as outlined below. All files, logs, and PCAP files related to the covered attacks can be found in the /home/htb-student and /home/htb-student/module_files directories.</p>
+<pre><code class="lang-shell-session">[!bash!]$ xfreerdp <span class="hljs-regexp">/u:htb-student /</span><span class="hljs-string">p:</span><span class="hljs-string">'HTB_@cademy_stdnt!'</span> <span class="hljs-regexp">/v:[Target IP] /</span>dynamic-resolution
+</code></pre>
+<p><strong>Related Evidence</strong></p>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/ransomware_open_rename_sodinokibi</code></li>
+<li><strong>Related Splunk Index</strong>: <code>ransomware_open_rename_sodinokibi</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:smb_files:json</code></li>
+</ul>
+<hr>
+<ul>
+<li><strong>Related Directory</strong>: <code>/home/htb-student/module_files/ransomware_new_file_extension_ctbl_ocker</code></li>
+<li><strong>Related Splunk Index</strong>: <code>ransomware_new_file_extension_ctbl_ocker</code></li>
+<li><strong>Related Splunk Sourcetype</strong>: <code>bro:smb_files:json</code></li>
+</ul>
+<hr>
+<h3 id="detecting-ransomware-with-splunk-zeek-logs-excessive-overwriting-">Detecting Ransomware With Splunk &amp; Zeek Logs (Excessive Overwriting)</h3>
+<p>Now let's explore how we can identify ransomware, using Splunk and Zeek logs.</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"ransomware_open_rename_sodinokibi"</span> sourcetype=<span class="hljs-string">"bro:smb_files:json"</span> 
+| <span class="hljs-keyword">where</span> action IN (<span class="hljs-string">"SMB::FILE_OPEN"</span>, <span class="hljs-string">"SMB::FILE_RENAME"</span>)
+| bin _time span=<span class="hljs-number">5</span>m
+| stats <span class="hljs-built_in">count</span> <span class="hljs-keyword">by</span> _time, source, action
+| <span class="hljs-keyword">where</span> <span class="hljs-built_in">count</span>&gt;<span class="hljs-number">30</span> 
+| stats sum(<span class="hljs-built_in">count</span>) <span class="hljs-keyword">as</span> <span class="hljs-built_in">count</span> values(action) dc(action) <span class="hljs-keyword">as</span> uniq_actions <span class="hljs-keyword">by</span> _time, source
+| <span class="hljs-keyword">where</span> uniq_actions==<span class="hljs-number">2</span> AND <span class="hljs-built_in">count</span>&gt;<span class="hljs-number">100</span>
+</code></pre>
+<p><img src="storage\modules\233\123.png" alt=""></p>
+<hr>
+<h3 id="detecting-ransomware-with-splunk-zeek-logs-excessive-renaming-with-the-same-extension-">Detecting Ransomware With Splunk &amp; Zeek Logs (Excessive Renaming With The Same Extension)</h3>
+<p>Now let's explore how we can identify ransomware, using Splunk and Zeek logs.</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"ransomware_new_file_extension_ctbl_ocker"</span> sourcetype=<span class="hljs-string">"bro:smb_files:json"</span> action=<span class="hljs-string">"SMB::FILE_RENAME"</span> 
+| bin _time span=<span class="hljs-number">5</span>m
+| rex field=<span class="hljs-string">"name"</span> <span class="hljs-string">"\.(?&lt;new_file_name_extension&gt;[^\.]*$)"</span>
+| rex field=<span class="hljs-string">"prev_name"</span> <span class="hljs-string">"\.(?&lt;old_file_name_extension&gt;[^\.]*$)"</span>
+| stats <span class="hljs-built_in">count</span> <span class="hljs-keyword">by</span> _time, <span class="hljs-built_in">id</span>.orig_h, <span class="hljs-built_in">id</span>.resp_p, <span class="hljs-built_in">name</span>, source, old_file_name_extension, new_file_name_extension,
+| <span class="hljs-keyword">where</span> new_file_name_extension!=old_file_name_extension
+| stats <span class="hljs-built_in">count</span> <span class="hljs-keyword">by</span> _time, <span class="hljs-built_in">id</span>.orig_h, <span class="hljs-built_in">id</span>.resp_p, source, new_file_name_extension
+| <span class="hljs-keyword">where</span> <span class="hljs-built_in">count</span>&gt;<span class="hljs-number">20</span>
+| sort -<span class="hljs-built_in">count</span>
+</code></pre>
+<p><img src="storage\modules\233\124.png" alt=""></p>
+<p><strong>Search Breakdown</strong>:</p>
+<ul>
+<li><code>index="ransomware_new_file_extension_ctbl_ocker" sourcetype="bro:smb_files:json" action="SMB::FILE_RENAME"</code>: This line filters the events based on the index <code>ransomware_new_file_extension_ctbl_ocker</code>, a specific sourcetype <code>bro:smb_files:json</code>, and the action <code>SMB::FILE_RENAME</code>. This effectively narrows the search to SMB file rename actions in the specified index.</li>
+<li><code>| bin _time span=5m</code>: This line groups the events into <code>5</code>-minute time bins.</li>
+<li><code>| rex field="name" "\.(?&lt;new_file_name_extension&gt;[^\.]*$)"</code>: This line uses the regular expression (regex) to extract the file extension from the <code>name</code> field and assigns it to the new field <code>new_file_name_extension</code>.</li>
+<li><code>| rex field="prev_name" "\.(?&lt;old_file_name_extension&gt;[^\.]*$)"</code>: Similarly, this line extracts the file extension from the <code>prev_name</code> field and assigns it to the new field <code>old_file_name_extension</code>.</li>
+<li><code>| stats count by _time, id.orig_h, id.resp_p, name, source, old_file_name_extension, new_file_name_extension</code>: This line aggregates the events and counts the occurrences based on several fields, including time, originating host, responding port, file name, source, old file extension, and new file extension.</li>
+<li><code>| where new_file_name_extension!=old_file_name_extension</code>: This line filters out events where the new file extension is the same as the old file extension.</li>
+<li><code>| stats count by _time, id.orig_h, id.resp_p, source, new_file_name_extension</code>: This line counts the remaining events by time, originating host, responding port, source, and new file extension.</li>
+<li><code>| where count&gt;20</code>: This line filters out any results with fewer than <code>21</code> file renames within a <code>5</code>-minute time bin.</li>
+<li><code>| sort -count</code>: This line sorts the results in descending order based on the count of file renames.</li>
+</ul>
+<hr>
+<p><strong>Note</strong>: Known ransomware-related extensions can be found in the resources below.</p>
+<ul>
+<li><a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRCVzG9JCzak3hNqqrVCTQQIzH0ty77BWiLEbDu-q9oxkhAamqnlYgtQ4gF85pF6j6g3GmQxivuvO1U/pubhtml">https://docs.google.com/spreadsheets/d/e/2PACX-1vRCVzG9JCzak3hNqqrVCTQQIzH0ty77BWiLEbDu-q9oxkhAamqnlYgtQ4gF85pF6j6g3GmQxivuvO1U/pubhtml</a></li>
+<li><a href="https://github.com/corelight/detect-ransomware-filenames">https://github.com/corelight/detect-ransomware-filenames</a></li>
+<li><a href="https://fsrm.experiant.ca/">https://fsrm.experiant.ca/</a></li>
+</ul>
+</div></body></html>

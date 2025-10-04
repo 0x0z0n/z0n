@@ -1,0 +1,452 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="api-attacks">API Attacks</h1>
+<h2 id="introduction-to-api-attacks">Introduction to API Attacks</h2>
+<hr>
+<p>Application Programming Interfaces (APIs) are foundational to modern software development, with web APIs being the most prevalent form. They enable seamless communication and data exchange across diverse systems over the internet, serving as crucial bridges that facilitate integration and collaboration among different software applications.</p>
+<p>At their essence, APIs consist of defined rules and protocols that dictate how disparate systems interact. They specify data formatting requirements, delineate access methods for resources, and define expected response structures. APIs are broadly categorized as either public, accessible to external parties, or private, restricted to specific organizations or groups of systems.</p>
+<h3 id="api-building-styles">API Building Styles</h3>
+<p>Web APIs can be built using various architectural styles, including <code>REST</code>, <code>SOAP</code>, <code>GraphQL</code>, and <code>gRPC</code>, each with its own strengths and use cases:</p>
+<ul>
+<li><a href="https://ics.uci.edu/~fielding/pubs/dissertation/top.htm">Representational State Transfer</a> (<code>REST</code>) is the most popular API style. It uses a <code>client-server</code> model where clients make requests to resources on a server using standard HTTP methods (<code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>DELETE</code>). <code>RESTful</code> APIs are stateless, meaning each request contains all necessary information for the server to process it, and responses are typically serialized as JSON or XML.</li>
+<li><a href="https://www.w3.org/TR/2000/NOTE-SOAP-20000508/">Simple Object Access Protocol</a> (<code>SOAP</code>) uses XML for message exchange between systems. <code>SOAP</code> APIs are highly standardized and offer comprehensive features for security, transactions, and error handling, but they are generally more complex to implement and use than <code>RESTful</code> APIs.</li>
+<li><a href="https://graphql.org/">GraphQL</a> is an alternative style that provides a more flexible and efficient way to fetch and update data. Instead of returning a fixed set of fields for each resource, <code>GraphQL</code> allows clients to specify exactly what data they need, reducing over-fetching and under-fetching of data. <code>GraphQL</code> APIs use a single endpoint and a strongly-typed query language to retrieve data.</li>
+<li><a href="https://grpc.io/">gRPC</a> is a newer style that uses <a href="https://protobuf.dev/">Protocol Buffers</a> for message serialization, providing a high-performance, efficient way to communicate between systems. <code>gRPC</code> APIs can be developed in a variety of programming languages and are particularly useful for microservices and distributed systems.</li>
+</ul>
+<p>In this module, our focus will be on attacks against a <a href="https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html">RESTful web API</a>. However, the vulnerabilities demonstrated may also exist in APIs built using other architectural styles.</p>
+<h2 id="api-attacks">API Attacks</h2>
+<p>Due to their versatility and ubiquitousness, APIs are a double-edged sword. Regardless that they are a critical component of modern software architecture, they also present a broad attack surface. The very nature of APIs, facilitating data exchange and communication between diverse systems, introduces vulnerabilities, such as <code>Exposure of Sensitive Data</code>, <code>Authentication and Authorization Issues</code>, <code>Insufficient Rate Limiting</code>, <code>Improper Error Handling</code>, and various other security misconfigurations.</p>
+<h3 id="owasp-top-10-api-security-risks">OWASP Top 10 API Security Risks</h3>
+<p>To categorize and standardize the security vulnerabilities and misconfigurations that APIs can face, <a href="https://owasp.org/">OWASP</a> has curated the <a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">OWASP API Security Top 10</a>, a comprehensive list of the most critical security risks specifically related to APIs:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Risk</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/">API1:2023 - Broken Object Level Authorization</a></td>
+<td>The API allows authenticated users to access data they are not authorized to view.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/">API2:2023 - Broken Authentication</a></td>
+<td>The authentication mechanisms of the API can be bypassed or circumvented, allowing unauthorized access.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa3-broken-object-property-level-authorization/">API3:2023 - Broken Object Property Level Authorization</a></td>
+<td>The API reveals sensitive data to authorized users that they should not access or permits them to manipulate sensitive properties.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/">API4:2023 - Unrestricted Resource Consumption</a></td>
+<td>The API does not limit the amount of resources users can consume.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa5-broken-function-level-authorization/">API5:2023 - Broken Function Level Authorization</a></td>
+<td>The API allows unauthorized users to perform authorized operations.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa6-unrestricted-access-to-sensitive-business-flows/">API6:2023 - Unrestricted Access to Sensitive Business Flows</a></td>
+<td>The API exposes sensitive business flows, leading to potential financial losses and other damages.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa7-server-side-request-forgery/">API7:2023 - Server Side Request Forgery</a></td>
+<td>The API does not validate requests adequately, allowing attackers to send malicious requests and interact with internal resources.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa8-security-misconfiguration/">API8:2023 - Security Misconfiguration</a></td>
+<td>The API suffers from security misconfigurations, including vulnerabilities that lead to Injection Attacks.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xa9-improper-inventory-management/">API9:2023 - Improper Inventory Management</a></td>
+<td>The API does not properly and securely manage version inventory.</td>
+</tr>
+<tr>
+<td><a href="https://owasp.org/API-Security/editions/2023/en/0xaa-unsafe-consumption-of-apis/">API10:2023 - Unsafe Consumption of APIs</a></td>
+<td>The API consumes another API unsafely, leading to potential security risks.</td>
+</tr>
+</tbody>
+</table>
+<p>This module will focus on exploiting all these security risks and understanding how to prevent them.</p>
+<hr>
+<h2 id="introduction-to-lab">Introduction to Lab</h2>
+<hr>
+<p>As we progress through the module, we will practice identifying and exploiting each of the OWASP API Top 10 Security Risks using a <code>RESTful</code> web API to fully understand these vulnerabilities.</p>
+<h3 id="inlanefreight-e-commerce-marketplace">Inlanefreight E-Commerce Marketplace</h3>
+<p>Our loyal customer, Inlanefreight, has ventured into the world of e-commerce marketplaces with <code>Inlanefreight E-Commerce Marketplace</code>. The marketplace's business model enables customers to browse and purchase products offered by suppliers. Each supplier is associated with a specific company. The marketplace generates revenue by charging a fee for each product a customer purchases from a supplier.</p>
+<p>To operate the marketplace and facilitate transactions between customers and suppliers, Inlanefreight has developed a multi-tenant web API that employs <code>Role-based Access Control</code> (<code>RBAC</code>) as its access control policy. Throughout the sections, we will interact with the API using different users with varying roles. Credentials associated with the <code>pentestercompany.com</code> domain represent supplier accounts, while those with <code>hackthebox.com</code> are identified as customer accounts.</p>
+<p>For each user that we authenticate, they will have pre-assigned roles determined by the admin of <code>Inlanefreight E-Commerce Marketplace</code>. The admin has adopted a straightforward naming convention for roles: the roles share the same name as the endpoints to which they provide access to. For example, if a user has the role <code>Suppliers_GetAll</code>, it implies that the user is authorized to interact with the endpoint that retrieves all supplier records (which, in this case, is <code>/api/v1/suppliers</code>).</p>
+<p>Our objective is to report any vulnerabilities found to the admin of <code>Inlanefreight E-Commerce Marketplace</code>. A detailed report of all discovered vulnerabilities will assist the admin in taking appropriate actions to secure the API. Each vulnerability will be mapped to its relevant <a href="https://cwe.mitre.org/data/index.html">CWE</a> weakness.</p>
+<h4 id="swagger-api-user-interface">Swagger API User Interface</h4>
+<p>Despite the frontend of <code>Inlanefreight E-Commerce Marketplace</code> still being in active development, the web API can be accessed via a <a href="https://swagger.io/tools/swagger-ui/">Swagger</a> UI at the <code>/swagger</code> path (make sure to include it after the port of the spawned target machine). We will use this interface throughout the module to explore and assess the security of the marketplace's API, which includes over 60 endpoints:</p>
+<p><img src="storage\modules\268\02_Introduction_to_Lab_Image_2.png" alt="Swagger UI for Inlanefreight E-Commerce Marketplace API, version 1, OAS 3.0. Sections: Authentication, Customers, Products, Roles, Supplier-Companies, Suppliers."></p>
+<p>The key entities that the marketplace encompasses include <code>Customers</code>, <code>Products</code>, <code>Supplier-Companies</code>, and <code>Suppliers</code>. We will also interact with other entities as we progress through the sections.</p>
+<hr>
+<h2 id="broken-object-level-authorization">Broken Object Level Authorization</h2>
+<hr>
+<p>Web APIs allow users to request data or records by sending various parameters, including unique identifiers such as <code>Universally Unique Identifiers</code> (<code>UUIDs</code>), also known as <code>Globally Unique Identifiers</code> (<code>GUIDs</code>), and integer IDs. However, failing to properly and securely verify that a user has ownership and permission to view a specific resource through <code>object-level authorization mechanisms</code> can lead to data exposure and security vulnerabilities.</p>
+<p>A web API endpoint is vulnerable to <code>Broken Object Level Authorization</code> (<code>BOLA</code>), also known as <code>Insecure Direct Object Reference</code> (<code>IDOR</code>), if its authorization checks (implemented at the source-code level) fail to correctly ensure that an authenticated user has sufficient permissions or privileges to request and view specific data or perform certain operations.</p>
+<h3 id="authorization-bypass-through-user-controlled-key">Authorization Bypass Through User-Controlled Key</h3>
+<p>The endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/639.html">CWE-639: Authorization Bypass Through User-Controlled Key</a>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester1@pentestercompany.com:HTBPentester1</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>Because the account belongs to a Supplier, we will utilize the <code>/api/v1/authentication/suppliers/sign-in</code> endpoint to sign in and obtain a JWT:</p>
+<p><img src="storage\modules\268\Authenitcation_Suppliers.gif" alt="GIF showcasing the usage of Swagger UI to send a request to an API call."></p>
+<p>To authenticate using the JWT, we will copy it from the response and click the <code>Authorize</code> button. Note the lock icon, currently unlocked, indicating our non-authenticated status. Next, we will paste the JWT into the <code>Value</code> text field within the <code>Available authorizations</code> popup and click <code>Authorize</code>. Upon completion, the lock icon will be fully locked, confirming our authentication:</p>
+<p><img src="storage\modules\268\Authentication_Suppliers_2.gif" alt="GIF showcasing the authorization using a JWT token."></p>
+<p>When examining the endpoints within the Suppliers group (notice how they have a lock at their right-most side, indicating that authentication is required), we will notice one named <code>/api/v1/suppliers/current-user</code>:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_5.png" alt="Swagger UI for Suppliers API. Endpoints: Get all suppliers, get supplier by ID, count suppliers by name, get current user supplier, get all quarterly reports, get report by ID."></p>
+<p>Endpoints containing <code>current-user</code> in their path indicate that they utilize the JWT of the currently authenticated user to perform the specified operation, which in this case is retrieving the current user's data. Upon invoking the endpoint, we will retrieve our current user's company <code>ID</code>, <code>b75a7c76-e149-4ca7-9c55-d9fc4ffa87be</code>, a <code>Guid</code> value:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_6.png" alt="GET request for /api/v1/supplier-companies/current-user. No parameters. Response: Supplier company details with ID, name &quot;PentesterCompany&quot;, email, and other attributes."></p>
+<p>Let us then retrieve our current user's roles. After invoking the <code>/api/v1/roles/current-user</code> endpoint, it responds with the role <code>SupplierCompanies_GetYearlyReportByID</code>:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_7.png" alt="GET request for /api/v1/roles/current-user. No parameters. Response: Roles of the user, including &quot;SupplierCompanies\_GetYearlyReportByID&quot;."></p>
+<p>In the <code>Supplier-Companies</code> group, we find an endpoint related to the role <code>SupplierCompanies_GetYearlyReportByID</code> that accepts a GET parameter: <code>/api/v1/supplier-companies/yearly-reports/{ID}</code>:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_8.png" alt="Supplier-Companies API endpoints: Update, get, and create supplier companies; manage certificates of incorporation; get current user company; get all or specific yearly reports."></p>
+<p>When expanding it, we will notice that it requires the <code>SupplierCompanies_GetYearlyReportByID</code> role and accepts the <code>ID</code> parameter as an integer and not a <code>Guid</code>:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_9.png" alt="GET request for /api/v1/supplier-companies/yearly-reports/{ID}. Requires role: SupplierCompanies\_GetYearlyReportByID. Parameter: ID (integer). Response: JSON with error message."></p>
+<p>If we use <code>1</code> as the <code>ID</code>, we will receive a yearly-report belonging to a company with the ID <code>f9e58492-b594-4d82-a4de-16e4f230fce1</code>, which is not the one we belong to, <code>b75a7c76-e149-4ca7-9c55-d9fc4ffa87be</code>:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_10.png" alt="GET request for /api/v1/supplier-companies/yearly-reports/1. Response: Yearly report with ID 1, company ID, year 2020, revenue 794425112, and comments from C-Level praising performance."></p>
+<p>When trying other IDs, we still can access yearly reports of other supplier-companies, allowing us to access potentially sensitive business data:</p>
+<p><img src="storage\modules\268\API1_2023_Broken_Object_Level_Authorization_Image_11.png" alt="GET request for /api/v1/supplier-companies/yearly-reports/13. Response: Yearly report with ID 13, company ID, year 2020, revenue 588820631, and comments from C-Level praising dedication."></p>
+<p>Additionally, we can mass abuse the <code>BOLA</code> vulnerability and fetch the first 20 yearly reports of supplier-companies:</p>
+<p><img src="storage\modules\268\BOLA_Mass_Abuse.gif" alt="GIF showcasing the BOLA mass abuse to fetch the first 20 yearly reports."></p>
+<p>The only changes we need to make to the copied cURL command from the <code>Swagger</code> interface are using a Bash <code>for-loop</code> with <code>variable interpolation</code>, adding a new line after each response using the flag <code>-w "\n"</code>, silencing progress using the flag <code>-s</code>, and piping the output to <a href="https://jqlang.github.io/jq/">jq</a>:</p>
+<p>  Broken Object Level Authorization</p>
+<pre><code class="lang-shell-session"><span class="hljs-type">root</span>@htb[/htb]<span class="hljs-string">$ </span>for ((i=<span class="hljs-number">1</span>; i&lt;= <span class="hljs-number">20</span>; i++)); do
+curl -s -w <span class="hljs-comment">"\n"</span> -<span class="hljs-type">X</span> <span class="hljs-string">'GET'</span> \
+  <span class="hljs-string">'http://94.237.49.212:43104/api/v1/supplier-companies/yearly-reports/'</span><span class="hljs-string">$i</span><span class="hljs-string">''</span> \
+  -<span class="hljs-type">H</span> <span class="hljs-string">'accept: application/json'</span> \
+  -<span class="hljs-type">H</span> <span class="hljs-string">'Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6Imh0YnBlbnRlc3RlcjFAcGVudGVzdGVyY29tcGFueS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJTdXBwbGllckNvbXBhbmllc19HZXRZZWFybHlSZXBvcnRCeUlEIiwiZXhwIjoxNzIwMTg1NzAwLCJpc3MiOiJodHRwOi8vYXBpLmlubGFuZWZyZWlnaHQuaHRiIiwiYXVkIjoiaHR0cDovL2FwaS5pbmxhbmVmcmVpZ2h0Lmh0YiJ9.D6E5gJ-HzeLZLSXeIC4v5iynZetx7f-bpWu8iE_pUODlpoWdYKniY9agU2qRYyf6tAGdTcyqLFKt1tOhpOsWlw'</span> | jq
+done
+
+{
+  <span class="hljs-comment">"supplierCompanyYearlyReport"</span>: {
+    <span class="hljs-comment">"id"</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-comment">"companyID"</span>: <span class="hljs-comment">"f9e58492-b594-4d82-a4de-16e4f230fce1"</span>,
+    <span class="hljs-comment">"year"</span>: <span class="hljs-number">2020</span>,
+    <span class="hljs-comment">"revenue"</span>: <span class="hljs-number">794425112</span>,
+    <span class="hljs-comment">"commentsFromCLevel"</span>: <span class="hljs-comment">"Superb work! The Board is over the moon! All employees will enjoy a dream vacation!"</span>
+  }
+}
+{
+  <span class="hljs-comment">"supplierCompanyYearlyReport"</span>: {
+    <span class="hljs-comment">"id"</span>: <span class="hljs-number">2</span>,
+    <span class="hljs-comment">"companyID"</span>: <span class="hljs-comment">"f9e58492-b594-4d82-a4de-16e4f230fce1"</span>,
+    <span class="hljs-comment">"year"</span>: <span class="hljs-number">2022</span>,
+    <span class="hljs-comment">"revenue"</span>: <span class="hljs-number">339322952</span>,
+    <span class="hljs-comment">"commentsFromCLevel"</span>: <span class="hljs-comment">"Excellent performance! The Board is exhilarated! Prepare for a special vacation adventure!"</span>
+  }
+}
+{
+  <span class="hljs-comment">"supplierCompanyYearlyReport"</span>: {
+    <span class="hljs-comment">"id"</span>: <span class="hljs-number">3</span>,
+    <span class="hljs-comment">"companyID"</span>: <span class="hljs-comment">"058ac1e5-3807-47f3-b546-cc069366f8f9"</span>,
+    <span class="hljs-comment">"year"</span>: <span class="hljs-number">2020</span>,
+    <span class="hljs-comment">"revenue"</span>: <span class="hljs-number">186208503</span>,
+    <span class="hljs-comment">"commentsFromCLevel"</span>: <span class="hljs-comment">"Phenomenal performance! The Board is deeply impressed! Everyone will be treated to a deluxe vacation!"</span>
+  }
+}
+
+&lt;<span class="hljs-type">SNIP</span>&gt;
+</code></pre>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>BOLA</code> vulnerability, the endpoint <code>/api/v1/supplier-companies/yearly-reports</code> should implement a verification step (at the source code level) to ensure that authorized users can only access yearly reports associated with their affiliated company. This verification involves comparing the <code>companyID</code> field of the report with the authenticated supplier's <code>companyID</code>. Access should be granted only if these values match; otherwise, the request should be denied. This approach effectively maintains data segregation between supplier-companies' yearly reports.</p>
+<hr>
+<h2 id="broken-authentication">Broken Authentication</h2>
+<hr>
+<p><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html">Authentication</a> is a fundamental pillar of web API security. Web APIs utilize various authentication mechanisms to ensure data confidentiality. An API suffers from <code>Broken Authentication</code> if any of its authentication mechanisms can be bypassed or circumvented.</p>
+<h3 id="improper-restriction-of-excessive-authentication-attempts">Improper Restriction of Excessive Authentication Attempts</h3>
+<p>The endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/307.html">CWE-307: Improper Restriction of Excessive Authentication Attempts</a>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester3@hackthebox.com:HTBPentester3</code>, wanting us to assess what API vulnerabilities can the user exploit with their assigned roles.</p>
+<p>Because the account belongs to a customer, we will utilize the <code>/api/v1/authentication/customers/sign-in</code> endpoint to obtain a JWT and then authenticate with it:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_1.png" alt="POST request for /api/v1/authentication/customers/sign-in. Parameters: Email and password. Response: JSON Web Token (JWT) provided."></p>
+<p>When invoking the <code>/api/v1/customers/current-user</code> endpoint, we get back the information of our currently authenticated user:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_2.png" alt="GET request for /api/v1/customers/current-user. No parameters. Response: Customer data including ID, name &quot;HTBPentester3&quot;, email, phone number, and birth date."></p>
+<p>The <code>/api/v1/roles/current-user</code> endpoint reveals that the user is assigned three roles: <code>Customers_UpdateByCurrentUser</code>, <code>Customers_Get</code>, and <code>Customers_GetAll</code>:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_3.png" alt="GET request for /api/v1/roles/current-user. No parameters. Response: User roles include &quot;Customers\_UpdateByCurrentUser&quot;, &quot;Customers\_Get&quot;, and &quot;Customers\_GetAll&quot;."></p>
+<p><code>Customers_GetAll</code> allows us to use the <code>/api/v1/customers</code> endpoint, which returns the records of all customers:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_4.png" alt="GET request for /api/v1/customers. Response: List of customers with details including ID, name, email, phone number, and birth date."></p>
+<p>Although the endpoint suffers from <code>Broken Object Property Level Authorization</code> (which we will cover in the upcoming section) because it exposes sensitive information about other customers, such as <code>email</code>, <code>phoneNumber</code>, and <code>birthDate</code>, it does not directly allow us to hijack any other account.</p>
+<p>When we expand the <code>/api/v1/customers/current-user</code> <code>PATCH</code> endpoint, we discover that it allows us to update our information fields, including the account's password:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_5.png" alt="PATCH request for /api/v1/customers/current-user. No parameters. Request body: Update customer details including name, email, phone number, birth date, and password."></p>
+<p>If we provide a weak password such as 'pass,' the API rejects the update, stating that passwords must be at least six characters long:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_6.png" alt="PATCH request for /api/v1/customers/current-user. Response: Error 400, password must be at least 6 characters long."></p>
+<p>The validation message provides valuable information, exposing that the API uses a weak password policy, which does not enforce cryptographically secure passwords. If we try setting the password to '123456', we will notice the API now returns <code>true</code> for the success status, indicating that it performed the update:</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_7.png" alt="PATCH request for /api/v1/customers/current-user. Request body includes updated customer details. Response: Success status is true."></p>
+<p>Given that the API uses a weak password policy, other customer accounts could have used cryptographically insecure passwords when registering. Therefore, we will perform password brute-forcing against customers using <code>ffuf</code>.</p>
+<p>First, we need to obtain the (fail) message that the <code>/api/v1/authentication/customers/sign-in</code> endpoint returns when provided with incorrect credentials, which in this case is 'Invalid Credentials':</p>
+<p><img src="storage\modules\268\API2_2023_Broken_Authentication_Image_8.png" alt="POST request for /api/v1/authentication/customers/sign-in. Request body includes email and password. Response: Error message &quot;Invalid Credentials&quot;."></p>
+<p>Instead of attacking all 107 customers, the admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the emails of three high-value targets (which we need to save in a file):</p>
+<ul>
+<li><code>OlawaleJones@yandex.com</code></li>
+<li><code>IsabellaRichardson@gmail.com</code></li>
+<li><code>WenSalazar@zoho.com</code></li>
+</ul>
+<p>For the password wordlist, we will use <a href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/xato-net-10-million-passwords-10000.txt">xato-net-10-million-passwords-10000</a> from <a href="https://github.com/danielmiessler/SecLists/tree/master">SecLists</a>.</p>
+<p>Because we are fuzzing two parameters at the same time (which are the email and password), we need to use the <code>-w</code> flag of <code>ffuf</code> and assign the keywords <code>EMAIL</code> and <code>PASS</code> to the customer emails and passwords wordlists, respectively. Once <code>ffuf</code> finishes, we will discover that the password of <code>IsabellaRichardson@gmail.com</code> is <code>qwerasdfzxcv</code>:</p>
+<p>  Broken Authentication</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w /</span>opt<span class="hljs-regexp">/useful/</span>seclists<span class="hljs-regexp">/Passwords/</span>xato-net<span class="hljs-number">-10</span>-million-passwords<span class="hljs-number">-10000.</span><span class="hljs-string">txt:</span>PASS -w customerEmails.<span class="hljs-string">txt:</span>EMAIL -u <span class="hljs-string">http:</span><span class="hljs-comment">//94.237.59.63:31874/api/v1/authentication/customers/sign-in -X POST -H "Content-Type: application/json" -d '{"Email": "EMAIL", "Password": "PASS"}' -fr "Invalid Credentials" -t 100</span>
+
+        <span class="hljs-regexp">/'___\  /</span><span class="hljs-string">'___\           /'</span>___\       
+       <span class="hljs-regexp">/\ \__/</span> <span class="hljs-regexp">/\ \__/</span>  __  __  <span class="hljs-regexp">/\ \__/</span>       
+       \ \ ,__\\ \ ,__\<span class="hljs-regexp">/\ \/\ \ \ \ </span>,__\      
+        \ \ \_<span class="hljs-regexp">/ \ \ \_/\ \ \_\ \ \ \ \_</span>/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \<span class="hljs-regexp">/_/</span>    \<span class="hljs-regexp">/_/</span>   \<span class="hljs-regexp">/___/</span>    \<span class="hljs-regexp">/_/</span>       
+
+       v2<span class="hljs-number">.1</span><span class="hljs-number">.0</span>-dev
+________________________________________________
+
+ :: <span class="hljs-string">Method           :</span> POST
+ :: <span class="hljs-string">URL              :</span> <span class="hljs-string">http:</span><span class="hljs-comment">//94.237.59.63:31874/api/v1/authentication/customers/sign-in</span>
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">PASS:</span> <span class="hljs-regexp">/opt/</span>useful<span class="hljs-regexp">/seclists/</span>Passwords/xato-net<span class="hljs-number">-10</span>-million-passwords<span class="hljs-number">-10000.</span>txt
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">EMAIL:</span> <span class="hljs-regexp">/home/</span>htb-ac<span class="hljs-number">-413848</span>/customerEmails.txt
+ :: <span class="hljs-string">Header           :</span> Content-<span class="hljs-string">Type:</span> application/json
+ :: <span class="hljs-string">Data             :</span> {<span class="hljs-string">"Email"</span>: <span class="hljs-string">"EMAIL"</span>, <span class="hljs-string">"Password"</span>: <span class="hljs-string">"PASS"</span>}
+ :: Follow <span class="hljs-string">redirects :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Calibration      :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Timeout          :</span> <span class="hljs-number">10</span>
+ :: <span class="hljs-string">Threads          :</span> <span class="hljs-number">100</span>
+ :: <span class="hljs-string">Matcher          :</span> Response <span class="hljs-string">status:</span> <span class="hljs-number">200</span><span class="hljs-number">-299</span>,<span class="hljs-number">301</span>,<span class="hljs-number">302</span>,<span class="hljs-number">307</span>,<span class="hljs-number">401</span>,<span class="hljs-number">403</span>,<span class="hljs-number">405</span>,<span class="hljs-number">500</span>
+ :: <span class="hljs-string">Filter           :</span> <span class="hljs-string">Regexp:</span> Invalid Credentials
+________________________________________________
+
+[<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">393</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">1</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">1</span>, <span class="hljs-string">Duration:</span> <span class="hljs-number">81</span>ms]
+    * <span class="hljs-string">EMAIL:</span> IsabellaRichardson<span class="hljs-meta">@gmail</span>.com
+    * <span class="hljs-string">PASS:</span> qwerasdfzxcv
+
+:: <span class="hljs-string">Progress:</span> [<span class="hljs-number">30000</span><span class="hljs-regexp">/30000] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">1275</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">24</span>] :: <span class="hljs-string">Errors:</span> <span class="hljs-number">0</span> ::
+</code></pre>
+<p>Now that we have brute-forced the password, we can use the <code>/api/v1/authentication/customers/sign-in</code> endpoint with the credentials <code>IsabellaRichardson@gmail.com:qwerasdfzxcv</code> to obtain a JWT as <code>Isabella</code> and view all her confidential information on <code>Inlanefreight E-Commerce Marketplace</code>.</p>
+<h4 id="brute-forcing-otps-and-answers-of-security-questions">Brute-forcing OTPs and Answers of Security Questions</h4>
+<p>Applications allow users to reset their passwords by requesting a <code>One Time Password</code> (<code>OTP</code>) sent to a device they own or answering a security question they have chosen during registration. If brute-forcing passwords is infeasible due to strong password policies, we can attempt to brute-force OTPs or answers to security questions, given that they have low entropy or can be guessed (in addition to rate-limiting not being implemented).</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>Broken Authentication</code> vulnerability, the <code>/api/v1/authentication/customers/sign-in</code> endpoint should implement rate-limiting to prevent brute-force attacks. This can be achieved by limiting the number of login attempts from a single IP address or user account within a specified time frame.</p>
+<p>Moreover, the web API should enforce a robust password policy for user credentials (including customers and suppliers) during both registration and updates, allowing only cryptographically secure passwords. This policy should include:</p>
+<ol>
+<li><code>Minimum password length</code> (e.g., at least 12 characters)</li>
+<li><code>Complexity requirements</code> (e.g., a mix of uppercase and lowercase letters, numbers, and special characters)</li>
+<li><code>Prohibition of commonly used or easily guessable passwords</code> (such as ones found in leaked password databases)</li>
+<li><code>Enforcement of password history to prevent reuse of recent passwords</code></li>
+<li><code>Regular password expiration and mandatory changes</code></li>
+</ol>
+<p>Additionally, the web API endpoint should implement multi-factor authentication (<code>MFA</code>) for added security, requesting an <code>OTP</code> before fully authenticating users.</p>
+<hr>
+<h2 id="broken-object-property-level-authorization">Broken Object Property Level Authorization</h2>
+<hr>
+<p><code>Broken Object Property Level Authorization</code> is a category of vulnerabilities that encompasses two subclasses: <code>Excessive Data Exposure</code> and <code>Mass Assignment</code>.</p>
+<p>An API endpoint is vulnerable to <code>Excessive Data Exposure</code> if it reveals sensitive data to authorized users that they are not supposed to access.</p>
+<p>On the other hand, an API endpoint is vulnerable to <code>Mass Assignment</code> if it permits authorized users to manipulate sensitive object properties beyond their authorized scope, including modifying, adding, or deleting values.</p>
+<h3 id="exposure-of-sensitive-information-due-to-incompatible-policies">Exposure of Sensitive Information Due to Incompatible Policies</h3>
+<p>The first endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/213.html">CWE-213</a>, <code>Exposure of Sensitive Information Due to Incompatible Policies</code>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester4@hackthebox.com:HTBPentester4</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>After invoking <code>/api/v1/authentication/customers/sign-in</code> to sign in as a customer and obtain a JWT, the <code>/api/v1/roles/current-user</code> endpoint shows that we have the roles <code>Suppliers_Get</code> and <code>Suppliers_GetAll</code>:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_1.png" alt="GET request for /api/v1/roles/current-user. No parameters. Response: User roles include &quot;Suppliers\_Get&quot; and &quot;Suppliers\_GetAll&quot;."></p>
+<p>It is typical for e-commerce marketplaces to allow customers to view supplier details. However, after invoking the <code>/api/v1/suppliers</code> <code>GET</code> endpoint, we notice that the response includes not only the <code>id</code>, <code>companyID</code>, and <code>name</code> fields but also the <code>email</code> and <code>phoneNumber</code> fields of the suppliers:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_2.png" alt="GET request for /api/v1/suppliers. Response: List of suppliers with details including ID, company ID, name, email, and phone number."></p>
+<p>These sensitive fields should not be exposed to customers, as this allows them to circumvent the marketplace entirely and contact suppliers directly to purchase goods (at a discounted price). Additionally, this vulnerability benefits suppliers financially by enabling them to generate greater revenues without paying the marketplace fee. However, for the stakeholders of <code>Inlanefreight E-Commerce Marketplace</code>, this will negatively impact their revenues.</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>Excessive Data Exposure</code> vulnerability, the <code>/api/v1/suppliers</code> endpoint should only return fields necessary from the customers' perspective. This can be achieved by returning a specific response <a href="https://en.wikipedia.org/wiki/Data_transfer_object">Data Transfer Object (DTO)</a> that includes only the fields intended for customer visibility, rather than exposing the entire domain model used for database interaction.</p>
+<h3 id="improperly-controlled-modification-of-dynamically-determined-object-attributes">Improperly Controlled Modification of Dynamically-Determined Object Attributes</h3>
+<p>The second API endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/915.html">CWE-915</a>, <code>Improperly Controlled Modification of Dynamically-Determined Object Attributes</code>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester6@pentestercompany.com:HTBPentester6</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>After invoking <code>/api/v1/authentication/suppliers/sign-in</code> to sign in as a Supplier and obtain a JWT, the <code>/api/v1/roles/current-user</code> endpoint shows that we have the roles <code>SupplierCompanies_Update</code> and <code>SupplierCompanies_Get</code>:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_3.png" alt="GET request for /api/v1/roles/current-user. No parameters. Response: User roles include &quot;SupplierCompanies\_Update&quot; and &quot;SupplierCompanies\_Get&quot;."></p>
+<p>The <code>/api/v1/supplier-companies/current-user</code> endpoint shows that the supplier-company the currently authenticated supplier belongs to, 'PentesterCompany', has the <code>isExemptedFromMarketplaceFee</code> field set to <code>0</code>, which equates to <code>false</code>:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_4.png" alt="GET request for /api/v1/supplier-companies/current-user. No parameters. Response: Supplier company details including ID, name &quot;PentesterCompany&quot;, email, exemption status, and certificate status."></p>
+<p>Therefore, this implies that <code>Inlanefreight E-Commerce Marketplace</code> will charge 'PentesterCompany' a marketplace fee for each product they sell.</p>
+<p>When expanding the <code>/api/v1/supplier-companies</code> <code>PATCH</code> endpoint, we notice that it requires the <code>SupplierCompanies_Update</code> role, states that the supplier performing the update must be a staff member, and allows sending a value for the <code>isExemptedFromMarketplaceFee</code> field:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_5.png" alt="PATCH request for /api/v1/supplier-companies. Role required: SupplierCompanies\_Update. Request body: Update supplier company details including ID, exemption status, and certificate URI."></p>
+<p>Let us set it to <code>1</code>, such that 'PentesterCompany' does not get included in the companies required to pay the marketplace fee; after invoking it, the endpoint returns a success message:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_6.png" alt="PATCH request for /api/v1/supplier-companies. Request body includes supplier company ID, exemption status, and certificate URI. Response: Success status is true."></p>
+<p>Then, when checking our company info again using <code>/api/v1/supplier-companies/current-user</code>, we will notice that the <code>isExemptedFromMarketplaceFee</code> field has become <code>1</code>:</p>
+<p><img src="storage\modules\268\API3_2023_Broken_Object_Property_Level_Authorization_Image_7.png" alt="GET request for /api/v1/supplier-companies/current-user. No parameters. Response: Supplier company details including ID, name &quot;PentesterCompany&quot;, email, exemption status, and certificate URI."></p>
+<p>Because the endpoint mistakenly allows suppliers to update the value of a field that they should not have access to, this vulnerability allows supplier-companies to generate more revenue from all sales performed over the <code>Inlanefreight E-Commerce Marketplace</code>, as they will not be charged a marketplace fee. However, similar to the repercussions of the previous <code>Exposure of Sensitive Information Due to Incompatible Policies</code> vulnerability, the revenues of the stakeholders of <code>Inlanefreight E-Commerce Marketplace</code> will be negatively impacted.</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>Mass Assignment</code> vulnerability, the <code>/api/v1/supplier-companies</code> <code>PATCH</code> endpoint should restrict invokers from updating sensitive fields. Similar to addressing <code>Excessive Data Exposure</code>, this can be achieved by implementing a dedicated request <code>DTO</code> that includes only the fields intended for suppliers to modify.</p>
+<hr>
+<h2 id="unrestricted-resource-consumption">Unrestricted Resource Consumption</h2>
+<hr>
+<p>File upload and download are fundamental features in all applications. For instance, in e-commerce marketplaces, suppliers require the ability to upload product images, while users need to view and download these files.</p>
+<p>A web API is vulnerable to <code>Unrestricted Resource Consumption</code> if it fails to limit user-initiated requests that consume resources such as <code>network bandwidth</code>, <code>CPU</code>, <code>memory</code>, and <code>storage</code>. These resources incur significant costs, and without adequate safeguards—particularly effective <code>rate-limiting</code>—against excessive usage, users can exploit these vulnerabilities and cause financial damage.</p>
+<h3 id="uncontrolled-resource-consumption">Uncontrolled Resource Consumption</h3>
+<p>The endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/400.html">CWE-400: Uncontrolled Resource Consumption</a>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester8@pentestercompany.com:HTBPentester8</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>After invoking <code>/api/v1/authentication/suppliers/sign-in</code> to sign in as a supplier and obtain a JWT, the <code>/api/v1/roles/current-user</code> endpoint shows that we have the roles <code>SupplierCompanies_Get</code> and <code>SupplierCompanies_UploadCertificateOfIncorporation</code>:</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_1.png" alt="GET request for /api/v1/roles/current-user. No parameters. Response: User roles include &quot;SupplierCompanies\_Get&quot; and &quot;SupplierCompanies\_UploadCertificateOfIncorporation&quot;."></p>
+<p>Checking the Supplier-Companies group, we notice only one endpoint related to the second role: the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> endpoint. When expanding it, we see that it requires the <code>SupplierCompanies_UploadCertificateOfIncorporation</code> role and allows the staff of a supplier company to upload its certificate of incorporation as a PDF file, storing it on disk indefinitely:</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_3.png" alt="POST request for /api/v1/supplier-companies/certificates-of-incorporation. Role required: SupplierCompanies\_UploadCertificateOfIncorporation. Upload PDF file and provide CompanyID. No file chosen."></p>
+<p>Let us attempt to upload a large PDF file containing random bytes. First, we will use <code>/api/v1/supplier-companies/current-user</code> to get the supplier-company ID of the currently authenticated user, <code>b75a7c76-e149-4ca7-9c55-d9fc4ffa87be</code>:</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_2.png" alt="GET request for /api/v1/supplier-companies/current-user. No parameters. Response: Supplier company details including ID, name &quot;PentesterCompany&quot;, email, exemption status, and certificate URI."></p>
+<p>Next, we will use <a href="https://man7.org/linux/man-pages/man1/dd.1.html">dd</a> to create a file containing 30 random megabytes and assign it the <code>.pdf</code> extension:</p>
+<p>  Unrestricted Resource Consumption</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ dd if=/dev/urandom of=certificateOfIncorporation.pdf bs=<span class="hljs-number">1</span>M count=<span class="hljs-number">30</span>
+
+<span class="hljs-number">30</span>+<span class="hljs-number">0</span> records in
+<span class="hljs-number">30</span>+<span class="hljs-number">0</span> records out
+<span class="hljs-number">31457280</span> bytes (<span class="hljs-number">31</span> MB, <span class="hljs-number">30</span> MiB) copied, <span class="hljs-number">0.139503</span> s, <span class="hljs-number">225</span> MB/s
+</code></pre>
+<p>Then, within the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> endpoint, we will click on the 'Choose File' button and upload the file:</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_4.png" alt="File selection window showing &quot;certificateOfIncorporation.pdf&quot;, a PDF document, size 31.5 MB."></p>
+<p>After invoking the endpoint, we notice that the API returns a successful upload message, along with the size of the uploaded file:</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_5.png" alt="POST request for uploading &quot;certificateOfIncorporation.pdf&quot;. Company ID provided. Response: Success status true, file URI, file size 31457280 bytes."></p>
+<p>Because the endpoint does not validate whether the file size is within a specified range, the backend will save files of any size to disk. Additionally, if the endpoint does not implement rate-limiting, we can attempt to cause a denial-of-service by sending the file upload request repeatedly, consuming all available disk storage. Exploiting this vulnerability to consume all the disk storage of the marketplace will result in financial losses for the stakeholders of <code>Inlanefreight E-Commerce Marketplace</code>.</p>
+<p>Additionally, we need to test whether the endpoint allows uploading files other than PDF files. Let us use <code>dd</code> again to generate a file with the <code>.exe</code> extension, filling it with random bytes:</p>
+<p>  Unrestricted Resource Consumption</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ dd if=/dev/urandom of=reverse-shell.exe bs=<span class="hljs-number">1</span>M count=<span class="hljs-number">10</span>
+
+<span class="hljs-number">10</span>+<span class="hljs-number">0</span> records in
+<span class="hljs-number">10</span>+<span class="hljs-number">0</span> records out
+<span class="hljs-number">10485760</span> bytes (<span class="hljs-number">10</span> MB, <span class="hljs-number">10</span> MiB) copied, <span class="hljs-number">0.0398348</span> s, <span class="hljs-number">263</span> MB/s
+</code></pre>
+<p>Within the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> endpoint, we will click on the 'Choose File' button and upload the file:</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_7.png" alt="File selection window showing &quot;reverse-shell.exe&quot;, a Microsoft Windows application, size 10.5 MB."></p>
+<p>After invoking the endpoint, we notice that the API returns a successful upload message, indicating that the endpoint does not validate the file extension (additionally, notice how the files are stored within <code>wwwroot/SupplierCompaniesCertificatesOfIncorporations</code>):</p>
+<p><img src="storage\modules\268\API4_2023_Unrestricted_Resource_Consumption_Image_8.png" alt="POST request for uploading &quot;reverse-shell.exe&quot;. Company ID provided. Response: Success status true, file URI, file size 10485760 bytes."></p>
+<p>If we manage to social engineer a system administrator of <code>Inlanefreight E-Commerce Marketplace</code> to open the file, the executable will run, potentially granting us a reverse shell (assuming we had used an actual reverse shell executable, such as those generated by <code>msfvenom</code>).</p>
+<h4 id="abusing-default-behaviors">Abusing Default Behaviors</h4>
+<p>After each request to upload files, we noticed that the file URI points to <code>wwwroot/SupplierCompaniesCertificatesOfIncorporations</code>, which is within the <code>wwwroot</code> directory.</p>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has informed us that the web API is developed using <a href="https://dotnet.microsoft.com/en-us/apps/aspnet">ASP.NET Core</a>. By default, static files in the <code>wwwroot</code> directory are <a href="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/static-files?view=aspnetcore-8.0#security-considerations-for-static-files">publicly accessible</a>. Let us try to download the previously uploaded <code>exe</code> file:</p>
+<p>  Unrestricted Resource Consumption</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl -O http:/</span><span class="hljs-regexp">/94.237.51.179:51135/</span>SupplierCompaniesCertificatesOfIncorporations/reverse-shell.exe
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+<span class="hljs-number">100</span> <span class="hljs-number">10.0</span>M  <span class="hljs-number">100</span> <span class="hljs-number">10.0</span>M    <span class="hljs-number">0</span>     <span class="hljs-number">0</span>  <span class="hljs-number">11.4</span>M      <span class="hljs-number">0</span> --<span class="hljs-symbol">:--</span><span class="hljs-symbol">:--</span> --<span class="hljs-symbol">:--</span><span class="hljs-symbol">:--</span> --<span class="hljs-symbol">:--</span><span class="hljs-symbol">:--</span> <span class="hljs-number">11.4</span>M
+</code></pre>
+<p>If we can enumerate file names within the <code>SupplierCompaniesCertificatesOfIncorporations</code> directory (and other directories within <code>wwwroot</code>), we could potentially access sensitive information about other customers of <code>Inlanefreight E-Commerce Marketplace</code>. Additionally, we could utilize the web API as cloud storage for malware that could be distributed to victims.</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>Unrestricted Resource Consumption</code> vulnerability, the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> endpoint should implement thorough validation mechanisms for both the size, extension and content of uploaded files. Validating the size of files prevents excessive consumption of server resources, such as disk space and memory, while ensuring that only authorized and expected file types are uploaded helps prevent potential security risks.</p>
+<p>Implementing file size validation ensures that the uploaded files do not exceed specified limits, thereby preventing excessive consumption of server resources. Alternatively, validating file extensions ensures that only authorized file types, such as PDF or specific image formats, are accepted. This prevents malicious uploads of executable files (<code>exe</code>, <code>bat</code>, <code>sh</code>) or other potentially harmful file types that could compromise server security. Implementing strict file extension validation, coupled with server-side checks, helps enforce security policies and prevents unauthorized access and execution of files.</p>
+<p>Integrating antivirus scanning tools like <a href="https://www.clamav.net/">ClamAV</a> adds a layer of security by scanning file contents for known malware signatures before saving them to disk. This proactive measure helps detect and prevent the uploading of infected files that could potentially compromise server integrity.</p>
+<p>Moreover, enforcing robust authentication and authorization mechanisms ensures that only authenticated users with appropriate privileges can upload files and access resources in publicly accessible directories such as <code>wwwroot</code>.</p>
+<hr>
+<h2 id="broken-function-level-authorization">Broken Function Level Authorization</h2>
+<hr>
+<p>A web API is vulnerable to <code>Broken Function Level Authorization</code> (<code>BFLA</code>) if it allows unauthorized or unprivileged users to interact with and invoke privileged endpoints, granting access to sensitive operations or confidential information. The difference between <code>BOLA</code> and <code>BFLA</code> is that, in the case of <code>BOLA</code>, the user is authorized to interact with the vulnerable endpoint, whereas in the case of <code>BFLA</code>, the user is not.</p>
+<h3 id="exposure-of-sensitive-information-to-an-unauthorized-actor">Exposure of Sensitive Information to an Unauthorized Actor</h3>
+<p>The endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/200.html">CWE-200: Exposure of Sensitive Information to an Unauthorized Actor</a>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester9@hackthebox.com:HTBPentester9</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>After invoking <code>/api/v1/authentication/customer/sign-in</code> to sign in as a customer and obtain a JWT, we need to hunt for endpoints that require authorization but allow unauthorized users to interact with them. One interesting endpoint under the Products group, <code>/api/v1/products/discounts</code>, seems to retrieve all product discounts, however, it requires authenticated users to have the <code>ProductDiscounts_GetAll</code> role:</p>
+<p><img src="storage\modules\268\API5_2023_Broken_Function_Level_Authorization_Image_1.png" alt="GET request for /api/v1/products/discounts. Role required: ProductDiscounts\_GetAll. No parameters. Response: Success with JSON error message placeholder."></p>
+<p>After checking our roles using the <code>/api/v1/roles/current-user</code> endpoint, we will discover that the currently authenticated user does not have any assigned:</p>
+<p><img src="storage\modules\268\API5_2023_Broken_Function_Level_Authorization_Image_2.png" alt="GET request for /api/v1/roles/current-user. No parameters. Response: Error message &quot;User does not have any roles assigned&quot;."></p>
+<p>Despite not having any roles, if we attempt to invoke the <code>/api/v1/products/discounts</code> endpoint, we notice that it returns data containing all the discounts for products:</p>
+<p><img src="storage\modules\268\API5_2023_Broken_Function_Level_Authorization_Image_3.png" alt="GET request for /api/v1/products/discounts. Response: List of product discounts with details including product ID, rate percentage, start date, and end date."></p>
+<p>Although the web API developers intended that only authorized users with the <code>ProductDiscounts_GetAll</code> role could access this endpoint, they did not implement the role-based access control check.</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>BFLA</code> vulnerability, the <code>/api/v1/products/discounts</code> endpoint should enforce an authorization check at the source-code level to ensure that only users with the <code>ProductDiscounts_GetAll</code> role can interact with it. This involves verifying the user's roles before processing the request, ensuring that unauthorized users are denied access to the endpoint's functionality.</p>
+<hr>
+<h2 id="unrestricted-access-to-sensitive-business-flows">Unrestricted Access to Sensitive Business Flows</h2>
+<hr>
+<p>All businesses operate to generate revenue; however, if a web API exposes operations or data that allows users to abuse them and undermine the system (for example, by buying goods at a discounted price), it becomes vulnerable to <code>Unrestricted Access to Sensitive Business Flows</code>. An API endpoint is vulnerable if it exposes a sensitive business flow without appropriately restricting access to it.</p>
+<h3 id="scenario">Scenario</h3>
+<p>In the previous section, we exploited a <code>BFLA</code> vulnerability and gained access to product discount data. This data exposure also leads to <code>Unrestricted Access to Sensitive Business Flows</code> because it allows us to know the dates when supplier companies will discount their products and the corresponding discount rates. For example, if we want to buy the product with ID <code>a923b706-0aaa-49b2-ad8d-21c97ff6fac7</code>, we should purchase it between <code>2023-03-15</code> and <code>2023-09-15</code> because it will be 70% off its original price:</p>
+<p><img src="storage\modules\268\API6_2023_Unrestricted_Access_to_Sensitive_Business_Flows_Image_1.png" alt="GET request for /api/v1/products/discounts. Response: Product discounts with product ID, rate percentage 70, start date &quot;2023-03-15&quot;, and end date &quot;2023-09-15&quot;."></p>
+<p>Additionally, if the endpoint responsible for purchasing products does not implement rate-limiting (i.e., it suffers from <code>Unrestricted Resource Consumption</code>), we can purchase all available stock on the day the discount starts and resell the products later at their original price or at a higher price after the discount ends.</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>Unrestricted Access to Sensitive Business Flows</code> vulnerability, endpoints exposing critical business operations, such as <code>/api/v1/products/discounts</code>, should implement strict access controls to ensure that only authorized users can view or interact with sensitive data.</p>
+<hr>
+<h2 id="server-side-request-forgery">Server Side Request Forgery</h2>
+<hr>
+<p>A web API is vulnerable to <code>Server-Side Request Forgery</code> (<code>SSRF</code>) (also known as <code>Cross-Site Port Attack</code> (<code>XPSA</code>)) if it uses user-controlled input to fetch remote or local resources without validation. SSRF flaws occur when an API fetches a remote resource without validating the user-supplied URL. This allows an attacker to coerce the application to send a crafted request to an unexpected destination (especially local ones), bypassing firewalls or VPNs.</p>
+<h3 id="server-side-request-forgery-ssrf-">Server-Side Request Forgery (SSRF)</h3>
+<p>The endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/918.html">CWE-918: Server-Side Request Forgery (SSRF)</a>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester10@pentestercompany.com:HTBPentester10</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>After invoking <code>/api/v1/authentication/suppliers/sign-in</code> to sign in as a supplier and obtain a JWT, the <code>/api/v1/roles/current-user</code> endpoint shows that we have the roles <code>SupplierCompanies_Update</code> and <code>SupplierCompanies_UploadCertificateOfIncorporation</code>:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_1.png" alt="Swagger UI showing a GET request to /api/v1/roles/current-user to retrieve roles of the authenticated user. No parameters required. Response code 200 with roles: &quot;SupplierCompanies\_Update&quot; and &quot;SupplierCompanies\_UploadCertificateOfIncorporation&quot;."></p>
+<p>Checking the Supplier-Companies group, we notice that there are three endpoints related to these roles, <code>/api/v1/supplier-companies</code>, <code>/api/v1/supplier-companies/{ID}/certificates-of-incorporation</code>, and <code>/api/v1/supplier-companies/certificates-of-incorporation</code>:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_2.png" alt="Swagger UI showing API endpoints for Supplier-Companies. Includes PATCH, GET, and POST methods for managing supplier companies and certificates of incorporation."></p>
+<p><code>/api/v1/supplier-companies/current-user</code> shows that the currently authenticated user belongs to the supplier-company with the ID <code>b75a7c76-e149-4ca7-9c55-d9fc4ffa87be</code>:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_4.png" alt="Swagger UI showing a GET request to /api/v1/supplier-companies/current-user to retrieve the supplier company of the authenticated user. No parameters required. Response code 200 with supplier details: ID, name &quot;PentesterCompany&quot;, email, and certificate status."></p>
+<p>Expanding the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> endpoint, we notice that it requires the <code>SupplierCompanies_UploadCertificateOfIncorporation</code> role and allows the staff of a supplier-company to upload its certificate of incorporation as a PDF file. We will provide any PDF file for the first field and the ID of our supplier-company:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_5.png" alt="Swagger UI showing a POST request to /api/v1/supplier-companies/certificates-of-incorporation for uploading a supplier's certificate of incorporation. Requires a PDF file and CompanyID. Response code 200 indicates success."></p>
+<p>After invoking the endpoint, we will notice that the response contains three fields, with the most interesting being the value of <code>fileURI</code>:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_6.png" alt="Swagger UI showing a POST request to upload a certificate of incorporation. Includes a PDF file and CompanyID. Response code 200 with success status true, file URI, and file size."></p>
+<p>The web API stores the path of files using the <a href="https://datatracker.ietf.org/doc/html/rfc8089">file URI Scheme</a>, which is used to represent local file paths and allows access to files on a local filesystem. If we use the <code>/api/v1/supplier-companies/current-user</code> endpoint again, we will notice that the value of <code>certificateOfIncorporationPDFFileURI</code> now has the file URI of the uploaded file:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_7.png" alt="Swagger UI showing a GET request to /api/v1/supplier-companies/current-user to retrieve the supplier company of the authenticated user. No parameters required. Response code 200 with supplier details: ID, name &quot;PentesterCompany&quot;, email, and certificate file URI."></p>
+<p>Expanding the <code>/api/v1/supplier-companies</code> <code>PATCH</code> endpoint, we notice that it requires the <code>SupplierCompanies_Update</code> role, that the update must be performed by staff belonging to the Supplier-Company, and that it allows modifying the value of the <code>CertificateOfIncorporationPDFFileURI</code> field:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_3.png" alt="Swagger UI showing a PATCH request to /api/v1/supplier-companies to update a supplier company. Requires role SupplierCompanies\_Update. Request body includes SupplierCompanyID, exemption status, and certificate URI. Response code 200 indicates success."></p>
+<p>Therefore, this endpoint is vulnerable to <code>Improperly Controlled Modification of Dynamically-Determined Object Attributes</code>, as the value of this field should only be set by the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> endpoint. Let us perform an SSRF attack and update the <code>CertificateOfIncorporationPDFFileURI</code> field to point to the <code>/etc/passwd</code> file:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_8.png" alt="Swagger UI showing a PATCH request to update a supplier company. Request includes SupplierCompanyID, exemption status, and certificate URI. Response code 200 with success status true."></p>
+<p>Because the web API's backend does not validate the path that the <code>CertificateOfIncorporationPDFFileURI</code> field points to, it will fetch and return the contents of local files, including sensitive ones such as <code>/etc/passwd</code>.</p>
+<p>Let us invoke the <code>/api/v1/supplier-companies/{ID}/certificates-of-incorporation</code> <code>GET</code> endpoint to retrieve the contents of the file that <code>CertificateOfIncorporationPDFFileURI</code> points to, which is <code>/etc/passwd</code>, as base64:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_9.png" alt="Swagger UI showing a GET request for a supplier company's certificate of incorporation using an ID. Response code 200 with success status true and base64 data."></p>
+<p>When using <a href="https://gchq.github.io/CyberChef/#recipe=From_Base64\('A-Za-z0-9%2B/%3D',true,false\">CyberChef</a>) to decode the value of the <code>base64Data</code> field, we obtain the contents of the <code>/etc/passwd</code> file from the backend server:</p>
+<p><img src="storage\modules\268\API7_2023_Server_Side_Request_Forgery_Image_10.png" alt="CyberChef interface decoding Base64 input. Output shows system user information, including root and other user accounts with their respective directories and shells."></p>
+<p>We can further compromise the system by viewing the contents of other critical files, such as <code>/etc/shadow</code>.</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>SSRF</code> vulnerability, the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> and <code>/api/v1/supplier-companies</code> <code>PATCH</code> endpoints must strictly prohibit file URIs that point to local resources on the server other than the intended ones. Implementing validation checks to ensure that file URIs only point to permissible local resources is crucial, which in this case is within the <code>wwwroot/SupplierCompaniesCertificatesOfIncorporations/</code> folder.</p>
+<p>Furthermore, the <code>/api/v1/supplier-companies/{ID}/certificates-of-incorporation</code> <code>GET</code> endpoint must be configured to serve content exclusively from the designated folder <code>wwwroot/SupplierCompaniesCertificatesOfIncorporations</code>. This ensures that only certificates of incorporation are accessible and that local resources or files outside this directory are never exposed. Additionally, this acts as a safeguard, if in case the validations performed by the <code>/api/v1/supplier-companies/certificates-of-incorporation</code> <code>POST</code> and <code>/api/v1/supplier-companies</code> <code>PATCH</code> endpoints fail.</p>
+<hr>
+<h2 id="security-misconfiguration">Security Misconfiguration</h2>
+<hr>
+<p>Web APIs are susceptible to the same security misconfigurations that can compromise traditional web applications. One typical example is a web API endpoint that accepts user-controlled input and incorporates it into SQL queries without proper validation, thereby allowing <a href="https://owasp.org/Top10/A03_2021-Injection/">Injection</a> attacks.</p>
+<h3 id="improper-neutralization-of-special-elements-used-in-an-sql-command-sql-injection-">Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')</h3>
+<p>The endpoint we will be practicing against is vulnerable to <a href="https://cwe.mitre.org/data/definitions/89.html">CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')</a>.</p>
+<h4 id="scenario">Scenario</h4>
+<p>The admin of <code>Inlanefreight E-Commerce Marketplace</code> has provided us with the credentials <code>htbpentester12@pentestercompany.com:HTBPentester12</code>, wanting us to assess what API vulnerabilities the user can exploit with their assigned roles.</p>
+<p>After obtaining a JWT as a supplier from the <code>/api/v1/authentication/suppliers/sign-in</code> endpoint and authenticating with it, we observe that the <code>/api/v1/roles/current-user</code> endpoint reveals that we have the <code>Products_GetProductsTotalCountByNameSubstring</code> role:</p>
+<p><img src="storage\modules\268\API8_2023_Security_Misconfiguration_Image_1.png" alt="Swagger UI showing a GET request to /api/v1/roles/current-user to retrieve roles of the authenticated user. No parameters required. Response code 200 with role: &quot;Products\_GetProductsTotalCountByNameSubstring&quot;."></p>
+<p>The only endpoint related to that role name is <code>/api/v1/products/{Name}/count</code>, which belongs to the Products group. When exploring this endpoint, we find that it returns the total count of products containing a user-provided substring in their name:</p>
+<p><img src="storage\modules\268\API8_2023_Security_Misconfiguration_Image_2.png" alt="Swagger UI showing a GET request to /api/v1/products/{Name}/count to get the total count of products with a substring in their name. Requires role Products\_GetProductsTotalCountByNameSubstring. Name parameter is required. Response code 200 indicates success."></p>
+<p>For example, if we use <code>laptop</code> as the <code>Name</code> substring parameter, we find that there are 18 matching products in total:</p>
+<p><img src="storage\modules\268\API8_2023_Security_Misconfiguration_Image_3.png" alt="Swagger UI showing a GET request to /api/v1/products/{Name}/count with the name &quot;laptop&quot; to get the total count of products. Requires role Products\_GetProductsTotalCountByNameSubstring. Response code 200 with productsCount: 18."></p>
+<p>However, if we try using <code>laptop'</code> (with a trailing apostrophe) as input, we observe that the endpoint returns an error message, indicating a potential vulnerability to SQL injection attacks:</p>
+<p><img src="storage\modules\268\API8_2023_Security_Misconfiguration_Image_4.png" alt="Swagger UI showing a GET request to /api/v1/products/{Name}/count with the name &quot;laptop'&quot;. Requires role Products\_GetProductsTotalCountByNameSubstring. Response code 200 with errorMessage: &quot;An error has occurred!&quot;."></p>
+<p>Let us attempt to retrieve the count of all records in the Products table using the payload <code>laptop' OR 1=1 --</code>; we will discover that there are 720 products in the table:</p>
+<p><img src="storage\modules\268\API8_2023_Security_Misconfiguration_Image_5.png" alt="Swagger UI showing a GET request to /api/v1/products/{Name}/count with the name &quot;laptop' OR 1=1 --&quot;. Requires role Products\_GetProductsTotalCountByNameSubstring. Response code 200 with productsCount: 720."></p>
+<h4 id="http-headers">HTTP Headers</h4>
+<p>APIs can also suffer from security misconfigurations if they do not use proper <a href="https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html">HTTP Security Response Headers</a>. For example, suppose an API does not set a secure <a href="https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html#access-control-allow-origin">Access-Control-Allow-Origin</a> as part of its <code>CORS</code> (<code>Cross-Origin Resource Sharing</code>) policy. In that case, it can be exposed to security risks, most notably, <a href="https://cwe.mitre.org/data/definitions/352.html">Cross-Site Request Forgery</a> (<code>CSRF</code>).</p>
+<h4 id="prevention">Prevention</h4>
+<p>To mitigate the <code>Security Misconfiguration</code> vulnerability, the <code>/api/v1/products/{Name}/count</code> endpoint should utilize parameterized queries or an <a href="https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping">Object Relational Mapper</a> (<code>ORM</code>) to safely insert user-controlled values into SQL queries. If that is not a choice, it must validate user-controlled input before concatenating it into the SQL query, which is never infallible.</p>
+<p>Furthermore, if the web API is using HTTP headers insecurely or omits security-related ones, it should implement secure headers to prevent various security vulnerabilities from occurring. Projects like <a href="https://github.com/OWASP/www-project-secure-headers">OWASP Secure Headers</a> provide guidance on HTTP security headers and how to avoid security vulnerabilities associated with improper header configurations.</p>
+<hr>
+<h2 id="improper-inventory-management">Improper Inventory Management</h2>
+<hr>
+<p>Maintaining accurate and up-to-date documentation is essential for web APIs, especially considering their reliance on third-party users who need to understand how to interact with the API effectively.</p>
+<p>However, as a web API matures and undergoes changes, it is crucial to implement proper versioning practices to avoid security pitfalls. Improper inventory management of APIs, including inadequate versioning, can introduce security misconfigurations and increase the attack surface. This can manifest in various ways, such as outdated or incompatible API versions remaining accessible, creating potential entry points for unauthorized users.</p>
+<h3 id="scenario">Scenario</h3>
+<p>In the previous sections, we have primarily interacted with <code>v1</code> of the <code>Inlanefreight E-Commerce Marketplace</code> web API. However, upon examining the <code>Swagger</code> UI's drop-down list for 'Select a definition', we discover the existence of an additional version, <code>v0</code>:</p>
+<p><img src="storage\modules\268\API9_2023_Improper_Inventory_Management_Image_1.png" alt="Swagger UI for Inlanefreight E-Commerce Marketplace API. Version v1 selected, option to switch to v0. Sections include Authentication, Customers, Products, Roles, Supplier-Companies, and Suppliers."></p>
+<p>Upon reviewing the description of <code>v0</code>, it is indicated that this version contains legacy and deleted data, serving as an unmaintained backup that should be removed. However, upon inspecting the endpoints, we will notice that none of them display a 'lock' icon, indicating that they do not require any form of authentication:</p>
+<p><img src="storage\modules\268\API9_2023_Improper_Inventory_Management_Image_2.png" alt="Swagger UI for Inlanefreight E-Commerce Marketplace API version v0. Deprecated version for retrieving legacy/deleted data. Includes GET endpoints for deleted customers, supplier companies, yearly and quarterly reports."></p>
+<p>Upon invoking the <code>/api/v0/customers/deleted</code> endpoint, the API responds by exposing deleted customer data, including sensitive password hashes:</p>
+<p><img src="storage\modules\268\API9_2023_Improper_Inventory_Management_Image_3.png" alt="Swagger UI showing a GET request to /api/v0/customers/deleted. Response code 200 with deleted customer details: ID, name, email, phone number, birth date, and password hash for multiple entries."></p>
+<p>Due to oversight by the developers in neglecting to remove the <code>v0</code> endpoints, we gained unauthorized access to deleted data of former customers. This issue was exacerbated by an <code>Excessive Data Exposure</code> vulnerability in the <code>/api/v0/customers/deleted</code> endpoint, which allowed us to view customer password hashes. With this exposed information, we could attempt password cracking. Given the common practice of password reuse, this could potentially compromise active accounts, particularly if the same customers re-registered using the same password.</p>
+<h4 id="prevention">Prevention</h4>
+<p>Effective versioning ensures that only the intended API versions are exposed to users, with older versions properly deprecated or sunset. By thoroughly managing the API inventory, <code>Inlanefreight E-Commerce Marketplace</code> can minimize the risk of exposing vulnerabilities and maintain a secure user interface.</p>
+<p>To mitigate the <code>Improper Inventory Management</code> vulnerability, developers at <code>Inlanefreight E-Commerce Marketplace</code> should either remove <code>v0</code> entirely or, at a minimum, restrict access exclusively for local development and testing purposes, ensuring it remains inaccessible to external users. If neither option is viable, the endpoints should be protected with stringent authentication measures, permitting interaction solely by administrators.</p>
+<hr>
+<h2 id="unsafe-consumption-of-apis">Unsafe Consumption of APIs</h2>
+<hr>
+<p>APIs frequently interact with other APIs to exchange data, forming a complex ecosystem of interconnected services. While this interconnectivity enhances functionality and efficiency, it also introduces significant security risks if not managed properly. Developers may blindly trust data received from third-party APIs, especially when provided by reputable organizations, leading to relaxed security measures, particularly in input validation and data sanitization.</p>
+<p>Several critical vulnerabilities can arise from API-to-API communication:</p>
+<ol>
+<li><code>Insecure Data Transmission</code>: APIs communicating over unencrypted channels expose sensitive data to interception, compromising confidentiality and integrity.</li>
+<li><code>Inadequate Data Validation</code>: Failing to properly validate and sanitize data received from external APIs before processing or forwarding it to downstream components can lead to injection attacks, data corruption, or even remote code execution.</li>
+<li><code>Weak Authentication</code>: Neglecting to implement robust authentication methods when communicating with other APIs can result in unauthorized access to sensitive data or critical functionality.</li>
+<li><code>Insufficient Rate-Limiting</code>: An API can overwhelm another API by sending a continuous surge of requests, potentially leading to denial-of-service.</li>
+<li><code>Inadequate Monitoring</code>: Insufficient monitoring of API-to-API interactions can make it difficult to detect and respond to security incidents promptly.</li>
+</ol>
+<p>If an API consumes another API insecurely, it is vulnerable to <a href="https://cwe.mitre.org/data/definitions/1357.html">CWE-1357: Reliance on Insufficiently Trustworthy Component</a>.</p>
+<h3 id="prevention">Prevention</h3>
+<p>To prevent vulnerabilities arising from API-to-API communication, web API developers should implement the following measures:</p>
+<ul>
+<li><code>Secure Data Transmission</code>: Use encrypted channels for data transmission to prevent exposure of sensitive data through man-in-the-middle attacks.</li>
+<li><code>Adequate Data Validation</code>: Ensure proper validation and sanitization of data received from external APIs before processing or forwarding it to downstream components. This mitigates risks such as injection attacks, data corruption, or remote code execution.</li>
+<li><code>Robust Authentication</code>: Employ secure authentication methods when communicating with other APIs to prevent unauthorized access to sensitive data or critical functionality.</li>
+<li><code>Sufficient Rate-Limiting</code>: Implement rate-limiting mechanisms to prevent an API from overwhelming another API, thereby protecting against denial-of-service attacks.</li>
+<li><code>Adequate Monitoring</code>: Implement robust monitoring of API-to-API interactions to promptly detect and respond to security incidents.</li>
+</ul>
+</div></body></html>

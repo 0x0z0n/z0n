@@ -1,0 +1,185 @@
+
+
+/* FUCK YOU NIGGER STOP ENUMERATING MY WEBSITE */
+
+/* ITS LITERALLY HTML AND CSS, DONT BOTHER ENUMERATING */
+
+/* Base Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Fira Code', monospace;
+}
+
+html {
+  zoom: 1.35; /* Adjusted zoom level (135%) */
+  font-size: 16px; /* Base font size */
+}
+
+body {
+  background: #1a1a1a;
+  color: #e6e6e6;
+  padding: 2rem;
+  font-size: 16px;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: #fff;
+  margin: 1.5rem 0 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 { font-size: 3rem; }
+h2 { font-size: 2.5rem; }
+h3 { font-size: 2rem; }
+h4 { font-size: 1.6rem; }
+
+/* Paragraphs */
+p {
+  margin-bottom: 1.2rem;
+  color: #cfcfcf;
+  font-size: 16px;
+}
+
+/* Links */
+a {
+  color: #61dafb;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none; /* Removed underline on hover */
+}
+
+/* Code Blocks */
+pre {
+  overflow-x: auto;
+  background: #2d2d2d;
+  padding: 1.2rem;
+  border-radius: 10px;
+  margin: 1.5rem 0;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+code {
+  background: transparent;
+  color: #dcdcdc;
+  font-size: 1em;
+}
+
+/* Syntax Highlighting */
+.hljs-comment,
+.hljs-quote {
+  color: #616161;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-section {
+  color: #cf9eff;
+}
+
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet {
+  color: #a5d6ff;
+}
+
+.hljs-number {
+  color: #f78c6c;
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #ffcb8b;
+}
+
+.hljs-meta,
+.hljs-meta-keyword {
+  color: #8ccf7e;
+}
+
+.hljs-built_in,
+.hljs-literal {
+  color: #8ccf7e;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  color: #bbb;
+}
+
+th,
+td {
+  padding: 0.8rem;
+  border: 1px solid #2d2d2d;
+}
+
+th {
+  background: linear-gradient(to bottom, #2d2d2d, #1a1a1a);
+  color: #fff;
+}
+
+/* Lists */
+ul,
+ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+li {
+  margin-bottom: 0.4rem;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid #61dafb;
+  padding-left: 0.8rem;
+  margin: 1.5rem 0;
+  color: #999;
+  font-style: italic;
+}
+
+/* Horizontal Rule */
+hr {
+  margin: 2.5rem 0;
+  border: none;
+  border-top: 1px solid #2d2d2d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 { font-size: 2.2rem; }
+  h2 { font-size: 1.8rem; }
+  h3 { font-size: 1.5rem; }
+}

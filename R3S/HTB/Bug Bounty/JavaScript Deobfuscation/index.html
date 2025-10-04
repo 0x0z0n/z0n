@@ -1,0 +1,389 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="javascript-deobfuscation">JavaScript Deobfuscation</h1>
+<h2 id="cheat-sheet">Cheat Sheet</h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h2 id="commands">Commands</h2>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>curl http:/SERVER_IP:PORT/</code></td>
+<td>cURL GET request</td>
+</tr>
+<tr>
+<td><code>curl -s http:/SERVER_IP:PORT/ -X POST</code></td>
+<td>cURL POST request</td>
+</tr>
+<tr>
+<td><code>curl -s http:/SERVER_IP:PORT/ -X POST -d "param1=sample"</code></td>
+<td>cURL POST request with data</td>
+</tr>
+<tr>
+<td>`echo hackthebox \</td>
+<td>base64`</td>
+<td>base64 encode</td>
+</tr>
+<tr>
+<td>`echo ENCODED_B64 \</td>
+<td>base64 -d`</td>
+<td>base64 decode</td>
+</tr>
+<tr>
+<td>`echo hackthebox \</td>
+<td>xxd -p`</td>
+<td>hex encode</td>
+</tr>
+<tr>
+<td>`echo ENCODED_HEX \</td>
+<td>xxd -p -r`</td>
+<td>hex decode</td>
+</tr>
+<tr>
+<td>`echo hackthebox \</td>
+<td>tr 'A-Za-z' 'N-ZA-Mn-za-m'`</td>
+<td>rot13 encode</td>
+</tr>
+<tr>
+<td>`echo ENCODED_ROT13 \</td>
+<td>tr 'A-Za-z' 'N-ZA-Mn-za-m'`</td>
+<td>rot13 decode</td>
+</tr>
+</tbody>
+</table>
+<h2 id="deobfuscation-websites">Deobfuscation Websites</h2>
+<table>
+<thead>
+<tr>
+<th><strong>Website</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://jsconsole.com/">JS Console</a></td>
+</tr>
+<tr>
+<td><a href="https://prettier.io/playground/">Prettier</a></td>
+</tr>
+<tr>
+<td><a href="https://beautifier.io/">Beautifier</a></td>
+</tr>
+<tr>
+<td><a href="http://www.jsnice.org/">JSNice</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="misc">Misc</h2>
+<table data-header-hidden=""><thead><tr><th width="203"></th><th></th></tr></thead><tbody><tr><td><strong>Command</strong></td><td><strong>Description</strong></td></tr><tr><td><code>ctrl+u</code></td><td>Show HTML source code in Firefox</td></tr></tbody></table>
+
+<h2 id="source-code">Source Code</h2>
+<hr>
+<p>Most websites nowadays utilize JavaScript to perform their functions. While <code>HTML</code> is used to determine the website's main fields and parameters, and <code>CSS</code> is used to determine its design, <code>JavaScript</code> is used to perform any functions necessary to run the website. This happens in the background, and we only see the pretty front-end of the website and interact with it.</p>
+<p>Even though all of this source code is available at the client-side, it is rendered by our browsers, so we do not often pay attention to the HTML source code. However, if we wanted to understand a certain page's client-side functionalities, we usually start by taking a look at the page's source code. This section will show how we can uncover the source code that contains all of this and understand its general usage.</p>
+<hr>
+<h3 id="html">HTML</h3>
+<p>We will start by starting the exercise below, open Firefox in our PwnBox, and visit the url shown in the question:</p>
+<p><img src="storage\modules\41\js_deobf_mainsite.jpg" alt=""></p>
+<p>As we can see, the website says <code>Secret Serial Generator</code>, without having any input fields or showing any clear functionality. So, our next step is to peak at its source code. We can do that by pressing <code>[CTRL + U]</code>, which should open the source view of the website:</p>
+<p><img src="storage\modules\41\js_deobf_mainsite_source_1.jpg" alt=""></p>
+<p>As we can see, we can view the <code>HTML</code> source code of the website.</p>
+<hr>
+<h3 id="css">CSS</h3>
+<p><code>CSS</code> code is either defined <code>internally</code> within the same <code>HTML</code> file between <code>&lt;style&gt;</code> elements, or defined <code>externally</code> in a separate <code>.css</code> file and referenced within the <code>HTML</code> code.</p>
+<p>In this case, we see that the <code>CSS</code> is internally defined, as seen in the code snippet below:</p>
+<pre><code class="lang-html">    <span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span><span class="css">
+        *,
+        <span class="hljs-selector-tag">html</span> {
+            <span class="hljs-attribute">margin</span>: <span class="hljs-number">0</span>;
+            <span class="hljs-attribute">padding</span>: <span class="hljs-number">0</span>;
+            <span class="hljs-attribute">border</span>: <span class="hljs-number">0</span>;
+        }
+        ..<span class="hljs-selector-class">.SNIP</span>...
+        <span class="hljs-selector-tag">h1</span> {
+            <span class="hljs-attribute">font-size</span>: <span class="hljs-number">144px</span>;
+        }
+        <span class="hljs-selector-tag">p</span> {
+            <span class="hljs-attribute">font-size</span>: <span class="hljs-number">64px</span>;
+        }
+    </span><span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span>
+</code></pre>
+<p>If a page <code>CSS</code> style is externally defined, the external <code>.css</code> file is referred to with the <code>&lt;link&gt;</code> tag within the HTML head, as follows:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">"stylesheet"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"style.css"</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+</code></pre>
+<hr>
+<h3 id="javascript">JavaScript</h3>
+<p>The same concept applies to <code>JavaScript</code>. It can be internally written between <code>&lt;script&gt;</code> elements or written into a separate <code>.js</code> file and referenced within the <code>HTML</code> code.</p>
+<p>We can see in our <code>HTML</code> source that the <code>.js</code> file is referenced externally:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"secret.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>We can check out the script by clicking on <code>secret.js</code>, which should take us directly into the script. When we visit it, we see that the code is very complicated and cannot be comprehended:</p>
+<pre><code class="lang-javascript">eval(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(p, a, c, k, e, d)</span> {</span> e = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(c)</span> {</span> '...SNIP... |<span class="hljs-literal">true</span>|<span class="hljs-function"><span class="hljs-keyword">function</span>'.<span class="hljs-title">split</span><span class="hljs-params">('|')</span>, 0, {</span>}))
+</code></pre>
+<p>The reason behind this is <code>code obfuscation</code>. What is it? How is it done? Where is it used?</p>
+<h2 id="code-obfuscation">Code Obfuscation</h2>
+<hr>
+<p>Before we start learning about <code>deobfuscation</code>, we must first learn about <code>code obfuscation</code>. Without understanding how code is obfuscated, we may not be able to successfully deobfuscate the code, especially if it was obfuscated using a custom obfuscator.</p>
+<hr>
+<h3 id="what-is-obfuscation">What is obfuscation</h3>
+<p>Obfuscation is a technique used to make a script more difficult to read by humans but allows it to function the same from a technical point of view, though performance may be slower. This is usually achieved automatically by using an obfuscation tool, which takes code as an input, and attempts to re-write the code in a way that is much more difficult to read, depending on its design.</p>
+<p>For example, code obfuscators often turn the code into a dictionary of all of the words and symbols used within the code and then attempt to rebuild the original code during execution by referring to each word and symbol from the dictionary. The following is an example of a simple JavaScript code being obfuscated:</p>
+<p><img src="storage\modules\41\obfuscation_example.jpg" alt=""></p>
+<p>Codes written in many languages are published and executed without being compiled in <code>interpreted</code> languages, such as <code>Python</code>, <code>PHP</code>, and <code>JavaScript</code>. While <code>Python</code> and <code>PHP</code> usually reside on the server-side and hence are hidden from end-users, <code>JavaScript</code> is usually used within browsers at the <code>client-side</code>, and the code is sent to the user and executed in cleartext. This is why obfuscation is very often used with <code>JavaScript</code>.</p>
+<hr>
+<h3 id="use-cases">Use Cases</h3>
+<p>There are many reasons why developers may consider obfuscating their code. One common reason is to hide the original code and its functions to prevent it from being reused or copied without the developer's permission, making it more difficult to reverse engineer the code's original functionality. Another reason is to provide a security layer when dealing with authentication or encryption to prevent attacks on vulnerabilities that may be found within the code.</p>
+<p><code>It must be noted that doing authentication or encryption on the client-side is not recommended, as code is more prone to attacks this way.</code></p>
+<p>The most common usage of obfuscation, however, is for malicious actions. It is common for attackers and malicious actors to obfuscate their malicious scripts to prevent Intrusion Detection and Prevention systems from detecting their scripts. In the next section, we will learn how to obfuscate a simple JavaScript code and attempt running it before and after obfuscation to note any differences.</p>
+<h2 id="basic-obfuscation">Basic Obfuscation</h2>
+<hr>
+<p>Code obfuscation is usually not done manually, as there are many tools for various languages that do automated code obfuscation. Many online tools can be found to do so, though many malicious actors and professional developers develop their own obfuscation tools to make it more difficult to deobfuscate.</p>
+<hr>
+<h3 id="running-javascript-code">Running JavaScript code</h3>
+<p>Let us take the following line of code as an example and attempt to obfuscate it:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">console.<span class="hljs-built_in">log</span>(<span class="hljs-string">'HTB JavaScript Deobfuscation Module'</span>)<span class="hljs-comment">;</span>
+</code></pre>
+<p>First, let us test running this code in cleartext, to see it work in action. We can go to <a href="https://jsconsole.com/">JSConsole</a>, paste the code and hit enter, and see its output:</p>
+<figure><img src=".gitbook\assets\image%20(356).png" alt=""><figcaption></figcaption></figure>
+
+<p>We see that this line of code prints <code>HTB JavaScript Deobfuscation Module</code>, which is done using the <code>console.log()</code> function.</p>
+<hr>
+<h3 id="minifying-javascript-code">Minifying JavaScript code</h3>
+<p>A common way of reducing the readability of a snippet of JavaScript code while keeping it fully functional is JavaScript minification. <code>Code minification</code> means having the entire code in a single (often very long) line. <code>Code minification</code> is more useful for longer code, as if our code only consisted of a single line, it would not look much different when minified.</p>
+<p>Many tools can help us minify JavaScript code, like <a href="https://javascript-minifier.com/">javascript-minifier</a>. We simply copy our code, and click <code>Minify</code>, and we get the minified output on the right:</p>
+<figure><img src=".gitbook\assets\image%20(355).png" alt=""><figcaption></figcaption></figure>
+
+<p>Once again, we can copy the minified code to <a href="https://jsconsole.com/">JSConsole</a>, and run it, and we see that it runs as expected. Usually, minified JavaScript code is saved with the extension <code>.min.js</code>.</p>
+<p>Note: Code minification is not exclusive to JavaScript, and can be applied to many other languages, as can be seen on <a href="https://javascript-minifier.com/">javascript-minifier</a>.</p>
+<hr>
+<h3 id="packing-javascript-code">Packing JavaScript code</h3>
+<p>Now, let us obfuscate our line of code to make it more obscure and difficult to read. First, we will try <a href="http://beautifytools.com/javascript-obfuscator.php">BeautifyTools</a> to obfuscate our code:</p>
+<figure><img src=".gitbook\assets\image%20(352).png" alt=""><figcaption></figcaption></figure>
+
+<pre><code class="lang-javascript"><span class="hljs-built_in">eval</span>(<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">p,a,c,k,e,d</span>)</span>{e=<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">c</span>)</span>{<span class="hljs-keyword">return</span> c};<span class="hljs-keyword">if</span>(!<span class="hljs-string">''</span>.replace(<span class="hljs-regexp">/^/</span>,<span class="hljs-built_in">String</span>)){<span class="hljs-keyword">while</span>(c--){d[c]=k[c]||c}k=[<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">e</span>)</span>{<span class="hljs-keyword">return</span> d[e]}];e=<span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>)</span>{<span class="hljs-keyword">return</span><span class="hljs-string">'\\w+'</span>};c=<span class="hljs-number">1</span>};<span class="hljs-keyword">while</span>(c--){<span class="hljs-keyword">if</span>(k[c]){p=p.replace(<span class="hljs-keyword">new</span> <span class="hljs-built_in">RegExp</span>(<span class="hljs-string">'\\b'</span>+e(c)+<span class="hljs-string">'\\b'</span>,<span class="hljs-string">'g'</span>),k[c])}}<span class="hljs-keyword">return</span> p}(<span class="hljs-string">'5.4(\'3 2 1 0\');'</span>,<span class="hljs-number">6</span>,<span class="hljs-number">6</span>,<span class="hljs-string">'Module|Deobfuscation|JavaScript|HTB|log|console'</span>.split(<span class="hljs-string">'|'</span>),<span class="hljs-number">0</span>,{}))
+</code></pre>
+<p>We see that our code became much more obfuscated and difficult to read. We can copy this code into <a href="https://jsconsole.com/">https://jsconsole.com</a>, to verify that it still does its main function:</p>
+<p>We see that we get the same output.</p>
+<p>Note: The above type of obfuscation is known as "packing", which is usually recognizable from the six function arguments used in the initial function "function(p,a,c,k,e,d)".</p>
+<p>A <code>packer</code> obfuscation tool usually attempts to convert all words and symbols of the code into a list or a dictionary and then refer to them using the <code>(p,a,c,k,e,d)</code> function to re-build the original code during execution. The <code>(p,a,c,k,e,d)</code> can be different from one packer to another. However, it usually contains a certain order in which the words and symbols of the original code were packed to know how to order them during execution.</p>
+<p>While a packer does a great job reducing the code's readability, we can still see its main strings written in cleartext, which may reveal some of its functionality. This is why we may want to look for better ways to obfuscate our code.</p>
+<h2 id="advanced-obfuscation">Advanced Obfuscation</h2>
+<hr>
+<p>So far, we have been able to make our code obfuscated and more difficult to read. However, the code still contains strings in cleartext, which may reveal its original functionality. In this section, we will try a couple of tools that should completely obfuscate the code and hide any remanence of its original functionality.</p>
+<hr>
+<h3 id="obfuscator">Obfuscator</h3>
+<p>Let's visit <a href="https://obfuscator.io/">https://obfuscator.io</a>. Before we click <code>obfuscate</code>, we will change <code>String Array Encoding</code> to <code>Base64</code>, as seen below:</p>
+<figure><img src=".gitbook\assets\image%20(350).png" alt=""><figcaption></figcaption></figure>
+
+<p>Now, we can paste our code and click <code>obfuscate</code>:</p>
+<figure><img src=".gitbook\assets\image%20(349).png" alt=""><figcaption></figcaption></figure>
+
+<p>We get the following code:</p>
+<pre><code class="lang-javascript">var <span class="hljs-emphasis">_0x1ec6=['Bg9N','sfrciePHDMfty3jPChqGrgvVyMz1C2nHDgLVBIbnB2r1Bgu='];(function(_</span>0x13249d,<span class="hljs-emphasis">_0x1ec6e5){var _</span>0x14f83b=function(<span class="hljs-emphasis">_0x3f720f){while(--_</span>0x3f720f){<span class="hljs-emphasis">_0x13249d['push'](_</span>0x13249d[<span class="hljs-string">'shift'</span>](<span class="hljs-link"></span>));}};<span class="hljs-emphasis">_0x14f83b(++_</span>0x1ec6e5);}(<span class="hljs-emphasis">_0x1ec6,0xb4));var _</span>0x14f8=function(<span class="hljs-emphasis">_0x13249d,_</span>0x1ec6e5){<span class="hljs-emphasis">_0x13249d=_</span>0x13249d-0x0;var <span class="hljs-emphasis">_0x14f83b=_</span>0x1ec6[<span class="hljs-string">_0x13249d</span>];if(<span class="hljs-emphasis">_0x14f8['eOTqeL']===undefined){var _</span>0x3f720f=function(<span class="hljs-emphasis">_0x32fbfd){var _</span>0x523045='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=',<span class="hljs-emphasis">_0x4f8a49=String(_</span>0x32fbfd)[<span class="hljs-string">'replace'</span>](<span class="hljs-link">/=+$/,''</span>);var <span class="hljs-emphasis">_0x1171d4='';for(var _</span>0x44920a=0x0,<span class="hljs-emphasis">_0x2a30c5,_</span>0x443b2f,<span class="hljs-emphasis">_0xcdf142=0x0;_</span>0x443b2f=<span class="hljs-emphasis">_0x4f8a49['charAt'](_</span>0xcdf142++);~<span class="hljs-emphasis">_0x443b2f&amp;&amp;(_</span>0x2a30c5=<span class="hljs-emphasis">_0x44920a%0x4?_</span>0x2a30c5<span class="hljs-emphasis">*0x40+_0x443b2f:_0x443b2f,_0x44920a++%0x4)?_0x1171d4+=String['fromCharCode'](0xff&amp;_0x2a30c5&gt;&gt;(-0x2*</span><span class="hljs-emphasis">_0x44920a&amp;0x6)):0x0){_</span>0x443b2f=<span class="hljs-emphasis">_0x523045['indexOf'](_</span>0x443b2f);}return <span class="hljs-emphasis">_0x1171d4;};_</span>0x14f8[<span class="hljs-string">'oZlYBE'</span>]=function(<span class="hljs-emphasis">_0x8f2071){var _</span>0x49af5e=<span class="hljs-emphasis">_0x3f720f(_</span>0x8f2071);var <span class="hljs-emphasis">_0x52e65f=[];for(var _</span>0x1ed1cf=0x0,<span class="hljs-emphasis">_0x79942e=_</span>0x49af5e[<span class="hljs-string">'length'</span>];<span class="hljs-emphasis">_0x1ed1cf&lt;_</span>0x79942e;<span class="hljs-emphasis">_0x1ed1cf++){_</span>0x52e65f+='%'+('00'+<span class="hljs-emphasis">_0x49af5e['charCodeAt'](_</span>0x1ed1cf)[<span class="hljs-string">'toString'</span>](<span class="hljs-link">0x10</span>))[<span class="hljs-string">'slice'</span>](<span class="hljs-link">-0x2</span>);}return decodeURIComponent(<span class="hljs-emphasis">_0x52e65f);},_</span>0x14f8[<span class="hljs-string">'qHtbNC'</span>]={},<span class="hljs-emphasis">_0x14f8['eOTqeL']=!![];}var _</span>0x20247c=<span class="hljs-emphasis">_0x14f8['qHtbNC'][_</span>0x13249d];return <span class="hljs-emphasis">_0x20247c===undefined?(_</span>0x14f83b=<span class="hljs-emphasis">_0x14f8['oZlYBE'](_</span>0x14f83b),<span class="hljs-emphasis">_0x14f8['qHtbNC'][_</span>0x13249d]=<span class="hljs-emphasis">_0x14f83b):_</span>0x14f83b=<span class="hljs-emphasis">_0x20247c,_</span>0x14f83b;};console[<span class="hljs-string">_0x14f8('0x0')</span>](<span class="hljs-link">_0x14f8('0x1'</span>));
+</code></pre>
+<p>This code is obviously more obfuscated, and we can't see any remnants of our original code. We can now try running it in <a href="https://jsconsole.com/">https://jsconsole.com</a> to verify that it still performs its original function. Try playing with the obfuscation settings in <a href="https://obfuscator.io/">https://obfuscator.io</a> to generate even more obfuscated code, and then try rerunning it in <a href="https://jsconsole.com/">https://jsconsole.com</a> to verify it still performs its original function.</p>
+<hr>
+<h3 id="more-obfuscation">More Obfuscation</h3>
+<p>Now we should have a clear idea of how code obfuscation works. There are still many variations of code obfuscation tools, each of which obfuscates the code differently. Take the following JavaScript code, for example:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">[<span class="hljs-string"></span>][<span class="hljs-symbol">(![</span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string">![</span>]]+[<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]][<span class="hljs-string">([</span>][<span class="hljs-symbol">(![</span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string">![</span>]]+[<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>][<span class="hljs-symbol">(![</span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string">![</span>]]+[<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+([<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]+([][[]]+[])[+[]]+([][(!
+...SNIP...
+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>][<span class="hljs-symbol">(![</span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string">![</span>]]+[<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+([<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]+([<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string"></span>][<span class="hljs-symbol">(![</span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string">![</span>]]+[<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>][<span class="hljs-symbol">(![</span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+([<span class="hljs-string">![</span>]]+[<span class="hljs-string"></span>][<span class="hljs-symbol">[</span>]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+[</span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+!+[<span class="hljs-string"></span>]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]])[<span class="hljs-string">+!+[</span>]+[<span class="hljs-string">+[</span>]]]+(!![<span class="hljs-string"></span>]+[<span class="hljs-string"></span>])[<span class="hljs-string">+!+[</span>]]])[<span class="hljs-string">!+[</span>]+!+[<span class="hljs-string"></span>]+[<span class="hljs-string">+[</span>]]]](!+[]+!+[]+[+[]])))()
+</code></pre>
+<p>We can still run this code, and it would still perform its original function:</p>
+<p>Note: The above code was snipped as the full code is too long, but the full code should successfully run.</p>
+<p>We can try obfuscating code using the same tool in <a href="http://www.jsfuck.com/">JSF</a>, and then rerunning it. We will notice that the code may take some time to run, which shows how code obfuscation could affect the performance, as previously mentioned.</p>
+<p>There are many other JavaScript obfuscators, like <a href="https://utf-8.jp/public/jjencode.html">JJ Encode</a> or <a href="https://utf-8.jp/public/aaencode.html">AA Encode</a>. However, such obfuscators usually make code execution/compilation very slow, so it is not recommended to be used unless for an obvious reason, like bypassing web filters or restrictions.</p>
+<h2 id="deobfuscation">Deobfuscation</h2>
+<hr>
+<p>Now that we understand how code obfuscation works let's start our learning towards deobfuscation. Just as there are tools to obfuscate code automatically, there are tools to beautify and deobfuscate the code automatically.</p>
+<hr>
+<h3 id="beautify">Beautify</h3>
+<p>We see that the current code we have is all written in a single line. This is known as <code>Minified JavaScript</code> code. In order to properly format the code, we need to <code>Beautify</code> our code. The most basic method for doing so is through our <code>Browser Dev Tools</code>.</p>
+<p>For example, if we were using Firefox, we can open the browser debugger with [ <code>CTRL+SHIFT+Z</code> ], and then click on our script <code>secret.js</code>. This will show the script in its original formatting, but we can click on the '<code>{ }</code>' button at the bottom, which will <code>Pretty Print</code> the script into its proper JavaScript formatting:</p>
+<figure><img src=".gitbook\assets\image%20(345).png" alt=""><figcaption></figcaption></figure>
+
+<p>Furthermore, we can utilize many online tools or code editor plugins, like <a href="https://prettier.io/playground/">Prettier</a> or <a href="https://beautifier.io/">Beautifier</a>. Let us copy the <code>secret.js</code> script:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-built_in">eval</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">p, a, c, k, e, d</span>) </span>{ e = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">c</span>) </span>{ <span class="hljs-keyword">return</span> c.toString(<span class="hljs-number">36</span>) }; <span class="hljs-keyword">if</span> (!<span class="hljs-string">''</span>.replace(<span class="hljs-regexp">/^/</span>, <span class="hljs-built_in">String</span>)) { <span class="hljs-keyword">while</span> (c--) { d[c.toString(a)] = k[c] || c.toString(a) } k = [<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">e</span>) </span>{ <span class="hljs-keyword">return</span> d[e] }]; e = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">'\\w+'</span> }; c = <span class="hljs-number">1</span> }; <span class="hljs-keyword">while</span> (c--) { <span class="hljs-keyword">if</span> (k[c]) { p = p.replace(<span class="hljs-keyword">new</span> <span class="hljs-built_in">RegExp</span>(<span class="hljs-string">'\\b'</span> + e(c) + <span class="hljs-string">'\\b'</span>, <span class="hljs-string">'g'</span>), k[c]) } } <span class="hljs-keyword">return</span> p }(<span class="hljs-string">'g 4(){0 5="6{7!}";0 1=8 a();0 2="/9.c";1.d("e",2,f);1.b(3)}'</span>, <span class="hljs-number">17</span>, <span class="hljs-number">17</span>, <span class="hljs-string">'var|xhr|url|null|generateSerial|flag|HTB|flag|new|serial|XMLHttpRequest|send|php|open|POST|true|function'</span>.split(<span class="hljs-string">'|'</span>), <span class="hljs-number">0</span>, {}))
+</code></pre>
+<p>We can see that both websites do a good job in formatting the code:</p>
+<figure><img src=".gitbook\assets\image%20(343).png" alt=""><figcaption></figcaption></figure>
+
+<figure><img src=".gitbook\assets\image%20(344).png" alt=""><figcaption></figcaption></figure>
+
+<p>However, the code is still not very easy to read. This is because the code we are dealing with was not only minified but obfuscated as well. So, simply formatting or beautifying the code will not be enough. For that, we will require tools to deobfuscate the code.</p>
+<hr>
+<h3 id="deobfuscate">Deobfuscate</h3>
+<p>We can find many good online tools to deobfuscate JavaScript code and turn it into something we can understand. One good tool is <a href="https://matthewfl.com/unPacker.html">UnPacker</a>. Let's try copying our above-obfuscated code and run it in UnPacker by clicking the <code>UnPack</code> button.</p>
+<p>Tip: Ensure you do not leave any empty lines before the script, as it may affect the deobfuscation process and give inaccurate results.</p>
+<p>We can see that this tool does a much better job in deobfuscating the JavaScript code and gave us an output we can understand:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">function generateSerial() {
+  ...SNIP...
+  var xhr = new XMLHttpRequest;
+  var url = <span class="hljs-string">"/serial.php"</span>;
+  xhr.open(<span class="hljs-string">"<span class="hljs-keyword">POST</span>"</span>, url, true);
+  xhr.send(null);
+};
+</code></pre>
+<p>As previously mentioned, the above-used method of obfuscation is <code>packing</code>. Another way of <code>unpacking</code> such code is to find the <code>return</code> value at the end and use <code>console.log</code> to print it instead of executing it.</p>
+<hr>
+<h3 id="reverse-engineering">Reverse Engineering</h3>
+<p>Though these tools are doing a good job so far in clearing up the code into something we can understand, once the code becomes more obfuscated and encoded, it would become much more difficult for automated tools to clean it up. This is especially true if the code was obfuscated using a custom obfuscation tool.</p>
+<p>We would need to manually reverse engineer the code to understand how it was obfuscated and its functionality for such cases. If you are interested in knowing more about advanced JavaScript Deobfuscation and Reverse Engineering, you can check out the <a href="https://academy.hackthebox.com/module/details/38">Secure Coding 101</a> module, which should thoroughly cover this topic.</p>
+<h2 id="code-analysis">Code Analysis</h2>
+<hr>
+<p>Now that we have deobfuscated the code, we can start going through it:</p>
+<pre><code class="lang-javascript"><span class="hljs-meta">'use strict'</span>;
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">generateSerial</span>(<span class="hljs-params"></span>) </span>{
+  ...SNIP...
+  var xhr = <span class="hljs-keyword">new</span> XMLHttpRequest;
+  <span class="hljs-keyword">var</span> url = <span class="hljs-string">"/serial.php"</span>;
+  xhr.open(<span class="hljs-string">"POST"</span>, url, <span class="hljs-literal">true</span>);
+  xhr.send(<span class="hljs-literal">null</span>);
+};
+</code></pre>
+<p>We see that the <code>secret.js</code> file contains only one function, <code>generateSerial</code>.</p>
+<hr>
+<h3 id="http-requests">HTTP Requests</h3>
+<p>Let us look at each line of the <code>generateSerial</code> function.</p>
+<p><strong>Code Variables</strong></p>
+<p>The function starts by defining a variable <code>xhr</code>, which creates an object of <code>XMLHttpRequest</code>. As we may not know exactly what <code>XMLHttpRequest</code> does in JavaScript, let us Google <code>XMLHttpRequest</code> to see what it is used for.\
+After we read about it, we see that it is a JavaScript function that handles web requests.</p>
+<p>The second variable defined is the <code>URL</code> variable, which contains a URL to <code>/serial.php</code>, which should be on the same domain, as no domain was specified.</p>
+<p><strong>Code Functions</strong></p>
+<p>Next, we see that <code>xhr.open</code> is used with <code>"POST"</code> and <code>URL</code>. We can Google this function once again, and we see that it opens the HTTP request defined '<code>GET</code> or <code>POST</code>' to the <code>URL</code>, and then the next line <code>xhr.send</code> would send the request.</p>
+<p>So, all <code>generateSerial</code> is doing is simply sending a <code>POST</code> request to <code>/serial.php</code>, without including any <code>POST</code> data or retrieving anything in return.</p>
+<p>The developers may have implemented this function whenever they need to generate a serial, like when clicking on a certain <code>Generate Serial</code> button, for example. However, since we did not see any similar HTML elements that generate serials, the developers must not have used this function yet and kept it for future use.</p>
+<p>With the use of code deobfuscation and code analysis, we were able to uncover this function. We can now attempt to replicate its functionality to see if it is handled on the server-side when sending a <code>POST</code> request. If the function is enabled and handled on the server-side, we may uncover an unreleased functionality, which usually tends to have bugs and vulnerabilities within them.</p>
+<h2 id="http-requests">HTTP Requests</h2>
+<hr>
+<p>In the previous section, we found out that the <code>secret.js</code> main function is sending an empty <code>POST</code> request to <code>/serial.php</code>. In this section, we will attempt to do the same using <code>cURL</code> to send a <code>POST</code> request to <code>/serial.php</code>. To learn more about <code>cURL</code> and web requests, you can check out the <a href="https://academy.hackthebox.com/module/details/35">Web Requests</a> module.</p>
+<hr>
+<h3 id="curl">cURL</h3>
+<p><code>cURL</code> is a powerful command-line tool used in Linux distributions, macOS, and even the latest Windows PowerShell versions. We can request any website by simply providing its URL, and we would get it in text-format, as follows:</p>
+<p>HTTP Requests</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http://SERVER_IP:PORT/
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+<span class="hljs-meta">&lt;!DOCTYPE html&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Secret Serial Generator<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span><span class="xml">
+        *,
+        html {
+            margin: 0;
+            padding: 0;
+            border: 0;
+...SNIP...
+        <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>Secret Serial Generator<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>This page generates secret serials!<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span></span>
+</code></pre>
+<p>This is the same <code>HTML</code> we went through when we checked the source code in the first section.</p>
+<hr>
+<h3 id="post-request">POST Request</h3>
+<p>To send a <code>POST</code> request, we should add the <code>-X POST</code> flag to our command, and it should send a <code>POST</code> request:</p>
+<p>HTTP Requests</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ curl -s http:/</span><span class="hljs-regexp">/SERVER_IP:PORT/</span> -X POST
+</code></pre>
+<p>Tip: We add the "-s" flag to reduce cluttering the response with unnecessary data</p>
+<p>However, <code>POST</code> request usually contains <code>POST</code> data. To send data, we can use the "<code>-d "param1=sample"</code>" flag and include our data for each parameter, as follows:</p>
+<p>HTTP Requests</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ curl -s http:/</span><span class="hljs-regexp">/SERVER_IP:PORT/</span> -X POST -d <span class="hljs-string">"param1=sample"</span>
+</code></pre>
+<p>Now that we know how to use <code>cURL</code> to send basic <code>POST</code> requests, in the next section, we will utilize this to replicate what <code>server.js</code> is doing to understand its purpose better.</p>
+<h2 id="decoding">Decoding</h2>
+<hr>
+<p>After doing the exercise in the previous section, we got a strange block of text that seems to be encoded:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http:/SERVER_IP:PORT/serial.php -X POST -d <span class="hljs-string">"param1=sample"</span>
+
+Z<span class="hljs-name">G8</span>gdGhlIGV<span class="hljs-number">4</span>ZXJjaX<span class="hljs-symbol">NlLCBkb24</span><span class="hljs-symbol">ndCBjb3</span>B<span class="hljs-number">5</span>IGFuZCBwYX<span class="hljs-symbol">N0</span>ZSA<span class="hljs-number">7</span>KQo=
+</code></pre>
+<p>This is another important aspect of obfuscation that we referred to in <code>More Obfuscation</code> in the <code>Advanced Obfuscation</code> section. Many techniques can further obfuscate the code and make it less readable by humans and less detectable by systems. For that reason, you will very often find obfuscated code containing encoded text blocks that get decoded upon execution. We will cover 3 of the most commonly used text encoding methods:</p>
+<ul>
+<li><code>base64</code></li>
+<li><code>hex</code></li>
+<li><code>rot13</code></li>
+</ul>
+<hr>
+<h3 id="base64">Base64</h3>
+<p><code>base64</code> encoding is usually used to reduce the use of special characters, as any characters encoded in <code>base64</code> would be represented in alpha-numeric characters, in addition to <code>+</code> and <code>/</code> only. Regardless of the input, even if it is in binary format, the resulting base64 encoded string would only use them.</p>
+<p><strong>Spotting Base64</strong></p>
+<p><code>base64</code> encoded strings are easily spotted since they only contain alpha-numeric characters. However, the most distinctive feature of <code>base64</code> is its padding using <code>=</code> characters. The length of <code>base64</code> encoded strings has to be in a multiple of 4. If the resulting output is only 3 characters long, for example, an extra <code>=</code> is added as padding, and so on.</p>
+<p><strong>Base64 Encode</strong></p>
+<p>To encode any text into <code>base64</code> in Linux, we can echo it and pipe it with '<code>|</code>' to <code>base64</code>:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ echo https:/</span><span class="hljs-regexp">/www.hackthebox.eu/</span> | base64
+
+aHR0cHM6Ly93d3cuaGFja3RoZWJveC5ldS8K
+</code></pre>
+<p><strong>Base64 Decode</strong></p>
+<p>If we want to decode any <code>base64</code> encoded string, we can use <code>base64 -d</code>, as follows:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo aHR0cHM6Ly93d3cuaGFja3RoZWJveC5ldS8K <span class="hljs-string">| base64 -d</span>
+
+https:<span class="hljs-comment">//www.hackthebox.eu/</span>
+</code></pre>
+<hr>
+<h3 id="hex">Hex</h3>
+<p>Another common encoding method is <code>hex</code> encoding, which encodes each character into its <code>hex</code> order in the <code>ASCII</code> table. For example, <code>a</code> is <code>61</code> in hex, <code>b</code> is <code>62</code>, <code>c</code> is <code>63</code>, and so on. You can find the full <code>ASCII</code> table in Linux using the <code>man ascii</code> command.</p>
+<p><strong>Spotting Hex</strong></p>
+<p>Any string encoded in <code>hex</code> would be comprised of hex characters only, which are 16 characters only: 0-9 and a-f. That makes spotting <code>hex</code> encoded strings just as easy as spotting <code>base64</code> encoded strings.</p>
+<p><strong>Hex Encode</strong></p>
+<p>To encode any string into <code>hex</code> in Linux, we can use the <code>xxd -p</code> command:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ echo https:/</span><span class="hljs-regexp">/www.hackthebox.eu/</span> | xxd -p
+
+<span class="hljs-number">68747470733</span>a2f2f7777772e6861636b746865626f782e65752f0a
+</code></pre>
+<p><strong>Hex Decode</strong></p>
+<p>To decode a <code>hex</code> encoded string, we can use the <code>xxd -p -r</code> command:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ echo <span class="hljs-number">68747470733</span>a2f2f7777772e6861636b746865626f782e65752f0a <span class="hljs-string">| xxd -p -r</span>
+
+https:<span class="hljs-comment">//www.hackthebox.eu/</span>
+</code></pre>
+<hr>
+<h3 id="caesar-rot13">Caesar/Rot13</h3>
+<p>Another common -and very old- encoding technique is a Caesar cipher, which shifts each letter by a fixed number. For example, shifting by 1 character makes <code>a</code> become <code>b</code>, and <code>b</code> becomes <code>c</code>, and so on. Many variations of the Caesar cipher use a different number of shifts, the most common of which is <code>rot13</code>, which shifts each character 13 times forward.</p>
+<p><strong>Spotting Caesar/Rot13</strong></p>
+<p>Even though this encoding method makes any text looks random, it is still possible to spot it because each character is mapped to a specific character. For example, in <code>rot13</code>, <code>http://www</code> becomes <code>uggc://jjj</code>, which still holds some resemblances and may be recognized as such.</p>
+<p><strong>Rot13 Encode</strong></p>
+<p>There isn't a specific command in Linux to do <code>rot13</code> encoding. However, it is fairly easy to create our own command to do the character shifting:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ echo https:/</span><span class="hljs-regexp">/www.hackthebox.eu/</span> | tr <span class="hljs-string">'A-Za-z'</span> <span class="hljs-string">'N-ZA-Mn-za-m'</span>
+
+<span class="hljs-symbol">uggcf:</span>/<span class="hljs-regexp">/jjj.unpxgurobk.rh/</span>
+</code></pre>
+<p><strong>Rot13 Decode</strong></p>
+<p>We can use the same previous command to decode rot13 as well:</p>
+<p>Decoding</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ echo uggcf:/</span><span class="hljs-regexp">/jjj.unpxgurobk.rh/</span> | tr <span class="hljs-string">'A-Za-z'</span> <span class="hljs-string">'N-ZA-Mn-za-m'</span>
+
+<span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/www.hackthebox.eu/</span>
+</code></pre>
+<p>Another option to encode/decode rot13 would be using an online tool, like <a href="https://rot13.com/">rot13</a>.</p>
+<hr>
+<h3 id="other-types-of-encoding">Other Types of Encoding</h3>
+<p>There are hundreds of other encoding methods we can find online. Even though these are the most common, sometimes we will come across other encoding methods, which may require some experience to identify and decode.</p>
+<p><code>If you face any similar types of encoding, first try to determine the type of encoding, and then look for online tools to decode it.</code></p>
+<p>Some tools can help us automatically determine the type of encoding, like <a href="https://www.boxentriq.com/code-breaking/cipher-identifier">Cipher Identifier</a>. Try the encoded strings above with <a href="https://www.boxentriq.com/code-breaking/cipher-identifier">Cipher Identifier</a>, to see if it can correctly identify the encoding method.</p>
+<p>Other than encoding, many obfuscation tools utilize encryption, which is encoding a string using a key, which may make the obfuscated code very difficult to reverse engineer and deobfuscate, especially if the decryption key is not stored within the script itself.</p>
+</div></body></html>

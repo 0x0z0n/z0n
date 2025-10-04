@@ -1,0 +1,1209 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="introduction-to-bash-scripting">Introduction to Bash Scripting</h1>
+<h2 id="bourne-again-shell">Bourne Again Shell</h2>
+<hr>
+<p><a href="https://en.wikipedia.org/wiki/Bash\_\(Unix\_shell\">Bash</a>) is the scripting language we use to communicate with Unix-based OS and give commands to the system. Since May 2019, Windows provides a <a href="https://docs.microsoft.com/en-us/windows/wsl/about">Windows Subsystem for Linux</a> that allows us to use <code>Bash</code> in a Windows environment. It is essential to master the language to work efficiently with it. The main difference between scripting and programming languages is that we don't need to compile the code to execute the scripting language, as opposed to programming languages.</p>
+<p>As penetration testers, we must be able to work with any operating system, whether it is Windows or Unix-based. Efficiency depends mainly on the knowledge of the systems, especially in the privilege escalation field. On Unix-based systems, it is essential to learn how to use the terminal, filter data, and automate these processes. Especially in large Unix-based enterprise networks, we will have to deal with large amounts of data. We have to sort and filter out accordingly to determine potential gaps and information as fast as possible.</p>
+<p>It is also essential to learn how to combine several commands and work with individual results. This is where scripting comes in, increasing our speed and efficiency. Like a programming language, a scripting language has almost the same structure, which can be divided into:</p>
+<ul>
+<li><code>Input</code> &amp; <code>Output</code></li>
+<li><code>Arguments</code>, <code>Variables</code> &amp; <code>Arrays</code></li>
+<li><code>Conditional execution</code></li>
+<li><code>Arithmetic</code></li>
+<li><code>Loops</code></li>
+<li><code>Comparison operators</code></li>
+<li><code>Functions</code></li>
+</ul>
+<p>It is often common to automate some processes not to repeat them all the time or process and filter a large amount of information. In general, a script does not create a process, but it is executed by the interpreter that executes the script, in this case, the <code>Bash</code>. To execute a script, we have to specify the interpreter and tell it which script it should process. Such a call looks like this:</p>
+<p><strong>Script Execution - Examples</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ bash script.sh &lt;optional arguments&gt;
+</code></pre>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sh script.sh &lt;optional arguments&gt;
+</code></pre>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ ./script.sh &lt;optional arguments&gt;
+</code></pre>
+<p>Let us look at such a script and see how they can be created to get specific results. If we execute this script and specify a domain, we see what information this script provides.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./CIDR.sh inlanefreight.com
+
+Discovered <span class="hljs-built_in">IP</span> address(<span class="hljs-built_in">es</span>):
+<span class="hljs-number">165.22</span><span class="hljs-meta">.119</span><span class="hljs-meta">.202</span>
+
+Additional options available:
+    <span class="hljs-number">1</span>) Identify the corresponding network range of target domain.
+    <span class="hljs-number">2</span>) Ping discovered hosts.
+    <span class="hljs-number">3</span>) All checks.
+    *) Exit.
+
+Select your <span class="hljs-meta">option</span>: <span class="hljs-number">3</span>
+
+NetRange for <span class="hljs-number">165.22</span><span class="hljs-meta">.119</span><span class="hljs-meta">.202</span>:
+<span class="hljs-symbol">NetRange:</span>       <span class="hljs-number">165.22</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> - <span class="hljs-number">165.22</span><span class="hljs-meta">.255</span><span class="hljs-meta">.255</span>
+<span class="hljs-symbol">CIDR:</span>           <span class="hljs-number">165.22</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>/<span class="hljs-number">16</span>
+
+Pinging host(s):
+<span class="hljs-number">165.22</span><span class="hljs-meta">.119</span><span class="hljs-meta">.202</span> is <span class="hljs-meta">up</span>.
+
+<span class="hljs-number">1</span> <span class="hljs-keyword">out</span> of <span class="hljs-number">1</span> hosts are <span class="hljs-meta">up</span>.
+</code></pre>
+<p>Now let us look at that script in detail and read it line by line in the best possible way. In the next sections, we will look at and analyze all the parts of this script.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check for given arguments</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-eq</span> 0 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"You need to specify the target domain.\n"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Usage:"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t<span class="hljs-variable">$0</span> &lt;domain&gt;"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+<span class="hljs-keyword">fi</span>
+
+<span class="hljs-comment"># Identify Network range for the specified IP address(es)</span>
+<span class="hljs-keyword">function</span> network_range {
+    <span class="hljs-keyword">for</span> ip <span class="hljs-keyword">in</span> <span class="hljs-variable">$ipaddr</span>
+    <span class="hljs-keyword">do</span>
+        netrange=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"NetRange\|CIDR"</span> | tee <span class="hljs-_">-a</span> CIDR.txt)
+        cidr=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"CIDR"</span> | awk <span class="hljs-string">'{print $2}'</span>)
+        cidr_ips=$(prips <span class="hljs-variable">$cidr</span>)
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\nNetRange for <span class="hljs-variable">$ip</span>:"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"<span class="hljs-variable">$netrange</span>"</span>
+    <span class="hljs-keyword">done</span>
+}
+
+<span class="hljs-comment"># Ping discovered IP address(es)</span>
+<span class="hljs-keyword">function</span> ping_host {
+    hosts_up=0
+    hosts_total=0
+
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\nPinging host(s):"</span>
+    <span class="hljs-keyword">for</span> host <span class="hljs-keyword">in</span> <span class="hljs-variable">$cidr_ips</span>
+    <span class="hljs-keyword">do</span>
+        <span class="hljs-built_in">stat</span>=1
+        <span class="hljs-keyword">while</span> [ <span class="hljs-variable">$stat</span> <span class="hljs-_">-eq</span> 1 ]
+        <span class="hljs-keyword">do</span>
+            ping -c 2 <span class="hljs-variable">$host</span> &gt; /dev/null 2&gt;&amp;1
+            <span class="hljs-keyword">if</span> [ $? <span class="hljs-_">-eq</span> 0 ]
+            <span class="hljs-keyword">then</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$host</span> is up."</span>
+                ((<span class="hljs-built_in">stat</span>--))
+                ((hosts_up++))
+                ((hosts_total++))
+            <span class="hljs-keyword">else</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$host</span> is down."</span>
+                ((<span class="hljs-built_in">stat</span>--))
+                ((hosts_total++))
+            <span class="hljs-keyword">fi</span>
+        <span class="hljs-keyword">done</span>
+    <span class="hljs-keyword">done</span>
+
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\n<span class="hljs-variable">$hosts_up</span> out of <span class="hljs-variable">$hosts_total</span> hosts are up."</span>
+}
+
+<span class="hljs-comment"># Identify IP address of the specified domain</span>
+hosts=$(host <span class="hljs-variable">$domain</span> | grep <span class="hljs-string">"has address"</span> | cut <span class="hljs-_">-d</span><span class="hljs-string">" "</span> <span class="hljs-_">-f</span>4 | tee discovered_hosts.txt)
+
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Discovered IP address:\n<span class="hljs-variable">$hosts</span>\n"</span>
+ipaddr=$(host <span class="hljs-variable">$domain</span> | grep <span class="hljs-string">"has address"</span> | cut <span class="hljs-_">-d</span><span class="hljs-string">" "</span> <span class="hljs-_">-f</span>4 | tr <span class="hljs-string">"\n"</span> <span class="hljs-string">" "</span>)
+
+<span class="hljs-comment"># Available options</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Additional options available:"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t1) Identify the corresponding network range of target domain."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t2) Ping discovered hosts."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t3) All checks."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t*) Exit.\n"</span>
+
+<span class="hljs-built_in">read</span> -p <span class="hljs-string">"Select your option: "</span> opt
+
+<span class="hljs-keyword">case</span> <span class="hljs-variable">$opt</span> <span class="hljs-keyword">in</span>
+    <span class="hljs-string">"1"</span>) network_range ;;
+    <span class="hljs-string">"2"</span>) ping_host ;;
+    <span class="hljs-string">"3"</span>) network_range &amp;&amp; ping_host ;;
+    <span class="hljs-string">"*"</span>) <span class="hljs-built_in">exit</span> 0 ;;
+<span class="hljs-keyword">esac</span>
+</code></pre>
+<hr>
+<p>As we can see, we have commented here several parts of the script into which we can split it.</p>
+<ol>
+<li>Check for given arguments</li>
+<li>Identify network range for the specified IP address(es)</li>
+<li>Ping discovered IP address(es)</li>
+<li>Identify IP address(es) of the specified domain</li>
+<li>Available options</li>
+</ol>
+<hr>
+<p><strong>1. Check for given arguments</strong></p>
+<p>In the first part of the script, we have an if-else statement that checks if we have specified a domain representing the target company.</p>
+<hr>
+<p><strong>2. Identify network range for the specified IP address(es)</strong></p>
+<p>Here we have created a function that makes a "whois" query for each IP address and displays the line for the reserved network range, and stores it in the CIDR.txt.</p>
+<hr>
+<p><strong>3. Ping discovered IP address(es)</strong></p>
+<p>This additional function is used to check if the found hosts are reachable with the respective IP addresses. With the For-Loop, we ping every IP address in the network range and count the results.</p>
+<hr>
+<p><strong>4. Identify IP address(es) of the specified domain</strong></p>
+<p>As the first step in this script, we identify the IPv4 address of the domain returned to us.</p>
+<hr>
+<p><strong>5. Available Options</strong></p>
+<p>Then we decide which functions we want to use to find out more information about the infrastructure.</p>
+<h2 id="conditional-execution">Conditional Execution</h2>
+<hr>
+<p>Conditional execution allows us to control the flow of our script by reaching different conditions. This function is one of the essential components. Otherwise, we could only execute one command after another.</p>
+<p>When defining various conditions, we specify which functions or sections of code should be executed for a specific value. If we reach a specific condition, only the code for that condition is executed, and the others are skipped. As soon as the code section is completed, the following commands will be executed outside the conditional execution. Let us look at the first part of the script again and analyze it.</p>
+<p><strong>Script.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check for given argument</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-eq</span> 0 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"You need to specify the target domain.\n"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Usage:"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t<span class="hljs-variable">$0</span> &lt;domain&gt;"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+<span class="hljs-keyword">fi</span>
+
+&lt;SNIP&gt;
+</code></pre>
+<p>In summary, this code section works with the following components:</p>
+<ul>
+<li><code>#!/bin/bash</code> - Shebang.</li>
+<li><code>if-else-fi</code> - Conditional execution.</li>
+<li><code>echo</code> - Prints specific output.</li>
+<li><code>$#</code> / <code>$0</code> / <code>$1</code> - Special variables.</li>
+<li><code>domain</code> - Variables.</li>
+</ul>
+<p>The conditions of the conditional executions can be defined using variables (<code>$#</code>, <code>$0</code>, <code>$1</code>, <code>domain</code>), values (<code>0</code>), and strings, as we will see in the next examples. These values are compared with the <code>comparison operators</code> (<code>-eq</code>) that we will look at in the next section.</p>
+<hr>
+<h3 id="shebang">Shebang</h3>
+<p>The shebang line is always at the top of each script and always starts with "<code>#!</code>". This line contains the path to the specified interpreter (<code>/bin/bash</code>) with which the script is executed. We can also use Shebang to define other interpreters like Python, Perl, and others.</p>
+<pre><code class="lang-python"><span class="hljs-meta">#!/usr/bin/env python</span>
+</code></pre>
+<pre><code class="lang-perl"><span class="hljs-meta">#!/usr/bin/env perl</span>
+</code></pre>
+<hr>
+<h3 id="if-else-fi">If-Else-Fi</h3>
+<p>One of the most fundamental programming tasks is to check different conditions to deal with these. Checking of conditions usually has two different forms in programming and scripting languages, the <code>if-else condition</code> and <code>case statements</code>. In pseudo-code, the if condition means the following:</p>
+<p><strong>Pseudo-Code</strong></p>
+<pre><code class="lang-bash"><span class="hljs-keyword">if</span> [ <span class="hljs-keyword">the</span> <span class="hljs-built_in">number</span> <span class="hljs-keyword">of</span> given arguments equals <span class="hljs-number">0</span> ]
+<span class="hljs-keyword">then</span>
+    Print: <span class="hljs-string">"You need to specify the target domain."</span>
+    Print: <span class="hljs-string">"&lt;empty line&gt;"</span>
+    Print: <span class="hljs-string">"Usage:"</span>
+    Print: <span class="hljs-string">"   &lt;name of the script&gt; &lt;domain&gt;"</span>
+    Exit <span class="hljs-keyword">the</span> script <span class="hljs-keyword">with</span> <span class="hljs-keyword">an</span> error
+<span class="hljs-keyword">else</span>
+    The <span class="hljs-string">"domain"</span> <span class="hljs-built_in">variable</span> serves <span class="hljs-keyword">as</span> <span class="hljs-keyword">the</span> <span class="hljs-built_in">alias</span> <span class="hljs-keyword">for</span> <span class="hljs-keyword">the</span> given argument 
+finish <span class="hljs-keyword">the</span> <span class="hljs-keyword">if</span>-condition
+</code></pre>
+<p>By default, an <code>If-Else</code> condition can contain only a single "<code>If</code>", as shown in the next example.</p>
+<p><strong>If-Only.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+value=<span class="hljs-variable">$1</span>
+
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$value</span> <span class="hljs-_">-gt</span> <span class="hljs-string">"10"</span> ]
+<span class="hljs-keyword">then</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"Given argument is greater than 10."</span>
+<span class="hljs-keyword">fi</span>
+</code></pre>
+<p><strong>If-Only.sh - Execution</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash <span class="hljs-keyword">if</span>-only<span class="hljs-selector-class">.sh</span> <span class="hljs-number">5</span>
+</code></pre>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash <span class="hljs-keyword">if</span>-<span class="hljs-keyword">only</span>.<span class="hljs-keyword">sh</span> <span class="hljs-number">12</span>
+
+Given <span class="hljs-keyword">argument</span> <span class="hljs-keyword">is</span> greater than <span class="hljs-number">10</span>.
+</code></pre>
+<hr>
+<p>When adding <code>Elif</code> or <code>Else</code>, we add alternatives to treat specific values or statuses. If a particular value does not apply to the first case, it will be caught by others.</p>
+<p><strong>If-Elif-Else.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+value=<span class="hljs-variable">$1</span>
+
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$value</span> <span class="hljs-_">-gt</span> <span class="hljs-string">"10"</span> ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Given argument is greater than 10."</span>
+<span class="hljs-keyword">elif</span> [ <span class="hljs-variable">$value</span> <span class="hljs-_">-lt</span> <span class="hljs-string">"10"</span> ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Given argument is less than 10."</span>
+<span class="hljs-keyword">else</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-string">"Given argument is not a number."</span>
+<span class="hljs-keyword">fi</span>
+</code></pre>
+<p><strong>If-Elif-Else.sh - Execution</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash <span class="hljs-keyword">if</span>-elif-<span class="hljs-keyword">else</span>.<span class="hljs-keyword">sh</span> <span class="hljs-number">5</span>
+
+Given <span class="hljs-keyword">argument</span> <span class="hljs-keyword">is</span> less than <span class="hljs-number">10</span>.
+</code></pre>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash <span class="hljs-keyword">if</span>-elif-<span class="hljs-keyword">else</span>.<span class="hljs-keyword">sh</span> <span class="hljs-number">12</span>
+
+Given <span class="hljs-keyword">argument</span> <span class="hljs-keyword">is</span> greater than <span class="hljs-number">10</span>.
+</code></pre>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash <span class="hljs-keyword">if</span>-elif-<span class="hljs-keyword">else</span><span class="hljs-selector-class">.sh</span> HTB
+
+<span class="hljs-keyword">if</span>-elif-<span class="hljs-keyword">else</span><span class="hljs-selector-class">.sh</span>: line <span class="hljs-number">5</span>: [: HTB: integer expression expected
+<span class="hljs-keyword">if</span>-elif-<span class="hljs-keyword">else</span><span class="hljs-selector-class">.sh</span>: line <span class="hljs-number">8</span>: [: HTB: integer expression expected
+Given argument is not <span class="hljs-selector-tag">a</span> number.
+</code></pre>
+<hr>
+<p>We could extend our script and specify several conditions. This could look something like this:</p>
+<p><strong>Several Conditions - Script.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check for given argument</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-eq</span> 0 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"You need to specify the target domain.\n"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Usage:"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t<span class="hljs-variable">$0</span> &lt;domain&gt;"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">elif</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-eq</span> 1 ]
+<span class="hljs-keyword">then</span>
+    domain=<span class="hljs-variable">$1</span>
+<span class="hljs-keyword">else</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Too many arguments given."</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">fi</span>
+
+&lt;SNIP&gt;
+</code></pre>
+<p>Here we define another condition (<code>elif [&lt;condition&gt;];then</code>) that prints a line telling us (<code>echo -e "..."</code>) that we have given more than one argument and exits the program with an error (<code>exit 1</code>).</p>
+<hr>
+<h3 id="exercise-script">Exercise Script</h3>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash</span>
+<span class="hljs-comment"># Count number of characters in a variable:</span>
+<span class="hljs-comment">#     echo $variable | wc -c</span>
+
+<span class="hljs-comment"># Variable to encode</span>
+var=<span class="hljs-string">"nef892na9s1p9asn2aJs71nIsm"</span>
+
+<span class="hljs-keyword">for</span> counter <span class="hljs-keyword">in</span> {1..40}
+<span class="hljs-keyword">do</span>
+        var=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$var</span> | base64)
+<span class="hljs-keyword">done</span>
+</code></pre>
+<h2 id="arguments-variables-and-arrays">Arguments, Variables, and Arrays</h2>
+<hr>
+<h3 id="arguments">Arguments</h3>
+<p>The advantage of bash scripts is that we can always pass up to 9 arguments (<code>$0</code>-<code>$9</code>) to the script without assigning them to variables or setting the corresponding requirements for these. <code>9 arguments</code> because the first argument <code>$0</code> is reserved for the script. As we can see here, we need the dollar sign (<code>$</code>) before the name of the variable to use it at the specified position. The assignment would look like this in comparison:</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ ./script</span>.sh ARG1 ARG2 ARG3 ... ARG9
+       <span class="hljs-symbol">ASSIGNMENTS:</span>       <span class="hljs-variable">$0</span>      <span class="hljs-variable">$1</span>   <span class="hljs-variable">$2</span>   <span class="hljs-variable">$3</span> ...   <span class="hljs-variable">$9</span>
+</code></pre>
+<p>This means that we have automatically assigned the corresponding arguments to the predefined variables in this place. These variables are called special variables. These special variables serve as placeholders. If we now look at the code section again, we will see where and which arguments have been used.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check for given argument</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-eq</span> 0 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"You need to specify the target domain.\n"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Usage:"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t<span class="hljs-variable">$0</span> &lt;domain&gt;"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+<span class="hljs-keyword">fi</span>
+
+&lt;SNIP&gt;
+</code></pre>
+<p>There are several ways how we can execute our script. However, we must first set the script's execution privileges before executing it with the interpreter defined in it.</p>
+<p><strong>CIDR.sh - Set Execution Privileges</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ chmod +x cidr.sh
+</code></pre>
+<p><strong>CIDR.sh - Execution without Arguments</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./cidr<span class="hljs-selector-class">.sh</span>
+
+You need to specify the target domain.
+
+Usage:
+    cidr<span class="hljs-selector-class">.sh</span> &lt;domain&gt;
+</code></pre>
+<p><strong>CIDR.sh - Execution without Execution Permissions</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash cidr<span class="hljs-selector-class">.sh</span>
+
+You need to specify the target domain.
+
+Usage:
+    cidr<span class="hljs-selector-class">.sh</span> &lt;domain&gt;
+</code></pre>
+<hr>
+<h3 id="special-variables">Special Variables</h3>
+<p>Special variables use the <a href="https://bash.cyberciti.biz/guide/$IFS">Internal Field Separator</a> (<code>IFS</code>) to identify when an argument ends and the next begins. Bash provides various special variables that assist while scripting. Some of these variables are:</p>
+<table data-header-hidden=""><thead><tr><th width="90"></th><th></th></tr></thead><tbody><tr><td><strong>IFS</strong></td><td><strong>Description</strong></td></tr><tr><td><code>$#</code></td><td>This variable holds the number of arguments passed to the script.</td></tr><tr><td><code>$@</code></td><td>This variable can be used to retrieve the list of command-line arguments.</td></tr><tr><td><code>$n</code></td><td>Each command-line argument can be selectively retrieved using its position. For example, the first argument is found at <code>$1</code>.</td></tr><tr><td><code>$$</code></td><td>The process ID of the currently executing process.</td></tr><tr><td><code>$?</code></td><td>The exit status of the script. This variable is useful to determine a command's success. The value 0 represents successful execution, while 1 is a result of a failure.</td></tr></tbody></table>
+
+<p>Of the ones shown above, we have 3 such special variables in our <code>if-else</code> condition.</p>
+<table data-header-hidden=""><thead><tr><th width="104"></th><th></th></tr></thead><tbody><tr><td><strong>IFS</strong></td><td><strong>Description</strong></td></tr><tr><td><code>$#</code></td><td>In this case, we need just one variable that needs to be assigned to the <code>domain</code> variable. This variable is used to specify the target we want to work with. If we provide just an FQDN as the argument, the <code>$#</code> variable will have a value of <code>1</code>.</td></tr><tr><td><code>$0</code></td><td>This special variable is assigned the name of the executed script, which is then shown in the "<code>Usage:</code>" example.</td></tr><tr><td><code>$1</code></td><td>Separated by a space, the first argument is assigned to that special variable.</td></tr></tbody></table>
+
+<hr>
+<h3 id="variables">Variables</h3>
+<p>We also see at the end of the if-else loop that we assign the value of the first argument to the variable called "<code>domain</code>". The assignment of variables takes place without the dollar sign (<code>$</code>). The dollar sign is only intended to allow this variable's corresponding value to be used in other code sections. When assigning variables, there must be no spaces between the names and values.</p>
+<pre><code class="lang-bash"><span class="hljs-section">&lt;SNIP&gt;</span>
+<span class="hljs-attribute">else</span>
+    <span class="hljs-attribute">domain</span>=<span class="hljs-number">$1</span>
+<span class="hljs-attribute">fi</span>
+<span class="hljs-section">&lt;SNIP&gt;</span>
+</code></pre>
+<p>In contrast to other programming languages, there is no direct differentiation and recognition between the types of variables in Bash like "<code>strings</code>," "<code>integers</code>," and "<code>boolean</code>." All contents of the variables are treated as string characters. Bash enables arithmetic functions depending on whether only numbers are assigned or not. It is important to note when declaring variables that they do <code>not</code> contain a <code>space</code>. Otherwise, the actual variable name will be interpreted as an internal function or a command.</p>
+<p><strong>Declaring a Variable - Error</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-symbol">$</span> <span class="hljs-keyword">variable</span> = <span class="hljs-string">"this will result with an error."</span>
+
+command <span class="hljs-comment">not found: variable</span>
+</code></pre>
+<p><strong>Declaring a Variable - Without an Error</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">variable</span>=<span class="hljs-string">"Declared without an error."</span>
+root@htb[/htb]$ echo $<span class="hljs-built_in">variable</span>
+
+Declared <span class="hljs-keyword">without</span> <span class="hljs-keyword">an</span> error.
+</code></pre>
+<hr>
+<h3 id="arrays">Arrays</h3>
+<p>There is also the possibility of assigning several values to a single variable in Bash. This can be beneficial if we want to scan multiple domains or IP addresses. These variables are called <code>arrays</code> that we can use to store and process an ordered sequence of specific type values. <code>Arrays</code> identify each stored entry with an <code>index</code> starting with <code>0</code>. When we want to assign a value to an array component, we do so in the same way as with standard shell variables. All we do is specify the field index enclosed in square brackets. The declaration for <code>arrays</code> looks like this in Bash:</p>
+<p><strong>Arrays.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+domains=(www.inlanefreight.com ftp.inlanefreight.com vpn.inlanefreight.com www2.inlanefreight.com)
+
+<span class="hljs-built_in">echo</span> <span class="hljs-variable">${domains[0]}</span>
+</code></pre>
+<p>We can also retrieve them individually using the index using the variable with the corresponding index in curly brackets. Curly brackets are used for variable expansion.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./Arrays<span class="hljs-selector-class">.sh</span>
+
+www<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+</code></pre>
+<p>It is important to note that single quotes (<code>'</code> ... <code>'</code>) and double quotes (<code>"</code> ... <code>"</code>) prevent the separation by a space of the individual values in the array. This means that all spaces between the single and double quotes are ignored and handled as a single value assigned to the array.</p>
+<p><strong>Arrays.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+domains=(<span class="hljs-string">"www.inlanefreight.com ftp.inlanefreight.com vpn.inlanefreight.com"</span> www2.inlanefreight.com)
+<span class="hljs-built_in">echo</span> <span class="hljs-variable">${domains[0]}</span>
+</code></pre>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./Arrays<span class="hljs-selector-class">.sh</span>
+
+www<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span> ftp<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span> vpn<span class="hljs-selector-class">.inlanefreight</span><span class="hljs-selector-class">.com</span>
+</code></pre>
+<h2 id="comparison-operators">Comparison Operators</h2>
+<hr>
+<p>To compare specific values with each other, we need elements that are called <a href="https://www.tldp.org/LDP/abs/html/comparison-ops.html">comparison operators</a>. The <code>comparison operators</code> are used to determine how the defined values will be compared. For these operators, we differentiate between:</p>
+<ul>
+<li><code>string</code> operators</li>
+<li><code>integer</code> operators</li>
+<li><code>file</code> operators</li>
+<li><code>boolean</code> operators</li>
+</ul>
+<hr>
+<h3 id="string-operators">String Operators</h3>
+<p>If we compare strings, then we know what we would like to have in the corresponding value.</p>
+<table data-header-hidden=""><thead><tr><th width="230"></th><th></th></tr></thead><tbody><tr><td><strong>Operator</strong></td><td><strong>Description</strong></td></tr><tr><td><code>==</code></td><td>is equal to</td></tr><tr><td><code>!=</code></td><td>is not equal to</td></tr><tr><td><code>&lt;</code></td><td>is less than in ASCII alphabetical order</td></tr><tr><td><code>&gt;</code></td><td>is greater than in ASCII alphabetical order</td></tr><tr><td><code>-z</code></td><td>if the string is empty (null)</td></tr><tr><td><code>-n</code></td><td>if the string is not null</td></tr></tbody></table>
+
+<p>It is important to note here that we put the variable for the given argument (<code>$1</code>) in double-quotes (<code>"$1"</code>). This tells Bash that the content of the variable should be handled as a string. Otherwise, we would get an error.</p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check the given argument</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-string">"<span class="hljs-variable">$1</span>"</span> != <span class="hljs-string">"HackTheBox"</span> ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"You need to give 'HackTheBox' as argument."</span>
+    <span class="hljs-built_in">exit</span> 1
+
+<span class="hljs-keyword">elif</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-gt</span> 1 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Too many arguments given."</span>
+    <span class="hljs-built_in">exit</span> 1
+
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Success!"</span>
+<span class="hljs-keyword">fi</span>
+</code></pre>
+<p>String comparison operators "<code>&lt;</code> / <code>&gt;</code>" works only within the double square brackets <code>[[ &lt;condition&gt; ]]</code>. We can find the ASCII table on the Internet or by using the following command in the terminal. We take a look at an example later.</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ man ascii
+</code></pre>
+<p><strong>ASCII Table</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Decimal</strong></th>
+<th><strong>Hexadecial</strong></th>
+<th><strong>Character</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>00</td>
+<td>NUL</td>
+<td>End of a string</td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<td>65</td>
+<td>41</td>
+<td>A</td>
+<td>Capital A</td>
+</tr>
+<tr>
+<td>66</td>
+<td>42</td>
+<td>B</td>
+<td>Capital B</td>
+</tr>
+<tr>
+<td>67</td>
+<td>43</td>
+<td>C</td>
+<td>Capital C</td>
+</tr>
+<tr>
+<td>68</td>
+<td>44</td>
+<td>D</td>
+<td>Capital D</td>
+</tr>
+<tr>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<td>127</td>
+<td>7F</td>
+<td>DEL</td>
+<td>Delete</td>
+</tr>
+</tbody>
+</table>
+<p><code>ASCII</code> stands for <code>American Standard Code for Information Interchange</code> and represents a 7-bit character encoding. Since each bit can take two values, there are <code>128</code> different bit patterns, which can also be interpreted as the decimal integers <code>0</code> - <code>127</code> or in hexadecimal values <code>00</code> - <code>7F</code>. The first 32 ASCII character codes are reserved as so-called <a href="https://en.wikipedia.org/wiki/Control\_character">control characters</a>.</p>
+<hr>
+<h3 id="integer-operators">Integer Operators</h3>
+<p>Comparing integer numbers can be very useful for us if we know what values we want to compare. Accordingly, we define the next steps and commands how the script should handle the corresponding value.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Operator</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-eq</code></td>
+<td>is equal to</td>
+</tr>
+<tr>
+<td><code>-ne</code></td>
+<td>is not equal to</td>
+</tr>
+<tr>
+<td><code>-lt</code></td>
+<td>is less than</td>
+</tr>
+<tr>
+<td><code>-le</code></td>
+<td>is less than or equal to</td>
+</tr>
+<tr>
+<td><code>-gt</code></td>
+<td>is greater than</td>
+</tr>
+<tr>
+<td><code>-ge</code></td>
+<td>is greater than or equal to</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check the given argument</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-lt</span> 1 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Number of given arguments is less than 1"</span>
+    <span class="hljs-built_in">exit</span> 1
+
+<span class="hljs-keyword">elif</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-gt</span> 1 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Number of given arguments is greater than 1"</span>
+    <span class="hljs-built_in">exit</span> 1
+
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Number of given arguments equals 1"</span>
+<span class="hljs-keyword">fi</span>
+</code></pre>
+<hr>
+<h3 id="file-operators">File Operators</h3>
+<p>The file operators are useful if we want to find out specific permissions or if they exist.</p>
+<table data-header-hidden=""><thead><tr><th width="229"></th><th></th></tr></thead><tbody><tr><td><strong>Operator</strong></td><td><strong>Description</strong></td></tr><tr><td><code>-e</code></td><td>if the file exist</td></tr><tr><td><code>-f</code></td><td>tests if it is a file</td></tr><tr><td><code>-d</code></td><td>tests if it is a directory</td></tr><tr><td><code>-L</code></td><td>tests if it is if a symbolic link</td></tr><tr><td><code>-N</code></td><td>checks if the file was modified after it was last read</td></tr><tr><td><code>-O</code></td><td>if the current user owns the file</td></tr><tr><td><code>-G</code></td><td>if the file’s group id matches the current user’s</td></tr><tr><td><code>-s</code></td><td>tests if the file has a size greater than 0</td></tr><tr><td><code>-r</code></td><td>tests if the file has read permission</td></tr><tr><td><code>-w</code></td><td>tests if the file has write permission</td></tr><tr><td><code>-x</code></td><td>tests if the file has execute permission</td></tr></tbody></table>
+
+<pre><code class="lang-bash"><span class="hljs-comment">#!/bin/bash</span>
+
+<span class="hljs-comment"># Check if the specified file exists</span>
+<span class="hljs-keyword">if</span> [ -e <span class="hljs-string">"$1"</span> ]
+then
+    echo -e <span class="hljs-string">"The file exists."</span>
+    <span class="hljs-keyword">exit</span> <span class="hljs-number">0</span>
+
+<span class="hljs-keyword">else</span>
+    echo -e <span class="hljs-string">"The file does not exist."</span>
+    <span class="hljs-keyword">exit</span> <span class="hljs-number">2</span>
+fi
+</code></pre>
+<hr>
+<h3 id="boolean-and-logical-operators">Boolean and Logical Operators</h3>
+<p>We get a boolean value "<code>false</code>" or "<code>true</code>" as a result with logical operators. Bash gives us the possibility to compare strings by using double square brackets <code>[[ &lt;condition&gt; ]]</code>. To get these boolean values, we can use the string operators. Whether the comparison matches or not, we get the boolean value "<code>false</code>" or "<code>true</code>".</p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check the boolean value</span>
+<span class="hljs-keyword">if</span> [[ -z <span class="hljs-variable">$1</span> ]]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Boolean value: True (is null)"</span>
+    <span class="hljs-built_in">exit</span> 1
+
+<span class="hljs-keyword">elif</span> [[ <span class="hljs-variable">$#</span> &gt; 1 ]]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Boolean value: True (is greater than)"</span>
+    <span class="hljs-built_in">exit</span> 1
+
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Boolean value: False (is equal to)"</span>
+<span class="hljs-keyword">fi</span>
+</code></pre>
+<hr>
+<h3 id="logical-operators">Logical Operators</h3>
+<p>With logical operators, we can define several conditions within one. This means that all the conditions we define must match before the corresponding code can be executed.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Operator</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>!</code></td>
+<td>logical negotation NOT</td>
+</tr>
+<tr>
+<td><code>&amp;&amp;</code></td>
+<td>logical AND</td>
+</tr>
+<tr>
+<td>`\</td>
+<td>\</td>
+<td>`</td>
+<td>logical OR</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-bash"><span class="hljs-comment">#!/bin/bash</span>
+
+<span class="hljs-comment"># Check if the specified file exists and if we have read permissions</span>
+<span class="hljs-keyword">if</span> [[ -e <span class="hljs-string">"$1"</span> &amp;&amp; -r <span class="hljs-string">"$1"</span> ]]
+then
+    echo -e <span class="hljs-string">"We can read the file that has been specified."</span>
+    <span class="hljs-keyword">exit</span> <span class="hljs-number">0</span>
+
+elif [[ ! -e <span class="hljs-string">"$1"</span> ]]
+then
+    echo -e <span class="hljs-string">"The specified file does not exist."</span>
+    <span class="hljs-keyword">exit</span> <span class="hljs-number">2</span>
+
+elif [[ -e <span class="hljs-string">"$1"</span> &amp;&amp; ! -r <span class="hljs-string">"$1"</span> ]]
+then
+    echo -e <span class="hljs-string">"We don't have read permission for this file."</span>
+    <span class="hljs-keyword">exit</span> <span class="hljs-number">1</span>
+
+<span class="hljs-keyword">else</span>
+    echo -e <span class="hljs-string">"Error occured."</span>
+    <span class="hljs-keyword">exit</span> <span class="hljs-number">5</span>
+fi
+</code></pre>
+<hr>
+<h3 id="exercise-script">Exercise Script</h3>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+var=<span class="hljs-string">"8dm7KsjU28B7v621Jls"</span>
+value=<span class="hljs-string">"ERmFRMVZ0U2paTlJYTkxDZz09Cg"</span>
+
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> {1..40}
+<span class="hljs-keyword">do</span>
+        var=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$var</span> | base64)
+
+        <span class="hljs-comment">#&lt;---- If condition here:</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<h2 id="arithmetic">Arithmetic</h2>
+<hr>
+<p>In Bash, we have seven different <code>arithmetic operators</code> we can work with. These are used to perform different mathematical operations or to modify certain integers.</p>
+<p><strong>Arithmetic Operators</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Operator</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>+</code></td>
+<td>Addition</td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>Substraction</td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>Multiplication</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>Division</td>
+</tr>
+<tr>
+<td><code>%</code></td>
+<td>Modulus</td>
+</tr>
+<tr>
+<td><code>variable++</code></td>
+<td>Increase the value of the variable by 1</td>
+</tr>
+<tr>
+<td><code>variable--</code></td>
+<td>Decrease the value of the variable by 1</td>
+</tr>
+</tbody>
+</table>
+<p>We can summarize all these operators in a small script:</p>
+<p><strong>Arithmetic.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+increase=1
+decrease=1
+
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Addition: 10 + 10 = <span class="hljs-variable">$((10 + 10)</span>)"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Substraction: 10 - 10 = <span class="hljs-variable">$((10 - 10)</span>)"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Multiplication: 10 * 10 = <span class="hljs-variable">$((10 * 10)</span>)"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Division: 10 / 10 = <span class="hljs-variable">$((10 / 10)</span>)"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Modulus: 10 % 4 = <span class="hljs-variable">$((10 % 4)</span>)"</span>
+
+((increase++))
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Increase Variable: <span class="hljs-variable">$increase</span>"</span>
+
+((decrease--))
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Decrease Variable: <span class="hljs-variable">$decrease</span>"</span>
+</code></pre>
+<p>The output of this script looks like this:</p>
+<p><strong>Arithmetic.sh - Execution</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./Arithmetic.sh
+
+Addition:<span class="hljs-number"> 10 </span>+<span class="hljs-number"> 10 </span>= 20
+Substraction:<span class="hljs-number"> 10 </span>-<span class="hljs-number"> 10 </span>= 0
+Multiplication:<span class="hljs-number"> 10 </span>*<span class="hljs-number"> 10 </span>= 100
+Division:<span class="hljs-number"> 10 </span>/<span class="hljs-number"> 10 </span>= 1
+Modulus:<span class="hljs-number"> 10 </span>%<span class="hljs-number"> 4 </span>= 2
+Increase Variable: 2
+Decrease Variable: 0
+</code></pre>
+<hr>
+<p>We can also calculate the length of the variable. Using this function <code>${#variable}</code>, every character gets counted, and we get the total number of characters in the variable.</p>
+<p><strong>VarLength.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+htb=<span class="hljs-string">"HackTheBox"</span>
+
+<span class="hljs-built_in">echo</span> <span class="hljs-variable">${#htb}</span>
+</code></pre>
+<p><strong>VarLength.sh</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ ./VarLength.sh
+
+<span class="hljs-number">10</span>
+</code></pre>
+<hr>
+<p>If we look at our <code>CIDR.sh</code> script, we will see that we have used the <code>increase</code> and <code>decrease</code> operators several times. This ensures that the while loop, which we will discuss later, runs and pings the hosts while the variable "<code>stat</code>" has a value of <code>1</code>. If the ping command ends with code <code>0</code> (successful), we get a message that the <code>host is up</code> and the "<code>stat</code>" variable, as well as the variables "<code>hosts_up</code>" and "<code>hosts_total</code>" get changed.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\nPinging host(s):"</span>
+    <span class="hljs-keyword">for</span> host <span class="hljs-keyword">in</span> <span class="hljs-variable">$cidr_ips</span>
+    <span class="hljs-keyword">do</span>
+        <span class="hljs-built_in">stat</span>=1
+        <span class="hljs-keyword">while</span> [ <span class="hljs-variable">$stat</span> <span class="hljs-_">-eq</span> 1 ]
+        <span class="hljs-keyword">do</span>
+            ping -c 2 <span class="hljs-variable">$host</span> &gt; /dev/null 2&gt;&amp;1
+            <span class="hljs-keyword">if</span> [ $? <span class="hljs-_">-eq</span> 0 ]
+            <span class="hljs-keyword">then</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$host</span> is up."</span>
+                ((<span class="hljs-built_in">stat</span>--))
+                ((hosts_up++))
+                ((hosts_total++))
+            <span class="hljs-keyword">else</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$host</span> is down."</span>
+                ((<span class="hljs-built_in">stat</span>--))
+                ((hosts_total++))
+            <span class="hljs-keyword">fi</span>
+        <span class="hljs-keyword">done</span>
+    <span class="hljs-keyword">done</span>
+&lt;SNIP&gt;
+</code></pre>
+<h2 id="input-and-output">Input and Output</h2>
+<hr>
+<h3 id="input-control">Input Control</h3>
+<p>We may get results from our sent requests and executed commands, which we have to decide manually on how to proceed. Another example would be that we have defined several functions in our script designed for different scenarios. We have to decide which of them should be executed after a manual check and based on the results. It is also quite possible that specific scans or activities may not be allowed to be performed. Therefore, we need to be familiar with how to get a running script to wait for our instructions. If we look at our <code>CIDR.sh</code> script again, we see that we have added such a call to decide further steps.</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Available options</span>
+&lt;SNIP&gt;
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Additional options available:"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t1) Identify the corresponding network range of target domain."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t2) Ping discovered hosts."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t3) All checks."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t*) Exit.\n"</span>
+
+<span class="hljs-built_in">read</span> -p <span class="hljs-string">"Select your option: "</span> opt
+
+<span class="hljs-keyword">case</span> <span class="hljs-variable">$opt</span> <span class="hljs-keyword">in</span>
+    <span class="hljs-string">"1"</span>) network_range ;;
+    <span class="hljs-string">"2"</span>) ping_host ;;
+    <span class="hljs-string">"3"</span>) network_range &amp;&amp; ping_host ;;
+    <span class="hljs-string">"*"</span>) <span class="hljs-built_in">exit</span> 0 ;;
+<span class="hljs-keyword">esac</span>
+</code></pre>
+<p>The first <code>echo</code> lines serve as a display menu for the options available to us. With the <code>read</code> command, the line with "<code>Select your option:</code>" is displayed, and the additional option <code>-p</code> ensures that our input remains on the same line. Our input is stored in the variable <code>opt</code>, which we then use to execute the corresponding functions with the <code>case</code> statement, which we will look at later. Depending on the number we enter, the <code>case</code> statement determines which functions are executed.</p>
+<hr>
+<h3 id="output-control">Output Control</h3>
+<p>We have already learned about the output redirections of output in the <code>Linux Fundamentals</code> module. Nevertheless, the problem with the redirections is that we do not get any output from the respective command. It will be redirected to the appropriate file. If our scripts become more complicated later, they can take much more time than just a few seconds. To avoid sitting inactively and waiting for our script's results, we can use the <a href="https://man7.org/linux/man-pages/man1/tee.1.html">tee</a> utility. It ensures that we see the results we get immediately and that they are stored in the corresponding files. In our <code>CIDR.sh</code> script, we have used this utility twice in different ways.</p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+
+<span class="hljs-comment"># Identify Network range for the specified IP address(es)</span>
+<span class="hljs-keyword">function</span> network_range {
+    <span class="hljs-keyword">for</span> ip <span class="hljs-keyword">in</span> <span class="hljs-variable">$ipaddr</span>
+    <span class="hljs-keyword">do</span>
+        netrange=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"NetRange\|CIDR"</span> | tee <span class="hljs-_">-a</span> CIDR.txt)
+        cidr=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"CIDR"</span> | awk <span class="hljs-string">'{print $2}'</span>)
+        cidr_ips=$(prips <span class="hljs-variable">$cidr</span>)
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\nNetRange for <span class="hljs-variable">$ip</span>:"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"<span class="hljs-variable">$netrange</span>"</span>
+    <span class="hljs-keyword">done</span>
+}
+
+&lt;SNIP&gt;
+
+<span class="hljs-comment"># Identify IP address of the specified domain</span>
+hosts=$(host <span class="hljs-variable">$domain</span> | grep <span class="hljs-string">"has address"</span> | cut <span class="hljs-_">-d</span><span class="hljs-string">" "</span> <span class="hljs-_">-f</span>4 | tee discovered_hosts.txt)
+
+&lt;SNIP&gt;
+</code></pre>
+<p>When using <code>tee</code>, we transfer the received output and use the pipe (<code>|</code>) to forward it to <code>tee</code>. The "<code>-a</code> / <code>--append</code>" parameter ensures that the specified file is not overwritten but supplemented with the new results. At the same time, it shows us the results and how they will be found in the file.</p>
+<pre><code class="lang-shell-session">[!bash!]$ cat discovered_hosts.txt CIDR.txt
+
+<span class="hljs-number">165.22</span><span class="hljs-meta">.119</span><span class="hljs-meta">.202</span>
+<span class="hljs-symbol">NetRange:</span>       <span class="hljs-number">165.22</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> - <span class="hljs-number">165.22</span><span class="hljs-meta">.255</span><span class="hljs-meta">.255</span>
+<span class="hljs-symbol">CIDR:</span>           <span class="hljs-number">165.22</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>/<span class="hljs-number">16</span>
+</code></pre>
+<h2 id="flow-control-loops">Flow Control - Loops</h2>
+<hr>
+<p>The control of the flow of our scripts is essential. We have already learned about the <code>if-else</code> conditions, which are also part of flow control. After all, we want our script to work quickly and efficiently, and for this, we can use other components to increase efficiency and allow error-free processing. Each control structure is either a <code>branch</code> or a <code>loop</code>. Logical expressions of boolean values usually control the execution of a control structure. These control structures include:</p>
+<ul>
+<li>Branches:<ul>
+<li><code>If-Else</code> Conditions</li>
+<li><code>Case</code> Statements</li>
+</ul>
+</li>
+<li>Loops:<ul>
+<li><code>For</code> Loops</li>
+<li><code>While</code> Loops</li>
+<li><code>Until</code> Loops</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="for-loops">For Loops</h3>
+<p>Let us start with the <code>For</code> loops. The <code>For</code> loop is executed on each pass for precisely one parameter, which the shell takes from a list, calculates from an increment, or takes from another data source. The for loop runs as long as it finds corresponding data. This type of loop can be structured and defined in different ways. For example, the for loops are often used when we need to work with many different values from an array. This can be used to scan different hosts or ports. We can also use it to execute specific commands for known ports and their services to speed up our enumeration process. The syntax for this can be as follows:</p>
+<p><strong>Syntax - Examples</strong></p>
+<pre><code class="lang-bash"><span class="hljs-keyword">for</span> variable <span class="hljs-keyword">in</span> 1 2 3 4
+<span class="hljs-keyword">do</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-variable">$variable</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<pre><code class="lang-bash"><span class="hljs-keyword">for</span> variable <span class="hljs-keyword">in</span> file1 file2 file3
+<span class="hljs-keyword">do</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-variable">$variable</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<pre><code class="lang-bash"><span class="hljs-keyword">for</span> ip <span class="hljs-keyword">in</span> <span class="hljs-string">"10.10.10.170 10.10.10.174 10.10.10.175"</span>
+<span class="hljs-keyword">do</span>
+    <span class="hljs-built_in">ping</span> -c <span class="hljs-number">1</span> $ip
+done
+</code></pre>
+<p>Of course, we can also write these commands in a single line. Such a command would look like this:</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ for <span class="hljs-built_in">ip</span> <span class="hljs-keyword">in</span> <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.170</span> <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.174</span><span class="hljs-comment">;do ping -c 1 $ip;done</span>
+
+PING <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.170</span> (<span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.170</span>): <span class="hljs-number">56</span> data bytes
+<span class="hljs-number">64</span> bytes from <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.170</span>: icmp_seq=<span class="hljs-number">0</span> ttl=<span class="hljs-number">63</span> time=<span class="hljs-number">42.106</span> ms
+
+--- <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.170</span> ping statistics ---
+<span class="hljs-number">1</span> packets transmitted, <span class="hljs-number">1</span> packets received, <span class="hljs-number">0.0</span>% packet loss
+round-trip min/avg/max/stddev = <span class="hljs-number">42.106</span>/<span class="hljs-number">42.106</span>/<span class="hljs-number">42.106</span>/<span class="hljs-number">0.000</span> ms
+PING <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.174</span> (<span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.174</span>): <span class="hljs-number">56</span> data bytes
+<span class="hljs-number">64</span> bytes from <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.174</span>: icmp_seq=<span class="hljs-number">0</span> ttl=<span class="hljs-number">63</span> time=<span class="hljs-number">45.700</span> ms
+
+--- <span class="hljs-number">10.10</span><span class="hljs-meta">.10</span><span class="hljs-meta">.174</span> ping statistics ---
+<span class="hljs-number">1</span> packets transmitted, <span class="hljs-number">1</span> packets received, <span class="hljs-number">0.0</span>% packet loss
+round-trip min/avg/max/stddev = <span class="hljs-number">45.700</span>/<span class="hljs-number">45.700</span>/<span class="hljs-number">45.700</span>/<span class="hljs-number">0.000</span> ms
+</code></pre>
+<hr>
+<p>Let us have another look at our <code>CIDR.sh</code> script. We have added several for loops to the script, but let us stick with this little code section.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+
+<span class="hljs-comment"># Identify Network range for the specified IP address(es)</span>
+<span class="hljs-keyword">function</span> network_range {
+    <span class="hljs-keyword">for</span> ip <span class="hljs-keyword">in</span> <span class="hljs-variable">$ipaddr</span>
+    <span class="hljs-keyword">do</span>
+        netrange=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"NetRange\|CIDR"</span> | tee <span class="hljs-_">-a</span> CIDR.txt)
+        cidr=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"CIDR"</span> | awk <span class="hljs-string">'{print $2}'</span>)
+        cidr_ips=$(prips <span class="hljs-variable">$cidr</span>)
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\nNetRange for <span class="hljs-variable">$ip</span>:"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"<span class="hljs-variable">$netrange</span>"</span>
+    <span class="hljs-keyword">done</span>
+}
+
+&lt;SNIP&gt;
+</code></pre>
+<p>As in the previous example, for each IP address from the array "<code>ipaddr</code>" we make a "<code>whois</code>" request, whose output is filtered for "<code>NetRange</code>" and "<code>CIDR</code>." This helps us to determine which address range our target is located in. We can use this information to search for additional hosts during a penetration test, <code>if approved by the client</code>. The results that we receive are displayed accordingly and stored in the file "<code>CIDR.txt</code>."</p>
+<hr>
+<h3 id="while-loops">While Loops</h3>
+<p>The <code>while</code> loop is conceptually simple and follows the following principle:</p>
+<ul>
+<li>A statement is executed as long as a condition is fulfilled (<code>true</code>).</li>
+</ul>
+<p>We can also combine loops and merge their execution with different values. It is important to note that the excessive combination of several loops in each other can make the code very unclear and lead to errors that can be hard to find and follow. Such a combination can look like in our <code>CIDR.sh</code> script.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+        <span class="hljs-built_in">stat</span>=1
+        <span class="hljs-keyword">while</span> [ <span class="hljs-variable">$stat</span> <span class="hljs-_">-eq</span> 1 ]
+        <span class="hljs-keyword">do</span>
+            ping -c 2 <span class="hljs-variable">$host</span> &gt; /dev/null 2&gt;&amp;1
+            <span class="hljs-keyword">if</span> [ $? <span class="hljs-_">-eq</span> 0 ]
+            <span class="hljs-keyword">then</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$host</span> is up."</span>
+                ((<span class="hljs-built_in">stat</span>--))
+                ((hosts_up++))
+                ((hosts_total++))
+            <span class="hljs-keyword">else</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-string">"<span class="hljs-variable">$host</span> is down."</span>
+                ((<span class="hljs-built_in">stat</span>--))
+                ((hosts_total++))
+            <span class="hljs-keyword">fi</span>
+        <span class="hljs-keyword">done</span>
+&lt;SNIP&gt;
+</code></pre>
+<p>The <code>while</code> loops also work with conditions like <code>if-else</code>. A while loop needs some sort of a counter to orientate itself when it has to stop executing the commands it contains. Otherwise, this leads to an endless loop. Such a counter can be a variable that we have declared with a specific value or a boolean value. <code>While</code> loops run while the boolean value is "<code>True</code>". Besides the counter, we can also use the command "<code>break</code>," which interrupts the loop when reaching this command like in the following example:</p>
+<p><strong>WhileBreaker.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+counter=0
+
+<span class="hljs-keyword">while</span> [ <span class="hljs-variable">$counter</span> <span class="hljs-_">-lt</span> 10 ]
+<span class="hljs-keyword">do</span>
+  <span class="hljs-comment"># Increase $counter by 1</span>
+  ((counter++))
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Counter: <span class="hljs-variable">$counter</span>"</span>
+
+  <span class="hljs-keyword">if</span> [ <span class="hljs-variable">$counter</span> == 2 ]
+  <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">continue</span>
+  <span class="hljs-keyword">elif</span> [ <span class="hljs-variable">$counter</span> == 4 ]
+  <span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">break</span>
+  <span class="hljs-keyword">fi</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<p><strong>WhileBreaker.sh</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ./</span>WhileBreaker.sh
+<span class="hljs-symbol">
+Counter:</span> <span class="hljs-number">1</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">2</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">3</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">4</span>
+</code></pre>
+<hr>
+<h3 id="until-loops">Until Loops</h3>
+<p>There is also the <code>until</code> loop, which is relatively rare. Nevertheless, the <code>until</code> loop works precisely like the <code>while</code> loop, but with the difference:</p>
+<ul>
+<li>The code inside a <code>until</code> loop is executed as long as the particular condition is <code>false</code>.</li>
+</ul>
+<p>The other way is to let the loop run until the desired value is reached. The "<code>until</code>" loops are very well suited for this. This type of loop works similarly to the "<code>while</code>" loop but, as already mentioned, with the difference that it runs until the boolean value is "<code>False</code>."</p>
+<p><strong>Until.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+counter=0
+
+until [ <span class="hljs-variable">$counter</span> <span class="hljs-_">-eq</span> 10 ]
+<span class="hljs-keyword">do</span>
+  <span class="hljs-comment"># Increase $counter by 1</span>
+  ((counter++))
+  <span class="hljs-built_in">echo</span> <span class="hljs-string">"Counter: <span class="hljs-variable">$counter</span>"</span>
+<span class="hljs-keyword">done</span>
+</code></pre>
+<p><strong>Until.sh</strong></p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ./</span>Until.sh
+<span class="hljs-symbol">
+Counter:</span> <span class="hljs-number">1</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">2</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">3</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">4</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">5</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">6</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">7</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">8</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">9</span>
+<span class="hljs-string">Counter:</span> <span class="hljs-number">10</span>
+</code></pre>
+<hr>
+<hr>
+<h3 id="exercise-script">Exercise Script</h3>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Decrypt function</span>
+<span class="hljs-keyword">function</span> decrypt {
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$hash</span> | sed <span class="hljs-string">'s/988sn1/83unasa/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/4d298d/9999/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/3i8dqos82/873h4d/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/4n9Ls/20X/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/912oijs01/i7gg/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/k32jx0aa/n391s/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/nI72n/YzF1/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/82ns71n/2d49/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/JGcms1a/zIm12/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/MS9/4SIs/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/Ymxj00Ims/Uso18/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/sSi8Lm/Mit/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/9su2n/43n92ka/g'</span>)
+    Mzns7293sk=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | sed <span class="hljs-string">'s/ggf3iunds/dn3i8/g'</span>)
+    MzSaas7k=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$Mzns7293sk</span> | sed <span class="hljs-string">'s/uBz/TT0K/g'</span>)
+
+    flag=$(<span class="hljs-built_in">echo</span> <span class="hljs-variable">$MzSaas7k</span> | base64 <span class="hljs-_">-d</span> | openssl enc -aes-128-cbc <span class="hljs-_">-a</span> <span class="hljs-_">-d</span> -salt -pass pass:<span class="hljs-variable">$salt</span>)
+}
+
+<span class="hljs-comment"># Variables</span>
+var=<span class="hljs-string">"9M"</span>
+salt=<span class="hljs-string">""</span>
+<span class="hljs-built_in">hash</span>=<span class="hljs-string">"VTJGc2RHVmtYMTl2ZnYyNTdUeERVRnBtQWVGNmFWWVUySG1wTXNmRi9rQT0K"</span>
+
+<span class="hljs-comment"># Base64 Encoding Example:</span>
+<span class="hljs-comment">#        $ echo "Some Text" | base64</span>
+
+<span class="hljs-comment"># &lt;- For-Loop here</span>
+
+<span class="hljs-comment"># Check if $salt is empty</span>
+<span class="hljs-keyword">if</span> [[ ! -z <span class="hljs-string">"<span class="hljs-variable">$salt</span>"</span> ]]
+<span class="hljs-keyword">then</span>
+    decrypt
+    <span class="hljs-built_in">echo</span> <span class="hljs-variable">$flag</span>
+<span class="hljs-keyword">else</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">fi</span>
+</code></pre>
+<h2 id="flow-control-branches">Flow Control - Branches</h2>
+<hr>
+<p>As we have already seen, the branches in flow control include <code>if-else</code> and the <code>case</code> statements. We have already discussed the <code>if-else</code> statements in detail and know how this works. Now we will take a closer look at the case statements.</p>
+<hr>
+<h3 id="case-statements">Case Statements</h3>
+<p><code>Case</code> statements are also known as <code>switch-case</code> statements in other languages, such as C/C++ and C#. The main difference between <code>if-else</code> and <code>switch-case</code> is that <code>if-else</code> constructs allow us to check any boolean expression, while <code>switch-case</code> always compares only the variable with the exact value. Therefore, the same conditions as for <code>if-else</code>, such as "greater-than," are not allowed for <code>switch-case</code>. The syntax for the switch-case statements looks like this:</p>
+<p><strong>Syntax - Switch-Case</strong></p>
+<pre><code class="lang-bash">case &lt;expression&gt; in
+    pattern_1 ) statements <span class="hljs-comment">;;</span>
+    pattern_2 ) statements <span class="hljs-comment">;;</span>
+    pattern_3 ) statements <span class="hljs-comment">;;</span>
+esac
+</code></pre>
+<p>The definition of switch-case starts with <code>case</code>, followed by the variable or value as an expression, which is then compared in the pattern. If the variable or value matches the expression, then the statements are executed after the parenthesis and ended with a double semicolon (<code>;;</code>).</p>
+<p>In our <code>CIDR.sh</code> script, we have used such a <code>case</code> statement. Here we defined four different options that we assigned to our script, how it should proceed after our decision.</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+<span class="hljs-comment"># Available options</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Additional options available:"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t1) Identify the corresponding network range of target domain."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t2) Ping discovered hosts."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t3) All checks."</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t*) Exit.\n"</span>
+
+<span class="hljs-built_in">read</span> -p <span class="hljs-string">"Select your option: "</span> opt
+
+<span class="hljs-keyword">case</span> <span class="hljs-variable">$opt</span> <span class="hljs-keyword">in</span>
+    <span class="hljs-string">"1"</span>) network_range ;;
+    <span class="hljs-string">"2"</span>) ping_host ;;
+    <span class="hljs-string">"3"</span>) network_range &amp;&amp; ping_host ;;
+    <span class="hljs-string">"*"</span>) <span class="hljs-built_in">exit</span> 0 ;;
+<span class="hljs-keyword">esac</span>
+&lt;SNIP&gt;
+</code></pre>
+<p>With the first two options, this script executes different functions that we had defined before. With the third option, both functions are executed, and with any other option, the script will be terminated.</p>
+<h2 id="functions">Functions</h2>
+<hr>
+<p>The bigger our scripts get, the more chaotic they become. If we use the same routines several times in the script, the script's size will increase accordingly. In such cases, <code>functions</code> are the solution that improves both the size and the clarity of the script many times. We combine several commands in a block between curly brackets ( <code>{</code> ... <code>}</code> ) and call them with a function name defined by us with <code>functions</code>. Once a function has been defined, it can be called and used again during the script.</p>
+<p><code>Functions</code> are an essential part of scripts and programs, as they are used to execute recurring commands for different values and phases of the script or program. Therefore, we do not have to repeat the whole section of code repeatedly but can create a single function that executes the specific commands. The definition of such functions makes the code easier to read and helps to keep the code as short as possible. It is important to note that functions must always be defined logically <code>before</code> the first call since a script is also processed from top to bottom. Therefore the definition of a function is always <code>at the beginning</code> of the script. There are two methods to define the functions:</p>
+<p><strong>Method 1 - Functions</strong></p>
+<pre><code class="lang-bash"><span class="hljs-function"><span class="hljs-keyword">function</span></span> <span class="hljs-keyword">name</span> {
+    &lt;commands&gt;
+}
+</code></pre>
+<p><strong>Method 2 - Functions</strong></p>
+<pre><code class="lang-bash"><span class="hljs-function"><span class="hljs-title">name</span><span class="hljs-params">()</span></span> {
+    &lt;commands&gt;
+}
+</code></pre>
+<p>We can choose the method to define a function that is most comfortable for us. In our <code>CIDR.sh</code> script, we used the first method because it is easier to read with the keyword "<code>function</code>."</p>
+<p><strong>CIDR.sh</strong></p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+<span class="hljs-comment"># Identify Network range for the specified IP address(es)</span>
+<span class="hljs-keyword">function</span> network_range {
+    <span class="hljs-keyword">for</span> ip <span class="hljs-keyword">in</span> <span class="hljs-variable">$ipaddr</span>
+    <span class="hljs-keyword">do</span>
+        netrange=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"NetRange\|CIDR"</span> | tee <span class="hljs-_">-a</span> CIDR.txt)
+        cidr=$(whois <span class="hljs-variable">$ip</span> | grep <span class="hljs-string">"CIDR"</span> | awk <span class="hljs-string">'{print $2}'</span>)
+        cidr_ips=$(prips <span class="hljs-variable">$cidr</span>)
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\nNetRange for <span class="hljs-variable">$ip</span>:"</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"<span class="hljs-variable">$netrange</span>"</span>
+    <span class="hljs-keyword">done</span>
+}
+&lt;SNIP&gt;
+</code></pre>
+<p>The function is called only by calling the specified name of the function, as we have seen in the case statement.</p>
+<p><strong>Function Execution - CIDR.sh</strong></p>
+<pre><code class="lang-bash">&lt;SNIP&gt;
+case <span class="hljs-variable">$opt</span> <span class="hljs-keyword">in</span>
+    <span class="hljs-string">"1"</span>) network_range ;;
+    <span class="hljs-string">"2"</span>) ping_host ;;
+    <span class="hljs-string">"3"</span>) network_range &amp;&amp; ping_host ;;
+    <span class="hljs-string">"*"</span>) <span class="hljs-keyword">exit</span> <span class="hljs-number">0</span> ;;
+esac
+</code></pre>
+<hr>
+<h3 id="parameter-passing">Parameter Passing</h3>
+<p>Such functions should be designed so that they can be used with a fixed structure of the values or at least only with a fixed format. Like we have already seen in our <code>CIDR.sh</code> script, we used the format of an IP address for the function "<code>network_range</code>". The parameters are optional, and therefore we can call the function without parameters. In principle, the same applies to the passed parameters as to parameters passed to a shell script. These are <code>$1</code> - <code>$9</code> (<code>${n}</code>), or <code>$variable</code> as we have already seen. Each function has its own set of parameters. So they do not collide with those of other functions or the parameters of the shell script.</p>
+<p>An important difference between bash scripts and other programming languages is that all defined variables are always processed <code>globally</code> unless otherwise declared by "<a href="https://www.tldp.org/LDP/abs/html/localvar.html">local</a>." This means that the first time we have defined a variable in a function, we will call it in our main script (outside the function). Passing the parameters to the functions is done the same way as we passed the arguments to our script and looks like this:</p>
+<p><strong>PrintPars.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-keyword">function</span> print_pars {
+    <span class="hljs-built_in">echo</span> <span class="hljs-variable">$1</span> <span class="hljs-variable">$2</span> <span class="hljs-variable">$3</span>
+}
+
+one=<span class="hljs-string">"First parameter"</span>
+two=<span class="hljs-string">"Second parameter"</span>
+three=<span class="hljs-string">"Third parameter"</span>
+
+print_pars <span class="hljs-string">"<span class="hljs-variable">$one</span>"</span> <span class="hljs-string">"<span class="hljs-variable">$two</span>"</span> <span class="hljs-string">"<span class="hljs-variable">$three</span>"</span>
+</code></pre>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ./PrintPars.sh
+
+First <span class="hljs-keyword">parameter</span> Second <span class="hljs-keyword">parameter</span> Third <span class="hljs-keyword">parameter</span>
+</code></pre>
+<hr>
+<h3 id="return-values">Return Values</h3>
+<p>When we start a new process, each <code>child process</code> (for example, a <code>function</code> in the executed script) returns a <code>return code</code> to the <code>parent process</code> (<code>bash shell</code> through which we executed the script) at its termination, informing it of the status of the execution. This information is used to determine whether the process ran successfully or whether specific errors occurred. Based on this information, the <code>parent process</code> can decide on further program flow.</p>
+<table data-header-hidden=""><thead><tr><th width="305"></th><th></th></tr></thead><tbody><tr><td><strong>Return Code</strong></td><td><strong>Description</strong></td></tr><tr><td><code>1</code></td><td>General errors</td></tr><tr><td><code>2</code></td><td>Misuse of shell builtins</td></tr><tr><td><code>126</code></td><td>Command invoked cannot execute</td></tr><tr><td><code>127</code></td><td>Command not found</td></tr><tr><td><code>128</code></td><td>Invalid argument to exit</td></tr><tr><td><code>128+n</code></td><td>Fatal error signal "<code>n</code>"</td></tr><tr><td><code>130</code></td><td>Script terminated by Control-C</td></tr><tr><td><code>255*</code></td><td>Exit status out of range</td></tr></tbody></table>
+
+<hr>
+<p>To get the value of a function back, we can use several methods like <code>return</code>, <code>echo</code>, or a <code>variable</code>. In the next example, we will see how to use "<code>$?</code>" to read the "<code>return code</code>," how to pass the arguments to the function and how to assign the result to a variable.</p>
+<p><strong>Return.sh</strong></p>
+<pre><code class="lang-bash"><span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-keyword">function</span> given_args {
+
+        <span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-lt</span> 1 ]
+        <span class="hljs-keyword">then</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Number of arguments: <span class="hljs-variable">$#</span>"</span>
+                <span class="hljs-built_in">return</span> 1
+        <span class="hljs-keyword">else</span>
+                <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Number of arguments: <span class="hljs-variable">$#</span>"</span>
+                <span class="hljs-built_in">return</span> 0
+        <span class="hljs-keyword">fi</span>
+}
+
+<span class="hljs-comment"># No arguments given</span>
+given_args
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Function status code: $?\n"</span>
+
+<span class="hljs-comment"># One argument given</span>
+given_args <span class="hljs-string">"argument"</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Function status code: $?\n"</span>
+
+<span class="hljs-comment"># Pass the results of the funtion into a variable</span>
+content=$(given_args <span class="hljs-string">"argument"</span>)
+
+<span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Content of the variable: \n\t<span class="hljs-variable">$content</span>"</span>
+</code></pre>
+<p><strong>Return.sh - Execution</strong></p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ ./</span>Return.sh
+
+<span class="hljs-built_in">Number</span> <span class="hljs-keyword">of</span> <span class="hljs-built_in">arguments</span>: <span class="hljs-number">0</span>
+<span class="hljs-built_in">Function</span> status code: <span class="hljs-number">1</span>
+
+<span class="hljs-built_in">Number</span> <span class="hljs-keyword">of</span> <span class="hljs-built_in">arguments</span>: <span class="hljs-number">1</span>
+<span class="hljs-built_in">Function</span> status code: <span class="hljs-number">0</span>
+
+Content <span class="hljs-keyword">of</span> the variable:
+    <span class="hljs-built_in">Number</span> <span class="hljs-keyword">of</span> <span class="hljs-built_in">arguments</span>: <span class="hljs-number">1</span>
+</code></pre>
+<h2 id="debugging">Debugging</h2>
+<hr>
+<p>Bash gives us an excellent opportunity to find, track, and fix errors in our code. The term <code>debugging</code> can have many different meanings. Nevertheless, <a href="https://tldp.org/LDP/Bash-Beginners-Guide/html/sect\_02\_03.html">Bash debugging</a> is the process of removing errors (bugs) from our code. Debugging can be performed in many different ways. For example, we can use our code for debugging to check for typos, or we can use it for code analysis to track them and determine why specific errors occur.</p>
+<p>This process is also used to find vulnerabilities in programs. For example, we can try to cause errors using different input types and track their handling in the CPU through the assembler, which may provide a way to manipulate the handling of these errors to insert our own code and force the system to execute it. This topic will be covered and discussed in detail in other modules. Bash allows us to debug our code by using the "<code>-x</code>" (<code>xtrace</code>) and "<code>-v</code>" options. Now let us see an example with our <code>CIDR.sh</code> script.</p>
+<p><strong>CIDR.sh - Debugging</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash -x CIDR.sh
+
++ <span class="hljs-string">'['</span> 0 <span class="hljs-_">-eq</span> 0 <span class="hljs-string">']'</span>
++ <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">'You need to specify the target domain.\n'</span>
+You need to specify the target domain.
+
++ <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> Usage:
+Usage:
++ <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">'\tCIDR.sh &lt;domain&gt;'</span>
+    CIDR.sh &lt;domain&gt;
++ <span class="hljs-built_in">exit</span> 1
+</code></pre>
+<p>Here Bash shows us precisely which function or command was executed with which values. This is indicated by the plus sign (<code>+</code>) at the beginning of the line. If we want to see all the code for a particular function, we can set the "<code>-v</code>" option that displays the output in more detail.</p>
+<p><strong>CIDR.sh - Verbose Debugging</strong></p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ bash -x -v CIDR.sh
+
+<span class="hljs-meta">#!/bin/bash
+</span>
+<span class="hljs-comment"># Check for given argument</span>
+<span class="hljs-keyword">if</span> [ <span class="hljs-variable">$#</span> <span class="hljs-_">-eq</span> 0 ]
+<span class="hljs-keyword">then</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"You need to specify the target domain.\n"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"Usage:"</span>
+    <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">"\t<span class="hljs-variable">$0</span> &lt;domain&gt;"</span>
+    <span class="hljs-built_in">exit</span> 1
+<span class="hljs-keyword">else</span>
+    domain=<span class="hljs-variable">$1</span>
+<span class="hljs-keyword">fi</span>
++ <span class="hljs-string">'['</span> 0 <span class="hljs-_">-eq</span> 0 <span class="hljs-string">']'</span>
++ <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">'You need to specify the target domain.\n'</span>
+You need to specify the target domain.
+
++ <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> Usage:
+Usage:
++ <span class="hljs-built_in">echo</span> <span class="hljs-_">-e</span> <span class="hljs-string">'\tCIDR.sh &lt;domain&gt;'</span>
+    CIDR.sh &lt;domain&gt;
++ <span class="hljs-built_in">exit</span> 1
+</code></pre>
+<p>In comparison to normal debugging, we see the entire code section that has been processed so far and then the individual steps that have been taken.</p>
+
+
+</div></body></html>

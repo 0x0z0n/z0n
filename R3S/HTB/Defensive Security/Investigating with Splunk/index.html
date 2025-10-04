@@ -1,0 +1,746 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+<h1 id="understanding-log-sources-investigating-with-splunk">Understanding Log Sources &amp; Investigating with Splunk</h1>
+<h2 id="introduction-to-splunk-spl">Introduction To Splunk &amp; SPL</h2>
+<hr>
+<h3 id="what-is-splunk-">What Is Splunk?</h3>
+<p>Splunk is a highly scalable, versatile, and robust data analytics software solution known for its ability to ingest, index, analyze, and visualize massive amounts of machine data. Splunk has the capability to drive a wide range of initiatives, encompassing cybersecurity, compliance, data pipelines, IT monitoring, observability, as well as overall IT and business management.</p>
+<p><img src="storage\modules\218\101.png" alt="Image"></p>
+<p><img src="storage\modules\218\102.png" alt="Image"></p>
+<p>Splunk's (Splunk Enterprise) <code>architecture</code> consists of several layers that work together to collect, index, search, analyze, and visualize data. The architecture can be divided into the following main components:</p>
+<ul>
+<li><code>Forwarders</code>: Forwarders are responsible for data collection. They gather machine data from various sources and forward it to the indexers. The types of forwarders used in Splunk are:<ul>
+<li><code>Universal Forwarder (UF)</code>: This is a lightweight agent that collects data and forwards it to the Splunk indexers without any preprocessing. Universal Forwarders are individual software packages that can be easily installed on remote sources without significantly affecting network or host performance.</li>
+<li><code>Heavy Forwarder (HF)</code>: This agent serves the purpose of collecting data from remote sources, especially for intensive data aggregation assignments involving sources like firewalls or data routing/filtering points. According to <a href="https://docs.splunk.com/Splexicon:Heavyforwarder">Splexicon</a>, heavy forwarders stand out from other types of forwarders as they parse data before forwarding, allowing them to route data based on specific criteria such as event source or type. They can also index data locally while simultaneously forwarding it to another indexer. Typically, Heavy Forwarders are deployed as dedicated "data collection nodes" for API/scripted data access, and they exclusively support Splunk Enterprise.</li>
+<li>Please note that there are <code>HTTP Event Collectors (HECs)</code> available for directly collecting data from applications in a scalable manner. HECs operate by using token-based JSON or raw API methods. In this process, data is sent directly to the Indexer level for further processing.</li>
+</ul>
+</li>
+<li><code>Indexers</code>: The indexers receive data from the forwarders, organize it, and store it in indexes. While indexing data, the indexers generate sets of directories categorized by age, wherein each directory hold compressed raw data and corresponding indexes that point to the raw data. They also process search queries from users and return results.</li>
+<li><code>Search Heads</code>: Search heads coordinate search jobs, dispatching them to the indexers and merging the results. They also provide an interface for users to interact with Splunk. On Search Heads, <code>Knowledge Objects</code> can be crafted to extract supplementary fields and manipulate data without modifying the original index data. It is important to mention that Search Heads also offer various tools to enrich the search experience, including reports, dashboards, and visualizations.</li>
+<li><code>Deployment Server</code>: It manages the configuration for forwarders, distributing apps and updates.</li>
+<li><code>Cluster Master</code>: The cluster master coordinates the activities of indexers in a clustered environment, ensuring data replication and search affinity.</li>
+<li><code>License Master</code>: It manages the licensing details of the Splunk platform.</li>
+</ul>
+<p>Splunk's <code>key components</code> include:</p>
+<ul>
+<li><code>Splunk Web Interface</code>: This is the graphical interface through which users can interact with Splunk, carrying out tasks like searching, creating alerts, dashboards, and reports.</li>
+<li><code>Search Processing Language (SPL)</code>: The query language for Splunk, allowing users to search, filter, and manipulate the indexed data.</li>
+<li><code>Apps and Add-ons</code>: Apps provide specific functionalities within Splunk, while add-ons extend capabilities or integrate with other systems. Splunk Apps enable the coexistence of multiple workspaces on a single Splunk instance, catering to different use cases and user roles. These ready-made apps can be found on <a href="https://splunkbase.splunk.com/">Splunkbase</a>, providing additional functionalities and pre-configured solutions. Splunk Technology Add-ons serve as an abstraction layer for data collection methods. They often include relevant field extractions, allowing for schema-on-the-fly functionality. Additionally, Technology Add-ons encompass pertinent configuration files (props/transforms) and supporting scripts or binaries. A Splunk App, on the other hand, can be seen as a comprehensive solution that typically utilizes one or more Technology Add-ons to enhance its capabilities.</li>
+<li><code>Knowledge Objects</code>: These include fields, tags, event types, lookups, macros, data models, and alerts that enhance the data in Splunk, making it easier to search and analyze.</li>
+</ul>
+<hr>
+<h3 id="splunk-as-a-siem-solution">Splunk As A SIEM Solution</h3>
+<p>When it comes to cybersecurity, Splunk can play a crucial role as a log management solution, but its true value lies in its analytics-driven Security Information and Event Management (SIEM) capabilities. Splunk as a SIEM solution can aid in real-time and historical data analysis, cybersecurity monitoring, incident response, and threat hunting. Moreover, it empowers organizations to enhance their detection capabilities by leveraging User Behavior Analytics.</p>
+<p>As discussed, Splunk Processing Language (SPL) is a language containing over a hundred commands, functions, arguments, and clauses. It's the backbone of data analysis in Splunk, used for searching, filtering, transforming, and visualizing data.</p>
+<p>Let's assume that <code>main</code> is an index containing Windows Security and Sysmon logs, among others.</p>
+<ol>
+<li><p><strong>Basic Searching</strong></p>
+<p>The most fundamental aspect of SPL is searching. By default, a search returns all events, but it can be narrowed down with keywords, boolean operators, comparison operators, and wildcard characters. For instance, a search for error would return all events containing that word.</p>
+<p>Boolean operators <code>AND</code>, <code>OR</code>, and <code>NOT</code> are used for more specific queries.</p>
+<p>The <code>search</code> command is typically implicit at the start of each SPL query and is not usually written out. However, here's an example using explicit search syntax:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">search</span> <span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> <span class="hljs-string">"UNKNOWN"</span>
+</code></pre>
+<p>By specifying the index as <code>main</code>, the query narrows down the search to only the events stored in the <code>main</code> index. The term <code>UNKNOWN</code> is then used as a keyword to filter and retrieve events that include this specific term.</p>
+<p><strong>Note</strong>: Wildcards (<code>*</code>) can replace any number of characters in searches and field values. Example (implicit search syntax):</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> <span class="hljs-string">"*UNKNOWN*"</span>
+</code></pre>
+<p>This SPL query will search within the <code>main</code> index for events that contain the term <code>UNKNOWN</code> anywhere in the event data.</p>
+</li>
+<li><p><strong>Fields and Comparison Operators</strong></p>
+<p>Splunk automatically identifies certain data as fields (like <code>source</code>, <code>sourcetype</code>, <code>host</code>, <code>EventCode</code>, etc.), and users can manually define additional fields. These fields can be used with comparison operators (<code>=</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>) for more precise searches. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> EventCode!=<span class="hljs-number">1</span>
+</code></pre>
+<p>This SPL (Splunk Processing Language) query is used to search within the <code>main</code> index for events that do <code>not</code> have an <code>EventCode</code> value of <code>1</code>.</p>
+</li>
+<li><p><strong>The fields command</strong></p>
+<p>The <code>fields</code> command specifies which fields should be included or excluded in the search results. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | fields - User
+</code></pre>
+<p>After retrieving all process creation events from the <code>main</code> index, the <code>fields</code> command excludes the <code>User</code> field from the search results. Thus, the results will contain all fields normally found in the <a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001">Sysmon Event ID 1</a> logs, except for the user that initiated the process. Please note that utilizing <code>sourcetype</code> restricts the scope exclusively to Sysmon event logs.</p>
+</li>
+<li><p><strong>The table command</strong></p>
+<p>The <code>table</code> command presents search results in a tabular format. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | table _<span class="hljs-built_in">time</span>, host, Image
+</code></pre>
+<p>This query returns process creation events, then arranges selected fields (_time, host, and Image) in a tabular format. <code>_time</code> is the timestamp of the event, <code>host</code> is the name of the host where the event occurred, and <code>Image</code> is the name of the executable file that represents the process.</p>
+</li>
+<li><p><strong>The rename command</strong></p>
+<p>The <code>rename</code> command renames a field in the search results. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | <span class="hljs-built_in">rename</span> Image <span class="hljs-keyword">as</span> Process
+</code></pre>
+<p>This command renames the <code>Image</code> field to <code>Process</code> in the search results. <code>Image</code> field in Sysmon logs represents the name of the executable file for the process. By renaming it, all the subsequent references to <code>Process</code> would now refer to what was originally the <code>Image</code> field.</p>
+</li>
+<li><p><strong>The dedup command</strong></p>
+<p>The 'dedup' command removes duplicate events. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | dedup Image
+</code></pre>
+<p>The <code>dedup</code> command removes duplicate entries based on the <code>Image</code> field from the process creation events. This means if the same process (<code>Image</code>) is created multiple times, it will appear only once in the results, effectively removing repetition.</p>
+</li>
+<li><p><strong>The sort command</strong></p>
+<p>The <code>sort</code> command sorts the search results. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | sort - _<span class="hljs-built_in">time</span>
+</code></pre>
+<p>This command sorts all process creation events in the <code>main</code> index in descending order of their timestamps (_time), i.e., the most recent events are shown first.</p>
+</li>
+<li><p><strong>The stats command</strong></p>
+<p>The <code>stats</code> command performs statistical operations. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">3</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> _time, Image
+</code></pre>
+<p>This query will return a table where each row represents a unique combination of a timestamp (<code>_time</code>) and a process (<code>Image</code>). The count column indicates the number of network connection events that occurred for that specific process at that specific time.</p>
+<p>However, it's challenging to visualize this data over time for each process because the data for each process is interspersed throughout the table. We'd need to manually filter by process (<code>Image</code>) to see the counts over time for each one.</p>
+</li>
+<li><p><strong>The chart command</strong></p>
+<p>The <code>chart</code> command creates a data visualization based on statistical operations. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">3</span> | chart <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> _time, Image
+</code></pre>
+<p>This query will return a table where each row represents a unique timestamp (<code>_time</code>) and each column represents a unique process (<code>Image</code>). The cell values indicate the number of network connection events that occurred for each process at each specific time.</p>
+<p>With the <code>chart</code> command, you can easily visualize the data over time for each process because each process has its own column. You can quickly see at a glance the count of network connection events over time for each process.</p>
+</li>
+<li><p><strong>The eval command</strong></p>
+<p>The <code>eval</code> command creates or redefines fields. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-title">index</span>=<span class="hljs-string">"main"</span> source<span class="hljs-keyword">type</span>="<span class="hljs-type">WinEventLog</span>:<span class="hljs-type">Sysmon</span>" <span class="hljs-type">EventCode</span>=1 | eval <span class="hljs-type">Process_Path</span>=lower(<span class="hljs-type">Image</span>)
+</code></pre>
+<p>This command creates a new field <code>Process_Path</code> which contains the lowercase version of the <code>Image</code> field. It doesn't change the actual <code>Image</code> field, but creates a new field that can be used in subsequent operations or for display purposes.</p>
+</li>
+<li><p><strong>The rex command</strong></p>
+<p>The <code>rex</code> command extracts new fields from existing ones using regular expressions. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session">    index=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">4662</span> | <span class="hljs-type">rex</span> max_match=<span class="hljs-number">0</span> <span class="hljs-string">"[^%](?&lt;guid&gt;{.*})"</span> | <span class="hljs-type">table</span> guid
+</code></pre>
+<ul>
+<li><code>index="main" EventCode=4662</code> filters the events to those in the <code>main</code> index with the <code>EventCode</code> equal to <code>4662</code>. This narrows down the search to specific events with the specified EventCode.</li>
+<li><code>rex max_match=0 "[^%](?&lt;guid&gt;{.*})"</code> uses the rex command to extract values matching the pattern from the events' fields. The regex pattern <code>{.*}</code> looks for substrings that begin with <code>{</code> and end with <code>}</code>. The <code>[^%]</code> part ensures that the match does not begin with a <code>%</code> character. The captured value within the curly braces is assigned to the named capture group <code>guid</code>.</li>
+<li><code>table guid</code> displays the extracted GUIDs in the output. This command is used to format the results and display only the <code>guid</code> field.</li>
+<li>The <code>max_match=0</code> option ensures that all occurrences of the pattern are extracted from each event. By default, the rex command only extracts the first occurrence.</li>
+</ul>
+<p>This is useful because GUIDs are not automatically extracted from 4662 event logs.</p>
+</li>
+<li><p><strong>The lookup command</strong></p>
+<p>The <code>lookup</code> command enriches the data with external sources. Example:</p>
+<p>Suppose the following CSV file called <code>malware_lookup.csv</code>.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">filename, is_malware
+notepad<span class="hljs-selector-class">.exe</span>, false
+cmd<span class="hljs-selector-class">.exe</span>, false
+powershell<span class="hljs-selector-class">.exe</span>, false
+sharphound<span class="hljs-selector-class">.exe</span>, true
+randomfile<span class="hljs-selector-class">.exe</span>, true
+</code></pre>
+<p>This CSV file should be added as a new Lookup table as follows.</p>
+<p><img src="storage\modules\218\107.png" alt="Image"></p>
+<p><img src="storage\modules\218\108.png" alt="Image"></p>
+<p><img src="storage\modules\218\109.png" alt="Image"></p>
+<p><img src="storage\modules\218\110.png" alt="Image"></p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | <span class="hljs-type">rex</span> <span class="hljs-built_in">field</span>=Image <span class="hljs-string">"(?P&lt;filename&gt;[^\\\]+)$"</span> | <span class="hljs-type">eval</span> filename=lower(filename) | <span class="hljs-type">lookup</span> malware_lookup.csv filename OUTPUTNEW is_malware | <span class="hljs-type">table</span> filename, is_malware
+</code></pre>
+<ul>
+<li><code>index="main" sourcetype="WinEventLog:Sysmon" EventCode=1</code>: This is the search criteria. It's looking for Sysmon logs (as identified by the sourcetype) with an EventCode of 1 (which represents process creation events) in the "main" index.</li>
+<li><code>| rex field=Image "(?P&lt;filename&gt;[^\\\]+)$"</code>: This command is using the regular expression (regex) to extract a part of the Image field. The Image field in Sysmon EventCode=1 logs typically contains the full file path of the process. This regex is saying: Capture everything after the last backslash (which should be the filename itself) and save it as filename.</li>
+<li><code>| eval filename=lower(filename)</code>: This command is taking the filename that was just extracted and converting it to lowercase. The lower() function is used to ensure the search is case-insensitive.</li>
+<li><code>| lookup malware_lookup.csv filename OUTPUTNEW is_malware</code>: This command is performing a lookup operation using the filename as a key. The lookup table (malware_lookup.csv) is expected to contain a list of filenames of known malicious executables. If a match is found in the lookup table, the new field is_malware is added to the event, which indicates whether or not the process is considered malicious based on the lookup table. <code>&lt;-- filename in this part of the query is the first column title in the CSV</code>.</li>
+<li><code>| table filename, is_malware</code>: This command is formatting the output to show only the fields filename and is_malware. If is_malware is not present in a row, it means that no match was found in the lookup table for that filename.</li>
+</ul>
+<p>In summary, this query is extracting the filenames of newly created processes, converting them to lowercase, comparing them against a list of known malicious filenames, and presenting the findings in a table.</p>
+<p>An equivalent that also removes duplicates is the following.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | <span class="hljs-keyword">eval</span> <span class="hljs-keyword">filename</span>=mvdedup(<span class="hljs-keyword">split</span>(Image, <span class="hljs-string">"\\"</span>)) | <span class="hljs-keyword">eval</span> <span class="hljs-keyword">filename</span>=mvindex(<span class="hljs-keyword">filename</span>, <span class="hljs-number">-1</span>) | <span class="hljs-keyword">eval</span> <span class="hljs-keyword">filename</span>=lower(<span class="hljs-keyword">filename</span>) | lookup malware_lookup.csv <span class="hljs-keyword">filename</span> OUTPUTNEW is_malware | table <span class="hljs-keyword">filename</span>, is_malware | dedup <span class="hljs-keyword">filename</span>, is_malware
+</code></pre>
+<ul>
+<li><code>index="main" sourcetype="WinEventLog:Sysmon" EventCode=1</code>: This command is the search criteria. It is pulling from the <code>main</code> index where the sourcetype is <code>WinEventLog:Sysmon</code> and the <code>EventCode</code> is <code>1</code>. The Sysmon <code>EventCode</code> of <code>1</code> indicates a process creation event.</li>
+<li><code>| eval filename=mvdedup(split(Image, "\\"))</code>: This command is splitting the <code>Image</code> field, which contains the file path, into multiple elements at each backslash and making it a multivalue field. The <code>mvdedup</code> function is used to eliminate any duplicates in this multivalue field.</li>
+<li><code>| eval filename=mvindex(filename, -1)</code>: Here, the <code>mvindex</code> function is being used to select the last element of the multivalue field generated in the previous step. In the context of a file path, this would typically be the actual file name.</li>
+<li><code>| eval filename=lower(filename)</code>: This command is taking the filename field and converting it into lowercase using the lower function. This is done to ensure the search is not case-sensitive and to standardize the data.</li>
+<li><code>| lookup malware_lookup.csv filename OUTPUTNEW is_malware</code>: This command is performing a lookup operation. The <code>lookup</code> command is taking the <code>filename</code> field, and checking if it matches any entries in the <code>malware_lookup.csv</code> lookup table. If there is a match, it appends a new field, <code>is_malware</code>, to the event, indicating whether the process is flagged as malicious.</li>
+<li><code>| table filename, is_malware</code>: The <code>table</code> command is used to format the output, in this case showing only the <code>filename</code> and <code>is_malware</code> fields in a tabular format.</li>
+<li><code>| dedup filename, is_malware</code>: This command eliminates any duplicate events based on the filename and is_malware fields. In other words, if there are multiple identical entries for the <code>filename</code> and <code>is_malware</code> fields in the search results, the <code>dedup</code> command will retain only the first occurrence and remove all subsequent duplicates.</li>
+</ul>
+<p>In summary, this SPL query searches the Sysmon logs for process creation events, extracts the <code>file name</code> from the <code>Image</code> field, converts it to lowercase, matches it against a list of known malware from the <code>malware_lookup.csv</code> file, and then displays the results in a table, removing any duplicates based on the <code>filename</code> and <code>is_malware</code> fields.</p>
+</li>
+<li><p><strong>The inputlookup command</strong></p>
+<p>The <code>inputlookup</code> command retrieves data from a lookup file without joining it to the search results. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-string">| inputlookup malware_lookup.csv</span>
+</code></pre>
+<p>This command retrieves all records from the <code>malware_lookup.csv</code> file. The result is not joined with any search results but can be used to verify the content of the lookup file or for subsequent operations like filtering or joining with other datasets.</p>
+</li>
+<li><p><strong>Time Range</strong></p>
+<p>Every event in Splunk has a timestamp. Using the time range picker or the <code>earliest</code> and <code>latest</code> commands, you can limit searches to specific time periods. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> earliest=-<span class="hljs-number">7</span>d EventCode!=<span class="hljs-number">1</span>
+</code></pre>
+<p>By combining the <code>index="main"</code> condition with <code>earliest=-7d</code> and <code>EventCode!=1</code>, the query will retrieve events from the <code>main</code> index that occurred in the last seven days and do not have an <code>EventCode</code> value of <code>1</code>.</p>
+</li>
+<li><p><strong>The transaction command</strong></p>
+<p>The <code>transaction</code> command is used in Splunk to group events that share common characteristics into transactions, often used to track sessions or user activities that span across multiple events. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-title">index</span>=<span class="hljs-string">"main"</span> source<span class="hljs-keyword">type</span>="<span class="hljs-type">WinEventLog</span>:<span class="hljs-type">Sysmon</span>" (<span class="hljs-type">EventCode</span>=1 <span class="hljs-type">OR</span> <span class="hljs-type">EventCode</span>=3) | transaction <span class="hljs-type">Image</span> startswith=eval(<span class="hljs-type">EventCode</span>=1) endswith=eval(<span class="hljs-type">EventCode</span>=3) maxspan=1m | table <span class="hljs-type">Image</span> |  dedup <span class="hljs-type">Image</span>
+</code></pre>
+<ul>
+<li><code>index="main" sourcetype="WinEventLog:Sysmon" (EventCode=1 OR EventCode=3)</code>: This is the search criteria. It's pulling from the <code>main</code> index where the sourcetype is <code>WinEventLog:Sysmon</code> and the <code>EventCode</code> is either <code>1</code> or <code>3</code>. In Sysmon logs, <code>EventCode 1</code> refers to a process creation event, and <code>EventCode 3</code> refers to a network connection event.</li>
+<li><code>| transaction Image startswith=eval(EventCode=1) endswith=eval(EventCode=3) maxspan=1m</code>: The transaction command is used here to group events based on the Image field, which represents the executable or script involved in the event. This grouping is subject to the conditions: the transaction starts with an event where <code>EventCode</code> is <code>1</code> and ends with an event where <code>EventCode</code> is <code>3</code>. The <code>maxspan=1m</code> clause limits the transaction to events occurring within a 1-minute window. The transaction command can link together related events to provide a better understanding of the sequences of activities happening within a system.</li>
+<li><code>| table Image</code>: This command formats the output into a table, displaying only the <code>Image</code> field.</li>
+<li><code>| dedup Image</code>: Finally, the <code>dedup</code> command removes duplicate entries from the result set. Here, it's eliminating any duplicate <code>Image</code> values. The command keeps only the first occurrence and removes subsequent duplicates based on the <code>Image</code> field.</li>
+</ul>
+<p>In summary, this query aims to identify sequences of activities (process creation followed by a network connection) associated with the same executable or script within a 1-minute window. It presents the results in a table format, ensuring that the listed executables/scripts are unique. The query can be valuable in threat hunting, particularly when looking for indicators of compromise such as rapid sequences of process creation and network connection events initiated by the same executable.</p>
+</li>
+<li><p><strong>Subsearches</strong></p>
+<p>A subsearch in Splunk is a search that is nested inside another search. It's used to compute a set of results that are then used in the outer search. Example:</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> <span class="hljs-built_in">NOT</span> [ <span class="hljs-built_in">search</span> <span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | top limit=<span class="hljs-number">100</span> Image | fields Image ] | table _<span class="hljs-built_in">time</span>, Image, CommandLine, User, ComputerName
+</code></pre>
+<p>In this query:</p>
+<ul>
+<li><code>index="main" sourcetype="WinEventLog:Sysmon" EventCode=1</code>: The main search that fetches <code>EventCode=1 (Process Creation)</code> events.</li>
+<li><code>NOT []</code>: The square brackets contain the subsearch. By placing <code>NOT</code> before it, the main search will exclude any results that are returned by the subsearch.</li>
+<li><code>search index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 | top limit=100 Image | fields Image</code>: The subsearch that fetches <code>EventCode=1 (Process Creation)</code> events, then uses the <code>top</code> command to return the 100 most common <code>Image</code> (process) names.</li>
+<li><code>table _time, Image, CommandLine, User, Computer</code>: This presents the final results as a table, displaying the timestamp of the event (<code>_time</code>), the process name (<code>Image</code>), the command line used to execute the process (<code>CommandLine</code>), the user that executed the process (<code>User</code>), and the computer on which the event occurred (<code>ComputerName</code>).</li>
+</ul>
+<p>This query can help to highlight unusual or rare processes, which may be worth investigating for potential malicious activity. Be sure to adjust the limit in the subsearch as necessary to fit your environment.</p>
+<p>As a note, this type of search can generate a lot of noise in environments where new and unique processes are frequently created, so careful tuning and context are important.</p>
+</li>
+</ol>
+<hr>
+<p>This is just the tip of the iceberg when it comes to SPL. Its vast command set and flexible syntax provide comprehensive data analysis capabilities. As with any language, proficiency comes with practice and experience. Find below some excellent resources to start with:</p>
+<ul>
+<li><a href="https://docs.splunk.com/Documentation/SCS/current/SearchReference/Introduction">https://docs.splunk.com/Documentation/SCS/current/SearchReference/Introduction</a></li>
+<li><a href="https://docs.splunk.com/Documentation/SplunkCloud/latest/SearchReference/">https://docs.splunk.com/Documentation/SplunkCloud/latest/SearchReference/</a></li>
+<li><a href="https://docs.splunk.com/Documentation/SplunkCloud/latest/Search/">https://docs.splunk.com/Documentation/SplunkCloud/latest/Search/</a></li>
+</ul>
+<hr>
+<h3 id="how-to-identify-the-available-data">How To Identify The Available Data</h3>
+<p><strong>Data and field identification approach 1: Leverage Splunk's Search &amp; Reporting Application (SPL)</strong></p>
+<p>In any robust Security Information and Event Management (SIEM) system like Splunk, understanding the available data sources, the data they provide, and the fields within them is critical to leveraging the system effectively. In Splunk, we primarily use the Search &amp; Reporting application to do this. Let's delve into how we can identify data source types, data, and fields within Splunk.</p>
+<p>Splunk can ingest a wide variety of data sources. We classify these data sources into source types that dictate how Splunk formats the incoming data. To identify the available source types, we can run the following SPL command, <code>after selecting the suitable time range in the time picker of the Search &amp; Reporting application</code>.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">| eventcount summarize=<span class="hljs-keyword">false</span> <span class="hljs-keyword">index</span>=* | table <span class="hljs-keyword">index</span>
+</code></pre>
+<p>This query uses <code>eventcount</code> to count events in all indexes, then <code>summarize=false</code> is used to display counts for each index separately, and finally, the <code>table</code> command is used to present the data in tabular form.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">| metadata <span class="hljs-keyword">type</span>=sourcetypes
+</code></pre>
+<p>This search uses the <code>metadata</code> command, which provides us with various statistics about specified indexed fields. Here, we're focusing on <code>sourcetypes</code>. The result is a list of all <code>sourcetypes</code> in our Splunk environment, along with additional metadata such as the first time a source type was seen (<code>firstTime</code>), the last time it was seen (<code>lastTime</code>), and the number of hosts (<code>totalCount</code>).</p>
+<p>For a simpler view, we can use the following search.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">| <span class="hljs-type">metadata</span> type=sourcetypes index=* | <span class="hljs-type">table</span> sourcetype
+</code></pre>
+<p>Here, the <code>metadata</code> command retrieves metadata about the data in our indexes. The <code>type=sourcetypes</code> argument tells Splunk to return metadata about sourcetypes. The <code>table</code> command is used to present the data in tabular form.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">| metadata <span class="hljs-built_in">type</span>=sources <span class="hljs-built_in">index</span>=* | table <span class="hljs-keyword">source</span>
+</code></pre>
+<p>This command returns a list of all data sources in the Splunk environment.</p>
+<p>Once we know our source types, we can investigate the kind of data they contain. Let's say we are interested in a sourcetype named <code>WinEventLog:Security</code>, we can use the table command to present the raw data as follows.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">sourcetype=<span class="hljs-string">"WinEventLog:Security"</span> | <span class="hljs-keyword">table</span> _raw
+</code></pre>
+<p>The <code>table</code> command generates a table with the specified fields as columns. Here, <code>_raw</code> represents the raw event data. This command will return the raw data for the specified source type.</p>
+<p>Splunk automatically extracts a set of default fields for every event it indexes, but it can also extract additional fields depending on the source type of the data. To see all fields available in a specific source type, we can use the <code>fields</code> command.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">sourcetype=<span class="hljs-string">"WinEventLog:Security"</span> | <span class="hljs-keyword">table</span> *
+</code></pre>
+<p>This command generates a table with all fields available in the <code>WinEventLog:Security</code> sourcetype. However, be cautious, as the use of <code>table *</code> can result in a very wide table if our events have a large number of fields. This may not be visually practical or effective for data analysis.</p>
+<p>A better approach is to identify the fields you are interested in using the <code>fields</code> command as mentioned before, and then specifying those field names in the <code>table</code> command. Example:</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">sourcetype=<span class="hljs-string">"WinEventLog:Security"</span> | <span class="hljs-type">fields</span> Account_Name, EventCode | <span class="hljs-type">table</span> Account_Name, EventCode
+</code></pre>
+<p>If we want to see a list of field names only, without the data, we can use the <code>fieldsummary</code> command instead.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">sourcetype</span>=<span class="hljs-string">"WinEventLog:Security"</span> | fieldsummary
+</code></pre>
+<p>This search will return a table that includes every field found in the events returned by the search (across the sourcetype we've specified). The table includes several columns of information about each field:</p>
+<ul>
+<li><code>field</code>: The name of the field.</li>
+<li><code>count</code>: The number of events that contain the field.</li>
+<li><code>distinct_count</code>: The number of distinct values in the field.</li>
+<li><code>is_exact</code>: Whether the count is exact or estimated.</li>
+<li><code>max</code>: The maximum value of the field.</li>
+<li><code>mean</code>: The mean value of the field.</li>
+<li><code>min</code>: The minimum value of the field.</li>
+<li><code>numeric_count</code>: The number of numeric values in the field.</li>
+<li><code>stdev</code>: The standard deviation of the field.</li>
+<li><code>values</code>: Sample values of the field.</li>
+</ul>
+<p>We may also see:</p>
+<ul>
+<li><code>modes</code>: The most common values of the field.</li>
+<li><code>numBuckets</code>: The number of buckets used to estimate the distinct count.</li>
+</ul>
+<p>Please note that the values provided by the <code>fieldsummary</code> command are calculated based on the events returned by our search. So if we want to see all fields within a specific <code>sourcetype</code>, we need to make sure our time range is large enough to capture all possible fields.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=* sourcetype=* | bucket _<span class="hljs-built_in">time</span> span=<span class="hljs-number">1</span>d | stats <span class="hljs-built_in">count</span> by _<span class="hljs-built_in">time</span>, <span class="hljs-built_in">index</span>, sourcetype | sort - _<span class="hljs-built_in">time</span>
+</code></pre>
+<p>Sometimes, we might want to know how events are distributed over time. This query retrieves all data (<code>index=* sourcetype=*</code>), then <code>bucket</code> command is used to group the events based on the <code>_time</code> field into 1-day buckets. The <code>stats</code> command then counts the number of events for each day (<code>_time</code>), <code>index</code>, and <code>sourcetype</code>. Lastly, the <code>sort</code> command sorts the result in descending order of <code>_time</code>.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=*</span> <span class="hljs-attr">sourcetype=*</span> | rare <span class="hljs-attr">limit=10</span> index, sourcetype
+</code></pre>
+<p>The <code>rare</code> command can help us identify uncommon event types, which might be indicative of abnormal behavior. This query retrieves all data and finds the 10 rarest combinations of indexes and sourcetypes.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> | rare limit=<span class="hljs-number">20</span> useother=f ParentImage
+</code></pre>
+<p>This command displays the 20 least common values of the <code>ParentImage</code> field.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session">index=* sourcetype=* | <span class="hljs-type">fieldsummary</span> | <span class="hljs-type">where</span> count &lt; <span class="hljs-number">100</span> | <span class="hljs-type">table</span> <span class="hljs-built_in">field</span>, count, distinct_count
+</code></pre>
+<p>A more complex query can provide a detailed summary of fields. This search shows a summary of all fields (<code>fieldsummary</code>), filters out fields that appear in less than 100 events (<code>where count &lt; 100</code>), and then displays a table (<code>table</code>) showing the field name, total count, and distinct count.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=* | sistats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> <span class="hljs-keyword">index</span>, sourcetype, source, host
+</code></pre>
+<p>We can also use the <code>sistats</code> command to explore event diversity. This command counts the number of events per index, sourcetype, source, and host, which can provide us a clear picture of the diversity and distribution of our data.</p>
+<p>  Introduction To Splunk &amp; SPL</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index=*</span> <span class="hljs-attr">sourcetype=*</span> | rare <span class="hljs-attr">limit=10</span> field1, field2, field3
+</code></pre>
+<p>The rare command can also be used to find uncommon combinations of field values. Replace <code>field1</code>, <code>field2</code>, <code>field3</code> with the fields of interest. This command will display the 10 rarest combinations of these fields.</p>
+<p>By combining the above SPL commands and techniques, we can explore and understand the types of data source, the data they contain, and the fields within them. This understanding is the foundation upon which we build effective searches, reports, alerts, and dashboards in Splunk.</p>
+<p>Lastly, remember to follow your organization's data governance policies when exploring data and source types to ensure you're compliant with all necessary privacy and security guidelines.</p>
+<p>You can apply each of the searches mentioned above successfully against the data within the Splunk instance of the target that you can spawn below. We highly recommend running and even modifying these searches to familiarize yourself with SPL (Search Processing Language) and its capabilities.</p>
+<hr>
+<p><strong>Data and field identification approach 2: Leverage Splunk's User Interface</strong></p>
+<p>When using the <code>Search &amp; Reporting</code> application's user interface, identifying the available data source types, the data they contain, and the fields within them becomes a task that involves interacting with various sections of the UI. Let's examine how we can effectively use the Splunk Web interface to identify these elements.</p>
+<ul>
+<li><code>Data Sources</code>: The first thing we want to identify is our data sources. We can do this by navigating to the <code>Settings</code> menu, which is usually located on the top right corner of our Splunk instance. In the dropdown, we'll find <code>Data inputs</code>. By clicking on <code>Data inputs</code>, we'll see a list of various data input methods, including files &amp; directories, HTTP event collector, forwarders, scripts, and many more. These represent the various sources through which data can be brought into Splunk. Clicking into each of these will give us an overview of the data sources being utilized.</li>
+<li><code>Data (Events)</code>: Now, let's move on to identifying the data itself, in other words, the events. For this, we'll want to navigate to the <code>Search &amp; Reporting</code> app. By exploring the events in the <code>Fast</code> mode, we can quickly scan through our data. The <code>Verbose</code> mode, on the other hand, lets us dive deep into each event's details, including its raw event data and all the fields that Splunk has extracted from it. <img src="storage\modules\218\111.png" alt="Image"> In the search bar, we could simply put <code>*</code> and hit search, which will bring up all the data that we have indexed. However, this is usually a massive amount of data, and it might not be the most efficient way to go about it. A better approach might be to leverage the time picker and select a smaller time range (let's be careful while doing so though to not miss any important/useful historic logs).</li>
+<li><code>Fields</code>: Lastly, to identify the fields in our data, let's look at an event in detail. We can click on any event in our search results to expand it. <img src="storage\modules\218\fields1.png" alt="Image"> We can also see on the left hand side of the "Search &amp; Reporting" application two categories of fields: <code>Selected Fields</code> and <code>Interesting Fields</code>. <code>Selected Fields</code> are fields that are always shown in the events (like <code>host</code>, <code>source</code>, and <code>sourcetype</code>), while <code>Interesting Fields</code> are those that appear in at least 20% of the events. By clicking <code>All fields</code>, we can see all the fields present in our events. <img src="storage\modules\218\fields.png" alt="Image"></li>
+<li><code>Data Models</code>: Data Models provide an organized, hierarchical view of our data, simplifying complex datasets into understandable structures. They're designed to make it easier to create meaningful reports, visualizations, and dashboards without needing a deep understanding of the underlying data sources or the need to write complex SPL queries. Here is how we can use the Data Models feature to identify and understand our data:<ul>
+<li><code>Accessing Data Models</code>: To access Data Models, we click on the <code>Settings</code> tab on the top right corner of the Splunk Web interface. Then we select <code>Data Models</code> under the <code>Knowledge</code> section. This will lead us to the Data Models management page. <code>&lt;-- If it appears empty, please execute a search and navigate to the Data Models page again.</code></li>
+<li><code>Understanding Existing Data Models</code>: On the Data Models management page, we can see a list of available Data Models. These might include models created by ourselves, our team, or models provided by Splunk Apps. Each Data Model is associated with a specific app context and is built to describe the structured data related to the app's purpose.</li>
+<li><code>Exploring Data Models</code>: By clicking on the name of a Data Model, we are taken to the <code>Data Model Editor</code>. This is where the true power of Data Models lies. Here, we can view the hierarchical structure of the data model, which is divided into <code>objects</code>. Each object represents a specific part of our data and contains <code>fields</code> that are relevant to that object. <img src="storage\modules\218\112.png" alt="Image"> For example, if we have a Data Model that describes web traffic, we might see objects like <code>Web Transactions</code>, <code>Web Errors</code>, etc. Within these objects, we'll find fields like <code>status</code>, <code>url</code>, <code>user</code>, etc.</li>
+</ul>
+</li>
+<li><p><code>Pivots</code>: Pivots are an extremely powerful feature in Splunk that allows us to create complex reports and visualizations without writing SPL queries. They provide an interactive, drag-and-drop interface for defining and refining our data reporting criteria. As such, they're also a fantastic tool for identifying and exploring the available data and fields within our Splunk environment. To start with Pivots to identify available data and fields, we can use the <code>Pivot</code> button that appears when we're browsing a particular data model in the <code>Data Models</code> page. <img src="storage\modules\218\115.png" alt="Image"></p>
+<p><img src="storage\modules\218\pivot.png" alt="Image"></p>
+</li>
+</ul>
+<h2 id="using-splunk-applications">Using Splunk Applications</h2>
+<hr>
+<h3 id="splunk-applications">Splunk Applications</h3>
+<p>Splunk applications, or apps, are packages that we add to our Splunk Enterprise or Splunk Cloud deployments to extend capabilities and manage specific types of operational data. Each application is tailored to handle data from specific technologies or use cases, effectively acting as a pre-built knowledge package for that data. Apps can provide capabilities ranging from custom data inputs, custom visualizations, dashboards, alerts, reports, and more.</p>
+<p>Splunk Apps enable the coexistence of multiple workspaces on a single Splunk instance, catering to different use cases and user roles. These ready-made apps can be found on Splunkbase.</p>
+<p>As an integral part of our cybersecurity operations, the Splunk apps designed for Security Information and Event Management (SIEM) purposes provide a range of capabilities to enhance our ability to detect, investigate, and respond to threats. They are designed to ingest, analyze, and visualize security-related data, enabling us to detect complex threats and perform in-depth investigations.</p>
+<p>When using these apps in our Splunk environment, we need to consider factors such as data volume, hardware requirements, and licensing. Many apps can be resource-intensive, so we must ensure our Splunk deployment is sized correctly to handle the additional workload. Further, it's also important to ensure we have the correct licenses for any premium apps, and that we are aware of the potential for increased license usage due to the added data inputs.</p>
+<p>In this segment, we'll be leveraging the <code>Sysmon App for Splunk</code> developed by Mike Haag.</p>
+<p>To download, add, and use this application, follow the steps delineated below:</p>
+<ol>
+<li>Sign up for a free account at <a href="https://splunkbase.splunk.com/">splunkbase</a> <img src="storage\modules\218\116.png" alt="Image"></li>
+<li>Once registered, log into your account</li>
+<li>Head over to the <a href="https://splunkbase.splunk.com/app/3544">Sysmon App for Splunk</a> page to download the application. <img src="storage\modules\218\117.png" alt="Image"></li>
+<li><p>Add the application as follows to your search head. <img src="storage\modules\218\118.png" alt="Image"></p>
+<p><img src="storage\modules\218\119.png" alt="Image"></p>
+<p><img src="storage\modules\218\120.png" alt="Image"></p>
+</li>
+<li><p>Adjust the application's <a href="https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/Definesearchmacros">macro</a> so that events are loaded as follows. <img src="storage\modules\218\121.png" alt="Image"></p>
+<p><img src="storage\modules\218\122.png" alt="Image"></p>
+<p><img src="storage\modules\218\123.png" alt="Image"></p>
+<p><img src="storage\modules\218\124.png" alt="Image"></p>
+</li>
+</ol>
+<p>Let's access the Sysmon App for Splunk by locating it in the "Apps" column on the Splunk home page and head over to the <code>File Activity</code> tab. <img src="storage\modules\218\125.png" alt="Image"></p>
+<p>Let's now specify "All time" on the time picker and click "Submit". Results are generated successfully; however, no results are appearing in the "Top Systems" section. <img src="storage\modules\218\126.png" alt="Image"></p>
+<p>We can fix that by clicking on "Edit" (upper right hand corner of the screen) and editing the search. <img src="storage\modules\218\127.png" alt="Image"></p>
+<p>The Sysmon Events with ID 11 do not contain a field named <code>Computer</code>, but they do include a field called <code>ComputerName</code>. Let's fix that and click "Apply" <img src="storage\modules\218\128.png" alt="Image"></p>
+<p>Results should now be generated successfully in the "Top Systems" section. <img src="storage\modules\218\129.png" alt="Image"></p>
+<p>Feel free to explore and experiment with this Splunk application. An excellent exercise is to modify the searches when no results are generated due to non-existent fields being specified, continuing until the desired results are obtained.</p>
+<h2 id="intrusion-detection-with-splunk-real-world-scenario-">Intrusion Detection With Splunk (Real-world Scenario)</h2>
+<hr>
+<h3 id="introduction">Introduction</h3>
+<p>The <code>Windows Event Logs &amp; Finding Evil</code> module familiarized us with log exploration on a single machine to pinpoint malicious activity. Now, we're stepping up our game. We'll be conducting similar investigations, but on a much larger scale, across numerous machines to uncover irregular activities within the entire network instead of just one device. Our tools will still include Windows Event logs, but the scope of our work will broaden significantly, demanding careful scrutiny of a larger pool of information, and identifying and discarding false positives whenever possible.</p>
+<p>In this module, we'll be zooming in on specific malicious machines. We'll master the art of crafting precise queries and triggering alerts to proactively enhance the security of our environment.</p>
+<p>The strategy we'll follow to identify events will mirror our initial lessons. However, we're going up against a much larger data set instead of merely one collection of event logs. And from our vantage point at the Splunk dashboard, we'll aim to weed out false positives.</p>
+<hr>
+<h3 id="ingesting-data-sources">Ingesting Data Sources</h3>
+<p>At the start of creating hunts, alerts, or queries, the sheer volume of information and data can be daunting. Part of the art of being a cybersecurity professional involves pinpointing the most meaningful data, determining how to sift through it quickly and efficiently, and ensuring the robustness of our analysis.</p>
+<p>To proceed, we need access to data we can analyze and use for threat hunting. There are a few sources we can turn to. One source that Splunk provides, along with installation instructions, is <a href="https://github.com/splunk/botsv3">BOTS</a>. Alternatively, <a href="https://www.logs.to/">https://www.logs.to</a> is a handy utility providing us with dummy logs in JSON format. If you upload data from <code>logs.to</code>, ensure your source type correctly extracts the JSON by adjusting the <code>Indexed Extractions</code> setting to JSON when crafting a new source type before uploading the JSON data.</p>
+<p>Our focus in this module, however, will be on a data set that we've personally created. This data set will assist your progress. You'll be working with over 500,000 events. By setting the time picker to <code>All time</code> and submitting the query below, we can retrieve all accessible events.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> earliest=<span class="hljs-number">0</span>
+</code></pre>
+<p><img src="storage\modules\218\1.png" alt="Image"></p>
+<p>We now have a mammoth data set to sift through and analyze across various sourcetypes with multiple infections. Within this data, we will encounter different types of attacks and infections. Our goal here isn't to identify every single one but to understand how we can begin to detect any sort of attack within this vast data pool. By the end of this lesson, we will have identified several attacks, and we encourage you to dive into the data and uncover more on your own.</p>
+<hr>
+<h3 id="searching-effectively">Searching Effectively</h3>
+<p>If you're new to Splunk, you might notice that certain queries take considerable time to process and return data, particularly when dealing with larger, more realistic data sets. Effective threat hunting in any SIEM hinges on crafting the right queries and targeting relevant data.</p>
+<p>We've touched upon the significance of relevant or accurate data multiple times. What does this really mean? The data within these events contains a mixture of valuable signals that can help us track down attacks and extraneous noise that we need to filter out. It can be a daunting thought that potential threats may be hiding in the background noise, and while this is a possibility, our job as the blue team is to methodically trace down tactics, techniques, and procedures (TTPs), and to craft alerts and hunting queries to cover as many potential threat vectors as we can. This is not a sprint; it's more of a marathon, a process that often spans across the life of an organization. We start by targeting what we know is malicious from familiar data.</p>
+<p>Let's dive into our data. Our first objective is to see what we can identify within the Sysmon data. We'll start by listing all our sourcetypes to approach this as an unknown environment from scratch. Run the following query to observe the possible sourcetypes (the screenshot may contain a WinEventLog sourcetype that you will not have).</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> sourcetype
+</code></pre>
+<p><img src="storage\modules\218\2.png" alt="Image"></p>
+<p>This will list all the sourcetypes available in your Splunk environment. Now let's query our Sysmon sourcetype and take a look at the incoming data.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span>
+</code></pre>
+<p><img src="storage\modules\218\3.png" alt="Image"></p>
+<p>We can delve into the events by clicking the arrow on the left.</p>
+<p><img src="storage\modules\218\4.png" alt="Image"></p>
+<p>Here we can verify that it is indeed Sysmon data and further identify extracted fields that we can target for searching. The extracted fields aid us in crafting more efficient searches. Here's the reasoning.</p>
+<p>There are several ways we can run searches to achieve our goal, but some methods will be more efficient than others. We can query all fields, which essentially performs regex searches for our data assuming we don't know what field it exists in. For demonstration, let's execute some generalized queries to illustrate performance differences. Let's search for all possible instances of <code>uniwaldo.local</code>.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> uniwaldo.local
+</code></pre>
+<p><img src="storage\modules\218\5.png" alt="Image"></p>
+<p>This should return results rather quickly. It will display any instances of this specific string found in <code>any</code> and <code>all</code> sourcetypes the way we ran it. It can be case insensitive and still return the same results. Now let's attempt to find all instances of this string concatenated within any other string such as "myuniwaldo.localtest" by using a wildcard before and after it.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> *uniwaldo.local*
+</code></pre>
+<p><img src="storage\modules\218\6.png" alt="Image"></p>
+<p>You'll observe that this query returns results <code>much</code> more slowly than before, even though the number of results is exactly the same! Now let's target this string within the <code>ComputerName</code> field only, as we might only care about this string if it shows up in <code>ComputerName</code>. Because no <code>ComputerName</code> <code>only</code> contains this string, we need to prepend a wildcard to return relevant results.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> ComputerName=<span class="hljs-string">"*uniwaldo.local"</span>
+</code></pre>
+<p><img src="storage\modules\218\7.png" alt="Image"></p>
+<p>You'll find that this query returns results <code>much</code> more swiftly than our previous search. The point being made here is that targeted searches in your SIEM will execute and return results much more quickly. They also lessen resource consumption and allow your colleagues to use the SIEM with less disruption and impact. As we devise our queries to hunt anomalies, it's crucial that we keep crafting efficient queries at the forefront of our thinking, particularly if we aim to convert this query into an alert later. Having many slow-running alerts won't benefit our systems or us. If you can aim the search at specific users, networks, machines, etc., it will always be to your advantage to do so, as it also cuts down a lot of irrelevant data, enabling you to focus on what truly matters. But again, how do we know what we <code>need</code> to focus on?</p>
+<hr>
+<h3 id="embracing-the-mindset-of-analysts-threat-hunters-detection-engineers">Embracing The Mindset Of Analysts, Threat Hunters, &amp; Detection Engineers</h3>
+<p>Making progress on our journey, let's pivot our focus towards spotting anomalies in our data. Remember the foundation we established in the <code>Windows Event Logs &amp; Finding Evil</code> module, where we explored the potential of event codes in tracing peculiar activities? We utilized public resources such as the Microsoft Sysinternals guide for <a href="https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon">Sysmon</a>. Let's apply the same approach and identify all Sysmon EventCodes prevalent in our data with this query.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> EventCode
+</code></pre>
+<p><img src="storage\modules\218\8.png" alt="Image"></p>
+<p>Our scan uncovers 20 distinct EventCodes. Before we move further, let's remind ourselves of some of the Sysmon event descriptions and their potential usage in detecting malicious activity.</p>
+<ul>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001">Sysmon Event ID 1 - Process Creation</a>: Useful for hunts targeting abnormal parent-child process hierarchies, as illustrated in the first lesson with Process Hacker. It's an event we can use later.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90002">Sysmon Event ID 2 - A process changed a file creation time</a>: Helpful in spotting "time stomp" attacks, where attackers alter file creation times. Bear in mind, not all such actions signal malicious intent.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90003">Sysmon Event ID 3 - Network connection</a>: A source of abundant noise since machines are perpetually establishing network connections. We may uncover anomalies, but let's consider other quieter areas first.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90004">Sysmon Event ID 4 - Sysmon service state changed</a>: Could be a useful hunt if attackers attempt to stop Sysmon, though the majority of these events are likely benign and informational, considering Sysmon's frequent legitimate starts and stops.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90005">Sysmon Event ID 5 - Process terminated</a>: This might aid us in detecting when attackers kill key processes or use sacrificial ones. For instance, Cobalt Strike often spawns temporary processes like werfault, the termination of which would be logged here, as well as the creation in ID 1.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90006">Sysmon Event ID 6 - Driver loaded</a>: A potential flag for BYOD (bring your own driver) attacks, though this is less common. Before diving deep into this, let's weed out more conspicuous threats first.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90007">Sysmon Event ID 7 - Image loaded</a>: Allows us to track dll loads, which is handy in detecting DLL hijacks.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90008">Sysmon Event ID 8 - CreateRemoteThread</a>: Potentially aids in identifying injected threads. While remote threads can be created legitimately, if an attacker misuses this API, we can potentially trace their rogue process and what they injected into.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90010">Sysmon Event ID 10 - ProcessAccess</a>: Useful for spotting remote code injection and memory dumping, as it records when handles on processes are made.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90011">Sysmon Event ID 11 - FileCreate</a>: With many files being created frequently due to updates, downloads, etc., it might be challenging to aim our hunt directly here. However, these events can be beneficial in correlating or identifying a file's origins later.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90012">Sysmon Event ID 12 - RegistryEvent (Object create and delete)</a> &amp; <a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90013">Sysmon Event ID 13 - RegistryEvent (Value Set)</a>: While numerous events take place here, many registry events can be malicious, and with a good idea of what to look for, hunting here can be fruitful.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90015">Sysmon Event ID 15 - FileCreateStreamHash</a>: Relates to file streams and the "Mark of the Web" pertaining to external downloads, but we'll leave this aside for now.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90016">Sysmon Event ID 16 - Sysmon config state changed</a>: Logs alterations in Sysmon configuration, useful for spotting tampering.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90017">Sysmon Event ID 17 - Pipe created</a> &amp; <a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90018">Sysmon Event ID 18 - Pipe connected</a>: Record pipe creations and connections. They can help observe malware's interprocess communication attempts, usage of <a href="https://learn.microsoft.com/en-us/sysinternals/downloads/psexec">PsExec</a>, and SMB lateral movement.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90022">Sysmon Event ID 22 - DNSEvent</a>: Tracks DNS queries, which can be beneficial for monitoring beacon resolutions and DNS beacons.</li>
+<li><a href="https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90023">Sysmon Event ID 23 - FileDelete</a>: Monitors file deletions, which can provide insights into whether a threat actor cleaned up their malware, deleted crucial files, or possibly attempted a ransomware attack.</li>
+<li><a href="https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon">Sysmon Event ID 25 - ProcessTampering (Process image change)</a>: Alerts on behaviors such as process herpadering, acting as a mini AV alert filter.</li>
+</ul>
+<p>Based on these <code>EventCodes</code>, we can perform preliminary queries. As previously stated, unusual parent-child trees are always suspicious. Let's inspect all parent-child trees with this query.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> ParentImage, Image
+</code></pre>
+<p><img src="storage\modules\218\9.png" alt="Image"></p>
+<p>We're met with 5,427 events, quite a heap to manually sift through. We have choices, weed out what seems benign or target child processes known to be problematic, like <code>cmd.exe</code> or <code>powershell.exe</code>. Let's target these two.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"*cmd.exe"</span> <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=<span class="hljs-string">"*powershell.exe"</span>) | stats <span class="hljs-built_in">count</span> by ParentImage, <span class="hljs-built_in">Image</span>
+</code></pre>
+<p><img src="storage\modules\218\10.png" alt="Image"></p>
+<p>The <code>notepad.exe</code> to <code>powershell.exe</code> chain stands out immediately. It implies that notepad.exe was run, which then spawned a child powershell to execute a command. The next steps? Question the <code>why</code> and validate if this is typical.</p>
+<p>We can delve deeper by focusing solely on these events.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> (Image=<span class="hljs-string">"*cmd.exe"</span> OR Image=<span class="hljs-string">"*powershell.exe"</span>) ParentImage=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>Windows<span class="hljs-subst">\\</span>System32<span class="hljs-subst">\\</span>notepad.exe"</span>
+</code></pre>
+<p><img src="storage\modules\218\11.png" alt="Image"></p>
+<p><img src="storage\modules\218\12.png" alt="Image"></p>
+<p>We see the <code>ParentCommandLine</code> (just <code>notepad.exe</code> with no arguments) triggering a <code>CommandLine</code> of <code>powershell.exe</code> seemingly downloading a file from a server with the IP of <code>10.0.0.229</code>!</p>
+<p>Our path now forks. We could trace what initiated the <code>notepad.exe</code>, or we could investigate other machines interacting with this IP and assess its legitimacy. Let's unearth more about this IP by running some queries to explore all sourcetypes that could shed some light.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> <span class="hljs-number">10.0</span><span class="hljs-number">.0</span><span class="hljs-number">.229</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> sourcetype
+</code></pre>
+<p><img src="storage\modules\218\13.png" alt="Image"></p>
+<p>Among the few options in this tiny 5-machine environment, most will just inform us that a connection occurred, but not much more.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> <span class="hljs-number">10.0</span><span class="hljs-number">.0</span><span class="hljs-number">.229</span> sourcetype=<span class="hljs-string">"linux:syslog"</span>
+</code></pre>
+<p><img src="storage\modules\218\14.png" alt="Image"></p>
+<p>Here we see that based on the data and the <code>host</code> parameter, we can conclude that this IP belongs to the host named <code>waldo-virtual-machine</code> on its <code>ens160</code> interface. The IP seems to be doing some generic stuff.</p>
+<p><img src="storage\modules\218\15.png" alt="Image"></p>
+<p>This finding indicates that our machine has engaged in some form of communication with a Linux system, notably downloading executable files through <code>PowerShell</code>. This sparks some concerns, hinting at the potential compromise of the Linux system as well! We're intrigued to dig deeper. So, let's initiate another inquiry using Sysmon data to unearth any further connections that might have been established.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> <span class="hljs-number">10.0</span><span class="hljs-number">.0</span><span class="hljs-number">.229</span> sourcetype=<span class="hljs-string">"WinEventLog:sysmon"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> CommandLine
+</code></pre>
+<p><img src="storage\modules\218\16.png" alt="Image"></p>
+<p>At this juncture, alarm bells should be sounding! We can spot several binaries with conspicuously malicious names, offering strong signals of their hostile intent. We would encourage you to exercise your investigative skills and try to trace these attacks independently – both for practice and for the thrill of it!</p>
+<p>From our assessment, it's becoming increasingly clear that not only was the spawning of <code>notepad.exe</code> to <code>powershell.exe</code> malicious in nature, but the Linux system also appears to be infected. It seems to be instrumental in transmitting additional utilities. We can now fine-tune our search query to zoom in on the hosts executing these commands.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> <span class="hljs-number">10.0</span><span class="hljs-number">.0</span><span class="hljs-number">.229</span> sourcetype=<span class="hljs-string">"WinEventLog:sysmon"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> CommandLine, host
+</code></pre>
+<p><img src="storage\modules\218\17.png" alt="Image"></p>
+<p>Our analysis indicates that two hosts fell prey to this Linux pivot. Notably, it appears that the DCSync PowerShell script was executed on the second host, indicating a likely <code>DCSync</code> attack. Instead of making an assumption, we'll seek validation by designing a more targeted query, zeroing in on the DCSync attack in this case. Here's the query.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-attr">index</span>=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">4662</span> Access_Mask=<span class="hljs-number">0</span>x100 Account_Name!=*$
+</code></pre>
+<p><img src="storage\modules\218\18.png" alt="Image"></p>
+<p>Now, let's dissect the rationale behind this query. Event Code <code>4662</code> is triggered when an Active Directory (AD) object is accessed. It's typically disabled by default and must be deliberately enabled by the Domain Controller to start appearing. <code>Access Mask 0x100</code> specifically requests <code>Control Access</code> typically needed for DCSync's high-level permissions. The <code>Account_Name</code> checks where AD objects are directly accessed by users instead of accounts, as DCSync should only be performed legitimately by <code>machine accounts</code> or <code>SYSTEM</code>, not users. You might be wondering how we can ascertain these are DCSync attempts since they could be accessing anything. To address this, we evaluate based on the properties field.</p>
+<p><img src="storage\modules\218\19.png" alt="Image"></p>
+<p>We notice two intriguing GUIDs. A quick Google search can yield valuable insights. Let's look them up.</p>
+<p><img src="storage\modules\218\20.png" alt="Image"></p>
+<p><img src="storage\modules\218\21.png" alt="Image"></p>
+<p><img src="storage\modules\218\22.png" alt="Image"></p>
+<p>Upon researching, we find that the first one is linked to <code>DS-Replication-Get-Changes-All</code>, which, as per its description, "...allows the replication of secret domain data".</p>
+<p>This gives us solid confirmation that a DCSync attempt was made and successfully executed by the Waldo user on the <code>UNIWALDO</code> domain. It's reasonable to presume that the Waldo user either possesses <code>Domain Admin</code> rights or has a certain level of access rights permitting this action. Furthermore, it's highly likely that the attacker has extracted all the accounts within the AD as well! This signifies a <code>full compromise</code> in our network, and we should consider rotating our <code>krbtgt</code> just in case a <code>golden ticket</code> was created.</p>
+<p>However, it's evident that we've barely scratched the surface of the attacker's activities. The attacker must have initially infiltrated the system and undertaken several maneuvers to obtain domain admin rights, orchestrate lateral movement, and dump the domain credentials. With this knowledge, we will adopt an additional hunt strategy to try and deduce how the attacker managed to obtain Domain Admin rights initially.</p>
+<p>We are aware of and have previously observed detections for lsass dumping as a prevalent credential harvesting technique. To spot this in our environment, we strive to identify processes opening handles to lsass, then evaluate whether we deem this behavior unusual or regular. Fortunately, Sysmon event code 10 can provide us with data on process access or processes opening handles to other processes. We'll deploy the following query to zero in on potential lsass dumping.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">10</span> lsass | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> SourceImage
+</code></pre>
+<p><img src="storage\modules\218\23.png" alt="Image"></p>
+<p>We prefer sorting by count to make the data more comprehensible. While it's not always safe to make assumptions, it's generally accepted that an activity occurring frequently is "normal" in an environment. It's also harder to detect malicious activity in a sea of 99 events compared to spotting it in just 1 or 5 possible events. With this logic, we'll begin by examining any conspicuous strange process accesses to lsass.exe by any source image. The most noticeable ones are <code>notepad</code> (given its absurdity) and <code>rundll32</code> (given its limited frequency). We can further explore these as we usually do.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">10</span> lsass SourceImage=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>Windows<span class="hljs-subst">\\</span>System32<span class="hljs-subst">\\</span>notepad.exe"</span>
+</code></pre>
+<p><img src="storage\modules\218\24.png" alt="Image"></p>
+<p>We are investigating the instances of notepad opening the handle. The data at hand is limited, but it's clear that Sysmon seems to think it's related to credential dumping. We can use the call stack to glean additional information about what triggered what and from where to ascertain how this attack was conducted.</p>
+<p><img src="storage\modules\218\25.png" alt="Image"></p>
+<p>To the untrained eye, it might not be immediately apparent that the callstack refers to an <code>UNKNOWN</code> segment into <code>ntdll</code>. In most cases, any form of shellcode will be located in what's termed an <code>unbacked</code> memory region. This implies that ANY API calls from this shellcode don't originate from any identifiable file on disk, but from arbitrary, or <code>UNKNOWN</code>, regions in memory that don't map to disk at all. While false positives can occur, the scenarios are limited to processes such as <code>JIT</code> processes, and they can mostly be filtered out.</p>
+<hr>
+<h3 id="creating-meaningful-alerts">Creating Meaningful Alerts</h3>
+<p>Armed with this newfound source of information, we can now aim to create alerts from malicious malware based on API calls from <code>UNKNOWN</code> regions of memory. It's crucial to remember that generating alerts differs from hunting. Our alerts must be resilient and effective, or we risk flooding our defense team with a glut of data, inadvertently providing a smokescreen for attackers to slip through our false positives. Moreover, we must ensure they aren't easily circumvented, where a few tweaks and seconds is all it takes.</p>
+<p>In this case, we'll attempt to create an alert that can detect threat actors based on them making calls from <code>UNKNOWN</code> memory regions. We want to focus on the malicious threads/regions while leaving standard items untouched to avoid alert fatigue. The approach we'll adopt in this lab will be more simplified and easier than many live environments due to the smaller amount of data we need to grapple with. However, the same concepts will apply when transitioning to an enterprise network – we'll just need to manage it against a much larger volume of data more effectively and creatively.</p>
+<p>We'll start by listing all the call stacks containing <code>UNKNOWN</code> during this lab period based on event code to see which can yield the most meaningful data.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> EventCode
+</code></pre>
+<p><img src="storage\modules\218\26.png" alt="Image"></p>
+<p>It appears that only event code 10 shows anything related to our <code>CallTrace</code>, so our alert will be tied to process access! This means we'll be alerting on anything attempting to open handles to other processes that don't map back to disk, assuming it's shellcode. We see 1575 counts though...so we'll begin by grouping based on <code>SourceImage</code>. Ordering can be applied by clicking on the arrows next to <code>count</code>.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> SourceImage
+</code></pre>
+<p><img src="storage\modules\218\27.png" alt="Image"></p>
+<p>Here are the false positives we mentioned, and they're all <code>JITs</code> as well! <code>.Net</code> is a <code>JIT</code>, and <code>Squirrel</code> utilities are tied to <code>electron</code>, which is a chromium browser and also contains a JIT. Even with our smaller dataset, there's a lot to sift through, and we're not sure what's malicious and what's not. The most effective way to manage this is by linking a few queries together.</p>
+<p>First, we're not concerned when a process accesses itself (necessarily), so let's filter those out for now.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> | <span class="hljs-keyword">where</span> SourceImage!=TargetImage | stats <span class="hljs-built_in">count</span> <span class="hljs-keyword">by</span> SourceImage
+</code></pre>
+<p><img src="storage\modules\218\28.png" alt="Image"></p>
+<p>Next, we know that <code>C Sharp</code> will be hard to weed out, and we want a high-fidelity alert. So we'll exclude anything <code>C Sharp</code> related due to its <code>JIT</code>. We can achieve this by excluding the Microsoft.Net folders and anything that has <code>ni.dll</code> in its call trace or <code>clr.dll</code>.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> SourceImage!=<span class="hljs-string">"*Microsoft.NET*"</span> CallTrace!=*ni.dll* CallTrace!=*clr.dll* | where SourceImage!=TargetImage | stats count by SourceImage
+</code></pre>
+<p><img src="storage\modules\218\29.png" alt="Image"></p>
+<p>In the next phase, we'll be focusing on eradicating anything related to <code>WOW64</code> within its call stack. Why, you may ask? Well, it's quite often that <code>WOW64</code> comprises regions of memory that are not backed by any specific file, a phenomenon we believe is linked to the <code>Heaven's Gate</code> mechanism, though we've yet to delve deep into this matter.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> SourceImage!=<span class="hljs-string">"*Microsoft.NET*"</span> CallTrace!=*ni.dll* CallTrace!=*clr.dll* CallTrace!=*wow64* | where SourceImage!=TargetImage | stats count by SourceImage
+</code></pre>
+<p><img src="storage\modules\218\30.png" alt="Image"></p>
+<p>Moving forward, we'll also exclude <code>Explorer.exe</code>, considering its versatile nature. It's akin to a wildcard, capable of undertaking an array of tasks. Identifying any malicious activity within Explorer directly is almost a Herculean task. The wide range of legitimate activities it performs and the multitude of tools that often dismiss it due to its intricacies make this process more challenging. It's tough to verify the <code>UNKNOWN</code>, especially in this context.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> SourceImage!=<span class="hljs-string">"*Microsoft.NET*"</span> CallTrace!=*ni.dll* CallTrace!=*clr.dll* CallTrace!=*wow64* SourceImage!=<span class="hljs-string">"C:\\Windows\\Explorer.EXE"</span> | where SourceImage!=TargetImage | stats count by SourceImage
+</code></pre>
+<p><img src="storage\modules\218\browser.png" alt="Image"></p>
+<p>With the steps outlined above, we've now established a reasonably robust alert system for our environment. This alert system is adept at identifying known threats. However, it's essential that we review the remaining data to verify its legitimacy. In addition, we must inspect the system to spot any unseen activities. To gain a more comprehensive understanding, we could reintroduce some fields we removed earlier, like <code>TargetImage</code> and <code>CallTrace</code>, or scrutinize each source image individually to weed out any remaining false positives.</p>
+<p>  Intrusion Detection With Splunk (Real-world Scenario)</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> CallTrace=<span class="hljs-string">"*UNKNOWN*"</span> SourceImage!=<span class="hljs-string">"*Microsoft.NET*"</span> CallTrace!=*ni.dll* CallTrace!=*clr.dll* CallTrace!=*wow64* SourceImage!=<span class="hljs-string">"C:\\Windows\\Explorer.EXE"</span> | where SourceImage!=TargetImage | stats count by SourceImage, TargetImage, CallTrace
+</code></pre>
+<p><img src="storage\modules\218\31.png" alt="Image"></p>
+<p>Please note that building this alert system was relatively straightforward in our current environment due to the limited data and false positives we had to deal with. However, in a real-world scenario, you might face extensive data that requires more nuanced mechanisms to pinpoint potentially malicious activities. Moreover, it's worth reflecting on the strength of this alert. How easily could it be bypassed? Unfortunately, there are a few ways to get past the alert we crafted.</p>
+<p>Imagine the ways to fortify this alert. For instance, a hacker could simply sidestep our alert by loading any random DLL with <code>NI</code> appended to its name. How could we enhance our alert further? What other ways could this alert be bypassed?</p>
+<hr>
+<p>Wrapping up, we've equipped ourselves with skills to sift through vast quantities of data, identify potential threats, explore our Security Information and Event Management (SIEM) for valuable data sources, trace attacks from their potential sources, and create potent alerts to keep a close watch on emerging threats. While the techniques we discussed were relatively simplified due to our smaller dataset of around 500.000 events, real-world scenarios may entail much larger or smaller datasets, requiring more rigorous techniques to identify malicious activities.</p>
+<p>As you advance in your cybersecurity journey, remember the importance of maintaining effective search strategies, getting innovative with analyzing massive datasets, leveraging open-source intelligence tools like Google to identify threats, and crafting robust alerts that aren't easily bypassed by incorporating arbitrary strings in your scripts.</p>
+<h2 id="detecting-attacker-behavior-with-splunk-based-on-ttps">Detecting Attacker Behavior With Splunk Based On TTPs</h2>
+<p>In the ever-evolving world of cybersecurity, proficient threat detection is crucial. This necessitates a thorough understanding of the myriad tactics, techniques, and procedures (TTPs) utilized by potential adversaries, along with a deep insight into our own network systems and their typical behaviors. Effective threat detection often revolves around identifying patterns that either match known malicious behaviors or diverge significantly from expected norms.</p>
+<p>In crafting detection-related SPL (Search Processing Language) searches in Splunk, we utilize two main approaches:</p>
+<ul>
+<li>The first approach is grounded in known adversary TTPs, leveraging our extensive knowledge of specific threats and attack vectors. This strategy is akin to playing a game of <code>spot the known</code>. If an entity behaves in a way that we recognize as characteristic of a particular threat, it draws our attention.</li>
+<li>The second approach, <code>while still informed by an understanding of attacker TTPs</code>, leans heavily on statistical analysis and anomaly detection to identify abnormal behavior within the sea of normal activity. This strategy is more of a game of <code>spot the unusual</code>. Here, we're not just relying on pre-existing knowledge of specific threats. Instead, we make extensive use of mathematical and statistical techniques to highlight anomalies, working on the premise that malicious activity will often manifest as an aberration from the norm.</li>
+</ul>
+<p>Together, these approaches give us a comprehensive toolkit for identifying and responding to a wide spectrum of cybersecurity threats. Each methodology offers unique advantages and, when used in tandem, they create a robust detection mechanism, one that is capable of identifying known threats while also surfacing potential unknown risks.</p>
+<p>Additionally, in both approaches, <code>the key is to understand our data and environment, then carefully tune our queries and thresholds to balance the need for accurate detection with the desire to avoid false positives</code>. Through continuous review and revision of our SPL queries, we can maintain a high level of security posture and readiness.</p>
+<p>Now, let's delve deeper into these two approaches.</p>
+<p>Please be aware that the upcoming sections do not pertain to detection engineering. The emphasis in these sections is on comprehending the two distinct approaches for constructing searches, rather than the actual process of analyzing an attack, identifying relevant log sources, and formulating searches. Furthermore, the provided searches are not finely tuned. As previously mentioned, fine-tuning necessitates a deep comprehension of the environment and its normal activity.</p>
+<hr>
+<h3 id="crafting-spl-searches-based-on-known-ttps">Crafting SPL Searches Based On Known TTPs</h3>
+<p>As mentioned above, the first approach revolves around a comprehensive understanding of known attacker behavior and TTPs. With this strategy, our focus is on recognizing patterns that we've seen before, which are indicative of specific threats or attack vectors.</p>
+<p>Below are some detection examples that follow this approach.</p>
+<ol>
+<li><p><strong>Example: Detection Of Reconnaissance Activities Leveraging Native Windows Binaries</strong></p>
+<p>Attackers often leverage native Windows binaries (such as <code>net.exe</code>) to gain insights into the target environment, identify potential privilege escalation opportunities, and perform lateral movement. <code>Sysmon Event ID 1</code> can assist in identifying such behavior.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> <span class="hljs-built_in">Image</span>=*\\ipconfig.exe <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=*\\net.exe <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=*\\whoami.exe <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=*\\netstat.exe <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=*\\nbtstat.exe <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=*\\hostname.exe <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=*\\tasklist.exe | stats <span class="hljs-built_in">count</span> by <span class="hljs-built_in">Image</span>,CommandLine | <span class="hljs-built_in">sort</span> - <span class="hljs-built_in">count</span>
+</code></pre>
+<p><img src="storage\modules\218\156.png" alt="Image"></p>
+<p>Within the search results, clear indications emerge, highlighting the utilization of native Windows binaries for reconnaissance purposes.</p>
+</li>
+<li><p><strong>Example: Detection Of Requesting Malicious Payloads/Tools Hosted On Reputable/Whitelisted Domains (Such As githubusercontent.com)</strong></p>
+<p>Attackers frequently exploit the use of <code>githubusercontent.com</code> as a hosting platform for their payloads. This is due to the common whitelisting and permissibility of the domain by company proxies. <code>Sysmon Event ID 22</code> can assist in identifying such behavior.</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">22</span>  QueryName=<span class="hljs-string">"*github*"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> Image, QueryName
+</code></pre>
+<p><img src="storage\modules\218\141.png" alt="Image"></p>
+<p>Within the search results, clear indications emerge, highlighting the utilization of <code>githubusercontent.com</code> for payload/tool-hosting purposes.</p>
+</li>
+<li><p><strong>Example: Detection Of PsExec Usage</strong></p>
+<p><a href="https://learn.microsoft.com/en-us/sysinternals/downloads/psexec">PsExec</a>, a part of the <a href="https://learn.microsoft.com/en-us/sysinternals/">Windows Sysinternals</a> suite, was initially conceived as a utility to aid system administrators in managing remote Windows systems. It offers the convenience of connecting to and interacting with remote systems via a command-line interface, and it's available to members of a computer’s Local Administrator group.</p>
+<p>The very features that make PsExec a powerful tool for system administrators also make it an attractive option for malicious actors. Several MITRE ATT\&amp;CK techniques, including <code>T1569.002 (System Services: Service Execution)</code>, <code>T1021.002 (Remote Services: SMB/Windows Admin Shares)</code>, and <code>T1570 (Lateral Tool Transfer)</code>, have seen PsExec in play.</p>
+<p>Despite its simple facade, PsExec packs a potent punch. It works by copying a service executable to the hidden Admin$ share. Subsequently, it taps into the Windows Service Control Manager API to jump-start the service. The service uses named pipes to link back to the PsExec tool. A major highlight is that PsExec can be deployed on both local and remote machines, and it can enable a user to act under the NT AUTHORITY\SYSTEM account. By studying <a href="https://www.synacktiv.com/publications/traces-of-windows-remote-command-execution">https://www.synacktiv.com/publications/traces-of-windows-remote-command-execution</a> and <a href="https://hurricanelabs.com/splunk-tutorials/splunking-with-sysmon-part-3-detecting-psexec-in-your-environment/">https://hurricanelabs.com/splunk-tutorials/splunking-with-sysmon-part-3-detecting-psexec-in-your-environment/</a> we deduce that <code>Sysmon Event ID 13</code>, <code>Sysmon Event ID 11</code>, and <code>Sysmon Event ID 17</code> or <code>Sysmon Event ID 18</code> can assist in identifying usage of PsExec.</p>
+<p><strong>Case 1: Leveraging Sysmon Event ID 13</strong></p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">13</span> Image=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>Windows<span class="hljs-subst">\\</span>system32<span class="hljs-subst">\\</span>services.exe"</span> TargetObject=<span class="hljs-string">"HKLM<span class="hljs-subst">\\</span>System<span class="hljs-subst">\\</span>CurrentControlSet<span class="hljs-subst">\\</span>Services<span class="hljs-subst">\\</span>*<span class="hljs-subst">\\</span>ImagePath"</span> | rex field=Details <span class="hljs-string">"(?&lt;reg_file_name&gt;[^<span class="hljs-subst">\\</span>\]+)$"</span> | eval reg_file_name = lower(reg_file_name), file_name = if(isnull(file_name),reg_file_name,lower(file_name)) | stats values(Image) AS Image, values(Details) AS RegistryDetails, values(_time) AS EventTimes, count by file_name, ComputerName
+</code></pre>
+<p>Let's break down each part of this query:</p>
+<ul>
+<li><code>index="main" sourcetype="WinEventLog:Sysmon" EventCode=13 Image="C:\\Windows\\system32\\services.exe" TargetObject="HKLM\\System\\CurrentControlSet\\Services\\*\\ImagePath"</code>: This part of the query is selecting logs from the <code>main</code> index with the sourcetype of <code>WinEventLog:Sysmon</code>. We're specifically looking for events with <code>EventCode=13</code>. In Sysmon logs, <code>EventCode 13</code> represents an event where a registry value was set. The <code>Image</code> field is set to <code>C:\\Windows\\system32\\services.exe</code> to filter for events where the services.exe process was involved, which is the Windows process responsible for handling service creation and management. The <code>TargetObject</code> field specifies the registry keys that we're interested in. In this case, we're looking for changes to the <code>ImagePath</code> value under any service key in <code>HKLM\\System\\CurrentControlSet\\Services</code>. The <code>ImagePath</code> registry value of a service specifies the path to the executable file for the service.</li>
+<li><code>| rex field=Details "(?&lt;reg_file_name&gt;[^\\\]+)$"</code>: The <code>rex</code> command here is extracting the file name from the <code>Details</code> field using a regular expression. The pattern <code>[^\\\]+)$</code> captures the part of the path after the last backslash, which is typically the file name. This value is stored in a new field <code>reg_file_name</code>.</li>
+<li><code>| eval file_name = if(isnull(file_name),reg_file_name,(file_name))</code>: This eval command checks if the <code>file_name</code> field is <code>null</code>. If it is, it sets <code>file_name</code> to the value of <code>reg_file_name</code> (the file name we extracted from the <code>Details</code> field). If <code>file_name</code> is not null, it remains the same.</li>
+<li><code>| stats values(Image), values(Details), values(TargetObject), values(_time), values(EventCode), count by file_name, ComputerName</code>: Finally, the <code>stats</code> command aggregates the data by <code>file_name</code> and <code>ComputerName</code>. For each unique combination of <code>file_name</code> and <code>ComputerName</code>, it collects all the unique values of <code>Image</code>, <code>Details</code>, <code>TargetObject</code>, and <code>_time</code>, and counts the number of events.</li>
+</ul>
+<p>In summary, this query is looking for instances where the <code>services.exe</code> process has modified the <code>ImagePath</code> value of any service. The output will include the details of these modifications, including the name of the modified service, the new ImagePath value, and the time of the modification.</p>
+<p><img src="storage\modules\218\142.png" alt="Image"></p>
+<p>Among the <code>less frequent</code> search results, it is evident that there are indications of execution resembling PsExec.</p>
+<p><strong>Case 2: Leveraging Sysmon Event ID 11</strong></p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">11</span> Image=System | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> TargetFilename
+</code></pre>
+<p><img src="storage\modules\218\143.png" alt="Image"></p>
+<p>Again, among the <code>less frequent</code> search results, it is evident that there are indications of execution resembling PsExec.</p>
+<p><strong>Case 3: Leveraging Sysmon Event ID 18</strong></p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">18</span> Image=System | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> PipeName
+</code></pre>
+<p><img src="storage\modules\218\144.png" alt="Image"></p>
+<p>This time, the results are more manageable to review and they continue to suggest an execution pattern resembling PsExec.</p>
+</li>
+<li><p><strong>Example: Detection Of Utilizing Archive Files For Transferring Tools Or Data Exfiltration</strong></p>
+<p>Attackers may employ <code>zip</code>, <code>rar</code>, or <code>7z</code> files for transferring tools to a compromised host or exfiltrating data from it. The following search examines the creation of <code>zip</code>, <code>rar</code>, or <code>7z</code> files, with results sorted in descending order based on count.</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">11</span> (TargetFilename=<span class="hljs-string">"*.zip"</span> <span class="hljs-built_in">OR</span> TargetFilename=<span class="hljs-string">"*.rar"</span> <span class="hljs-built_in">OR</span> TargetFilename=<span class="hljs-string">"*.7z"</span>) | stats <span class="hljs-built_in">count</span> by ComputerName, User, TargetFilename | sort - <span class="hljs-built_in">count</span>
+</code></pre>
+<p><img src="storage\modules\218\145.png" alt="Image"></p>
+<p>Within the search results, clear indications emerge, highlighting the usage of archive files for tool-transferring and/or data exfiltration purposes.</p>
+</li>
+<li><p><strong>Example: Detection Of Utilizing PowerShell or MS Edge For Downloading Payloads/Tools</strong></p>
+<p>Attackers may exploit PowerShell to download additional payloads and tools, or deceive users into downloading malware via web browsers. The following SPL searches examine files downloaded through PowerShell or MS Edge.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">11</span> <span class="hljs-built_in">Image</span>=<span class="hljs-string">"*powershell.exe*"</span> |  stats <span class="hljs-built_in">count</span> by <span class="hljs-built_in">Image</span>, TargetFilename |  <span class="hljs-built_in">sort</span> + <span class="hljs-built_in">count</span>
+</code></pre>
+<p><img src="storage\modules\218\155.png" alt="Image"></p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">11</span> Image=<span class="hljs-string">"*msedge.exe"</span> TargetFilename=*<span class="hljs-string">"Zone.Identifier"</span> |  stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> TargetFilename |  sort + <span class="hljs-keyword">count</span>
+</code></pre>
+<p>The <code>*Zone.Identifier</code> is indicative of a file downloaded from the internet or another potentially untrustworthy source. Windows uses this zone identifier to track the security zones of a file. The <code>Zone.Identifier</code> is an ADS (Alternate Data Stream) that contains metadata about where the file was downloaded from and its security settings.</p>
+<p><img src="storage\modules\218\147.png" alt="Image"></p>
+<p>Within both search results, clear indications emerge, highlighting the usage of PowerShell and MS edge for payload/tool-downloading purposes.</p>
+</li>
+<li><p><strong>Example: Detection Of Execution From Atypical Or Suspicious Locations</strong></p>
+<p>The following SPL search is designed to identify any process creation (<code>EventCode=1</code>) occurring in a user's <code>Downloads</code> folder.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">1</span> | regex Image=<span class="hljs-string">"C:<span class="hljs-subst">\\</span><span class="hljs-subst">\\</span>Users<span class="hljs-subst">\\</span><span class="hljs-subst">\\</span>.*<span class="hljs-subst">\\</span><span class="hljs-subst">\\</span>Downloads<span class="hljs-subst">\\</span><span class="hljs-subst">\\</span>.*"</span> |  stats count by Image
+</code></pre>
+<p><img src="storage\modules\218\148.png" alt="Image"></p>
+<p>Within the <code>less frequent</code> search results, clear indications emerge, highlighting execution from a user's <code>Downloads</code> folder.</p>
+</li>
+<li><p><strong>Example: Detection Of Executables or DLLs Being Created Outside The Windows Directory</strong></p>
+<p>The following SPL identifies potential malware activity by checking for the creation of executable and DLL files outside the Windows directory. It then groups and counts these activities by user and target filename.</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">index</span>=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">11</span> (TargetFilename=<span class="hljs-string">"*.exe"</span> OR TargetFilename=<span class="hljs-string">"*.dll"</span>) TargetFilename!=<span class="hljs-string">"*\\windows\\*"</span> | stats <span class="hljs-keyword">count</span> <span class="hljs-keyword">by</span> User, TargetFilename | sort + <span class="hljs-keyword">count</span>
+</code></pre>
+<p><img src="storage\modules\218\149.png" alt="Image"></p>
+<p>Within the <code>less frequent</code> search results, clear indications emerge, highlighting the creation of executables outside the Windows directory.</p>
+</li>
+<li><p><strong>Example: Detection Of Misspelling Legitimate Binaries</strong></p>
+<p>Attackers often disguise their malicious binaries by intentionally misspelling legitimate ones to blend in and avoid detection. The purpose of the following SPL search is to detect potential misspellings of the legitimate <code>PSEXESVC.exe</code> binary, commonly used by <code>PsExec</code>. By examining the <code>Image</code>, <code>ParentImage</code>, <code>CommandLine</code> and <code>ParentCommandLine</code> fields, the search aims to identify instances where variations of <code>psexe</code> are used, potentially indicating the presence of malicious binaries attempting to masquerade as the legitimate PsExec service binary.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> (CommandLine=<span class="hljs-string">"*psexe*.exe"</span> <span class="hljs-built_in">NOT</span> (CommandLine=<span class="hljs-string">"*PSEXESVC.exe"</span> <span class="hljs-built_in">OR</span> CommandLine=<span class="hljs-string">"*PsExec64.exe"</span>)) <span class="hljs-built_in">OR</span> (ParentCommandLine=<span class="hljs-string">"*psexe*.exe"</span> <span class="hljs-built_in">NOT</span> (ParentCommandLine=<span class="hljs-string">"*PSEXESVC.exe"</span> <span class="hljs-built_in">OR</span> ParentCommandLine=<span class="hljs-string">"*PsExec64.exe"</span>)) <span class="hljs-built_in">OR</span> (ParentImage=<span class="hljs-string">"*psexe*.exe"</span> <span class="hljs-built_in">NOT</span> (ParentImage=<span class="hljs-string">"*PSEXESVC.exe"</span> <span class="hljs-built_in">OR</span> ParentImage=<span class="hljs-string">"*PsExec64.exe"</span>)) <span class="hljs-built_in">OR</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"*psexe*.exe"</span> <span class="hljs-built_in">NOT</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"*PSEXESVC.exe"</span> <span class="hljs-built_in">OR</span> <span class="hljs-built_in">Image</span>=<span class="hljs-string">"*PsExec64.exe"</span>)) |  table <span class="hljs-built_in">Image</span>, CommandLine, ParentImage, ParentCommandLine
+</code></pre>
+<p><img src="storage\modules\218\150.png" alt="Image"></p>
+<p>Within the search results, clear indications emerge, highlighting the misspelling of <code>PSEXESVC.exe</code> for evasion purposes.</p>
+</li>
+<li><p><strong>Example: Detection Of Using Non-standard Ports For Communications/Transfers</strong></p>
+<p>Attackers often utilize non-standard ports during their operations. The following SPL search detects suspicious network connections to non-standard ports by excluding standard web and file transfer ports (80, 443, 22, 21). The <code>stats</code> command aggregates these connections, and they are sorted in descending order by <code>count</code>.</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">3</span> <span class="hljs-built_in">NOT</span> (DestinationPort=<span class="hljs-number">80</span> <span class="hljs-built_in">OR</span> DestinationPort=<span class="hljs-number">443</span> <span class="hljs-built_in">OR</span> DestinationPort=<span class="hljs-number">22</span> <span class="hljs-built_in">OR</span> DestinationPort=<span class="hljs-number">21</span>) | stats <span class="hljs-built_in">count</span> by SourceIp, DestinationIp, DestinationPort | sort - <span class="hljs-built_in">count</span>
+</code></pre>
+<p><img src="storage\modules\218\151.png" alt="Image"></p>
+<p>Within the search results, clear indications emerge, highlighting the usage of non-standard ports communication or tool-transferring purposes.</p>
+</li>
+</ol>
+<hr>
+<p>It should be apparent by now that with a comprehensive understanding of attacker tactics, techniques, and procedures (TTPs), we could have detected the compromise of our environment more swiftly. However, it is essential to note that crafting searches solely based on attacker TTPs is insufficient as adversaries continuously evolve and employ obscure or unknown TTPs to avoid detection.</p>
+<h2 id="detecting-attacker-behavior-with-splunk-based-on-analytics">Detecting Attacker Behavior With Splunk Based On Analytics</h2>
+<p>As previously mentioned, the second approach leans heavily on statistical analysis and anomaly detection to identify abnormal behavior. By profiling <code>normal</code> behavior and identifying deviations from this baseline, we can uncover suspicious activities that may signify an intrusion. These statistical detection models, although driven by data, are invariably shaped by the broader understanding of attacker techniques, tactics, and procedures (TTPs).</p>
+<p>A good example of this approach in Splunk is the use of the <code>streamstats</code> command. This command allows us to perform real-time analytics on the data, which can be useful for identifying unusual patterns or trends.</p>
+<p>Consider a scenario where we are monitoring the number of network connections initiated by a process within a certain time frame.</p>
+<p>  Detecting Attacker Behavior With Splunk Based On Analytics</p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">3</span> | <span class="hljs-type">bin</span> _time span=<span class="hljs-number">1</span>h | <span class="hljs-type">stats</span> count <span class="hljs-built_in">as</span> NetworkConnections <span class="hljs-built_in">by</span> _time, Image | <span class="hljs-type">streamstats</span> time_window=<span class="hljs-number">24</span>h avg(NetworkConnections) <span class="hljs-built_in">as</span> avg stdev(NetworkConnections) <span class="hljs-built_in">as</span> stdev <span class="hljs-built_in">by</span> Image | <span class="hljs-type">eval</span> isOutlier=<span class="hljs-keyword">if</span>(NetworkConnections &gt; (avg + (<span class="hljs-number">0.5</span>*stdev)), <span class="hljs-number">1</span>, <span class="hljs-number">0</span>) | <span class="hljs-type">search</span> isOutlier=<span class="hljs-number">1</span>
+</code></pre>
+<p>In this search:</p>
+<ul>
+<li>We start by focusing on network connection events (<code>EventCode=3</code>), and then group these events into hourly intervals (<code>bin</code> can be seen as a <code>bucket</code> alias). For each unique process image (<code>Image</code>), we calculate the number of network connection events per time bucket.</li>
+<li>We then use the <code>streamstats</code> command to calculate a rolling average and standard deviation of the number of network connections over a 24-hour period for each unique process image. This gives us a dynamic baseline to compare each data point to.</li>
+<li>The <code>eval</code> command is then used to create a new field, <code>isOutlier</code>, and assigns it a value of <code>1</code> for any event where the number of network connections is more than 0.5 standard deviations away from the average. This labels these events as statistically anomalous and potentially indicative of suspicious activity.</li>
+<li>Lastly, the <code>search</code> command filters our results to only include the outliers, i.e., the events where <code>isOutlier</code> equals <code>1</code>.</li>
+</ul>
+<p>By monitoring for anomalies in network connections initiated by processes, we can detect potentially malicious activities such as command-and-control communication or data exfiltration attempts. However, as with any anomaly detection method, it's important to remember that it may yield false positives and should be calibrated according to the specifics of your environment.</p>
+<p><img src="storage\modules\218\159.png" alt="Image"></p>
+<p>Upon closer examination of the results, we observe the presence of numerous suspicious processes that were previously identified, although not all of them are evident.</p>
+<h3 id="crafting-spl-searches-based-on-analytics">Crafting SPL Searches Based On Analytics</h3>
+<p>Below are some more detection examples that follow this approach.</p>
+<ol>
+<li><p><strong>Example: Detection Of Abnormally Long Commands</strong></p>
+<p>Attackers frequently employ excessively long commands as part of their operations to accomplish their objectives.</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> Image=*cmd.<span class="hljs-keyword">exe</span> | <span class="hljs-built_in">eval</span> <span class="hljs-built_in">len</span>=<span class="hljs-built_in">len</span>(CommandLine) | table User, <span class="hljs-built_in">len</span>, CommandLine | <span class="hljs-keyword">sort</span> - <span class="hljs-built_in">len</span>
+</code></pre>
+<p>After reviewing the results, we notice some benign activity that can be filtered out to reduce noise. Let's apply the following modifications to the search.</p>
+<p>  </p>
+<pre><code class="lang-shell-session"><span class="hljs-built_in">index</span>=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> Image=*cmd.<span class="hljs-keyword">exe</span> ParentImage!=<span class="hljs-string">"*msiexec.exe"</span> ParentImage!=<span class="hljs-string">"*explorer.exe"</span> | <span class="hljs-built_in">eval</span> <span class="hljs-built_in">len</span>=<span class="hljs-built_in">len</span>(CommandLine) | table User, <span class="hljs-built_in">len</span>, CommandLine | <span class="hljs-keyword">sort</span> - <span class="hljs-built_in">len</span>
+</code></pre>
+<p><img src="storage\modules\218\160.png" alt="Image"></p>
+<p>Once again, we observe the recurrence of malicious activity that we previously identified during our investigation.</p>
+</li>
+<li><p><strong>Example: Detection Of Abnormal cmd.exe Activity</strong></p>
+<p>The following search identifies unusual <code>cmd.exe</code> activity within a certain time range. It uses the <code>bucket</code> command to group events by hour, calculates the <code>count</code>, <code>average</code>, and <code>standard deviation</code> of <code>cmd.exe</code> executions, and flags outliers.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">1</span> (CommandLine=<span class="hljs-string">"*cmd.exe*"</span>) | <span class="hljs-type">bucket</span> _time span=<span class="hljs-number">1</span>h | <span class="hljs-type">stats</span> count <span class="hljs-built_in">as</span> cmdCount <span class="hljs-built_in">by</span> _time User CommandLine | <span class="hljs-type">eventstats</span> avg(cmdCount) <span class="hljs-built_in">as</span> avg stdev(cmdCount) <span class="hljs-built_in">as</span> stdev | <span class="hljs-type">eval</span> isOutlier=<span class="hljs-keyword">if</span>(cmdCount &gt; avg+<span class="hljs-number">1.5</span>*stdev, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>) | <span class="hljs-type">search</span> isOutlier=<span class="hljs-number">1</span>
+</code></pre>
+<p><img src="storage\modules\218\161.png" alt="Image"></p>
+<p>Upon closer examination of the results, we observe the presence of suspicious commands that were previously identified, although not all of them are evident.</p>
+</li>
+<li><p><strong>Example: Detection Of Processes Loading A High Number Of DLLs In A Specific Time</strong></p>
+<p>It is not uncommon for malware to load multiple DLLs in rapid succession. The following SPL can assist in monitoring this behavior.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">7</span> | <span class="hljs-type">bucket</span> _time span=<span class="hljs-number">1</span>h | <span class="hljs-type">stats</span> dc(ImageLoaded) <span class="hljs-built_in">as</span> unique_dlls_loaded <span class="hljs-built_in">by</span> _time, Image | <span class="hljs-type">where</span> unique_dlls_loaded &gt; <span class="hljs-number">3</span> | <span class="hljs-type">stats</span> count <span class="hljs-built_in">by</span> Image, unique_dlls_loaded
+</code></pre>
+<p>After reviewing the results, we notice some benign activity that can be filtered out to reduce noise. Let's apply the following modifications to the search.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> EventCode=<span class="hljs-number">7</span> <span class="hljs-built_in">NOT</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"C:\\Windows\\System32*"</span>) <span class="hljs-built_in">NOT</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"C:\\Program Files (x86)*"</span>) <span class="hljs-built_in">NOT</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"C:\\Program Files*"</span>) <span class="hljs-built_in">NOT</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"C:\\ProgramData*"</span>) <span class="hljs-built_in">NOT</span> (<span class="hljs-built_in">Image</span>=<span class="hljs-string">"C:\\Users\\waldo\\AppData*"</span>)| bucket _time span=<span class="hljs-number">1</span>h | stats dc(ImageLoaded) as unique_dlls_loaded by _time, <span class="hljs-built_in">Image</span> | where unique_dlls_loaded &gt; <span class="hljs-number">3</span> | stats <span class="hljs-built_in">count</span> by <span class="hljs-built_in">Image</span>, unique_dlls_loaded | <span class="hljs-built_in">sort</span> - unique_dlls_loaded
+</code></pre>
+<ul>
+<li><code>index="main" EventCode=7 NOT (Image="C:\\Windows\\System32*") NOT (Image="C:\\Program Files (x86)*") NOT (Image="C:\\Program Files*") NOT (Image="C:\\ProgramData*") NOT (Image="C:\\Users\\waldo\\AppData*")</code>: This part of the query is responsible for fetching all the events from the <code>main</code> index where <code>EventCode</code> is <code>7</code> (Image loaded events in Sysmon logs). The <code>NOT</code> filters are excluding events from known benign paths (like "Windows\System32", "Program Files", "ProgramData", and a specific user's "AppData" directory).</li>
+<li><code>| bucket _time span=1h</code>: This command is used to group the events into time buckets of one hour duration. This is used to analyze the data in hourly intervals.</li>
+<li><code>| stats dc(ImageLoaded) as unique_dlls_loaded by _time, Image</code>: The <code>stats</code> command is used to perform statistical operations on the events. Here, <code>dc(ImageLoaded)</code> calculates the distinct count of DLLs loaded (<code>ImageLoaded</code>) for each process image (<code>Image</code>) in each one-hour time bucket.</li>
+<li><code>| where unique_dlls_loaded &gt; 3</code>: This filter excludes the results where the number of unique DLLs loaded by a process within an hour is <code>3 or less</code>. This is based on the assumption that legitimate software usually loads DLLs at a moderate rate, whereas malware might rapidly load many different DLLs.</li>
+<li><code>| stats count by Image, unique_dlls_loaded</code>: This command calculates the number of times each process (<code>Image</code>) has loaded <code>more than 3 unique DLLs</code> in an hour.</li>
+<li><code>| sort - unique_dlls_loaded</code>: Finally, this command sorts the results in descending order based on the number of unique DLLs loaded (<code>unique_dlls_loaded</code>).</li>
+</ul>
+<p><img src="storage\modules\218\162.png" alt="Image"></p>
+<p>Upon closer examination of the results, we observe the presence of suspicious processes that were previously identified, although not all of them are evident.</p>
+<p>It's important to note that this behavior can also be exhibited by legitimate software in numerous cases, so context and additional investigation would be necessary to confirm malicious activity.</p>
+</li>
+<li><p><strong>Example: Detection Of Transactions Where The Same Process Has Been Created More Than Once On The Same Computer</strong></p>
+<p>We want to correlate events where the same process (<code>Image</code>) is executed on the same computer (<code>ComputerName</code>) since this might indicate abnormalities depending on the nature of the processes involved. As always, context and additional investigation would be necessary to confirm if it's truly malicious or just a benign occurrence. The following SPL can assist in monitoring this behavior.</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span> | <span class="hljs-keyword">transaction</span> ComputerName, Image | <span class="hljs-keyword">where</span> mvcount(ProcessGuid) &gt; <span class="hljs-number">1</span> | stats <span class="hljs-built_in">count</span> <span class="hljs-keyword">by</span> Image, ParentImage
+</code></pre>
+<ul>
+<li><code>index="main" sourcetype="WinEventLog:Sysmon" EventCode=1</code>: This part of the query fetches all the Sysmon process creation events (<code>EventCode=1</code>) from the <code>main</code> index. Sysmon event code 1 represents a process creation event, which includes details such as the process that was started, its command line arguments, the user that started it, and the process that it was started from.</li>
+<li><code>| transaction ComputerName, Image</code>: The transaction command is used to group related events together based on shared field values. In this case, events are being grouped together if they share the same <code>ComputerName</code> and <code>Image</code> values. This can help to link together all the process creation events associated with a specific program on a specific computer.</li>
+<li><code>| where mvcount(ProcessGuid) &gt; 1</code>: This command filters the results to only include transactions where more than one unique process GUID (<code>ProcessGuid</code>) is associated with the same program image (<code>Image</code>) on the same computer (<code>ComputerName</code>). This would typically represent instances where the same program was started more than once.</li>
+<li><code>| stats count by Image, ParentImage</code>: Finally, this stats command is used to count the number of such instances by the program image (<code>Image</code>) and its parent process image (<code>ParentImage</code>).</li>
+</ul>
+<p><img src="storage\modules\218\163.png" alt="Image"></p>
+<p>Let's dive deeper into the relationship between <code>rundll32.exe</code> and <code>svchost.exe</code> (since this pair has the highest <code>count</code> number).</p>
+<p>  </p>
+<pre><code class="lang-shell-session">index=<span class="hljs-string">"main"</span> sourcetype=<span class="hljs-string">"WinEventLog:Sysmon"</span> EventCode=<span class="hljs-number">1</span>  | transaction ComputerName, Image  | where mvcount(ProcessGuid) &gt; <span class="hljs-number">1</span> | search Image=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>Windows<span class="hljs-subst">\\</span>System32<span class="hljs-subst">\\</span>rundll32.exe"</span> ParentImage=<span class="hljs-string">"C:<span class="hljs-subst">\\</span>Windows<span class="hljs-subst">\\</span>System32<span class="hljs-subst">\\</span>svchost.exe"</span> | table CommandLine, ParentCommandLine
+</code></pre>
+<p><img src="storage\modules\218\164.png" alt="Image"></p>
+<p>After careful scrutiny of the results, it becomes apparent that we not only identify the presence of previously identified suspicious commands but also new ones.</p>
+</li>
+</ol>
+<hr>
+<p>By establishing a profile of "normal" behavior and utilizing a statistical model to identify deviations from a baseline, we could have detected the compromise of our environment more rapidly, especially with a thorough understanding of attacker tactics, techniques, and procedures (TTPs). However, it is important to acknowledge that relying solely on this approach when crafting queries is inadequate.</p>
+</div></body></html>

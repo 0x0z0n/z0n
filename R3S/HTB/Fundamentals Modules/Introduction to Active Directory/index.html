@@ -1,0 +1,944 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="introduction-to-active-directory">Introduction to Active Directory</h1>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h2 id="cheat-sheet-iad">Cheat Sheet IAD</h2>
+<hr>
+<h3 id="basic-commands-needed">Basic Commands Needed</h3>
+<p><code>xfreerdp /v:&lt;IP&gt; /u:&lt;User&gt; /p:&lt;Password&gt;</code>\
+<code>ping &lt;IP&gt;</code></p>
+<hr>
+<h3 id="general-commands">General Commands</h3>
+<p><code>Get-Module</code>\
+Returns a list of loaded PowerShell Modules.</p>
+<p><code>Get-Command -Module ActiveDirectory</code>\
+Lists commands for the module specified.</p>
+<p><code>Get-Help &lt;cmd-let&gt;</code>\
+Shows help syntax for the cmd-let specified.</p>
+<p><code>Import-Module ActiveDirectory</code> Imports the Active Directory Module</p>
+<hr>
+<h3 id="active-directory-powershell-commands">Active Directory PowerShell Commands</h3>
+<hr>
+<h4 id="ad-user-commands">AD User Commands</h4>
+<p><code>New-ADUser -Name "first last" -Accountpassword (Read-Host -AsSecureString "Super$ecurePassword!") -Enabled $true -OtherAttributes @{'title'="Analyst";'mail'="f.last@domain.com"}</code>\
+Add a user to AD and set attributes.</p>
+<p><code>Remove-ADUser -Identity &lt;name&gt;</code>\
+Removes a user from AD with the identity of 'name'.</p>
+<p><code>Unlock-ADAccount -Identity &lt;name&gt;</code>\
+Unlocks a user account with the identity of 'name'.</p>
+<p><code>Set-ADAccountPassword -Identity &lt;'name'&gt; -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "NewP@ssw0rdReset!" -Force)</code>\
+Set the password of an AD user to the password specified.</p>
+<p><code>Set-ADUser -Identity amasters -ChangePasswordAtLogon $true</code>\
+Force a user to change their password at next logon attempt.</p>
+<hr>
+<h4 id="ad-group-commands">AD Group Commands</h4>
+<p><code>New-ADOrganizationalUnit -Name "name" -Path "OU=folder,DC=domain,DC=local"</code>\
+Create a new AD OU container named "name" in the path specified.</p>
+<p><code>New-ADGroup -Name "name" -SamAccountName analysts -GroupCategory Security -GroupScope Global -DisplayName "Security Analysts" -Path "CN=Users,DC=domain,DC=local" -Description "Members of this group are Security Analysts under the IT OU"</code>\
+Create a new security group named "name" with the accompanying attributes.</p>
+<p><code>Add-ADGroupMember -Identity 'group name' -Members 'ACepheus,OStarchaser,ACallisto'</code>\
+Add an AD user to the group specified.</p>
+<hr>
+<h4 id="gpo-commands">GPO Commands</h4>
+<p><code>Copy-GPO -SourceName "GPO to copy" -TargetName "Name"</code>\
+Copy a GPO for use as a new GPO with a target name of "name".</p>
+<p><code>New-GPLink -Name "Security Analysts Control" -Target "ou=Security Analysts,ou=IT,OU=HQ-NYC,OU=Employees,OU=Corp,dc=INLANEFREIGHT,dc=LOCAL" -LinkEnabled Yes</code>\
+Create a new GPO and link it to a specific OU or security group.</p>
+<p><code>Set-GPLink -Name "Security Analysts Control" -Target "ou=Security Analysts,ou=IT,OU=HQ-NYC,OU=Employees,OU=Corp,dc=INLANEFREIGHT,dc=LOCAL" -LinkEnabled Yes</code>\
+Link an existing GPO for use to a specific OU or security group.</p>
+<hr>
+<h4 id="computer-commands">Computer Commands</h4>
+<p><code>Add-Computer -DomainName 'INLANEFREIGHT.LOCAL' -Credential 'INLANEFREIGHT\HTB-student_adm' -Restart</code>\
+Add a new computer to the domain using the credentials specified.</p>
+<p><code>Add-Computer -ComputerName 'name' -LocalCredential '.\localuser' -DomainName 'INLANEFREIGHT.LOCAL' -Credential 'INLANEFREIGHT\htb-student_adm' -Restart</code>\
+Remotely add a computer to a domain.</p>
+<p><code>Get-ADComputer -Identity "name" -Properties * | select CN,CanonicalName,IPv4Address</code>\
+Check for a computer named "name" and view its properties.</p>
+<hr>
+<h3 id="references">References</h3>
+<p><a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview">Microsoft</a></p>
+<hr>
+<h2 id="why-active-directory-">Why Active Directory?</h2>
+<hr>
+<p>Active Directory (AD) is a directory service for Windows network environments. It is a distributed, hierarchical structure that allows for centralized management of an organization's resources, including users, computers, groups, network devices, file shares, group policies, devices, and trusts. AD provides authentication and authorization functions within a Windows domain environment. It has come under increasing attack in recent years. It is designed to be backward-compatible, and many features are arguably not "secure by default," and it can be easily misconfigured. This weakness can be leveraged to move laterally and vertically within a network and gain unauthorized access. AD is essentially a sizeable read-only database accessible to all users within the domain, regardless of their privilege level. A basic AD user account with no added privileges can enumerate most objects within AD. This fact makes it extremely important to properly secure an AD implementation because ANY user account, regardless of their privilege level, can be used to enumerate the domain and hunt for misconfigurations and flaws thoroughly. Also, multiple attacks can be performed with only a standard domain user account, showing the importance of a defense-in-depth strategy and careful planning focusing on security and hardening AD, network segmentation, and least privilege. One example is the <a href="https://www.secureworks.com/blog/nopac-a-tale-of-two-vulnerabilities-that-could-end-in-ransomware">noPac</a> attack that was first released in December of 2021.</p>
+<p>Active Directory makes information easy to find and use for administrators and users. AD is highly scalable, supports millions of objects per domain, and allows the creation of additional domains as an organization grows.</p>
+<p><img src="storage\modules\74\whyad5.png" alt="image"> <a href="https://dbaontap.com/2016/11/25/oem13c-roles-ad-groups/active-directory/">Source</a></p>
+<p>It is estimated that around 95% of <a href="https://en.wikipedia.org/wiki/Fortune\_500">Fortune 500</a> companies run Active Directory, making AD a key focus for attackers. A successful attack such as a phish that lands an attacker within the AD environment as a standard domain user would give them enough access to begin mapping out the domain and looking for avenues of attack. As security professionals, we will encounter AD environments of all sizes throughout our careers. It is essential to understand the structure and function of AD to become better informed as both an attacker and a defender.</p>
+<p>Ransomware operators have been increasingly targeting Active Directory as a key part of their attack paths. The <a href="https://www.cisa.gov/sites/default/files/publications/AA21-265A-Conti\_Ransomware\_TLP\_WHITE.pdf">Conti Ransomware</a> which has been used in more than 400 attacks around the world has been shown to leverage recent critical Active Directory flaws such as <a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-34527">PrintNightmare (CVE-2021-34527)</a> and <a href="https://msrc.microsoft.com/update-guide/vulnerability/CVE-2020-1472">Zerologon (CVE-2020-1472)</a> to escalate privileges and move laterally in a target network. Understanding the structure and function of Active Directory is the first step in a career path to find and prevent these types of flaws before attackers do. Researchers are continually finding new, extremely high-risk attacks that affect Active Directory environments that often require no more than a standard domain user to obtain complete administrative control over the entire domain. There are many great open-source tools for penetration testers to enumerate and attack Active Directory. Still, to use these most effectively, we must understand how Active Directory works to identify obvious and nuanced flaws. Tools are only as effective as their operator is knowledgeable. So let's take the time to understand the structure and function of Active Directory before moving into later modules that will focus on in-depth manual and tool-based enumeration, attacks, lateral movement, post-exploitation, and persistence.</p>
+<p>This module will lay the foundations for starting down the path of enumerating and attacking Active Directory. We will cover, in-depth, the structure and function of AD, discuss the various AD objects, discuss user rights and privileges, tools, and processes for managing AD, and even walk through examples of setting up a small AD environment.</p>
+<hr>
+<h3 id="history-of-active-directory">History of Active Directory</h3>
+<p>LDAP, the foundation of Active Directory, was first introduced in <a href="https://en.wikipedia.org/wiki/Request\_for\_Comments">RFCs</a> as early as 1971. Active Directory was predated by the <a href="https://en.wikipedia.org/wiki/X.500">X.500</a> organizational unit concept, which was the earliest version of all directory systems created by Novell and Lotus and released in 1993 as <a href="https://en.wikipedia.org/wiki/NetIQ\_eDirectory">Novell Directory Services</a>.</p>
+<p>Active Directory was first introduced in the mid-'90s but did not become part of the Windows operating system until the release of Windows Server 2000. Microsoft first attempted to provide directory services in 1990 with the release of Windows NT 3.0. This operating system combined features of the <a href="https://en.wikipedia.org/wiki/LAN\_Manager">LAN Manager</a> protocol and the <a href="https://en.wikipedia.org/wiki/OS/2">OS/2</a> operating systems, which Microsoft created initially along with IBM lead by <a href="https://en.wikipedia.org/wiki/Ed\_Iacobucci">Ed Iacobucci</a> who also led the design of <a href="https://en.wikipedia.org/wiki/IBM\_PC\_DOS">IBM DOS</a> and later co-founded Citrix Systems. The NT operating system evolved throughout the 90s, adapting protocols such as LDAP and Kerberos with Microsoft's proprietary elements. The first beta release of Active Directory was in 1997.</p>
+<p>The release of Windows Server 2003 saw extended functionality and improved administration and added the <code>Forest</code> feature, which allows sysadmins to create "containers" of separate domains, users, computers, and other objects all under the same umbrella. <a href="https://en.wikipedia.org/wiki/Active\_Directory\_Federation\_Services">Active Directory Federation Services (ADFS)</a> was introduced in Server 2008 to provide Single Sign-On (SSO) to systems and applications for users on Windows Server operating systems. ADFS made it simpler and more streamlined for users to sign into applications and systems, not on their same LAN.</p>
+<p>ADFS enables users to access applications across organizational boundaries using a single set of credentials. ADFS uses the <a href="https://en.wikipedia.org/wiki/Claims-based\_identity">claims-based</a> Access Control Authorization model, which attempts to ensure security across applications by identifying users by a set of claims related to their identity, which are packaged into a security token by the identity provider.</p>
+<p>The release of Server 2016 brought even more changes to Active Directory, such as the ability to migrate AD environments to the cloud and additional security enhancements such as user access monitoring and <a href="https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/service-accounts-group-managed">Group Managed Service Accounts (gMSA)</a>. gMSA offers a more secure way to run specific automated tasks, applications, and services and is often a recommended mitigation against the infamous Kerberoasting attack.</p>
+<p>2016 saw a more significant push towards the cloud with the release of Azure AD Connect, which was designed as a single sign-on method for users being migrated to the Microsoft Office 365 environment.</p>
+<p>Active Directory has suffered from various misconfigurations from 2000 to the present day. New vulnerabilities are discovered regularly that affect Active Directory and other technologies that interface with AD, such as Microsoft Exchange. As security researchers continue to uncover new flaws, organizations that run Active Directory need to remain on top of patching and implementing fixes. As penetration testers, we are tasked with finding these flaws for our clients before attackers.</p>
+<p>For this reason, we must have a solid foundation in Active Directory fundamentals and understand its structure, function, the various protocols that it uses to operate, how user rights and privileges are managed, how sysadmins administer AD and the multitude of vulnerabilities and misconfigurations that can be present in an AD environment. Managing AD is no easy task. One change/fix can introduce additional issues elsewhere. Before beginning to enumerate and then attack Active Directory, let's cover foundational concepts that will follow us throughout our infosec careers.</p>
+<p>As said before, 95% of Fortune 500 companies run Active Directory, and Microsoft has a near-complete monopoly in the directory services space. Even though many companies are transitioning to cloud and hybrid environments, on-prem AD is not going away for many companies. If you are performing network penetration testing engagements, you can be nearly sure to encounter AD in some way on almost all of them.</p>
+<p>This fundamental knowledge will make us better attackers and give us insight into AD that will be extremely useful when providing remediation advice to our clients. A deep understanding of AD will make peeling back the layers less daunting, and we will have the same confidence when approaching an environment with 10,000 hosts as we do with one with 20.</p>
+<h2 id="active-directory-research-over-the-years">Active Directory Research Over the Years</h2>
+<hr>
+<p>Active Directory has been a major area of focus for security researchers for the past decade or so. Starting in 2014, we began to see many of the tools and much of the research emerge, leading to the discovery of common attacks and techniques that are still used today. Below is a timeline of events highlighting the discovery of some of the most impactful attacks and flaws by incredible researchers, as well as the release of some of the most widely used tools by penetration testers until this day. While many techniques have been discovered over the years, AD (and now Azure AD) presents a vast attack surface, and new attacks are still being discovered. New tools emerge that both penetration testers and defenders must have a firm grasp of to assist organizations with the difficult but critical task of securing AD environments.</p>
+<p>As we can see from the timeline below, critical flaws are continuously being discovered. The noPac attack was discovered in December of 2021 and is the most recent critical AD attack that has been discovered at the time of writing (January of 2022). As we continue into 2022, we will surely see new tools and attacks released and new methods for exploiting and chaining together known vulnerabilities. We must stay on top of the latest and greatest Active Directory research to best help customers secure it or secure it ourselves.</p>
+<p>This is by no means a comprehensive list of all the excellent research and tools that have been released over the years, but this is a snapshot of many of the most consequential ones seen over the past decade. The hard work of the researchers listed in this timeline (and many others) has led to remarkable discoveries and the creation of tools that can help both penetration testers and defenders dig deep into Active Directory environments. With them, it's easier to find both obvious and obscure, high-risk flaws before attackers do.</p>
+<hr>
+<h3 id="ad-attacks-tools-timeline">AD Attacks &amp; Tools Timeline</h3>
+<h4 id="2021">2021</h4>
+<p>The <a href="https://en.wikipedia.org/wiki/PrintNightmare">PrintNightmare</a> vulnerability was released. This was a remote code execution flaw in the Windows Print Spooler that could be used to take over hosts in an AD environment. The <a href="https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab">Shadow Credentials</a> attack was released which allows for low privileged users to impersonate other user and computer accounts if conditions are right, and can be used to escalate privileges in a domain. The <a href="https://www.secureworks.com/blog/nopac-a-tale-of-two-vulnerabilities-that-could-end-in-ransomware">noPac</a> attack was released in mid-December of 2021 when much of the security world was focused on the Log4j vulnerabilities. This attack allows an attacker to gain full control over a domain from a standard domain user account if the right conditions exist.</p>
+<h4 id="2020">2020</h4>
+<p>The <a href="https://blog.malwarebytes.com/exploits-and-vulnerabilities/2021/01/the-story-of-zerologon/">ZeroLogon</a> attack debuted late in 2020. This was a critical flaw that allowed an attacker to impersonate any unpatched domain controller in a network.</p>
+<h4 id="2019">2019</h4>
+<p>harmj0y delivered the talk <a href="https://www.slideshare.net/harmj0y/derbycon-2019-kerberoasting-revisited">"Kerberoasting Revisited"</a> at DerbyCon which laid out new approaches to Kerberoasting. Elad Shamir released a <a href="https://shenaniganslabs.io/2019/01/28/Wagging-the-Dog.html">blog post</a> outlining techniques for abusing resource-based constrained delegation (RBCD) in Active Directory. The company BC Security released <a href="https://github.com/BC-SECURITY/Empire">Empire 3.0</a> (now version 4) which was a re-release of the PowerShell Empire framework written in Python3 with many additions and changes.</p>
+<h4 id="2018">2018</h4>
+<p>The "Printer Bug" bug was discovered by Lee Christensen and the <a href="https://github.com/leechristensen/SpoolSample">SpoolSample</a> PoC tool was released which leverages this bug to coerce Windows hosts to authenticate to other machines via the MS-RPRN RPC interface. harmj0y released the <a href="http://www.harmj0y.net/blog/redteaming/from-kekeo-to-rubeus/">Rubeus toolkit</a> for attacking Kerberos. Late in 2018 harmj0y also released the blog <a href="http://www.harmj0y.net/blog/redteaming/not-a-security-boundary-breaking-forest-trusts/">"Not A Security Boundary: Breaking Forest Trusts"</a> which presented key research on performing attacks across forest trusts. The <a href="https://www.dcshadow.com/">DCShadow</a> attack technique was also released by Vincent LE TOUX and Benjamin Delpy at the Bluehat IL 2018 conference. The <a href="https://github.com/vletoux/pingcastle/commits/master?after=f128d84e86e675f1ad65c4b9b05bd529e1f9dc7c+34\&amp;branch=master">Ping Castle</a> tool was released by Vincent LE TOUX for performing security audits of Active Directory by looking for misconfigurations and other flaws that can raise the risk level of a domain and producing a report that can be used to identify ways to further harden the environment.</p>
+<h4 id="2017">2017</h4>
+<p>The <a href="http://www.harmj0y.net/blog/activedirectory/roasting-as-reps/">ASREPRoast</a> technique was introduced for attacking user accounts that don't require Kerberos preauthentication. _wald0 and harmj0y delivered the pivotal talk on Active Directory ACL attacks <a href="https://www.slideshare.net/harmj0y/ace-up-the-sleeve">"ACE Up the Sleeve"</a> at Black Hat and DEF CON. harmj0y released his <a href="https://www.harmj0y.net/blog/redteaming/a-guide-to-attacking-domain-trusts/">"A Guide to Attacking Domain Trusts"</a> blog post on enumerating and attacking domain trusts.</p>
+<h4 id="2016">2016</h4>
+<p><a href="https://wald0.com/?p=68">BloodHound</a> was released as a game changing tool for visualizing attack paths in AD at <a href="https://www.youtube.com/watch?v=wP8ZCczC1OU">DEF CON 24</a>.</p>
+<h4 id="2015">2015</h4>
+<p>2015 saw the release of some of the most impactful Active Directory tools of all time. The <a href="https://github.com/EmpireProject/Empire">PowerShell Empire framework</a> was released. <a href="http://www.harmj0y.net/blog/redteaming/powerview-2-0/">PowerView 2.0</a> released as part of the (now deprecated) <a href="https://github.com/PowerShellEmpire/PowerTools/">PowerTools</a> repository, which was a part of the PowerShellEmpire GitHub account. The DCSync attack was first released by Benjamin Delpy and Vincent Le Toux as part of the <a href="https://github.com/gentilkiwi/mimikatz/">mimikatz</a> tool. It has since been included in other tools. The first stable release of CrackMapExec (<a href="https://github.com/byt3bl33d3r/CrackMapExec/releases?page=3">(v1.0.0)</a> was introduced. Sean Metcalf gave a talk at Black Hat USA about the dangers of Kerberos Unconstrained Delegation and released an excellent <a href="https://adsecurity.org/?p=1667">blog post</a> on the topic. The <a href="https://github.com/SecureAuthCorp/impacket/releases?page=2">Impacket</a> toolkit was also released in 2015. This is a collection of Python tools, many of which can be used to perform Active Directory attacks. It is still actively maintained as of January 2022 and is a key part of most every penetration tester's toolkit.</p>
+<h4 id="2014">2014</h4>
+<p>Veil-PowerView first <a href="https://github.com/darkoperator/Veil-PowerView/commit/fdfd47c0a1e06e529bf31c93da7caed3479d08e1#diff-1695122ff2b5844b625f6d05c9274ce0a8b75b9b7cde84386df07e24ae98181b">released</a>. This project later became part of the <a href="https://github.com/PowerShellMafia/PowerSploit">PowerSploit</a> framework as the (no longer supported) <a href="https://github.com/PowerShellMafia/PowerSploit/blob/master/Recon/PowerView.ps1">PowerView.ps1</a> AD recon tool. The Kerberoasting attack was first presented at a conference by <a href="https://twitter.com/timmedin">Tim Medin</a> at SANS Hackfest 2014.</p>
+<h4 id="2013">2013</h4>
+<p>The <a href="https://github.com/SpiderLabs/Responder/commits/master?after=c02c74853298ea52a2bfaa4d250c3898886a44ac+174\&amp;branch=master">Responder</a> tool was released by Laurent Gaffie. Responder is a tool used for poisoning LLMNR, NBT-NS, and MDNS on an Active Directory network. It can be used to obtain password hashes and also perform SMB Relay attacks (when combined with other tools) to move laterally and vertically in an AD environment. It has evolved considerably over the years and is still actively supported (with new features added) as of January 2022.</p>
+<h2 id="active-directory-structure">Active Directory Structure</h2>
+<hr>
+<p><a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview">Active Directory (AD)</a> is a directory service for Windows network environments. It is a distributed, hierarchical structure that allows for centralized management of an organization's resources, including users, computers, groups, network devices and file shares, group policies, servers and workstations, and trusts. AD provides authentication and authorization functions within a Windows domain environment. A directory service, such as <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview">Active Directory Domain Services (AD DS)</a> gives an organization ways to store directory data and make it available to both standard users and administrators on the same network. AD DS stores information such as usernames and passwords and manages the rights needed for authorized users to access this information. It was first shipped with Windows Server 2000; it has come under increasing attack in recent years. It is designed to be backward-compatible, and many features are arguably not "secure by default." It is difficult to manage properly, especially in large environments where it can be easily misconfigured.</p>
+<p>Active Directory flaws and misconfigurations can often be used to obtain a foothold (internal access), move laterally and vertically within a network, and gain unauthorized access to protected resources such as databases, file shares, source code, and more. AD is essentially a large database accessible to all users within the domain, regardless of their privilege level. A basic AD user account with no added privileges can be used to enumerate the majority of objects contained within AD, including but not limited to:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain Computers</td>
+<td>Domain Users</td>
+</tr>
+<tr>
+<td>Domain Group Information</td>
+<td>Organizational Units (OUs)</td>
+</tr>
+<tr>
+<td>Default Domain Policy</td>
+<td>Functional Domain Levels</td>
+</tr>
+<tr>
+<td>Password Policy</td>
+<td>Group Policy Objects (GPOs)</td>
+</tr>
+<tr>
+<td>Domain Trusts</td>
+<td>Access Control Lists (ACLs)</td>
+</tr>
+</tbody>
+</table>
+<p>For this reason, we must understand how Active Directory is set up and the basics of administration before attempting to attack it. It's always easier to "break" things if we already know how to build them.</p>
+<hr>
+<p>Active Directory is arranged in a hierarchical tree structure, with a forest at the top containing one or more domains, which can themselves have nested subdomains. A forest is the security boundary within which all objects are under administrative control. A forest may contain multiple domains, and a domain may include further child or sub-domains. A domain is a structure within which contained objects (users, computers, and groups) are accessible. It has many built-in Organizational Units (OUs), such as <code>Domain Controllers</code>, <code>Users</code>, <code>Computers</code>, and new OUs can be created as required. OUs may contain objects and sub-OUs, allowing for the assignment of different group policies.</p>
+<p>At a very (simplistic) high level, an AD structure may look as follows:</p>
+<pre><code class="lang-shell-session">INLANEFREIGHT.LOCAL/
+├── ADMIN<span class="hljs-selector-class">.INLANEFREIGHT</span><span class="hljs-selector-class">.LOCAL</span>
+│   ├── GPOs
+│   └── OU
+│       └── EMPLOYEES
+│           ├── COMPUTERS
+│           │   └── FILE01
+│           ├── GROUPS
+│           │   └── HQ Staff
+│           └── USERS
+│               └── barbara<span class="hljs-selector-class">.jones</span>
+├── CORP<span class="hljs-selector-class">.INLANEFREIGHT</span><span class="hljs-selector-class">.LOCAL</span>
+└── DEV<span class="hljs-selector-class">.INLANEFREIGHT</span><span class="hljs-selector-class">.LOCAL</span>
+</code></pre>
+<p>Here we could say that <code>INLANEFREIGHT.LOCAL</code> is the root domain and contains the subdomains (either child or tree root domains) <code>ADMIN.INLANEFREIGHT.LOCAL</code>, <code>CORP.INLANEFREIGHT.LOCAL</code>, and <code>DEV.INLANEFREIGHT.LOCAL</code> as well as the other objects that make up a domain such as users, groups, computers, and more as we will see in detail below. It is common to see multiple domains (or forests) linked together via trust relationships in organizations that perform a lot of acquisitions. It is often quicker and easier to create a trust relationship with another domain/forest than recreate all new users in the current domain. As we will see in later modules, domain trusts can introduce a slew of security issues if not appropriately administered.</p>
+<p><img src="storage\modules\74\ad\_forests.png" alt="image"></p>
+<p>The graphic below shows two forests, <code>INLANEFREIGHT.LOCAL</code> and <code>FREIGHTLOGISTICS.LOCAL</code>. The two-way arrow represents a bidirectional trust between the two forests, meaning that users in <code>INLANEFREIGHT.LOCAL</code> can access resources in <code>FREIGHTLOGISTICS.LOCAL</code> and vice versa. We can also see multiple child domains under each root domain. In this example, we can see that the root domain trusts each of the child domains, but the child domains in forest A do not necessarily have trusts established with the child domains in forest B. This means that a user that is part of <code>admin.dev.freightlogistics.local</code> would NOT be able to authenticate to machines in the <code>wh.corp.inlanefreight.local</code> domain by default even though a bidirectional trust exists between the top-level <code>inlanefreight.local</code> and <code>freightlogistics.local</code> domains. To allow direct communication from <code>admin.dev.freightlogistics.local</code> and <code>wh.corp.inlanefreight.local</code>, another trust would need to be set up.</p>
+<p><img src="storage\modules\74\ilflog2.png" alt="image"></p>
+<hr>
+<h2 id="active-directory-terminology">Active Directory Terminology</h2>
+<hr>
+<p>Before we go any further, let's take a step back and define some key terminology that will be used throughout this module and in general when dealing with Active Directory in any capacity.</p>
+<p><strong>Object</strong></p>
+<p>An object can be defined as ANY resource present within an Active Directory environment such as OUs, printers, users, domain controllers, etc.</p>
+<p><strong>Attributes</strong></p>
+<p>Every object in Active Directory has an associated set of <a href="https://docs.microsoft.com/en-us/windows/win32/adschema/attributes-all">attributes</a> used to define characteristics of the given object. A computer object contains attributes such as the hostname and DNS name. All attributes in AD have an associated LDAP name that can be used when performing LDAP queries, such as <code>displayName</code> for <code>Full Name</code> and <code>given name</code> for <code>First Name</code>.</p>
+<p><strong>Schema</strong></p>
+<p>The Active Directory <a href="https://docs.microsoft.com/en-us/windows/win32/ad/schema">schema</a> is essentially the blueprint of any enterprise environment. It defines what types of objects can exist in the AD database and their associated attributes. It lists definitions corresponding to AD objects and holds information about each object. For example, users in AD belong to the class "user," and computer objects to "computer," and so on. Each object has its own information (some required to be set and others optional) that are stored in Attributes. When an object is created from a class, this is called instantiation, and an object created from a specific class is called an instance of that class. For example, if we take the computer RDS01. This computer object is an instance of the "computer" class in Active Directory.</p>
+<p><strong>Domain</strong></p>
+<p>A domain is a logical group of objects such as computers, users, OUs, groups, etc. We can think of each domain as a different city within a state or country. Domains can operate entirely independently of one another or be connected via trust relationships.</p>
+<p><strong>Forest</strong></p>
+<p>A forest is a collection of Active Directory domains. It is the topmost container and contains all of the AD objects introduced below, including but not limited to domains, users, groups, computers, and Group Policy objects. A forest can contain one or multiple domains and be thought of as a state in the US or a country within the EU. Each forest operates independently but may have various trust relationships with other forests.</p>
+<p><strong>Tree</strong></p>
+<p>A tree is a collection of Active Directory domains that begins at a single root domain. A forest is a collection of AD trees. Each domain in a tree shares a boundary with the other domains. A parent-child trust relationship is formed when a domain is added under another domain in a tree. Two trees in the same forest cannot share a name (namespace). Let's say we have two trees in an AD forest: <code>inlanefreight.local</code> and <code>ilfreight.local</code>. A child domain of the first would be <code>corp.inlanefreight.local</code> while a child domain of the second could be <code>corp.ilfreight.local</code>. All domains in a tree share a standard Global Catalog which contains all information about objects that belong to the tree.</p>
+<p><strong>Container</strong></p>
+<p>Container objects hold other objects and have a defined place in the directory subtree hierarchy.</p>
+<p><strong>Leaf</strong></p>
+<p>Leaf objects do not contain other objects and are found at the end of the subtree hierarchy.</p>
+<p><strong>Global Unique Identifier (GUID)</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/windows/win32/adschema/a-objectguid">GUID</a> is a unique 128-bit value assigned when a domain user or group is created. This GUID value is unique across the enterprise, similar to a MAC address. Every single object created by Active Directory is assigned a GUID, not only user and group objects. The GUID is stored in the <code>ObjectGUID</code> attribute. When querying for an AD object (such as a user, group, computer, domain, domain controller, etc.), we can query for its <code>objectGUID</code> value using PowerShell or search for it by specifying its distinguished name, GUID, SID, or SAM account name. GUIDs are used by AD to identify objects internally. Searching in Active Directory by GUID value is probably the most accurate and reliable way to find the exact object you are looking for, especially if the global catalog may contain similar matches for an object name. Specifying the <code>ObjectGUID</code> value when performing AD enumeration will ensure that we get the most accurate results pertaining to the object we are searching for information about. The <code>ObjectGUID</code> property <code>never</code> changes and is associated with the object for as long as that object exists in the domain.</p>
+<p><strong>Security principals</strong></p>
+<p><a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-principals">Security principals</a> are anything that the operating system can authenticate, including users, computer accounts, or even threads/processes that run in the context of a user or computer account (i.e., an application such as Tomcat running in the context of a service account within the domain). In AD, security principles are domain objects that can manage access to other resources within the domain. We can also have local user accounts and security groups used to control access to resources on only that specific computer. These are not managed by AD but rather by the <a href="https://en.wikipedia.org/wiki/Security\_Account\_Manager">Security Accounts Manager (SAM)</a>.</p>
+<p><strong>Security Identifier (SID)</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/security-principals">security identifier</a>, or SID is used as a unique identifier for a security principal or security group. Every account, group, or process has its own unique SID, which, in an AD environment, is issued by the domain controller and stored in a secure database. A SID can only be used once. Even if the security principle is deleted, it can never be used again in that environment to identify another user or group. When a user logs in, the system creates an access token for them which contains the user's SID, the rights they have been granted, and the SIDs for any groups that the user is a member of. This token is used to check rights whenever the user performs an action on the computer. There are also <a href="https://ldapwiki.com/wiki/Wiki.jsp?page=Well-known%20Security%20Identifiers">well-known SIDs</a> that are used to identify generic users and groups. These are the same across all operating systems. An example is the <code>Everyone</code> group.</p>
+<p><strong>Distinguished Name (DN)</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ldap/distinguished-names">Distinguished Name (DN)</a> describes the full path to an object in AD (such as <code>cn=bjones, ou=IT, ou=Employees, dc=inlanefreight, dc=local</code>). In this example, the user <code>bjones</code> works in the IT department of the company Inlanefreight, and his account is created in an Organizational Unit (OU) that holds accounts for company employees. The Common Name (CN) <code>bjones</code> is just one way the user object could be searched for or accessed within the domain.</p>
+<p><strong>Relative Distinguished Name (RDN)</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/windows/win32/ad/object-names-and-identities">Relative Distinguished Name (RDN)</a> is a single component of the Distinguished Name that identifies the object as unique from other objects at the current level in the naming hierarchy. In our example, <code>bjones</code> is the Relative Distinguished Name of the object. AD does not allow two objects with the same name under the same parent container, but there can be two objects with the same RDNs that are still unique in the domain because they have different DNs. For example, the object <code>cn=bjones,dc=dev,dc=inlanefreight,dc=local</code> would be recognized as different from <code>cn=bjones,dc=inlanefreight,dc=local</code>.</p>
+<p><img src="storage\modules\74\dn\_rdn2.png" alt="image"></p>
+<p><strong>sAMAccountName</strong></p>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/win32/ad/naming-properties#samaccountname">sAMAccountName</a> is the user's logon name. Here it would just be <code>bjones</code>. It must be a unique value and 20 or fewer characters.</p>
+<p><strong>userPrincipalName</strong></p>
+<p>The <a href="https://social.technet.microsoft.com/wiki/contents/articles/52250.active-directory-user-principal-name.aspx">userPrincipalName</a> attribute is another way to identify users in AD. This attribute consists of a prefix (the user account name) and a suffix (the domain name) in the format of <code>bjones@inlanefreight.local</code>. This attribute is not mandatory.</p>
+<p><strong>FSMO Roles</strong></p>
+<p>In the early days of AD, if you had multiple DCs in an environment, they would fight over which DC gets to make changes, and sometimes changes would not be made properly. Microsoft then implemented "last writer wins," which could introduce its own problems if the last change breaks things. They then introduced a model in which a single "master" DC could apply changes to the domain while the others merely fulfilled authentication requests. This was a flawed design because if the master DC went down, no changes could be made to the environment until it was restored. To resolve this single point of failure model, Microsoft separated the various responsibilities that a DC can have into <a href="https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/fsmo-roles">Flexible Single Master Operation (FSMO)</a> roles. These give Domain Controllers (DC) the ability to continue authenticating users and granting permissions without interruption (authorization and authentication). There are five FSMO roles: <code>Schema Master</code> and <code>Domain Naming Master</code> (one of each per forest), <code>Relative ID (RID) Master</code> (one per domain), <code>Primary Domain Controller (PDC) Emulator</code> (one per domain), and <code>Infrastructure Master</code> (one per domain). All five roles are assigned to the first DC in the forest root domain in a new AD forest. Each time a new domain is added to a forest, only the RID Master, PDC Emulator, and Infrastructure Master roles are assigned to the new domain. FSMO roles are typically set when domain controllers are created, but sysadmins can transfer these roles if needed. These roles help replication in AD to run smoothly and ensure that critical services are operating correctly. We will walk through each of these roles in detail later in this section.</p>
+<p><strong>Global Catalog</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/windows/win32/ad/global-catalog">global catalog (GC)</a> is a domain controller that stores copies of ALL objects in an Active Directory forest. The GC stores a full copy of all objects in the current domain and a partial copy of objects that belong to other domains in the forest. Standard domain controllers hold a complete replica of objects belonging to its domain but not those of different domains in the forest. The GC allows both users and applications to find information about any objects in ANY domain in the forest. GC is a feature that is enabled on a domain controller and performs the following functions:</p>
+<ul>
+<li>Authentication (provided authorization for all groups that a user account belongs to, which is included when an access token is generated)</li>
+<li>Object search (making the directory structure within a forest transparent, allowing a search to be carried out across all domains in a forest by providing just one attribute about an object.)</li>
+</ul>
+<p><strong>Read-Only Domain Controller (RODC)</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/windows/win32/ad/rodc-and-active-directory-schema">Read-Only Domain Controller (RODC)</a> has a read-only Active Directory database. No AD account passwords are cached on an RODC (other than the RODC computer account &amp; RODC KRBTGT passwords.) No changes are pushed out via an RODC's AD database, SYSVOL, or DNS. RODCs also include a read-only DNS server, allow for administrator role separation, reduce replication traffic in the environment, and prevent SYSVOL modifications from being replicated to other DCs.</p>
+<p><strong>Replication</strong></p>
+<p><a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/replication/active-directory-replication-concepts">Replication</a> happens in AD when AD objects are updated and transferred from one Domain Controller to another. Whenever a DC is added, connection objects are created to manage replication between them. These connections are made by the Knowledge Consistency Checker (KCC) service, which is present on all DCs. Replication ensures that changes are synchronized with all other DCs in a forest, helping to create a backup in case one domain controller fails.</p>
+<p><strong>Service Principal Name (SPN)</strong></p>
+<p>A <a href="https://docs.microsoft.com/en-us/windows/win32/ad/service-principal-names">Service Principal Name (SPN)</a> uniquely identifies a service instance. They are used by Kerberos authentication to associate an instance of a service with a logon account, allowing a client application to request the service to authenticate an account without needing to know the account name.</p>
+<p><strong>Group Policy Object (GPO)</strong></p>
+<p><a href="https://docs.microsoft.com/en-us/previous-versions/windows/desktop/policy/group-policy-objects">Group Policy Objects (GPOs)</a> are virtual collections of policy settings. Each GPO has a unique GUID. A GPO can contain local file system settings or Active Directory settings. GPO settings can be applied to both user and computer objects. They can be applied to all users and computers within the domain or defined more granularly at the OU level.</p>
+<p><strong>Access Control List (ACL)</strong></p>
+<p>An <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/access-control-lists">Access Control List (ACL)</a> is the ordered collection of Access Control Entries (ACEs) that apply to an object.</p>
+<p><strong>Access Control Entries (ACEs)</strong></p>
+<p>Each <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/access-control-entries">Access Control Entry (ACE)</a> in an ACL identifies a trustee (user account, group account, or logon session) and lists the access rights that are allowed, denied, or audited for the given trustee.</p>
+<p><strong>Discretionary Access Control List (DACL)</strong></p>
+<p>DACLs define which security principles are granted or denied access to an object; it contains a list of ACEs. When a process tries to access a securable object, the system checks the ACEs in the object's DACL to determine whether or not to grant access. If an object does NOT have a DACL, then the system will grant full access to everyone, but if the DACL has no ACE entries, the system will deny all access attempts. ACEs in the DACL are checked in sequence until a match is found that allows the requested rights or until access is denied.</p>
+<p><strong>System Access Control Lists (SACL)</strong></p>
+<p>Allows for administrators to log access attempts that are made to secured objects. ACEs specify the types of access attempts that cause the system to generate a record in the security event log.</p>
+<p><strong>Fully Qualified Domain Name (FQDN)</strong></p>
+<p>An FQDN is the complete name for a specific computer or host. It is written with the hostname and domain name in the format [host name].[domain name].[tld]. This is used to specify an object's location in the tree hierarchy of DNS. The FQDN can be used to locate hosts in an Active Directory without knowing the IP address, much like when browsing to a website such as google.com instead of typing in the associated IP address. An example would be the host <code>DC01</code> in the domain <code>INLANEFREIGHT.LOCAL</code>. The FQDN here would be <code>DC01.INLANEFREIGHT.LOCAL</code>.</p>
+<p><strong>Tombstone</strong></p>
+<p>A <a href="https://ldapwiki.com/wiki/Tombstone">tombstone</a> is a container object in AD that holds deleted AD objects. When an object is deleted from AD, the object remains for a set period of time known as the <code>Tombstone Lifetime,</code> and the <code>isDeleted</code> attribute is set to <code>TRUE</code>. Once an object exceeds the <code>Tombstone Lifetime</code>, it will be entirely removed. Microsoft recommends a tombstone lifetime of 180 days to increase the usefulness of backups, but this value may differ across environments. Depending on the DC operating system version, this value will default to 60 or 180 days. If an object is deleted in a domain that does not have an AD Recycle Bin, it will become a tombstone object. When this happens, the object is stripped of most of its attributes and placed in the <code>Deleted Objects</code> container for the duration of the <code>tombstoneLifetime</code>. It can be recovered, but any attributes that were lost can no longer be recovered.</p>
+<p><strong>AD Recycle Bin</strong></p>
+<p>The <a href="https://techcommunity.microsoft.com/t5/ask-the-directory-services-team/the-ad-recycle-bin-understanding-implementing-best-practices-and/ba-p/396944">AD Recycle Bin</a> was first introduced in Windows Server 2008 R2 to facilitate the recovery of deleted AD objects. This made it easier for sysadmins to restore objects, avoiding the need to restore from backups, restarting Active Directory Domain Services (AD DS), or rebooting a Domain Controller. When the AD Recycle Bin is enabled, any deleted objects are preserved for a period of time, facilitating restoration if needed. Sysadmins can set how long an object remains in a deleted, recoverable state. If this is not specified, the object will be restorable for a default value of 60 days. The biggest advantage of using the AD Recycle Bin is that most of a deleted object's attributes are preserved, which makes it far easier to fully restore a deleted object to its previous state.</p>
+<p><strong>SYSVOL</strong></p>
+<p>The <a href="https://social.technet.microsoft.com/wiki/contents/articles/8548.active-directory-sysvol-and-netlogon.aspx">SYSVOL</a> folder, or share, stores copies of public files in the domain such as system policies, Group Policy settings, logon/logoff scripts, and often contains other types of scripts that are executed to perform various tasks in the AD environment. The contents of the SYSVOL folder are replicated to all DCs within the environment using File Replication Services (FRS). You can read more about the SYSVOL structure <a href="https://networkencyclopedia.com/sysvol-share/#Components-and-Structure">here</a>.</p>
+<p><strong>AdminSDHolder</strong></p>
+<p>The <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-c--protected-accounts-and-groups-in-active-directory">AdminSDHolder</a> object is used to manage ACLs for members of built-in groups in AD marked as privileged. It acts as a container that holds the Security Descriptor applied to members of protected groups. The SDProp (SD Propagator) process runs on a schedule on the PDC Emulator Domain Controller. When this process runs, it checks members of protected groups to ensure that the correct ACL is applied to them. It runs every hour by default. For example, suppose an attacker is able to create a malicious ACL entry to grant a user certain rights over a member of the Domain Admins group. In that case, unless they modify other settings in AD, these rights will be removed (and they will lose any persistence they were hoping to achieve) when the SDProp process runs on the set interval.</p>
+<p><strong>dsHeuristics</strong></p>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/win32/adschema/a-dsheuristics">dsHeuristics</a> attribute is a string value set on the Directory Service object used to define multiple forest-wide configuration settings. One of these settings is to exclude built-in groups from the <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-c--protected-accounts-and-groups-in-active-directory">Protected Groups</a> list. Groups in this list are protected from modification via the <code>AdminSDHolder</code> object. If a group is excluded via the <code>dsHeuristics</code> attribute, then any changes that affect it will not be reverted when the SDProp process runs.</p>
+<p><strong>adminCount</strong></p>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/win32/adschema/a-admincount">adminCount</a> attribute determines whether or not the SDProp process protects a user. If the value is set to <code>0</code> or not specified, the user is not protected. If the attribute value is set to <code>value</code>, the user is protected. Attackers will often look for accounts with the <code>adminCount</code> attribute set to <code>1</code> to target in an internal environment. These are often privileged accounts and may lead to further access or full domain compromise.</p>
+<p><strong>Active Directory Users and Computers (ADUC)</strong></p>
+<p>ADUC is a GUI console commonly used for managing users, groups, computers, and contacts in AD. Changes made in ADUC can be done via PowerShell as well.</p>
+<p><strong>ADSI Edit</strong></p>
+<p>ADSI Edit is a GUI tool used to manage objects in AD. It provides access to far more than is available in ADUC and can be used to set or delete any attribute available on an object, add, remove, and move objects as well. It is a powerful tool that allows a user to access AD at a much deeper level. Great care should be taken when using this tool, as changes here could cause major problems in AD.</p>
+<p><strong>sIDHistory</strong></p>
+<p><a href="https://docs.microsoft.com/en-us/defender-for-identity/cas-isp-unsecure-sid-history-attribute">This</a> attribute holds any SIDs that an object was assigned previously. It is usually used in migrations so a user can maintain the same level of access when migrated from one domain to another. This attribute can potentially be abused if set insecurely, allowing an attacker to gain prior elevated access that an account had before a migration if SID Filtering (or removing SIDs from another domain from a user's access token that could be used for elevated access) is not enabled.</p>
+<p><strong>NTDS.DIT</strong></p>
+<p>The NTDS.DIT file can be considered the heart of Active Directory. It is stored on a Domain Controller at <code>C:\Windows\NTDS\</code> and is a database that stores AD data such as information about user and group objects, group membership, and, most important to attackers and penetration testers, the password hashes for all users in the domain. Once full domain compromise is reached, an attacker can retrieve this file, extract the hashes, and either use them to perform a pass-the-hash attack or crack them offline using a tool such as Hashcat to access additional resources in the domain. If the setting <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/store-passwords-using-reversible-encryption">Store password with reversible encryption</a> is enabled, then the NTDS.DIT will also store the cleartext passwords for all users created or who changed their password after this policy was set. While rare, some organizations may enable this setting if they use applications or protocols that need to use a user's existing password (and not Kerberos) for authentication.</p>
+<p><strong>MSBROWSE</strong></p>
+<p>MSBROWSE is a Microsoft networking protocol that was used in early versions of Windows-based local area networks (LANs) to provide browsing services. It was used to maintain a list of resources, such as shared printers and files, that were available on the network, and to allow users to easily browse and access these resources.</p>
+<p>In older version of Windows we could use <code>nbtstat -A ip-address</code> to search for the Master Browser. If we see MSBROWSE it means that's the Master Browser. Aditionally we could use <code>nltest</code> utility to query a Windows Master Browser for the names of the Domain Controllers.</p>
+<p>Today, MSBROWSE is largely obsolete and is no longer in widespread use. Modern Windows-based LANs use the Server Message Block (SMB) protocol for file and printer sharing, and the Common Internet File System (CIFS) protocol for browsing services.</p>
+<h2 id="active-directory-objects">Active Directory Objects</h2>
+<hr>
+<p>We will often see the term "objects" when referring to AD. What is an object? An object can be defined as ANY resource present within an Active Directory environment such as OUs, printers, users, domain controllers.</p>
+<p><strong>AD Objects</strong></p>
+<p><img src="storage\modules\74\adobjects.png" alt="image"></p>
+<p><strong>Users</strong></p>
+<p>These are the users within the organization's AD environment. Users are considered <code>leaf objects</code>, which means that they cannot contain any other objects within them. Another example of a leaf object is a mailbox in Microsoft Exchange. A user object is considered a security principal and has a security identifier (SID) and a global unique identifier (GUID). User objects have many possible <a href="http://www.kouti.com/tables/userattributes.htm">attributes</a>, such as their display name, last login time, date of last password change, email address, account description, manager, address, and more. Depending on how a particular Active Directory environment is set up, there can be over 800 possible user attributes when accounting for ALL possible attributes as detailed <a href="https://www.easy365manager.com/how-to-get-all-active-directory-user-object-attributes/">here</a>. This example goes far beyond what is typically populated for a standard user in most environments but shows Active Directory's sheer size and complexity. They are a crucial target for attackers since gaining access to even a low privileged user can grant access to many objects and resources and allow for detailed enumeration of the entire domain (or forest).</p>
+<p><strong>Contacts</strong></p>
+<p>A contact object is usually used to represent an external user and contains informational attributes such as first name, last name, email address, telephone number, etc. They are <code>leaf objects</code> and are NOT security principals (securable objects), so they don't have a SID, only a GUID. An example would be a contact card for a third-party vendor or a customer.</p>
+<p><strong>Printers</strong></p>
+<p>A printer object points to a printer accessible within the AD network. Like a contact, a printer is a <code>leaf object</code> and not a security principal, so it only has a GUID. Printers have attributes such as the printer's name, driver information, port number, etc.</p>
+<p><strong>Computers</strong></p>
+<p>A computer object is any computer joined to the AD network (workstation or server). Computers are <code>leaf objects</code> because they do not contain other objects. However, they are considered security principals and have a SID and a GUID. Like users, they are prime targets for attackers since full administrative access to a computer (as the all-powerful <code>NT AUTHORITY\SYSTEM</code> account) grants similar rights to a standard domain user and can be used to perform the majority of the enumeration tasks that a user account can (save for a few exceptions across domain trusts.)</p>
+<p><strong>Shared Folders</strong></p>
+<p>A shared folder object points to a shared folder on the specific computer where the folder resides. Shared folders can have stringent access control applied to them and can be either accessible to everyone (even those without a valid AD account), open to only authenticated users (which means anyone with even the lowest privileged user account OR a computer account (<code>NT AUTHORITY\SYSTEM</code>) could access it), or be locked down to only allow certain users/groups access. Anyone not explicitly allowed access will be denied from listing or reading its contents. Shared folders are NOT security principals and only have a GUID. A shared folder's attributes can include the name, location on the system, security access rights.</p>
+<p><strong>Groups</strong></p>
+<p>A group is considered a <code>container object</code> because it can contain other objects, including users, computers, and even other groups. A group IS regarded as a security principal and has a SID and a GUID. In AD, groups are a way to manage user permissions and access to other securable objects (both users and computers). Let's say we want to give 20 help desk users access to the Remote Management Users group on a jump host. Instead of adding the users one by one, we could add the group, and the users would inherit the intended permissions via their membership in the group. In Active Directory, we commonly see what are called "<a href="https://docs.microsoft.com/en-us/windows/win32/ad/nesting-a-group-in-another-group">nested groups</a>" (a group added as a member of another group), which can lead to a user(s) obtaining unintended rights. Nested group membership is something we see and often leverage during penetration tests. The tool <a href="https://github.com/BloodHoundAD/BloodHound">BloodHound</a> helps to discover attack paths within a network and illustrate them in a graphical interface. It is excellent for auditing group membership and uncovering/seeing the sometimes unintended impacts of nested group membership. Groups in AD can have many <a href="http://www.selfadsi.org/group-attributes.htm">attributes</a>, the most common being the name, description, membership, and other groups that the group belongs to. Many other attributes can be set, which we will discuss more in-depth later in this module.</p>
+<p><strong>Organizational Units (OUs)</strong></p>
+<p>An organizational unit, or OU from here on out, is a container that systems administrators can use to store similar objects for ease of administration. OUs are often used for administrative delegation of tasks without granting a user account full administrative rights. For example, we may have a top-level OU called Employees and then child OUs under it for the various departments such as Marketing, HR, Finance, Help Desk, etc. If an account were given the right to reset passwords over the top-level OU, this user would have the right to reset passwords for all users in the company. However, if the OU structure were such that specific departments were child OUs of the Help Desk OU, then any user placed in the Help Desk OU would have this right delegated to them if granted. Other tasks that may be delegated at the OU level include creating/deleting users, modifying group membership, managing Group Policy links, and performing password resets. OUs are very useful for managing Group Policy (which we will study later in this module) settings across a subset of users and groups within a domain. For example, we may want to set a specific password policy for privileged service accounts so these accounts could be placed in a particular OU and then have a Group Policy object assigned to it, which would enforce this password policy on all accounts placed inside of it. A few OU attributes include its name, members, security settings, and more.</p>
+<p><strong>Domain</strong></p>
+<p>A domain is the structure of an AD network. Domains contain objects such as users and computers, which are organized into container objects: groups and OUs. Every domain has its own separate database and sets of policies that can be applied to any and all objects within the domain. Some policies are set by default (and can be tweaked), such as the domain password policy. In contrast, others are created and applied based on the organization's need, such as blocking access to cmd.exe for all non-administrative users or mapping shared drives at log in.</p>
+<p><strong>Domain Controllers</strong></p>
+<p>Domain Controllers are essentially the brains of an AD network. They handle authentication requests, verify users on the network, and control who can access the various resources in the domain. All access requests are validated via the domain controller and privileged access requests are based on predetermined roles assigned to users. It also enforces security policies and stores information about every other object in the domain.</p>
+<p><strong>Sites</strong></p>
+<p>A site in AD is a set of computers across one or more subnets connected using high-speed links. They are used to make replication across domain controllers run efficiently.</p>
+<p><strong>Built-in</strong></p>
+<p>In AD, built-in is a container that holds <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups">default groups</a> in an AD domain. They are predefined when an AD domain is created.</p>
+<p><strong>Foreign Security Principals</strong></p>
+<p>A foreign security principal (FSP) is an object created in AD to represent a security principal that belongs to a trusted external forest. They are created when an object such as a user, group, or computer from an external (outside of the current) forest is added to a group in the current domain. They are created automatically after adding a security principal to a group. Every foreign security principal is a placeholder object that holds the SID of the foreign object (an object that belongs to another forest.) Windows uses this SID to resolve the object's name via the trust relationship. FSPs are created in a specific container named ForeignSecurityPrincipals with a distinguished name like <code>cn=ForeignSecurityPrincipals,dc=inlanefreight,dc=local</code>.</p>
+<h2 id="active-directory-functionality">Active Directory Functionality</h2>
+<hr>
+<p>As mentioned before, there are five Flexible Single Master Operation (FSMO) roles. These roles can be defined as follows:</p>
+<table data-header-hidden=""><thead><tr><th width="314"></th><th></th></tr></thead><tbody><tr><td><strong>Roles</strong></td><td><strong>Description</strong></td></tr><tr><td><code>Schema Master</code></td><td>This role manages the read/write copy of the AD schema, which defines all attributes that can apply to an object in AD.</td></tr><tr><td><code>Domain Naming Master</code></td><td>Manages domain names and ensures that two domains of the same name are not created in the same forest.</td></tr><tr><td><code>Relative ID (RID) Master</code></td><td>The RID Master assigns blocks of RIDs to other DCs within the domain that can be used for new objects. The RID Master helps ensure that multiple objects are not assigned the same SID. Domain object SIDs are the domain SID combined with the RID number assigned to the object to make the unique SID.</td></tr><tr><td><code>PDC Emulator</code></td><td>The host with this role would be the authoritative DC in the domain and respond to authentication requests, password changes, and manage Group Policy Objects (GPOs). The PDC Emulator also maintains time within the domain.</td></tr><tr><td><code>Infrastructure Master</code></td><td>This role translates GUIDs, SIDs, and DNs between domains. This role is used in organizations with multiple domains in a single forest. The Infrastructure Master helps them to communicate. If this role is not functioning properly, Access Control Lists (ACLs) will show SIDs instead of fully resolved names.</td></tr></tbody></table>
+
+<p>Depending on the organization, these roles may be assigned to specific DCs or as defaults each time a new DC is added. Issues with FSMO roles will lead to authentication and authorization difficulties within a domain.</p>
+<hr>
+<h3 id="domain-and-forest-functional-levels">Domain and Forest Functional Levels</h3>
+<p>Microsoft introduced functional levels to determine the various features and capabilities available in Active Directory Domain Services (AD DS) at the domain and forest level. They are also used to specify which Windows Server operating systems can run a Domain Controller in a domain or forest. <a href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc754918\(v=ws.10\">This</a>?redirectedfrom=MSDN) and <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels">this</a> article describe both the domain and forest functional levels from Windows 2000 native to Windows Server 2012 R2. Below is a quick overview of the differences in <code>domain functional levels</code> from Windows 2000 native up to Windows Server 2016, aside from all default Active Directory Directory Services features from the level just below it (or just the default AD DS features in the case of Windows 2000 native.)</p>
+<table>
+<thead>
+<tr>
+<th>Domain Functional Level</th>
+<th>Features Available</th>
+<th>Supported Domain Controller Operating Systems</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows 2000 native</td>
+<td>Universal groups for distribution and security groups, group nesting, group conversion (between security and distribution and security groups), SID history.</td>
+<td>Windows Server 2008 R2, Windows Server 2008, Windows Server 2003, Windows 2000</td>
+</tr>
+<tr>
+<td>Windows Server 2003</td>
+<td>Netdom.exe domain management tool, lastLogonTimestamp attribute introduced, well-known users and computers containers, constrained delegation, selective authentication.</td>
+<td>Windows Server 2012 R2, Windows Server 2012, Windows Server 2008 R2, Windows Server 2008, Windows Server 2003</td>
+</tr>
+<tr>
+<td>Windows Server 2008</td>
+<td>Distributed File System (DFS) replication support, Advanced Encryption Standard (AES 128 and AES 256) support for the Kerberos protocol, Fine-grained password policies</td>
+<td>Windows Server 2012 R2, Windows Server 2012, Windows Server 2008 R2, Windows Server 2008</td>
+</tr>
+<tr>
+<td>Windows Server 2008 R2</td>
+<td>Authentication mechanism assurance, Managed Service Accounts</td>
+<td>Windows Server 2012 R2, Windows Server 2012, Windows Server 2008 R2</td>
+</tr>
+<tr>
+<td>Windows Server 2012</td>
+<td>KDC support for claims, compound authentication, and Kerberos armoring</td>
+<td>Windows Server 2012 R2, Windows Server 2012</td>
+</tr>
+<tr>
+<td>Windows Server 2012 R2</td>
+<td>Extra protections for members of the Protected Users group, Authentication Policies, Authentication Policy Silos</td>
+<td>Windows Server 2012 R2</td>
+</tr>
+<tr>
+<td>Windows Server 2016</td>
+<td><a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/interactive-logon-require-smart-card">Smart card required for interactive logon</a> new <a href="https://docs.microsoft.com/en-us/windows-server/security/kerberos/whats-new-in-kerberos-authentication">Kerberos</a> features and new <a href="https://docs.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/whats-new-in-credential-protection">credential protection</a> features</td>
+<td>Windows Server 2019 and Windows Server 2016</td>
+</tr>
+</tbody>
+</table>
+<p>A new functional level was not added with the release of Windows Server 2019. However, Windows Server 2008 functional level is the minimum requirement for adding Server 2019 Domain Controllers to an environment. Also, the target domain has to use <a href="https://docs.microsoft.com/en-us/windows-server/storage/dfs-replication/dfsr-overview">DFS-R</a> for SYSVOL replication.</p>
+<p>Forest functional levels have introduced a few key capabilities over the years:</p>
+<table data-header-hidden=""><thead><tr><th width="295"></th><th></th></tr></thead><tbody><tr><td><strong>Version</strong></td><td><strong>Capabilities</strong></td></tr><tr><td><code>Windows Server 2003</code></td><td>saw the introduction of the forest trust, domain renaming, read-only domain controllers (RODC), and more.</td></tr><tr><td><code>Windows Server 2008</code></td><td>All new domains added to the forest default to the Server 2008 domain functional level. No additional new features.</td></tr><tr><td><code>Windows Server 2008 R2</code></td><td>Active Directory Recycle Bin provides the ability to restore deleted objects when AD DS is running.</td></tr><tr><td><code>Windows Server 2012</code></td><td>All new domains added to the forest default to the Server 2012 domain functional level. No additional new features.</td></tr><tr><td><code>Windows Server 2012 R2</code></td><td>All new domains added to the forest default to the Server 2012 R2 domain functional level. No additional new features.</td></tr><tr><td><code>Windows Server 2016</code></td><td><a href="https://docs.microsoft.com/en-us/windows-server/identity/whats-new-active-directory-domain-services#privileged-access-management">Privileged access management (PAM) using Microsoft Identity Manager (MIM).</a></td></tr></tbody></table>
+
+<hr>
+<h3 id="trusts">Trusts</h3>
+<p>A trust is used to establish <code>forest-forest</code> or <code>domain-domain</code> authentication, allowing users to access resources in (or administer) another domain outside of the domain their account resides in. A trust creates a link between the authentication systems of two domains.</p>
+<p>There are several trust types.</p>
+<table data-header-hidden=""><thead><tr><th width="194"></th><th></th></tr></thead><tbody><tr><td><strong>Trust Type</strong></td><td><strong>Description</strong></td></tr><tr><td><code>Parent-child</code></td><td>Domains within the same forest. The child domain has a two-way transitive trust with the parent domain.</td></tr><tr><td><code>Cross-link</code></td><td>a trust between child domains to speed up authentication.</td></tr><tr><td><code>External</code></td><td>A non-transitive trust between two separate domains in separate forests which are not already joined by a forest trust. This type of trust utilizes SID filtering.</td></tr><tr><td><code>Tree-root</code></td><td>a two-way transitive trust between a forest root domain and a new tree root domain. They are created by design when you set up a new tree root domain within a forest.</td></tr><tr><td><code>Forest</code></td><td>a transitive trust between two forest root domains.</td></tr></tbody></table>
+
+<p><strong>Trust Example</strong></p>
+<p><img src="storage\modules\74\trusts-diagram.png" alt="image"></p>
+<p>Trusts can be transitive or non-transitive.</p>
+<ul>
+<li>A transitive trust means that trust is extended to objects that the child domain trusts.</li>
+<li>In a non-transitive trust, only the child domain itself is trusted.</li>
+</ul>
+<p>Trusts can be set up to be one-way or two-way (bidirectional).</p>
+<ul>
+<li>In bidirectional trusts, users from both trusting domains can access resources.</li>
+<li>In a one-way trust, only users in a trusted domain can access resources in a trusting domain, not vice-versa. The direction of trust is opposite to the direction of access.</li>
+</ul>
+<p>Often, domain trusts are set up improperly and provide unintended attack paths. Also, trusts set up for ease of use may not be reviewed later for potential security implications. Mergers and acquisitions can result in bidirectional trusts with acquired companies, unknowingly introducing risk into the acquiring company’s environment. It is not uncommon to be able to perform an attack such as Kerberoasting against a domain outside the principal domain and obtain a user that has administrative access within the principal domain.</p>
+<h2 id="ntlm-authentication">NTLM Authentication</h2>
+<hr>
+<p>Aside from Kerberos and LDAP, Active Directory uses several other authentication methods which can be used (and abused) by applications and services in AD. These include LM, NTLM, NTLMv1, and NTLMv2. LM and NTLM here are the hash names, and NTLMv1 and NTLMv2 are authentication protocols that utilize the LM or NT hash. Below is a quick comparison between these hashes and protocols, which shows us that, while not perfect by any means, Kerberos is often the authentication protocol of choice wherever possible. It is essential to understand the difference between the hash types and the protocols that use them.</p>
+<p><strong>Hash Protocol Comparison</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Hash/Protocol</strong></th>
+<th><strong>Cryptographic technique</strong></th>
+<th><strong>Mutual Authentication</strong></th>
+<th><strong>Message Type</strong></th>
+<th><strong>Trusted Third Party</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NTLM</code></td>
+<td>Symmetric key cryptography</td>
+<td>No</td>
+<td>Random number</td>
+<td>Domain Controller</td>
+</tr>
+<tr>
+<td><code>NTLMv1</code></td>
+<td>Symmetric key cryptography</td>
+<td>No</td>
+<td>MD4 hash, random number</td>
+<td>Domain Controller</td>
+</tr>
+<tr>
+<td><code>NTLMv2</code></td>
+<td>Symmetric key cryptography</td>
+<td>No</td>
+<td>MD4 hash, random number</td>
+<td>Domain Controller</td>
+</tr>
+<tr>
+<td><code>Kerberos</code></td>
+<td>Symmetric key cryptography &amp; asymmetric cryptography</td>
+<td>Yes</td>
+<td>Encrypted ticket using DES, MD5</td>
+<td>Domain Controller/Key Distribution Center (KDC)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="lm">LM</h3>
+<p><code>LAN Manager</code> (LM or LANMAN) hashes are the oldest password storage mechanism used by the Windows operating system. LM debuted in 1987 on the OS/2 operating system. If in use, they are stored in the SAM database on a Windows host and the NTDS.DIT database on a Domain Controller. Due to significant security weaknesses in the hashing algorithm used for LM hashes, it has been turned off by default since Windows Vista/Server 2008. However, it is still common to encounter, especially in large environments where older systems are still used. Passwords using LM are limited to a maximum of <code>14</code> characters. Passwords are not case sensitive and are converted to uppercase before generating the hashed value, limiting the keyspace to a total of 69 characters making it relatively easy to crack these hashes using a tool such as Hashcat.</p>
+<p>Before hashing, a 14 character password is first split into two seven-character chunks. If the password is less than fourteen characters, it will be padded with NULL characters to reach the correct value. Two DES keys are created from each chunk. These chunks are then encrypted using the string <code>KGS!@#$%</code>, creating two 8-byte ciphertext values. These two values are then concatenated together, resulting in an LM hash. This hashing algorithm means that an attacker only needs to brute force seven characters twice instead of the entire fourteen characters, making it fast to crack LM hashes on a system with one or more GPUs. If a password is seven characters or less, the second half of the LM hash will always be the same value and could even be determined visually without even needed tools such as Hashcat. The use of LM hashes can be disallowed using <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/network-security-do-not-store-lan-manager-hash-value-on-next-password-change">Group Policy</a>. An LM hash takes the form of <code>299bd128c1101fd6</code>.</p>
+<p>Note: Windows operating systems prior to Windows Vista and Windows Server 2008 (Windows NT4, Windows 2000, Windows 2003, Windows XP) stored both the LM hash and the NTLM hash of a user's password by default.</p>
+<hr>
+<h3 id="nthash-ntlm-">NTHash (NTLM)</h3>
+<p><code>NT LAN Manager</code> (NTLM) hashes are used on modern Windows systems. It is a challenge-response authentication protocol and uses three messages to authenticate: a client first sends a <code>NEGOTIATE_MESSAGE</code> to the server, whose response is a <code>CHALLENGE_MESSAGE</code> to verify the client's identity. Lastly, the client responds with an <code>AUTHENTICATE_MESSAGE</code>. These hashes are stored locally in the SAM database or the NTDS.DIT database file on a Domain Controller. The protocol has two hashed password values to choose from to perform authentication: the LM hash (as discussed above) and the NT hash, which is the MD4 hash of the little-endian UTF-16 value of the password. The algorithm can be visualized as: <code>MD4(UTF-16-LE(password))</code>.</p>
+<p><strong>NTLM Authentication Request</strong></p>
+<p><img src="storage\modules\74\ntlm\_auth.png" alt="image"></p>
+<p>Even though they are considerably stronger than LM hashes (supporting the entire Unicode character set of 65,536 characters), they can still be brute-forced offline relatively quickly using a tool such as Hashcat. GPU attacks have shown that the entire NTLM 8 character keyspace can be brute-forced in under <code>3 hours</code>. Longer NTLM hashes can be more challenging to crack depending on the password chosen, and even long passwords (15+ characters) can be cracked using an offline dictionary attack combined with rules. NTLM is also vulnerable to the pass-the-hash attack, which means an attacker can use just the NTLM hash (after obtaining via another successful attack) to authenticate to target systems where the user is a local admin without needing to know the cleartext value of the password.</p>
+<p>An NT hash takes the form of <code>b4b9b02e6f09a9bd760f388b67351e2b</code>, which is the second half of the full NTLM hash. An NTLM hash looks like this:</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">Rachel</span><span class="hljs-selector-pseudo">:500</span><span class="hljs-selector-pseudo">:aad3c435b514a4eeaad3b935b51304fe</span><span class="hljs-selector-pseudo">:e46b9e548fa0d122de7f59fb6d48eaa2</span>:::
+</code></pre>
+<p>Looking at the hash above, we can break the NTLM hash down into its individual parts:</p>
+<ul>
+<li><code>Rachel</code> is the username</li>
+<li><code>500</code> is the Relative Identifier (RID). 500 is the known RID for the <code>administrator</code> account</li>
+<li><code>aad3c435b514a4eeaad3b935b51304fe</code> is the LM hash and, if LM hashes are disabled on the system, can not be used for anything</li>
+<li><code>e46b9e548fa0d122de7f59fb6d48eaa2</code> is the NT hash. This hash can either be cracked offline to reveal the cleartext value (depending on the length/strength of the password) or used for a pass-the-hash attack. Below is an example of a successful pass-the-hash attack using the <a href="https://github.com/byt3bl33d3r/CrackMapExec">CrackMapExec</a> tool:</li>
+</ul>
+<pre><code class="lang-shell-session">root@htb<span class="hljs-string">[/htb]</span>$ crackmapexec smb <span class="hljs-number">10.129.41.19</span> -u rachel -H e46b9e548fa0d122de7f59fb6d48eaa2
+
+SMB         <span class="hljs-number">10.129.43.9</span>     <span class="hljs-number">445</span>    DC01      <span class="hljs-string">[*]</span> Windows <span class="hljs-number">10</span>.<span class="hljs-number">0</span> Build <span class="hljs-number">17763</span> (name:DC01) (domain:INLANEFREIGHT.LOCAL) (signing:True) (SMBv1:False)
+SMB         <span class="hljs-number">10.129.43.9</span>     <span class="hljs-number">445</span>    DC01      <span class="hljs-string">[+]</span> INLANEFREIGHT.LOCAL\rachel:e46b9e548fa0d122de7f59fb6d48eaa2 (Pwn3d!)
+</code></pre>
+<p>Now that we understand the capabilities and structure of NTLM let's examine the progression of the protocol through NTLMv1 and NTLMv2.</p>
+<p>Note: Neither LANMAN nor NTLM uses a salt.</p>
+<hr>
+<h3 id="ntlmv1-net-ntlmv1-">NTLMv1 (Net-NTLMv1)</h3>
+<p>The NTLM protocol performs a challenge/response between a server and client using the NT hash. NTLMv1 uses both the NT and the LM hash, which can make it easier to "crack" offline after capturing a hash using a tool such as <a href="https://github.com/lgandx/Responder">Responder</a> or via an <a href="https://byt3bl33d3r.github.io/practical-guide-to-ntlm-relaying-in-2017-aka-getting-a-foothold-in-under-5-minutes.html">NTLM relay attack</a> (both of which are out of scope for this module and will be covered in later modules on Lateral Movement). The protocol is used for network authentication, and the Net-NTLMv1 hash itself is created from a challenge/response algorithm. The server sends the client an 8-byte random number (challenge), and the client returns a 24-byte response. These hashes can NOT be used for pass-the-hash attacks. The algorithm looks as follows:</p>
+<p><strong>V1 Challenge &amp; Response Algorithm</strong></p>
+<pre><code class="lang-shell-session">C = <span class="hljs-number">8</span>-<span class="hljs-built_in">byte</span> server challenge, random
+<span class="hljs-built_in">K1</span> | <span class="hljs-built_in">K2</span> | <span class="hljs-built_in">K3</span> = LM/NT-hash | <span class="hljs-number">5</span>-bytes-<span class="hljs-number">0</span>
+response = DES(<span class="hljs-built_in">K1</span>,C) | DES(<span class="hljs-built_in">K2</span>,C) | DES(<span class="hljs-built_in">K3</span>,C)
+</code></pre>
+<p>An example of a full NTLMv1 hash looks like:</p>
+<p><strong>NTLMv1 Hash Example</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">u4-netntlm</span><span class="hljs-selector-pseudo">::kNS</span><span class="hljs-selector-pseudo">:338d08f8e26de93300000000000000000000000000000000</span><span class="hljs-selector-pseudo">:9526fb8c23a90751cdd619b6cea564742e1e4bf33006ba41</span><span class="hljs-selector-pseudo">:cb8086049ec4736c</span>
+</code></pre>
+<p>NTLMv1 was the building block for modern NTLM authentication. Like any protocol, it has flaws and is susceptible to cracking and other attacks. Now let us move on and take a look at NTLMv2 and see how it improves on the foundation that version one set.</p>
+<hr>
+<h3 id="ntlmv2-net-ntlmv2-">NTLMv2 (Net-NTLMv2)</h3>
+<p>The NTLMv2 protocol was first introduced in Windows NT 4.0 SP4 and was created as a stronger alternative to NTLMv1. It has been the default in Windows since Server 2000. It is hardened against certain spoofing attacks that NTLMv1 is susceptible to. NTLMv2 sends two responses to the 8-byte challenge received by the server. These responses contain a 16-byte HMAC-MD5 hash of the challenge, a randomly generated challenge from the client, and an HMAC-MD5 hash of the user's credentials. A second response is sent, using a variable-length client challenge including the current time, an 8-byte random value, and the domain name. The algorithm is as follows:</p>
+<p><strong>V2 Challenge &amp; Response Algorithm</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">SC</span> = 8-byte server challenge, random
+<span class="hljs-keyword">CC</span> = 8-byte client challenge, random
+<span class="hljs-keyword">CC</span>* = (X, time, CC2, domain name)
+v2-Hash = HMAC-MD5(NT-Hash, user name, domain name)
+LMv2 = HMAC-MD5(v2-Hash, <span class="hljs-keyword">SC</span>, <span class="hljs-keyword">CC</span>)
+NTv2 = HMAC-MD5(v2-Hash, <span class="hljs-keyword">SC</span>, <span class="hljs-keyword">CC</span>*)
+response = LMv2 | <span class="hljs-keyword">CC</span> | NTv2 | <span class="hljs-keyword">CC</span>*
+</code></pre>
+<p>An example of an NTLMv2 hash is:</p>
+<p><strong>NTLMv2 Hash Example</strong></p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">admin</span><span class="hljs-selector-pseudo">::N46iSNekpT</span><span class="hljs-selector-pseudo">:08ca45b7d7ea58ee</span><span class="hljs-selector-pseudo">:88dcbe4446168966a153a0064958dac6</span><span class="hljs-selector-pseudo">:5c7830315c7830310000000000000b45c67103d07d7b95acd12ffa11230e0000000052920b85f78d013c31cdb3b92f5d765c783030</span>
+</code></pre>
+<p>We can see that developers improved upon v1 by making NTLMv2 harder to crack and giving it a more robust algorithm made up of multiple stages. We have one more authentication mechanism to discuss before moving on. This method is of note to us because it does not require a persistent network connection to work.</p>
+<hr>
+<h3 id="domain-cached-credentials-mscache2-">Domain Cached Credentials (MSCache2)</h3>
+<p>In an AD environment, the authentication methods mentioned in this section and the previous require the host we are trying to access to communicate with the "brains" of the network, the Domain Controller. Microsoft developed the <a href="https://webstersprodigy.net/2014/02/03/mscash-hash-primer-for-pentesters/">MS Cache v1 and v2</a> algorithm (also known as <code>Domain Cached Credentials</code> (DCC) to solve the potential issue of a domain-joined host being unable to communicate with a domain controller (i.e., due to a network outage or other technical issue) and, hence, NTLM/Kerberos authentication not working to access the host in question. Hosts save the last <code>ten</code> hashes for any domain users that successfully log into the machine in the <code>HKEY_LOCAL_MACHINE\SECURITY\Cache</code> registry key. These hashes cannot be used in pass-the-hash attacks. Furthermore, the hash is very slow to crack with a tool such as Hashcat, even when using an extremely powerful GPU cracking rig, so attempts to crack these hashes typically need to be extremely targeted or rely on a very weak password in use. These hashes can be obtained by an attacker or pentester after gaining local admin access to a host and have the following format: <code>$DCC2$10240#bjones#e4e938d12fe5974dc42a90120bd9c90f</code>. It is vital as penetration testers that we understand the varying types of hashes that we may encounter while assessing an AD environment, their strengths, weaknesses, how they can be abused (cracking to cleartext, pass-the-hash, or relayed), and when an attack may be futile (i.e., spending days attempting to crack a set of Domain Cached Credentials).</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>Now that we have covered authentication protocols and associated password hashes let's look at users and groups in Active Directory, which are typically the most important target for penetration testers and attackers alike. They can have varying privileges and be used to move laterally in an environment or gain access to protected resources.</p>
+<h2 id="user-and-machine-accounts">User and Machine Accounts</h2>
+<hr>
+<p>User accounts are created on both local systems (not joined to AD) and in Active Directory to give a person or a program (such as a system service) the ability to log on to a computer and access resources based on their rights. When a user logs in, the system verifies their password and creates an access token. This token describes the security content of a process or thread and includes the user's security identity and group membership. Whenever a user interacts with a process, this token is presented. User accounts are used to allow employees/contractors to log in to a computer and access resources, to run programs or services under a specific security context (i.e., running as a highly privileged user instead of a network service account), and to manage access to objects and their properties such as network file shares, files, applications, etc. Users can be assigned to groups that can contain one or more members. These groups can also be used to control access to resources. It can be easier for an administrator to assign privileges once to a group (which all group members inherit) instead of many times to each individual user. This helps simplify administration and makes it easier to grant and revoke user rights.</p>
+<p>The ability to provision and manage user accounts is one of the core elements of Active Directory. Typically, every company we encounter will have at least one AD user account provisioned per user. Some users may have two or more accounts provisioned based on their job role (i.e., an IT admin or Help Desk member). Aside from standard user and admin accounts tied back to a specific user, we will often see many service accounts used to run a particular application or service in the background or perform other vital functions within the domain environment. An organization with 1,000 employees could have 1,200 active user accounts or more! We may also see organizations with hundreds of disabled accounts from former employees, temporary/seasonal employees, interns, etc. Some companies must retain records of these accounts for audit purposes, so they will deactivate them (and hopefully remove all privileges) once the employee is terminated, but they will not delete them. It is common to see an OU such as <code>FORMER EMPLOYEES</code> that will contain many deactivated accounts.</p>
+<p><img src="storage\modules\74\all\_users.png" alt="image"></p>
+<p>As we will see later in this module, user accounts can be provisioned many rights in Active Directory. They can be configured as basically read-only users who have read access to most of the environment (which are the permissions a standard Domain User receives) up to Enterprise Admin (with complete control of every object in the domain) and countless combinations in between. Because users can have so many rights assigned to them, they can also be misconfigured relatively easily and granted unintended rights that an attacker or a penetration tester can leverage. User accounts present an immense attack surface and are usually a key focus for gaining a foothold during a penetration test. Users are often the weakest link in any organization. It is difficult to manage human behavior and account for every user choosing weak or shared passwords, installing unauthorized software, or admins making careless mistakes or being overly permissive with account management. To combat this, an organization needs to have policies and procedures to combat issues that can arise around user accounts and must have defense in depth to mitigate the inherent risk that users bring to the domain.</p>
+<p>Specifics on user-related misconfigurations and attacks are outside the scope of this module. Still, it is important to understand the sheer impact users can have within any Active Directory network and to understand the nuances between the different types of users/accounts we may encounter.</p>
+<hr>
+<h3 id="local-accounts">Local Accounts</h3>
+<p>Local accounts are stored locally on a particular server or workstation. These accounts can be assigned rights on that host either individually or via group membership. Any rights assigned can only be granted to that specific host and will not work across the domain. Local user accounts are considered security principals but can only manage access to and secure resources on a standalone host. There are several default local user accounts that are created on a Windows system:</p>
+<ul>
+<li><code>Administrator</code>: this account has the SID <code>S-1-5-domain-500</code> and is the first account created with a new Windows installation. It has full control over almost every resource on the system. It cannot be deleted or locked, but it can be disabled or renamed. Windows 10 and Server 2016 hosts disable the built-in administrator account by default and create another local account in the local administrator's group during setup.</li>
+<li><code>Guest</code>: this account is disabled by default. The purpose of this account is to allow users without an account on the computer to log in temporarily with limited access rights. By default, it has a blank password and is generally recommended to be left disabled because of the security risk of allowing anonymous access to a host.</li>
+<li><code>SYSTEM</code>: The SYSTEM (or <code>NT AUTHORITY\SYSTEM</code>) account on a Windows host is the default account installed and used by the operating system to perform many of its internal functions. Unlike the Root account on Linux, <code>SYSTEM</code> is a service account and does not run entirely in the same context as a regular user. Many of the processes and services running on a host are run under the SYSTEM context. One thing to note with this account is that a profile for it does not exist, but it will have permissions over almost everything on the host. It does not appear in User Manager and cannot be added to any groups. A <code>SYSTEM</code> account is the highest permission level one can achieve on a Windows host and, by default, is granted Full Control permissions to all files on a Windows system.</li>
+<li><code>Network Service</code>: This is a predefined local account used by the Service Control Manager (SCM) for running Windows services. When a service runs in the context of this particular account, it will present credentials to remote services.</li>
+<li><code>Local Service</code>: This is another predefined local account used by the Service Control Manager (SCM) for running Windows services. It is configured with minimal privileges on the computer and presents anonymous credentials to the network.</li>
+</ul>
+<p>It is worth studying Microsoft's documentation on <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/local-accounts">local default accounts</a> in-depth to gain a better understanding of how the various accounts work together on an individual Windows system and across a domain network. Take some time to look them over and understand the nuances between them.</p>
+<hr>
+<h3 id="domain-users">Domain Users</h3>
+<p>Domain users differ from local users in that they are granted rights from the domain to access resources such as file servers, printers, intranet hosts, and other objects based on the permissions granted to their user account or the group that account is a member of. Domain user accounts can log in to any host in the domain, unlike local users. For more information on the many different Active Directory account types, check out this <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-accounts">link</a>. One account to keep in mind is the <code>KRBTGT</code> account, however. This is a type of local account built into the AD infrastructure. This account acts as a service account for the Key Distribution service providing authentication and access for domain resources. This account is a common target of many attackers since gaining control or access will enable an attacker to have unconstrained access to the domain. It can be leveraged for privilege escalation and persistence in a domain through attacks such as the <a href="https://attack.mitre.org/techniques/T1558/001/">Golden Ticket</a> attack.</p>
+<hr>
+<h3 id="user-naming-attributes">User Naming Attributes</h3>
+<p>Security in Active Directory can be improved using a set of user naming attributes to help identify user objects like logon name or ID. The following are a few important Naming Attributes in AD:</p>
+<table><thead><tr><th width="286"></th><th></th></tr></thead><tbody><tr><td><code>UserPrincipalName</code> (UPN)</td><td>This is the primary logon name for the user. By convention, the UPN uses the email address of the user.</td></tr><tr><td><code>ObjectGUID</code></td><td>This is a unique identifier of the user. In AD, the ObjectGUID attribute name never changes and remains unique even if the user is removed.</td></tr><tr><td><code>SAMAccountName</code></td><td>This is a logon name that supports the previous version of Windows clients and servers.</td></tr><tr><td><code>objectSID</code></td><td>The user's Security Identifier (SID). This attribute identifies a user and its group memberships during security interactions with the server.</td></tr><tr><td><code>sIDHistory</code></td><td>This contains previous SIDs for the user object if moved from another domain and is typically seen in migration scenarios from domain to domain. After a migration occurs, the last SID will be added to the <code>sIDHistory</code> property, and the new SID will become its <code>objectSID</code>.</td></tr></tbody></table>
+
+<p><strong>Common User Attributes</strong></p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-string">C:</span>\htb Get-ADUser -Identity htb-student
+
+<span class="hljs-string">DistinguishedName :</span> CN=htb student,CN=Users,DC=INLANEFREIGHT,DC=LOCAL
+<span class="hljs-string">Enabled           :</span> True
+<span class="hljs-string">GivenName         :</span> htb
+<span class="hljs-string">Name              :</span> htb student
+<span class="hljs-string">ObjectClass       :</span> user
+<span class="hljs-string">ObjectGUID        :</span> aa799587-c641<span class="hljs-number">-4</span>c23-a2f7<span class="hljs-number">-75850</span>b4dd7e3
+<span class="hljs-string">SamAccountName    :</span> htb-student
+<span class="hljs-string">SID               :</span> S<span class="hljs-number">-1</span><span class="hljs-number">-5</span><span class="hljs-number">-21</span><span class="hljs-number">-3842939050</span><span class="hljs-number">-3880317879</span><span class="hljs-number">-2865463114</span><span class="hljs-number">-1111</span>
+<span class="hljs-string">Surname           :</span> student
+<span class="hljs-string">UserPrincipalName :</span> htb-student<span class="hljs-meta">@INLANEFREIGHT</span>.LOCAL
+</code></pre>
+<p>For a deeper look at user object attributes, check out this <a href="https://docs.microsoft.com/en-us/windows/win32/ad/user-object-attributes">page</a>. Many attributes can be set for any object in AD. Many objects will never be used or are not relevant to us as security professionals. Still, it is essential to familiarize ourselves with the most common and more obscure ones that may contain sensitive data or help mount an attack.</p>
+<hr>
+<h3 id="domain-joined-vs-non-domain-joined-machines">Domain-joined vs. Non-Domain-joined Machines</h3>
+<p>When it comes to computer resources, there are several ways they are typically managed. Below we will discuss the differences between a host joined to a domain versus a host that is only in a workgroup.</p>
+<p><strong><code>Domain joined</code></strong></p>
+<p>Hosts joined to a domain have greater ease of information sharing within the enterprise and a central management point (the DC) to gather resources, policies, and updates from. A host joined to a domain will acquire any configurations or changes necessary through the domain's Group Policy. The benefit here is that a user in the domain can log in and access resources from any host joined to the domain, not just the one they work on. This is the typical setup you will see in enterprise environments.</p>
+<p><strong><code>Non-domain joined</code></strong></p>
+<p>Non-domain joined computers or computers in a <code>workgroup</code> are not managed by domain policy. With that in mind, sharing resources outside your local network is much more complicated than it would be on a domain. This is fine for computers meant for home use or small business clusters on the same LAN. The advantage of this setup is that the individual users are in charge of any changes they wish to make to their host. Any user accounts on a workgroup computer only exist on that host, and profiles are not migrated to other hosts within the workgroup.</p>
+<p>It is important to note that a machine account (<code>NT AUTHORITY\SYSTEM</code> level access) in an AD environment will have most of the same rights as a standard domain user account. This is important because we do not always need to obtain a set of valid credentials for an individual user's account to begin enumerating and attacking a domain (as we will see in later modules). We may obtain <code>SYSTEM</code> level access to a domain-joined Windows host through a successful remote code execution exploit or by escalating privileges on a host. This access is often overlooked as only useful for pillaging sensitive data (i.e., passwords, SSH keys, sensitive files, etc.) on a particular host. In reality, access in the context of the <code>SYSTEM</code> account will allow us read access to much of the data within the domain and is a great launching point for gathering as much information about the domain as possible before proceeding with applicable AD-related attacks.</p>
+<h2 id="active-directory-groups">Active Directory Groups</h2>
+<hr>
+<p>After users, groups are another significant object in Active Directory. They can place similar users together and mass assign rights and access. Groups are another key target for attackers and penetration testers, as the rights that they confer on their members may not be readily apparent but may grant excessive (and even unintended) privileges that can be abused if not set up correctly. There are many <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#about-active-directory-groups">built-in groups</a> in Active Directory, and most organizations also create their own groups to define rights and privileges, further managing access within the domain. The number of groups in an AD environment can snowball and become unwieldy, potentially leading to unintended access if left unchecked. It is essential to understand the impact of using different group types and for any organization to periodically <code>audit</code> which groups exist within their domain, the privileges that these groups grant their members, and check for excessive group membership beyond what is required for a user to perform their day-to-day work. Moving on, we will discuss the different types of groups that exist and the scopes they can be assigned to.</p>
+<p>One question that comes up often is the difference between Groups and Organizational Units (OUs). As discussed earlier in the module, OUs are useful for grouping users, groups, and computers to ease management and deploying Group Policy settings to specific objects in the domain. Groups are primarily used to assign permissions to access resources. OUs can also be used to delegate administrative tasks to a user, such as resetting passwords or unlocking user accounts without giving them additional admin rights that they may inherit through group membership.</p>
+<hr>
+<h3 id="types-of-groups">Types of Groups</h3>
+<p>In simpler terms, groups are used to place users, computers, and contact objects into management units that provide ease of administration over permissions and facilitate the assignment of resources such as printers and file share access. For example, if an admin needs to assign 50 members of a department access to a new share drive, it would be time-consuming to add each user's account individually. Granting permissions this way would also make it more difficult to audit who has access to resources and difficult to clean up/revoke permissions. Instead, a sysadmin can either use an existing group or create a new group and grant that specific group permissions over the resource. From here, every user in the group will inherit the permissions based on their membership in the group. If the permissions need to be modified or revoked for one or more users, they could merely be removed from the group, leaving the other users unaffected and their permissions intact.</p>
+<p>Groups in Active Directory have two fundamental characteristics: <code>type</code> and <code>scope</code>. The <code>group type</code> defines the group's purpose, while the <code>group scope</code> shows how the group can be used within the domain or forest. When creating a new group, we must select a group type. There are two main types: <code>security</code> and <code>distribution</code> groups.</p>
+<p><strong>Group Type And Scope</strong></p>
+<p><img src="storage\modules\74\group-options2.png" alt="image"></p>
+<p>The <code>Security groups</code> type is primarily for ease of assigning permissions and rights to a collection of users instead of one at a time. They simplify management and reduce overhead when assigning permissions and rights for a given resource. All users added to a security group will inherit any permissions assigned to the group, making it easier to move users in and out of groups while leaving the group's permissions unchanged.</p>
+<p>The <code>Distribution groups</code> type is used by email applications such as Microsoft Exchange to distribute messages to group members. They function much like mailing lists and allow for auto-adding emails in the "To" field when creating an email in Microsoft Outlook. This type of group cannot be used to assign permissions to resources in a domain environment.</p>
+<hr>
+<h3 id="group-scopes">Group Scopes</h3>
+<p>There are three different <code>group scopes</code> that can be assigned when creating a new group.</p>
+<ol>
+<li>Domain Local Group</li>
+<li>Global Group</li>
+<li>Universal Group</li>
+</ol>
+<p><strong>Domain Local Group</strong></p>
+<p>Domain local groups can only be used to manage permissions to domain resources in the domain where it was created. Local groups cannot be used in other domains but <code>CAN</code> contain users from <code>OTHER</code> domains. Local groups can be nested into (contained within) other local groups but <code>NOT</code> within global groups.</p>
+<p><strong>Global Group</strong></p>
+<p>Global groups can be used to grant access to resources in <code>another domain</code>. A global group can only contain accounts from the domain where it was created. Global groups can be added to both other global groups and local groups.</p>
+<p><strong>Universal Group</strong></p>
+<p>The universal group scope can be used to manage resources distributed across multiple domains and can be given permissions to any object within the same <code>forest</code>. They are available to all domains within an organization and can contain users from any domain. Unlike domain local and global groups, universal groups are stored in the Global Catalog (GC), and adding or removing objects from a universal group triggers forest-wide replication. It is recommended that administrators maintain other groups (such as global groups) as members of universal groups because global group membership within universal groups is less likely to change than individual user membership in global groups. Replication is only triggered at the individual domain level when a user is removed from a global group. If individual users and computers (instead of global groups) are maintained within universal groups, it will trigger forest-wide replication each time a change is made. This can create a lot of network overhead and potential for issues. Below is an example of the groups in AD and their scope settings. Please pay attention to some of the critical groups and their scope. ( Enterprise and Schema admins compared to Domain admins, for example.)</p>
+<p><strong>AD Group Scope Examples</strong></p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; Get-ADGroup  -Filter * |<span class="hljs-keyword">select</span> samaccountname,groupscope
+
+samaccountname                           groupscope
+--------------                           ----------
+Administrators                          DomainLocal
+Users                                   DomainLocal
+Guests                                  DomainLocal
+<span class="hljs-built_in">Print</span> Operators                         DomainLocal
+Backup Operators                        DomainLocal
+Replicator                              DomainLocal
+Remote Desktop Users                    DomainLocal
+Network Configuration Operators         DomainLocal
+Distributed COM Users                   DomainLocal
+IIS_IUSRS                               DomainLocal
+Cryptographic Operators                 DomainLocal
+Event <span class="hljs-built_in">Log</span> Readers                       DomainLocal
+Certificate Service DCOM Access         DomainLocal
+RDS Remote Access Servers               DomainLocal
+RDS Endpoint Servers                    DomainLocal
+RDS Management Servers                  DomainLocal
+Hyper-V Administrators                  DomainLocal
+Access Control Assistance Operators     DomainLocal
+Remote Management Users                 DomainLocal
+Storage Replica Administrators          DomainLocal
+Domain Computers                             <span class="hljs-keyword">Global</span>
+Domain Controllers                           <span class="hljs-keyword">Global</span>
+Schema Admins                             Universal
+Enterprise Admins                         Universal
+Cert Publishers                         DomainLocal
+Domain Admins                                <span class="hljs-keyword">Global</span>
+Domain Users                                 <span class="hljs-keyword">Global</span>
+Domain Guests                                <span class="hljs-keyword">Global</span>
+
+&lt;SNIP&gt;
+</code></pre>
+<p>Group scopes can be changed, but there are a few caveats:</p>
+<ul>
+<li>A Global Group can only be converted to a Universal Group if it is NOT part of another Global Group.</li>
+<li>A Domain Local Group can only be converted to a Universal Group if the Domain Local Group does NOT contain any other Domain Local Groups as members.</li>
+<li>A Universal Group can be converted to a Domain Local Group without any restrictions.</li>
+<li>A Universal Group can only be converted to a Global Group if it does NOT contain any other Universal Groups as members.</li>
+</ul>
+<hr>
+<h3 id="built-in-vs-custom-groups">Built-in vs. Custom Groups</h3>
+<p>Several built-in security groups are created with a Domain Local Group scope when a domain is created. These groups are used for specific administrative purposes and are discussed more in the next section. It is important to note that only user accounts can be added to these built-in groups as they do not allow for group nesting (groups within groups). Some examples of built-in groups included <code>Domain Admins</code>, which is a <code>Global</code> security group and can only contain accounts from its own domain. If an organization wants to allow an account from domain B to perform administrative functions on a domain controller in domain A, the account would have to be added to the built-in Administrators group, which is a <code>Domain Local</code> group. Though Active Directory comes prepopulated with many groups, it is common for most organizations to create additional groups (both security and distribution) for their own purposes. Changes/additions to an AD environment can also trigger the creation of additional groups. For example, when Microsoft Exchange is added to a domain, it adds various different security groups to the domain, some of which are highly privileged and, if not managed properly, can be used to gain privileged access within the domain.</p>
+<hr>
+<h3 id="nested-group-membership">Nested Group Membership</h3>
+<p>Nested group membership is an important concept in AD. As mentioned previously, a Domain Local Group can be a member of another Domain Local Group in the same domain. Through this membership, a user may inherit privileges not assigned directly to their account or even the group they are directly a member of, but rather the group that their group is a member of. This can sometimes lead to unintended privileges granted to a user that are difficult to uncover without an in-depth assessment of the domain. Tools such as <a href="https://github.com/BloodHoundAD/BloodHound">BloodHound</a> are particularly useful in uncovering privileges that a user may inherit through one or more nestings of groups. This is a key tool for penetration testers for uncovering nuanced misconfigurations and is also extremely powerful for sysadmins and the like to gain deep insights (visually) into the security posture of their domain(s).</p>
+<p>Below is an example of privileges inherited through nested group membership. Though <code>DCorner</code> is not a direct member of <code>Helpdesk Level 1</code>, their membership in <code>Help Desk</code> grants them the same privileges that any member of <code>Helpdesk Level 1</code> has. In this case, the privilege would allow them to add a member to the <code>Tier 1 Admins</code> group (<code>GenericWrite</code>). If this group confers any elevated privileges in the domain, it would likely be a key target for a penetration tester. Here, we could add our user to the group and obtain privileges that members of the <code>Tier 1 Admins</code> group are granted, such as local administrator access to one or more hosts that could be used to further access.</p>
+<p><strong>Examining Nested Groups via BloodHound</strong></p>
+<p><img src="storage\modules\74\bh\_nested\_groups.png" alt="image"></p>
+<hr>
+<h3 id="important-group-attributes">Important Group Attributes</h3>
+<p>Like users, groups have many <a href="http://www.selfadsi.org/group-attributes.htm">attributes</a>. Some of the most <a href="https://docs.microsoft.com/en-us/windows/win32/ad/group-objects">important group attributes</a> include:</p>
+<ul>
+<li><code>cn</code>: The <code>cn</code> or Common-Name is the name of the group in Active Directory Domain Services.</li>
+<li><code>member</code>: Which user, group, and contact objects are members of the group.</li>
+<li><code>groupType</code>: An integer that specifies the group type and scope.</li>
+<li><code>memberOf</code>: A listing of any groups that contain the group as a member (nested group membership).</li>
+<li><code>objectSid</code>: This is the security identifier or SID of the group, which is the unique value used to identify the group as a security principal.</li>
+</ul>
+<p>Groups are fundamental objects in AD that can be used to group other objects together and facilitate the management of rights and access. Take the time to study the differences between group types and scopes. This knowledge is useful for administering AD as well as understanding the relationships between groups in the same and different domains and what information can be enumerated during the recon phase of a penetration test. Understanding how different group types can be utilized to perform attacks in a single domain and across trust boundaries is an excellent bit of knowledge to have. We deep-dived into Groups in this section, now let's examine the differences between <code>Rights</code> and <code>Privileges</code>.</p>
+<h2 id="active-directory-rights-and-privileges">Active Directory Rights and Privileges</h2>
+<hr>
+<p>Rights and privileges are the cornerstones of AD management and, if mismanaged, can easily lead to abuse by attackers or penetration testers. Access rights and privileges are two important topics in AD (and infosec in general), and we must understand the difference. <code>Rights</code> are typically assigned to users or groups and deal with permissions to <code>access</code> an object such as a file, while <code>privileges</code> grant a user permission to <code>perform an action</code> such as run a program, shut down a system, reset passwords, etc. Privileges can be assigned individually to users or conferred upon them via built-in or custom group membership. Windows computers have a concept called <code>User Rights Assignment</code>, which, while referred to as rights, are actually types of privileges granted to a user. We will discuss these later in this section. We must have a firm grasp of the differences between rights and privileges in a broader sense and precisely how they apply to an AD environment.</p>
+<hr>
+<h3 id="built-in-ad-groups">Built-in AD Groups</h3>
+<p>AD contains many <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups">default or built-in security groups</a>, some of which grant their members powerful rights and privileges which can be abused to escalate privileges within a domain and ultimately gain Domain Admin or SYSTEM privileges on a Domain Controller (DC). Membership in many of these groups should be tightly managed as excessive group membership/privileges is a common flaw in many AD networks that attackers look to abuse. Some of the most common built-in groups are listed below.</p>
+<table><thead><tr><th width="262">Group Name</th><th>Description</th></tr></thead><tbody><tr><td><code>Account Operators</code></td><td>Members can create and modify most types of accounts, including those of users, local groups, and global groups, and members can log in locally to domain controllers. They cannot manage the Administrator account, administrative user accounts, or members of the Administrators, Server Operators, Account Operators, Backup Operators, or Print Operators groups.</td></tr><tr><td><code>Administrators</code></td><td>Members have full and unrestricted access to a computer or an entire domain if they are in this group on a Domain Controller.</td></tr><tr><td><code>Backup Operators</code></td><td>Members can back up and restore all files on a computer, regardless of the permissions set on the files. Backup Operators can also log on to and shut down the computer. Members can log onto DCs locally and should be considered Domain Admins. They can make shadow copies of the SAM/NTDS database, which, if taken, can be used to extract credentials and other juicy info.</td></tr><tr><td><code>DnsAdmins</code></td><td>Members have access to network DNS information. The group will only be created if the DNS server role is or was at one time installed on a domain controller in the domain.</td></tr><tr><td><code>Domain Admins</code></td><td>Members have full access to administer the domain and are members of the local administrator's group on all domain-joined machines.</td></tr><tr><td><code>Domain Computers</code></td><td>Any computers created in the domain (aside from domain controllers) are added to this group.</td></tr><tr><td><code>Domain Controllers</code></td><td>Contains all DCs within a domain. New DCs are added to this group automatically.</td></tr><tr><td><code>Domain Guests</code></td><td>This group includes the domain's built-in Guest account. Members of this group have a domain profile created when signing onto a domain-joined computer as a local guest.</td></tr><tr><td><code>Domain Users</code></td><td>This group contains all user accounts in a domain. A new user account created in the domain is automatically added to this group.</td></tr><tr><td><code>Enterprise Admins</code></td><td>Membership in this group provides complete configuration access within the domain. The group only exists in the root domain of an AD forest. Members in this group are granted the ability to make forest-wide changes such as adding a child domain or creating a trust. The Administrator account for the forest root domain is the only member of this group by default.</td></tr><tr><td><code>Event Log Readers</code></td><td>Members can read event logs on local computers. The group is only created when a host is promoted to a domain controller.</td></tr><tr><td><code>Group Policy Creator Owners</code></td><td>Members create, edit, or delete Group Policy Objects in the domain.</td></tr><tr><td><code>Hyper-V Administrators</code></td><td>Members have complete and unrestricted access to all the features in Hyper-V. If there are virtual DCs in the domain, any virtualization admins, such as members of Hyper-V Administrators, should be considered Domain Admins.</td></tr><tr><td><code>IIS_IUSRS</code></td><td>This is a built-in group used by Internet Information Services (IIS), beginning with IIS 7.0.</td></tr><tr><td><code>Pre–Windows 2000 Compatible Access</code></td><td>This group exists for backward compatibility for computers running Windows NT 4.0 and earlier. Membership in this group is often a leftover legacy configuration. It can lead to flaws where anyone on the network can read information from AD without requiring a valid AD username and password.</td></tr><tr><td><code>Print Operators</code></td><td>Members can manage, create, share, and delete printers that are connected to domain controllers in the domain along with any printer objects in AD. Members are allowed to log on to DCs locally and may be used to load a malicious printer driver and escalate privileges within the domain.</td></tr><tr><td><code>Protected Users</code></td><td>Members of this <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#protected-users">group</a> are provided additional protections against credential theft and tactics such as Kerberos abuse.</td></tr><tr><td><code>Read-only Domain Controllers</code></td><td>Contains all Read-only domain controllers in the domain.</td></tr><tr><td><code>Remote Desktop Users</code></td><td>This group is used to grant users and groups permission to connect to a host via Remote Desktop (RDP). This group cannot be renamed, deleted, or moved.</td></tr><tr><td><code>Remote Management Users</code></td><td>This group can be used to grant users remote access to computers via <a href="https://docs.microsoft.com/en-us/windows/win32/winrm/portal">Windows Remote Management (WinRM)</a></td></tr><tr><td><code>Schema Admins</code></td><td>Members can modify the Active Directory schema, which is the way all objects with AD are defined. This group only exists in the root domain of an AD forest. The Administrator account for the forest root domain is the only member of this group by default.</td></tr><tr><td><code>Server Operators</code></td><td>This group only exists on domain controllers. Members can modify services, access SMB shares, and backup files on domain controllers. By default, this group has no members.</td></tr></tbody></table>
+
+<p>Below we have provided some output regarding domain admins and server operators.</p>
+<p><strong>Server Operators Group Details</strong></p>
+<pre><code class="lang-powershell-session">PS <span class="hljs-string">C:</span>\htb&gt;  Get-ADGroup -Identity <span class="hljs-string">"Server Operators"</span> -Properties *
+
+<span class="hljs-string">adminCount                      :</span> <span class="hljs-number">1</span>
+<span class="hljs-string">CanonicalName                   :</span> INLANEFREIGHT.LOCAL<span class="hljs-regexp">/Builtin/</span>Server Operators
+<span class="hljs-string">CN                              :</span> Server Operators
+<span class="hljs-string">Created                         :</span> <span class="hljs-number">10</span><span class="hljs-regexp">/27/</span><span class="hljs-number">2021</span> <span class="hljs-number">8</span>:<span class="hljs-number">14</span>:<span class="hljs-number">34</span> AM
+<span class="hljs-string">createTimeStamp                 :</span> <span class="hljs-number">10</span><span class="hljs-regexp">/27/</span><span class="hljs-number">2021</span> <span class="hljs-number">8</span>:<span class="hljs-number">14</span>:<span class="hljs-number">34</span> AM
+<span class="hljs-string">Deleted                         :</span> 
+<span class="hljs-string">Description                     :</span> Members can administer domain servers
+<span class="hljs-string">DisplayName                     :</span> 
+<span class="hljs-string">DistinguishedName               :</span> CN=Server Operators,CN=Builtin,DC=INLANEFREIGHT,DC=LOCAL
+<span class="hljs-string">dSCorePropagationData           :</span> {<span class="hljs-number">10</span><span class="hljs-regexp">/28/</span><span class="hljs-number">2021</span> <span class="hljs-number">1</span>:<span class="hljs-number">47</span>:<span class="hljs-number">52</span> PM, <span class="hljs-number">10</span><span class="hljs-regexp">/28/</span><span class="hljs-number">2021</span> <span class="hljs-number">1</span>:<span class="hljs-number">44</span>:<span class="hljs-number">12</span> PM, <span class="hljs-number">10</span><span class="hljs-regexp">/28/</span><span class="hljs-number">2021</span> <span class="hljs-number">1</span>:<span class="hljs-number">44</span>:<span class="hljs-number">11</span> PM, <span class="hljs-number">10</span><span class="hljs-regexp">/27/</span><span class="hljs-number">2021</span> 
+<span class="hljs-symbol">                                  8:</span><span class="hljs-number">50</span>:<span class="hljs-number">25</span> AM...}
+<span class="hljs-string">GroupCategory                   :</span> Security
+<span class="hljs-string">GroupScope                      :</span> DomainLocal
+<span class="hljs-string">groupType                       :</span> <span class="hljs-number">-2147483643</span>
+<span class="hljs-string">HomePage                        :</span> 
+<span class="hljs-string">instanceType                    :</span> <span class="hljs-number">4</span>
+<span class="hljs-string">isCriticalSystemObject          :</span> True
+<span class="hljs-string">isDeleted                       :</span> 
+<span class="hljs-string">LastKnownParent                 :</span> 
+<span class="hljs-string">ManagedBy                       :</span> 
+<span class="hljs-string">MemberOf                        :</span> {}
+<span class="hljs-string">Members                         :</span> {}
+<span class="hljs-string">Modified                        :</span> <span class="hljs-number">10</span><span class="hljs-regexp">/28/</span><span class="hljs-number">2021</span> <span class="hljs-number">1</span>:<span class="hljs-number">47</span>:<span class="hljs-number">52</span> PM
+<span class="hljs-string">modifyTimeStamp                 :</span> <span class="hljs-number">10</span><span class="hljs-regexp">/28/</span><span class="hljs-number">2021</span> <span class="hljs-number">1</span>:<span class="hljs-number">47</span>:<span class="hljs-number">52</span> PM
+<span class="hljs-string">Name                            :</span> Server Operators
+<span class="hljs-string">nTSecurityDescriptor            :</span> System.DirectoryServices.ActiveDirectorySecurity
+<span class="hljs-string">ObjectCategory                  :</span> CN=Group,CN=Schema,CN=Configuration,DC=INLANEFREIGHT,DC=LOCAL
+<span class="hljs-string">ObjectClass                     :</span> group
+<span class="hljs-string">ObjectGUID                      :</span> <span class="hljs-number">0887487</span>b<span class="hljs-number">-7</span>b07<span class="hljs-number">-4</span>d85<span class="hljs-number">-82</span>aa<span class="hljs-number">-40</span>d25526ec17
+<span class="hljs-string">objectSid                       :</span> S<span class="hljs-number">-1</span><span class="hljs-number">-5</span><span class="hljs-number">-32</span><span class="hljs-number">-549</span>
+<span class="hljs-string">ProtectedFromAccidentalDeletion :</span> False
+<span class="hljs-string">SamAccountName                  :</span> Server Operators
+<span class="hljs-string">sAMAccountType                  :</span> <span class="hljs-number">536870912</span>
+<span class="hljs-string">sDRightsEffective               :</span> <span class="hljs-number">0</span>
+<span class="hljs-string">SID                             :</span> S<span class="hljs-number">-1</span><span class="hljs-number">-5</span><span class="hljs-number">-32</span><span class="hljs-number">-549</span>
+<span class="hljs-string">SIDHistory                      :</span> {}
+<span class="hljs-string">systemFlags                     :</span> <span class="hljs-number">-1946157056</span>
+<span class="hljs-string">uSNChanged                      :</span> <span class="hljs-number">228556</span>
+<span class="hljs-string">uSNCreated                      :</span> <span class="hljs-number">12360</span>
+<span class="hljs-string">whenChanged                     :</span> <span class="hljs-number">10</span><span class="hljs-regexp">/28/</span><span class="hljs-number">2021</span> <span class="hljs-number">1</span>:<span class="hljs-number">47</span>:<span class="hljs-number">52</span> PM
+<span class="hljs-string">whenCreated                     :</span> <span class="hljs-number">10</span><span class="hljs-regexp">/27/</span><span class="hljs-number">2021</span> <span class="hljs-number">8</span>:<span class="hljs-number">14</span>:<span class="hljs-number">34</span> AM
+</code></pre>
+<p>As we can see above, the default state of the <code>Server Operators</code> group is to have no members and is a domain local group by default. In contrast, the <code>Domain Admins</code> group seen below has several members and service accounts assigned to it. Domain Admins are also Global groups instead of domain local. More on group membership can be found later in this module. Be wary of who, if anyone, you give access to these groups. An attacker could easily gain the keys to the enterprise if they gain access to a user assigned to these groups.</p>
+<p><strong>Domain Admins Group Membership</strong></p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt;  Get<span class="hljs-params">-ADGroup</span> <span class="hljs-params">-Identity</span> <span class="hljs-string">"Domain Admins"</span> <span class="hljs-params">-Properties</span> * | <span class="hljs-keyword">select</span> DistinguishedName,GroupCategory,GroupScope,Name,Members
+
+DistinguishedName : <span class="hljs-literal">CN</span>=Domain Admins,<span class="hljs-literal">CN</span>=Users,DC=INLANEFREIGHT,DC=<span class="hljs-built_in">LOCAL</span>
+GroupCategory     : Security
+GroupScope        : <span class="hljs-built_in">Global</span>
+Name              : Domain Admins
+Members           : {<span class="hljs-literal">CN</span>=htb<span class="hljs-params">-student_adm</span>,<span class="hljs-literal">CN</span>=Users,DC=INLANEFREIGHT,DC=<span class="hljs-built_in">LOCAL</span>, <span class="hljs-literal">CN</span>=sharepoint
+                    admin,<span class="hljs-literal">CN</span>=Users,DC=INLANEFREIGHT,DC=<span class="hljs-built_in">LOCAL</span>, <span class="hljs-literal">CN</span>=FREIGHTLOGISTICSUSER,OU=Service
+                    Accounts,OU=Corp,DC=INLANEFREIGHT,DC=<span class="hljs-built_in">LOCAL</span>, <span class="hljs-literal">CN</span>=PROXYAGENT,OU=Service
+                    Accounts,OU=Corp,DC=INLANEFREIGHT,DC=<span class="hljs-built_in">LOCAL</span><span class="hljs-params">...</span>}
+</code></pre>
+<hr>
+<h3 id="user-rights-assignment">User Rights Assignment</h3>
+<p>Depending on their current group membership, and other factors such as privileges that administrators can assign via Group Policy (GPO), users can have various rights assigned to their account. This Microsoft article on <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/user-rights-assignment">User Rights Assignment</a> provides a detailed explanation of each of the user rights that can be set in Windows. Not every right listed here is important to us from a security standpoint as penetration testers or defenders, but some rights granted to an account can lead to unintended consequences such as privilege escalation or access to sensitive files. For example, let's say we can gain write access over a Group Policy Object (GPO) applied to an OU containing one or more users that we control. In this example, we could potentially leverage a tool such as <a href="https://github.com/FSecureLABS/SharpGPOAbuse">SharpGPOAbuse</a> to assign targeted rights to a user. We may perform many actions in the domain to further our access with these new rights. A few examples include:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Privilege</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SeRemoteInteractiveLogonRight</code></td>
+<td>This privilege could give our target user the right to log onto a host via Remote Desktop (RDP), which could potentially be used to obtain sensitive data or escalate privileges.</td>
+</tr>
+<tr>
+<td><code>SeBackupPrivilege</code></td>
+<td>This grants a user the ability to create system backups and could be used to obtain copies of sensitive system files that can be used to retrieve passwords such as the SAM and SYSTEM Registry hives and the NTDS.dit Active Directory database file.</td>
+</tr>
+<tr>
+<td><code>SeDebugPrivilege</code></td>
+<td>This allows a user to debug and adjust the memory of a process. With this privilege, attackers could utilize a tool such as <a href="https://github.com/ParrotSec/mimikatz">Mimikatz</a> to read the memory space of the Local System Authority (LSASS) process and obtain any credentials stored in memory.</td>
+</tr>
+<tr>
+<td><code>SeImpersonatePrivilege</code></td>
+<td>This privilege allows us to impersonate a token of a privileged account such as <code>NT AUTHORITY\SYSTEM</code>. This could be leveraged with a tool such as JuicyPotato, RogueWinRM, PrintSpoofer, etc., to escalate privileges on a target system.</td>
+</tr>
+<tr>
+<td><code>SeLoadDriverPrivilege</code></td>
+<td>A user with this privilege can load and unload device drivers that could potentially be used to escalate privileges or compromise a system.</td>
+</tr>
+<tr>
+<td><code>SeTakeOwnershipPrivilege</code></td>
+<td>This allows a process to take ownership of an object. At its most basic level, we could use this privilege to gain access to a file share or a file on a share that was otherwise not accessible to us.</td>
+</tr>
+</tbody>
+</table>
+<p>There are many techniques available to abuse user rights detailed <a href="https://blog.palantir.com/windows-privilege-abuse-auditing-detection-and-defense-3078a403d74e">here</a> and <a href="https://book.hacktricks.xyz/windows/windows-local-privilege-escalation/privilege-escalation-abusing-tokens">here</a>. Though outside the scope of this module, it is essential to understand the impact that assigning the wrong privilege to an account can have within Active Directory. A small admin mistake can lead to a complete system or enterprise compromise.</p>
+<hr>
+<h3 id="viewing-a-user-s-privileges">Viewing a User's Privileges</h3>
+<p>After logging into a host, typing the command <code>whoami /priv</code> will give us a listing of all user rights assigned to the current user. Some rights are only available to administrative users and can only be listed/leveraged when running an elevated CMD or PowerShell session. These concepts of elevated rights and <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works">User Account Control (UAC)</a> are security features introduced with Windows Vista that default to restricting applications from running with full permissions unless absolutely necessary. If we compare and contrast the rights available to us as an admin in a non-elevated console vs. an elevated console, we will see that they differ drastically. First, let's look at the rights available to a standard Active Directory user.</p>
+<p><strong>Standard Domain User's Rights</strong></p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; whoami /priv
+
+<span class="hljs-section">PRIVILEGES INFORMATION
+----------------------</span>
+
+Privilege Name                Description                    State
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+</code></pre>
+<p>We can see that the rights are very <code>limited</code>, and none of the "dangerous" rights outlined above are present. Next, let's take a look at a privileged user. Below are the rights available to a Domain Admin user.</p>
+<p><strong>Domain Admin Rights Non-Elevated</strong></p>
+<p>We can see the following in a <code>non-elevated</code> console which does not appear to be anything more than available to the standard domain user. This is because, by default, Windows systems do not enable all rights to us unless we run the CMD or PowerShell console in an elevated context. This is to prevent every application from running with the highest possible privileges. This is controlled by something called <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works">User Account Control (UAC)</a> which is covered in-depth in the <a href="https://academy.hackthebox.com/course/preview/windows-privilege-escalation">Windows Privilege Escalation</a> module.</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; whoami /priv
+
+<span class="hljs-section">PRIVILEGES INFORMATION
+----------------------</span>
+
+Privilege Name                Description                          State
+============================= ==================================== ========
+SeShutdownPrivilege           Shut down the system                 Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking             Enabled
+SeUndockPrivilege             Remove computer from docking station Disabled
+SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+SeTimeZonePrivilege           Change the time zone                 Disabled
+</code></pre>
+<p><strong>Domain Admin Rights Elevated</strong></p>
+<p>If we enter the same command from an elevated PowerShell console, we can see the complete listing of rights available to us:</p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                            Description                                                        State
+========================================= ================================================================== ========
+SeIncreaseQuotaPrivilege                  Adjust memory quotas <span class="hljs-keyword">for</span> a process                                 Disabled
+SeMachineAccountPrivilege                 Add workstations to domain                                         Disabled
+SeSecurityPrivilege                       Manage auditing <span class="hljs-keyword">and</span> security <span class="hljs-built_in">log</span>                                   Disabled
+SeTakeOwnershipPrivilege                  Take ownership of files <span class="hljs-keyword">or</span> other objects                           Disabled
+SeLoadDriverPrivilege                     <span class="hljs-keyword">Load</span> <span class="hljs-keyword">and</span> unload device drivers                                     Disabled
+SeSystemProfilePrivilege                  Profile <span class="hljs-keyword">system</span> performance                                         Disabled
+SeSystemtimePrivilege                     Change the <span class="hljs-keyword">system</span> <span class="hljs-built_in">time</span>                                             Disabled
+SeProfileSingleProcessPrivilege           Profile single process                                             Disabled
+SeIncreaseBasePriorityPrivilege           Increase scheduling priority                                       Disabled
+SeCreatePagefilePrivilege                 <span class="hljs-keyword">Create</span> a pagefile                                                  Disabled
+SeBackupPrivilege                         Back up files <span class="hljs-keyword">and</span> directories                                      Disabled
+SeRestorePrivilege                        Restore files <span class="hljs-keyword">and</span> directories                                      Disabled
+SeShutdownPrivilege                       Shut down the <span class="hljs-keyword">system</span>                                               Disabled
+SeDebugPrivilege                          <span class="hljs-keyword">Debug</span> programs                                                     Enabled
+SeSystemEnvironmentPrivilege              Modify firmware environment values                                 Disabled
+SeChangeNotifyPrivilege                   Bypass traverse checking                                           Enabled
+SeRemoteShutdownPrivilege                 Force shutdown from a remote <span class="hljs-keyword">system</span>                                Disabled
+SeUndockPrivilege                         Remove computer from docking station                               Disabled
+SeEnableDelegationPrivilege               <span class="hljs-keyword">Enable</span> computer <span class="hljs-keyword">and</span> user accounts to be trusted <span class="hljs-keyword">for</span> delegation     Disabled
+SeManageVolumePrivilege                   Perform <span class="hljs-built_in">volume</span> maintenance tasks                                   Disabled
+SeImpersonatePrivilege                    Impersonate a client after authentication                          Enabled
+SeCreateGlobalPrivilege                   <span class="hljs-keyword">Create</span> global objects                                              Enabled
+SeIncreaseWorkingSetPrivilege             Increase a process working set                                     Disabled
+SeTimeZonePrivilege                       Change the <span class="hljs-built_in">time</span> zone                                               Disabled
+SeCreateSymbolicLinkPrivilege             <span class="hljs-keyword">Create</span> symbolic links                                              Disabled
+SeDelegateSessionUserImpersonatePrivilege Obtain an impersonation <span class="hljs-built_in">token</span> <span class="hljs-keyword">for</span> another user in the same session Disabled
+</code></pre>
+<p>User rights increase based on the groups they are placed in or their assigned privileges. Below is an example of the rights granted to a <code>Backup Operators</code> group member. Users in this group have other rights currently restricted by UAC (additional rights such as the powerful <code>SeBackupPrivilege</code> are not enabled by default in a standard console session). Still, we can see from this command that they have the <code>SeShutdownPrivilege</code>, which means they can shut down a domain controller. This privilege on its own could not be used to gain access to sensitive data but could cause a massive service interruption should they log onto a domain controller locally (not remotely via RDP or WinRM).</p>
+<p><strong>Backup Operator Rights</strong></p>
+<pre><code class="lang-powershell-session">PS C:\htb&gt; whoami /priv
+
+<span class="hljs-section">PRIVILEGES INFORMATION
+----------------------</span>
+
+Privilege Name                Description                    State
+============================= ============================== ========
+SeShutdownPrivilege           Shut down the system           Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+</code></pre>
+<p>As attackers and defenders, we need to understand the rights that are granted to users via membership from built-in security groups in Active Directory. It's not uncommon to find seemingly low privileged users added to one or more of these groups, which can be used to further access or compromise the domain. Access to these groups should be strictly controlled. It is typically best practice to leave most of these groups empty and only add an account to a group if a one-off action needs to be performed or a repetitive task needs to be set up. Any accounts added to one of the groups discussed in this section or granted extra privileges should be strictly controlled and monitored, assigned a very strong password or passphrase, and should be separate from an account used by a sysadmin to perform their day-to-day duties.</p>
+<p>Now that we've begun to touch on some security considerations in AD related to user privileges and built-in group membership let's walk through some critical points for securing an Active Directory installation.</p>
+<h2 id="security-in-active-directory">Security in Active Directory</h2>
+<hr>
+<p>As we have progressed through this module, we have looked at the many features and functionalities built into Active Directory. All of which are built around the premise of central management and the ability to share information quickly, at will, to a large userbase. Active Directory can be considered insecure by design because of this. A default Active Directory installation will be missing many hardening measures, settings, and tools that can be used to secure an AD implementation. When we think about cybersecurity, one of the first things that come up is the balance between Confidentiality, Integrity, and Availability, also known as the <a href="https://www.f5.com/labs/articles/education/what-is-the-cia-triad">CIA Triad</a>. Finding this balance is hard, and AD leans heavily toward <code>Availability</code> and <code>Confidentiality</code> at its core.</p>
+<p><strong>CIA Triad</strong></p>
+<p><img src="storage\modules\74\CIA-triad-diag.png" alt="image"></p>
+<p>We can help balance the scales by utilizing Microsoft's built-in features that can be enabled/tweaked to harden AD against common attacks. The list below is not exhaustive. Many other general security hardening principles must be in place within an organization to ensure a proper <code>defense-in-depth</code> approach (having an accurate asset inventory, vulnerability patches, configuration management, endpoint protection, security awareness training, network segmentation, etc.). This section can be considered the bare minimum general AD security best practices that any organization will benefit from. We will deep dive into Active Directory Defense in a later module. Let's dive in and start with a few general hardening measures for AD.</p>
+<hr>
+<h3 id="general-active-directory-hardening-measures">General Active Directory Hardening Measures</h3>
+<p>The <a href="https://www.microsoft.com/en-us/download/details.aspx?id=46899">Microsoft Local Administrator Password Solution (LAPS)</a> is used to randomize and rotate local administrator passwords on Windows hosts and prevent lateral movement.</p>
+<p><strong>LAPS</strong></p>
+<p>Accounts can be set up to have their password rotated on a fixed interval (i.e., 12 hours, 24 hours, etc.). This free tool can be beneficial in reducing the impact of an individual compromised host in an AD environment. Organizations should not rely on tools like this alone. Still, when combined with other hardening measures and security best practices, it can be a very effective tool for local administrator account password management.</p>
+<p><strong>Audit Policy Settings (Logging and Monitoring)</strong></p>
+<p>Every organization needs to have logging and monitoring setup to detect and react to unexpected changes or activities that may indicate an attack. Effective logging and monitoring can be used to detect an attacker or unauthorized employee adding a user or computer, modifying an object in AD, changing an account password, accessing a system in an unauthorized or non-standard manner, performing an attack such as password spraying, or more advanced attacks such as modern Kerberos attacks.</p>
+<p><strong>Group Policy Security Settings</strong></p>
+<p>As mentioned earlier in the module, Group Policy Objects (GPOs) are virtual collections of policy settings that can be applied to specific users, groups, and computers at the OU level. These can be used to apply a wide variety of <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/security-policy-settings">security policies</a> to help harden Active Directory. The following is a non-exhaustive list of the types of security policies that can be applied:</p>
+<ul>
+<li><a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/account-policies">Account Policies</a> - Manage how user accounts interact with the domain. These include the password policy, account lockout policy, and Kerberos-related settings such as the lifetime of Kerberos tickets</li>
+<li><a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/security-options">Local Policies</a> - These apply to a specific computer and include the security event audit policy, user rights assignments (user privileges on a host), and specific security settings such as the ability to install drivers, whether the administrator and guest accounts are enabled, renaming the guest and administrator accounts, preventing users from installing printers or using removable media, and a variety of network access and network security controls.</li>
+<li><a href="https://docs.microsoft.com/en-us/windows-server/identity/software-restriction-policies/software-restriction-policies">Software Restriction Policies</a> - Settings to control what software can be run on a host.</li>
+<li><a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/windows-defender-application-control">Application Control Policies</a> - Settings to control which applications can be run by certain users/groups. This may include blocking certain users from running all executables, Windows Installer files, scripts, etc. Administrators use <a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/applocker/applocker-overview">AppLocker</a> to restrict access to certain types of applications and files. It is not uncommon to see organizations block access to CMD and PowerShell (among other executables) for users that do not require them for their day-to-day job. These policies are imperfect and can often be bypassed but necessary for a defense-in-depth strategy.</li>
+<li><a href="https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/secpol-advanced-security-audit-policy-settings">Advanced Audit Policy Configuration</a> - A variety of settings that can be adjusted to audit activities such as file access or modification, account logon/logoff, policy changes, privilege usage, and more.</li>
+</ul>
+<p><strong>Advanced Audit Policy</strong></p>
+<p><img src="storage\modules\74\adv-audit-pol.png" alt="image"></p>
+<p><strong>Update Management (SCCM/WSUS)</strong></p>
+<p>Proper patch management is critical for any organization, especially those running Windows/Active Directory systems. The <a href="https://docs.microsoft.com/en-us/windows-server/administration/windows-server-update-services/get-started/windows-server-update-services-wsus">Windows Server Update Service (WSUS)</a> can be installed as a role on a Windows Server and can be used to minimize the manual task of patching Windows systems. <code>System Center Configuration Manager</code> (SCCM) is a paid solution that relies on the WSUS Windows Server role being installed and offers more features than WSUS on its own. A patch management solution can help ensure timely deployment of patches and maximize coverage, making sure that no hosts miss critical security patches. If an organization relies on a manual method for applying patches, it could take a very long time depending on the size of the environment and also could result in systems being missed and left vulnerable.</p>
+<p><strong>Group Managed Service Accounts (gMSA)</strong></p>
+<p>A gMSA is an account managed by the domain that offers a higher level of security than other types of service accounts for use with non-interactive applications, services, processes, and tasks that are run automatically but require credentials to run. They provide automatic password management with a 120 character password generated by the domain controller. The password is changed at a regular interval and does not need to be known by any user. It allows for credentials to be used across multiple hosts.</p>
+<p><strong>Security Groups</strong></p>
+<p>Security groups offer an easy way to assign access to network resources. They can be used to assign specific rights to the group (instead of directly to the user) to determine what members of the group can do within the AD environment. Active Directory automatically creates some <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#active-directory-default-security-groups-by-operating-system-version">default security groups</a> during installation. Some examples are Account Operators, Administrators, Backup Operators, Domain Admins, and Domain Users. These groups can also be used to assign permission to access resources (i.e., a file share, folder, printer, or a document). Security groups help ensure you can assign granular permissions to users en masse instead of individually managing each user.</p>
+<p><strong>Built-in AD Security Groups</strong></p>
+<p><img src="storage\modules\74\def-sec-groups.png" alt="image"></p>
+<p><strong>Account Separation</strong></p>
+<p>Administrators must have two separate accounts. One for their day-to-day work and a second for any administrative tasks they must perform. For example, a user could log into their machine using their <code>sjones</code> account to send/receive an email, create documents, etc. They should have a separate account, such as <code>sjones_adm</code>, to access a <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-secure-administrative-hosts">secure administrative host</a> used to perform administrative tasks. This can help ensure that if a user's host is compromised (through a phishing attack, for example), the attacker would be limited to that host and would not obtain credentials for a highly privileged user with considerable access within the domain. It is also essential for the individual to use different passwords for each account to mitigate the risk of password reuse attacks if their non-admin account is compromised.</p>
+<p><strong>Password Complexity Policies + Passphrases + 2FA</strong></p>
+<p>Ideally, an organization should be using passphrases or large randomly generated passwords using an enterprise password manager. The standard 7-8 character passwords can be cracked offline using a tool such as Hashcat very quickly with a GPU password cracking rig. Shorter, less complex passwords may also be guessed through a password spraying attack, giving an attacker a foothold in the domain. Password complexity rules alone in AD are not enough to ensure strong passwords. For example, the password <code>Welcome1</code> would meet the standard complexity rules (3 out of 4 of uppercase, lowercase, number, and special character) but would be one of the first passwords I would try in a password spraying attack. An organization should also consider implementing a password filter to disallow passwords containing the months or seasons of the year, the company name, and common words such as <code>password</code> and <code>welcome</code>. The minimum password length for standard users should be at least 12 characters and ideally longer for administrators/service accounts. Another important security measure is the implementation of multi-factor authentication (MFA) for Remote Desktop Access to any host. This can help to limit lateral movement attempts that may rely on GUI access to a host.</p>
+<p><strong>Limiting Domain Admin Account Usage</strong></p>
+<p>All-powerful Domain Admin accounts should only be used to log in to Domain Controllers, not personal workstations, jump hosts, web servers, etc. This can significantly reduce the impact of an attack and cut down potential attack paths should a host be compromised. This would ensure that Domain Admin account passwords are not left in memory on hosts throughout the environment.</p>
+<p><strong>Periodically Auditing and Removing Stale Users and Objects</strong></p>
+<p>It is important for an organization to periodically audit Active Directory and remove or disable any unused accounts. For example, there may be a privileged service account that was created eight years ago with a very weak password that was never changed, and the account is no longer in use. Even if the password policy had since been changed to be more resistant to attacks such as password spraying, an account such as this may be a quick and easy foothold or method for lateral movement or privilege escalation within the domain.</p>
+<p><strong>Auditing Permissions and Access</strong></p>
+<p>Organizations should also periodically perform access control audits to ensure that users only have the level of access required for their day-to-day work. It is important to audit local admin rights, the number of Domain Admins (do we really need 30 of them?), and Enterprise Admins to limit the attack surface, file share access, user rights (i.e., membership in certain privileged security groups), and more.</p>
+<p><strong>Audit Policies &amp; Logging</strong></p>
+<p>Visibility into the domain is a must. An organization can achieve this through robust logging and then using rules to detect anomalous activity (such as many failed login attempts that could be indicative of a password spraying attack) or indicators that a Kerberoasting attack is being attempted. These can also be used to detect Active Directory enumeration. It is worth familiarizing ourselves with Microsoft's <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/audit-policy-recommendations">Audit Policy Recommendations</a> to help detect compromise.</p>
+<p><strong>Using Restricted Groups</strong></p>
+<p><a href="https://social.technet.microsoft.com/wiki/contents/articles/20402.active-directory-group-policy-restricted-groups.aspx">Restricted Groups</a> allow for administrators to configure group membership via Group Policy. They can be used for a number of reasons, such as controlling membership in the local administrator's group on all hosts in the domain by restricting it to just the local Administrator account and Domain Admins and controlling membership in the highly privileged Enterprise Admins and Schema Admins groups and other key administrative groups.</p>
+<p><strong>Limiting Server Roles</strong></p>
+<p>It is important not to install additional roles on sensitive hosts, such as installing the <code>Internet Information Server</code> (IIS) role on a Domain Controller. This would increase the attack surface of the Domain Controller, and this type of role should be installed on a separate standalone web server. Some other examples would be not hosting web applications on an Exchange mail server and separating web servers and database servers out to different hosts. This type of role separation can help to reduce the impact of a successful attack.</p>
+<p><strong>Limiting Local Admin and RDP Rights</strong></p>
+<p>Organizations should tightly control which users have local admin rights on which computers. As stated above, this can be achieved using Restricted Groups. I have seen too many organizations with the entire Domain Users group with local admin rights on one or more hosts. This would allow an attacker that compromises <code>ANY</code> account (even a very low privileged one) to access that host as a local admin and potentially obtain sensitive data or steal high privileged domain account credentials from memory if another user is logged in. The same goes for Remote Desktop (RDP) rights. If many users can RDP to one or many machines, this increases the risk of sensitive data exposure or potential privilege escalation attacks, leading to further compromise.</p>
+<p>This <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory">link</a> provides further reading on Microsoft's Best Practices for Securing Active Directory.</p>
+<hr>
+<h2 id="examining-group-policy">Examining Group Policy</h2>
+<hr>
+<p>Group Policy is a Windows feature that provides administrators with a wide array of advanced settings that can apply to both user and computer accounts in a Windows environment. Every Windows host has a Local Group Policy editor to manage local settings. For our purposes, we will focus on Group Policy in a domain context for managing users and computers in Active Directory. Group Policy is a powerful tool for managing and configuring user settings, operating systems, and applications. Group Policy is also a potent tool for managing security in a domain environment. From a security context, leveraging Group Policy is one of the best ways to widely affect your enterprise's security posture. Active Directory is by no means secure "out of the box," and Group Policy, when used properly, is a crucial part of a defense-in-depth strategy.</p>
+<p>While Group Policy is an excellent tool for managing the security of a domain, it can also be abused by attackers. Gaining rights over a Group Policy Object could lead to lateral movement, privilege escalation, and even full domain compromise if the attacker can leverage them in a way to take over a high-value user or computer. They can also be used as a way for an attacker to maintain persistence within a network. Understanding how Group Policy works will give us a leg up against attackers and can help us greatly on penetration tests, sometimes finding nuanced misconfigurations that other penetration testers may miss.</p>
+<hr>
+<h3 id="group-policy-objects-gpos-">Group Policy Objects (GPOs)</h3>
+<p>A <a href="https://docs.microsoft.com/en-us/previous-versions/windows/desktop/policy/group-policy-objects">Group Policy Object (GPO)</a> is a virtual collection of policy settings that can be applied to <code>user(s)</code> or <code>computer(s)</code>. GPOs include policies such as screen lock timeout, disabling USB ports, enforcing a custom domain password policy, installing software, managing applications, customizing remote access settings, and much more. Every GPO has a unique name and is assigned a unique identifier (a GUID). They can be linked to a specific OU, domain, or site. A single GPO can be linked to multiple containers, and any container can have multiple GPOs applied to it. They can be applied to individual users, hosts, or groups by being applied directly to an OU. Every GPO contains one or more Group Policy settings that may apply at the local machine level or within the Active Directory context.</p>
+<hr>
+<h3 id="example-gpos">Example GPOs</h3>
+<p>Some examples of things we can do with GPOs may include:</p>
+<ul>
+<li>Establishing different password policies for service accounts, admin accounts, and standard user accounts using separate GPOs</li>
+<li>Preventing the use of removable media devices (such as USB devices)</li>
+<li>Enforcing a screensaver with a password</li>
+<li>Restricting access to applications that a standard user may not need, such as cmd.exe and PowerShell</li>
+<li>Enforcing audit and logging policies</li>
+<li>Blocking users from running certain types of programs and scripts</li>
+<li>Deploying software across a domain</li>
+<li>Blocking users from installing unapproved software</li>
+<li>Displaying a logon banner whenever a user logs into a system</li>
+<li>Disallowing LM hash usage in the domain</li>
+<li>Running scripts when computers start/shutdown or when a user logs in/out of their machine</li>
+</ul>
+<p>Let's use as example a default Windows Server 2008 Active Directory implementation, password complexity is enforced by default. The password complexity requirements are as follows:</p>
+<ul>
+<li>Passwords must be at least 7 characters long.</li>
+<li>Passwords must contain characters from at least three of the following four categories:<ul>
+<li>Uppercase characters (A-Z)</li>
+<li>Lowercase characters (a-z)</li>
+<li>Numbers (0-9)</li>
+<li>Special characters (e.g. !@#$%^&amp;*()_+|~-=`{}[]:";'&lt;&gt;?,./)</li>
+</ul>
+</li>
+</ul>
+<p>These are just a few examples of what can be done with Group Policy. There are hundreds of settings that can be applied within a GPO, which can get extremely granular. For example, below are some options that we can set for Remote Desktop sessions.</p>
+<p><strong>RDP GPO Settings</strong></p>
+<p><img src="storage\modules\74\rdp\_settings.png" alt="image"></p>
+<p>GPO settings are processed using the hierarchical structure of AD and are applied using the <code>Order of Precedence</code> rule as seen in the table below:</p>
+<p><strong>Order of Precedence</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>Level</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Local Group Policy</code></td>
+<td>The policies are defined directly to the host locally outside the domain. Any setting here will be overwritten if a similar setting is defined at a higher level.</td>
+</tr>
+<tr>
+<td><code>Site Policy</code></td>
+<td>Any policies specific to the Enterprise Site that the host resides in. Remember that enterprise environments can span large campuses and even across countries. So it stands to reason that a site might have its own policies to follow that could differentiate it from the rest of the organization. Access Control policies are a great example of this. Say a specific building or <code>site</code> performs secret or restricted research and requires a higher level of authentication for access to resources. You could specify those settings at the site level and ensure they are linked so as not to be overwritten by domain policy. This is also a great way to perform actions like printer and share mapping for users in specific sites.</td>
+</tr>
+<tr>
+<td><code>Domain-wide Policy</code></td>
+<td>Any settings you wish to have applied across the domain as a whole. For example, setting the password policy complexity level, configuring a Desktop background for all users, and setting a Notice of Use and Consent to Monitor banner at the login screen.</td>
+</tr>
+<tr>
+<td><code>Organizational Unit</code> (OU)</td>
+<td>These settings would affect users and computers who belong to specific OUs. You would want to place any unique settings here that are role-specific. For example, the mapping of a particular share drive that can only be accessed by HR, access to specific resources like printers, or the ability for IT admins to utilize PowerShell and command-prompt.</td>
+</tr>
+<tr>
+<td><code>Any OU Policies nested within other OU's</code></td>
+<td>Settings at this level would reflect special permissions for objects within nested OUs. For example, providing Security Analysts a specific set of Applocker policy settings that differ from the standard IT Applocker settings.</td>
+</tr>
+</tbody>
+</table>
+<p>We can manage Group Policy from the Group Policy Management Console (found under Administrative Tools in the Start Menu on a domain controller), custom applications, or using the PowerShell <a href="https://docs.microsoft.com/en-us/powershell/module/grouppolicy/?view=windowsserver2022-ps">GroupPolicy</a> module via command line. The Default Domain Policy is the default GPO that is automatically created and linked to the domain. It has the highest precedence of all GPOs and is applied by default to all users and computers. Generally, it is best practice to use this default GPO to manage default settings that will apply domain-wide. The Default Domain Controllers policy is also created automatically with a domain and sets baseline security and auditing settings for all domain controllers in a given domain. It can be customized as needed, like any GPO.</p>
+<hr>
+<h3 id="gpo-order-of-precedence">GPO Order of Precedence</h3>
+<p>GPOs are processed from the top down when viewing them from a domain organizational standpoint. A GPO linked to an OU at the highest level in an Active Directory network (at the domain level, for example) would be processed first, followed by those linked to a child OU, etc. This means that a GPO linked directly to an OU containing user or computer objects is processed last. In other words, a GPO attached to a specific OU would have precedence over a GPO attached at the domain level because it will be processed last and could run the risk of overriding settings in a GPO higher up in the domain hierarchy. One more thing to keep track of with precedence is that a setting configured in Computer policy will always have a higher priority of the same setting applied to a user. The following graphic illustrates precedence and how it is applied.</p>
+<p><strong>GPO Precedence Order</strong></p>
+<p><img src="storage\modules\74\gpo\_levels.png" alt="image"></p>
+<p>Let's look at another example using the Group Policy Management Console on a Domain Controller. In this image, we see several GPOs. The <code>Disabled Forced Restarts</code> GPO will have precedence over the <code>Logon Banner</code> GPO since it would be processed last. Any settings configured in the <code>Disabled Forced Restarts</code> GPO could potentially override settings in any GPOs higher up in the hierarchy (including those linked to the <code>Corp</code> OU).</p>
+<p><strong>GPMC Hive Example</strong></p>
+<p><img src="storage\modules\74\gpo\_precedence.png" alt="image"></p>
+<p>This image also shows an example of several GPOs being linked to the <code>Corp</code> OU. When more than one GPO is linked to an OU, they are processed based on the <code>Link Order</code>. The GPO with the lowest Link Order is processed last, or the GPO with link order 1 has the highest precedence, then 2, and 3, and so on. So in our example above, the <code>Disallow LM Hash</code> GPO will have precedence over the <code>Block Removable Media</code> and <code>Disable Guest Account</code> GPOs, meaning it will be processed first.</p>
+<p>It is possible to specify the <code>Enforced</code> option to enforce settings in a specific GPO. If this option is set, policy settings in GPOs linked to lower OUs <code>CANNOT</code> override the settings. If a GPO is set at the domain level with the <code>Enforced</code> option selected, the settings contained in that GPO will be applied to all OUs in the domain and cannot be overridden by lower-level OU policies. In the past, this setting was called <code>No Override</code> and was set on the container in question under Active Directory Users and Computers. Below we can see an example of an <code>Enforced</code> GPO, where the <code>Logon Banner</code> GPO is taking precedence over GPOs linked to lower OUs and therefore will not be overridden.</p>
+<p><strong>Enforced GPO Policy Precedence</strong></p>
+<p><img src="storage\modules\74\gpo\_enforced.png" alt="image"></p>
+<p>Regardless of which GPO is set to enforced, if the <code>Default Domain Policy</code> GPO is enforced, it will take precedence over all GPOs at all levels.</p>
+<p><strong>Default Domain Policy Override</strong></p>
+<p><img src="storage\modules\74\default\_gpo.png" alt="image"></p>
+<p>It is also possible to set the <code>Block inheritance</code> option on an OU. If this is specified for a particular OU, then policies higher up (such as at the domain level) will NOT be applied to this OU. If both options are set, the <code>No Override</code> option has precedence over the <code>Block inheritance</code> option. Here is a quick example. The <code>Computers</code> OU is inheriting GPOs set on the <code>Corp</code> OU in the below image.</p>
+<p><img src="storage\modules\74\inheritance.png" alt="image"></p>
+<p>If the <code>Block Inheritance</code> option is chosen, we can see that the 3 GPOs applied higher up to the <code>Corp</code> OU are no longer enforced on the <code>Computers</code> OU.</p>
+<p><strong>Block Inheritance</strong></p>
+<p><img src="storage\modules\74\block\_inheritance.png" alt="image"></p>
+<hr>
+<h3 id="group-policy-refresh-frequency">Group Policy Refresh Frequency</h3>
+<p>When a new GPO is created, the settings are not automatically applied right away. Windows performs periodic Group Policy updates, which by default is done every 90 minutes with a randomized offset of +/- 30 minutes for users and computers. The period is only 5 minutes for domain controllers to update by default. When a new GPO is created and linked, it could take up to 2 hours (120 minutes) until the settings take effect. This random offset of +/- 30 minutes is set to avoid overwhelming domain controllers by having all clients request Group Policy from the domain controller simultaneously.</p>
+<p>It is possible to change the default refresh interval within Group Policy itself. Furthermore, we can issue the command <code>gpupdate /force</code> to kick off the update process. This command will compare the GPOs currently applied on the machine against the domain controller and either modify or skip them depending on if they have changed since the last automatic update.</p>
+<p>We can modify the refresh interval via Group Policy by clicking on <code>Computer Configuration --&gt; Policies --&gt; Administrative Templates --&gt; System --&gt; Group Policy</code> and selecting <code>Set Group Policy refresh interval for computers</code>. While it can be changed, it should not be set to occur too often, or it could cause network congestion leading to replication issues.</p>
+<p><img src="storage\modules\74\comp\_updates.png" alt="image"></p>
+<hr>
+<h3 id="security-considerations-of-gpos">Security Considerations of GPOs</h3>
+<p>As mentioned earlier, GPOs can be used to carry out attacks. These attacks may include adding additional rights to a user account that we control, adding a local administrator to a host, or creating an immediate scheduled task to run a malicious command such as modifying group membership, adding a new admin account, establishing a reverse shell connection, or even installing targeted malware throughout a domain. These attacks typically happen when a user has the rights required to modify a GPO that applies to an OU that contains either a user account that we control or a computer.</p>
+<p>Below is an example of a GPO attack path identified using the <a href="https://github.com/BloodHoundAD/BloodHound">BloodHound</a> tool. This example shows that the <code>Domain Users</code> group can modify the <code>Disconnect Idle RDP</code> GPO due to nested group membership. In this case, we would next look to see which OUs this GPO applies to and if we can leverage these rights to gain control over a high-value user (administrator or Domain Admin) or computer (server, DC, or critical host) and move laterally to escalate privileges within the domain.</p>
+<p><img src="storage\modules\74\bh\_gpo.png" alt="image"></p>
+<hr>
+</div></body></html>

