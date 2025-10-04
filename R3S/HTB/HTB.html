@@ -24,7 +24,7 @@ const owner = '0x0z0n'; // replace with your GitHub username
 const repo = 'z0n';         // replace with your repository name
 
 async function fetchContents(path='') {
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const url = `https://0x0z0n.github.io/z0n/R3S/HTB/${path}`;
   const res = await fetch(url);
   if(!res.ok) return [];
   return await res.json();
