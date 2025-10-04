@@ -743,6 +743,7 @@ For example, we can run procdump.exe directly from this share without downloadin
 
 	\\live.sysinternals.com\tools\procdump.exe -accepteula
 
+<!--
 ```text
 ProcDump v9.0 - Sysinternals process dump utility
 Copyright (C) 2009-2017 Mark Russinovich and Andrew Richards
@@ -776,7 +777,7 @@ Capture Usage:
 				
 <SNIP>
 ```
-
+-->
 The suite includes tools such as `Process Explorer`, an enhanced version of `Task Manager`, and `Process Monitor`, which can be used to monitor file system, registry, and network activity related to any process running on the system. Some additional tools are TCPView, which is used to monitor internet activity, and PSExec, which can be used to manage/connect to systems via the SMB protocol remotely.
 
 These tools can be useful for penetration testers to, for example, discover interesting processes and possible privilege escalation paths as well as for lateral movement.
