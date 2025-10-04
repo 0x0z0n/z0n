@@ -6,12 +6,6 @@ Operating System: Linux
 Hints: True
 ```
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
-
-<!--
-
 
 ### 🏁 Summary of Attack Chain
 
@@ -192,5 +186,3 @@ With the `os` module available, it was possible to execute arbitrary shell comma
 The output returned **`root`**, indicating that the Erlang SSH service was running with `root` privileges. This allowed for full control over the system as `root` and the capture of the final flag.
 
 **Pwned! Soulmate**
-
--->
