@@ -1,208 +1,68 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Directory Graph — CyberTheme</title>
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <style>
-    :root{
-      --bg:#0b0f13; --panel:#0f1720; --muted:#93a3b3; --accent:#00ff8a; --link:#ffd24a;
-    }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#05060a 0%, #0b0f13 100%);color:#d7e6ef;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    .topbar{display:flex;align-items:center;gap:12px;padding:16px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.03)}
-    .brand{font-weight:700;font-size:18px;color:var(--link)}
-    .controls{display:flex;gap:8px;margin-left:auto;align-items:center}
-    button,input[type=file],textarea{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit;padding:8px 10px;border-radius:10px}
-    .main{display:grid;grid-template-columns:360px 1fr;height:calc(100% - 64px)}
-    .sidebar{padding:16px;overflow:auto;border-right:1px solid rgba(255,255,255,0.02);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent)}
-    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));padding:12px;border-radius:12px;margin-bottom:12px}
-    .hint{font-size:13px;color:var(--muted);line-height:1.4}
-    #cy{width:100%;height:100%;background:radial-gradient(ellipse at center, rgba(0,0,0,0.2), transparent 30%), transparent}
-    .node-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .legend-item{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.01);font-size:13px}
-    a.link{color:var(--link);text-decoration:none}
-    footer{padding:8px 16px;font-size:12px;color:var(--muted);border-top:1px solid rgba(255,255,255,0.02)}
-  </style>
-  <!-- Cytoscape.js CDN -->
-  <script src="https://unpkg.com/cytoscape@3.24.0/dist/cytoscape.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repo Index — CyberTheme</title>
+<style>
+  body { background:#0b0f13; color:#d7e6ef; font-family:Inter,sans-serif; padding:20px; }
+  h1 { color:#ffd24a; }
+  ul { list-style:none; padding-left:20px; }
+  li { margin:4px 0; }
+  li.dir > span { color:#00ff8a; cursor:pointer; }
+  li.file > span { color:#ffd24a; cursor:pointer; text-decoration:underline; }
+  li span { user-select:none; }
+  li ul { display:none; margin-left:12px; }
+</style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="brand">Directory Graph — CyberTheme</div>
-    <div class="hint">Dark, cyber-themed visualisation of your local folder structure.</div>
-    <div class="controls">
-      <input id="fileInput" type="file" accept=".json,.txt" />
-      <button id="pasteBtn">Paste/Load from clipboard</button>
-      <button id="sampleBtn">Load Sample</button>
-    </div>
-  </div>
-  <div class="main">
-    <div class="sidebar">
-      <div class="panel">
-        <div style="font-weight:700;margin-bottom:6px">How to feed your local folders</div>
-        <div class="hint">
-          1) Run this in your project root to produce a newline list of files: <code>find . -type f | sed 's|^./||' &gt; files.txt</code>.<br>
-          2) Or use the Python generator (creates JSON tree):
-          <pre style="background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;color:#cfefff;font-size:12px">python3 - <<'PY'
-import os, json
-root='.'
-json_out='tree.json'
-
-def build(path):
-  node={'name':os.path.basename(path) or '.', 'children':[]}
-  try:
-    with os.scandir(path) as it:
-      for e in it:
-        if e.is_dir(follow_symlinks=False):
-          node['children'].append(build(e.path))
-        else:
-          node['children'].append({'name':e.name,'size':e.stat().st_size})
-  except PermissionError:
-    pass
-  return node
-
-open(json_out,'w').write(json.dumps(build(root),indent=2))
-print('Wrote', json_out)
-PY</pre>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div style="font-weight:700">Input preview</div>
-        <textarea id="textIn" rows="8" style="width:100%;margin-top:8px" placeholder="Paste newline paths (one per line) or paste JSON tree here"></textarea>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button id="renderBtn">Render</button>
-          <button id="clearBtn">Clear</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div style="font-weight:700">Legend</div>
-        <div class="node-legend">
-          <div class="legend-item">📁 Directory</div>
-          <div class="legend-item">📄 File</div>
-          <div class="legend-item">🔗 Click node to focus</div>
-        </div>
-      </div>
-
-      <div class="panel hint">Tip: For large trees, use the Python JSON generator. The viewer auto-collapses deep branches.</div>
-    </div>
-
-    <div id="cy" title="graph-area"></div>
-  </div>
-
-  <footer>Drag &amp; drop files.txt or tree.json, or paste a list of paths. Designed for offline use.</footer>
+<h1>Repository Index</h1>
+<div id="tree">Loading...</div>
 
 <script>
-// Utility: convert newline list of paths into tree object
-function pathsToTree(lines){
-  const root = {name:'.', children:[], _map: new Map()};
-  root._map.set('', root);
-  for(const raw of lines){
-    const p = raw.trim(); if(!p) continue;
-    const parts = p.split(/\/+|\\+/).filter(Boolean);
-    let curKey = '';
-    let cur = root;
-    parts.forEach((part, idx)=>{
-      const nextKey = curKey? curKey + '/' + part : part;
-      if(!cur._map.has(nextKey)){
-        const node = {'name':part, children:[], _map: new Map(), _path: nextKey, _isFile: idx===parts.length-1 && raw.indexOf('.')>-1 && idx===parts.length-1};
-        cur.children.push(node);
-        cur._map.set(nextKey,node);
-      }
-      cur = cur._map.get(nextKey);
-      curKey = nextKey;
-    });
-  }
-  function stripMaps(n){
-    delete n._map; if(!n.children || n.children.length===0) return;
-    n.children.forEach(stripMaps);
-  }
-  stripMaps(root);
-  return root;
+const owner = '0x0z0n'; // replace with your GitHub username
+const repo = 'z0n';         // replace with your repository name
+
+async function fetchContents(path='') {
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const res = await fetch(url);
+  if(!res.ok) return [];
+  return await res.json();
 }
 
-function treeToElements(root){
-  const elements = [];
-  let idCounter=0;
-  function nodeId(){return 'n'+(idCounter++);}
-  function walk(node, parentId){
-    const myId = node._id || nodeId(); node._id = myId;
-    const isDir = node.children && node.children.length>0;
-    elements.push({data:{id:myId, label: node.name, path: node._path||node.name, isDir:!!isDir}});
-    if(parentId) elements.push({data:{source:parentId,target:myId}});
-    if(isDir){
-      // sort directories first
-      node.children.sort((a,b)=> ( (b.children&&b.children.length)||0) - ((a.children&&a.children.length)||0) );
-      node.children.forEach(ch=> walk(ch,myId));
+async function buildTree(container, path='') {
+  const items = await fetchContents(path);
+  const ul = document.createElement('ul');
+
+  for(const item of items) {
+    const li = document.createElement('li');
+    li.className = item.type;
+    const span = document.createElement('span');
+    span.textContent = item.name;
+    li.appendChild(span);
+
+    if(item.type==='dir') {
+      span.onclick = async () => {
+        let sub = li.querySelector('ul');
+        if(sub) {
+          sub.style.display = sub.style.display==='none'?'block':'none';
+        } else {
+          await buildTree(li, item.path);
+          sub = li.querySelector('ul');
+          sub.style.display = 'block';
+        }
+      };
+    } else if(item.type==='file') {
+      span.onclick = () => window.open(item.html_url, '_blank');
     }
+
+    ul.appendChild(li);
   }
-  walk(root,null);
-  return elements;
+  container.appendChild(ul);
 }
 
-// Initialize cytoscape
-let cy = cytoscape({
-  container: document.getElementById('cy'),
-  style: [
-    {selector: 'node', style: { 'label': 'data(label)', 'text-valign': 'center','text-halign':'center','width':'label', 'padding':'6px','height':'label','shape':'round-rectangle','background-color': 'black','border-width':2,'border-color':'#123','color':'#dff6ea','font-size':11,'text-wrap':'wrap','text-max-width':80 }},
-    {selector: 'node[isDir]', style: {'background-color':'#071127','border-color':'#00a86b','shape':'round-rectangle'}},
-    {selector: 'node[!isDir]', style: {'background-color':'#0b1b27','border-color':'#ffd24a','shape':'ellipse'}},
-    {selector: 'edge', style: {'width':1,'line-color':'rgba(255,255,255,0.04)','curve-style':'bezier'}},
-    {selector: 'node:selected', style: {'border-color':'#ffd24a','border-width':3,'z-index':9999}},
-  ],
-  layout: {name:'breadthfirst', directed:true, padding:20}
-});
-
-function renderFromText(text){
-  let obj=null;
-  try{
-    if(text.trim().startsWith('{')||text.trim().startsWith('[')){
-      obj = JSON.parse(text);
-      // if it's already a root tree
-      if(obj && obj.name) {
-        const els = treeToElements(obj);
-        cy.elements().remove(); cy.add(els); cy.layout({name:'breadthfirst', padding:20}).run(); return;
-      }
-    }
-  }catch(e){/* not JSON */}
-  // assume newline paths
-  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  const tree = pathsToTree(lines);
-  const els = treeToElements(tree);
-  cy.elements().remove(); cy.add(els); cy.layout({name:'breadthfirst', padding:20}).run();
-}
-
-// File input handling
-const fileInput=document.getElementById('fileInput');
-fileInput.addEventListener('change',()=>{
-  const f=fileInput.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload = ()=>{ document.getElementById('textIn').value = reader.result; renderFromText(reader.result); };
-  reader.readAsText(f);
-});
-
-document.getElementById('renderBtn').onclick = ()=>{ renderFromText(document.getElementById('textIn').value); };
-document.getElementById('clearBtn').onclick = ()=>{ document.getElementById('textIn').value=''; cy.elements().remove(); };
-
-document.getElementById('sampleBtn').onclick = ()=>{
-  const sample = ['src/index.js','src/lib/api.js','src/lib/helpers.js','README.md','package.json','assets/logo.png','docs/usage.md','tests/test_api.py','tests/test_utils.py'];
-  document.getElementById('textIn').value = sample.join('\n'); renderFromText(sample.join('\n'));
-};
-
-document.getElementById('pasteBtn').onclick = async ()=>{
-  try{ const txt = await navigator.clipboard.readText(); if(!txt) return alert('Clipboard empty'); document.getElementById('textIn').value = txt; renderFromText(txt);}catch(e){alert('Clipboard access failed');}
-};
-
-// click-to-focus
-cy.on('tap', 'node', function(evt){ const node=evt.target; cy.animate({center: {eles: node}, duration: 400}); node.select();});
-
-// support drag & drop of files into viewer
-const cyEl = document.getElementById('cy');
-['dragover','dragenter'].forEach(e=>cyEl.addEventListener(e,ev=>{ ev.preventDefault(); ev.dataTransfer.dropEffect='copy'; }));
-cyEl.addEventListener('drop', ev=>{ ev.preventDefault(); const f = ev.dataTransfer.files && ev.dataTransfer.files[0]; if(f){ const reader=new FileReader(); reader.onload=()=>{ document.getElementById('textIn').value=reader.result; renderFromText(reader.result);} ; reader.readAsText(f); } });
-
+document.getElementById('tree').textContent = '';
+buildTree(document.getElementById('tree'));
 </script>
 </body>
 </html>
