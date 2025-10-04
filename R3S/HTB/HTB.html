@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTB Files Index — CyberTheme</title>
+<title>HTB Hosted Index — CyberTheme</title>
 <style>
   body { background:#0b0f13; color:#d7e6ef; font-family:Inter,sans-serif; padding:20px; }
   h1 { color:#ffd24a; }
@@ -16,13 +16,14 @@
 </style>
 </head>
 <body>
-<h1>HTB Index</h1>
+<h1>HTB Hosted Index</h1>
 <div id="tree">Loading...</div>
 
 <script>
-const owner = '0x0z0n';    // your GitHub username
-const repo = 'z0n';         // your repository name
-const rootPath = 'R3S/HTB'; // the folder you want to index
+const owner = '0x0z0n';       // GitHub username
+const repo = 'z0n';            // repository name
+const rootPath = 'R3S/HTB';    // folder to index
+const baseURL = 'https://0x0z0n.github.io/z0n/'; // GitHub Pages base
 
 async function fetchContents(path='') {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
@@ -54,15 +55,19 @@ async function buildTree(container, path='') {
         }
       };
     } else if(item.type==='file') {
-      span.onclick = () => window.open(item.html_url, '_blank');
+      span.onclick = () => {
+        const hostedURL = baseURL + encodeURIComponent(item.path).replace(/%2F/g,'/');
+        window.location.href = hostedURL;
+      };
     }
 
     ul.appendChild(li);
   }
+
   container.appendChild(ul);
 }
 
-// Load root folder
+// Initialize
 document.getElementById('tree').textContent = '';
 buildTree(document.getElementById('tree'), rootPath);
 </script>
