@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Repo Index — CyberTheme</title>
+<title>HTB Files Index — CyberTheme</title>
 <style>
   body { background:#0b0f13; color:#d7e6ef; font-family:Inter,sans-serif; padding:20px; }
   h1 { color:#ffd24a; }
@@ -16,15 +16,16 @@
 </style>
 </head>
 <body>
-<h1>Repository Index</h1>
+<h1>HTB Index</h1>
 <div id="tree">Loading...</div>
 
 <script>
-const owner = '0x0z0n'; // replace with your GitHub username
-const repo = 'z0n';         // replace with your repository name
+const owner = '0x0z0n';    // your GitHub username
+const repo = 'z0n';         // your repository name
+const rootPath = 'R3S/HTB'; // the folder you want to index
 
 async function fetchContents(path='') {
-  const url = `https://0x0z0n.github.io/z0n/R3S/HTB/${path}`;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   const res = await fetch(url);
   if(!res.ok) return [];
   return await res.json();
@@ -61,8 +62,9 @@ async function buildTree(container, path='') {
   container.appendChild(ul);
 }
 
+// Load root folder
 document.getElementById('tree').textContent = '';
-buildTree(document.getElementById('tree'));
+buildTree(document.getElementById('tree'), rootPath);
 </script>
 </body>
 </html>
