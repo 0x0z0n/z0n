@@ -751,7 +751,7 @@ Sysinternals - www.sysinternals.com
 
 Monitors a process and writes a dump file when the process exceeds the
 specified criteria or has an exception.
-
+{% raw %}
 Capture Usage:
    procdump.exe [-mm] [-ma] [-mp] [-mc Mask] [-md Callback_DLL] [-mk]
                 [-n Count]
@@ -777,7 +777,7 @@ Capture Usage:
 				
 <SNIP>
 ```
--->
+{% endraw %}
 The suite includes tools such as `Process Explorer`, an enhanced version of `Task Manager`, and `Process Monitor`, which can be used to monitor file system, registry, and network activity related to any process running on the system. Some additional tools are TCPView, which is used to monitor internet activity, and PSExec, which can be used to manage/connect to systems via the SMB protocol remotely.
 
 These tools can be useful for penetration testers to, for example, discover interesting processes and possible privilege escalation paths as well as for lateral movement.
