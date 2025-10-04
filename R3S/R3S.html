@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberTheme Index</title>
+  <link rel="icon" type="image/png" href="assets/tab.png">
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #d4d4d4;
+      font-family: "Fira Code", monospace, sans-serif;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #00ff88;
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(0,255,136,0.8);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 25px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #121212, #1e1e1e);
+      padding: 25px;
+      border-radius: 18px;
+      border: 1px solid #222;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.6),
+                  0 0 18px rgba(0, 255, 136, 0.15);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      cursor: pointer;
+      perspective: 1000px;
+    }
+
+    .card:hover {
+      transform: translateY(-10px) rotateX(3deg) rotateY(-3deg);
+      box-shadow: 0 12px 25px rgba(0, 255, 136, 0.3),
+                  0 0 25px rgba(0,255,136,0.6);
+    }
+
+    .card a {
+      text-decoration: none;
+      color: #ffd000;
+      font-weight: bold;
+      font-size: 1.1rem;
+      display: block;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .card a:hover {
+      color: #fff76b;
+      text-shadow: 0 0 10px rgba(255,208,0,0.8);
+    }
+
+    .card p {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #aaa;
+      line-height: 1.4em;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 0.9rem;
+      color: #666;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📂 CyberTheme Index</h1>
+  <div class="grid" id="links-container">
+    <!-- Sample Post -->
+    <div class="card">
+      <a href="CPTS.html">HackTheBox: CPTS</a>
+      <p>HTB Certified Penetration Testing Specialist (HTB CPTS)
+</p>
+    </div>
+  </div>
+
+  <div class="card">
+      <a href="CLD-100.html">OffSec: CLD</a>
+      <p>Cloud Security.</p>
+    </div>
+  </div>
+
+  <div class="card">
+      <a href="EXP-100.html">OffSec: EXP</a>
+      <p>Exploit Development Essentials</p>
+    </div>
+  </div>
+  
+
+  <div class="card">
+      <a href="PEN-100.html">OffSec: PEN</a>
+      <p>Penetration Testing Essentials</p>
+    </div>
+  </div>
+
+  <div class="card">
+      <a href="SOC-100.html">OffSec: SOC</a>
+      <p>Security OPerations Essentials</p>
+    </div>
+   </div>
+
+
+  <div class="footer">
+    ⚡ Powered by 0x0z0n
+  </div>
+
+  <script>
+    async function loadLinks() {
+      try {
+        const response = await fetch(".");
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/html");
+        const anchors = Array.from(doc.querySelectorAll("a"))
+          .map(a => a.getAttribute("href"))
+          .filter(href => href && href.endsWith(".html") && href !== "index.html" && href !== "htb_HackNet.html");
+
+        const container = document.getElementById("links-container");
+        anchors.forEach(href => {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `
+            <a href="${href}">${href.replace('.html','')}</a>
+            <p>A cyber writeup post for ${href.replace('.html','')}.</p>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading links:", err);
+      }
+    }
+    loadLinks();
+  </script>
+</body>
+</html>
