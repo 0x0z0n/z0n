@@ -10,8 +10,9 @@
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
    <link rel="icon" type="image/png" href="assets/tab.png" />
     <style>
-      :root {
-  /* Default variables (0x0z0n-dark) */
+/* ========== Theme Variables ========== */
+:root {
+  /* Default 0x0z0n-dark */
   --bg-color: #0a0a0a;
   --card-bg: #141414;
   --text-color: #00ff95;
@@ -19,6 +20,9 @@
   --tag-bg: #0f0f0f;
   --tag-hover: #00ffcc;
   --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
+  --hover-bg: #222;
+  --hover-text: #80ffff;
+  --hover-border: #00d0ff;
 }
 
 /* 0x0z0n-light */
@@ -30,6 +34,9 @@ html[data-theme="0x0z0n-light"] {
   --tag-bg: #e3eff9;
   --tag-hover: #007acc;
   --border-glow: 0 0 4px #007acc55;
+  --hover-bg: #e0e0e0;
+  --hover-text: #007acc;
+  --hover-border: #007acc;
 }
 
 /* Minimalist Dark */
@@ -41,6 +48,9 @@ html[data-theme="minimal-dark"] {
   --tag-bg: #202020;
   --tag-hover: #4db6ac;
   --border-glow: none;
+  --hover-bg: #2a2a2a;
+  --hover-text: #a0e0d0;
+  --hover-border: #4db6ac;
 }
 
 /* Minimalist Light */
@@ -52,9 +62,12 @@ html[data-theme="minimal-light"] {
   --tag-bg: #e3f2f1;
   --tag-hover: #00796b;
   --border-glow: none;
+  --hover-bg: #e0f0ef;
+  --hover-text: #00796b;
+  --hover-border: #00796b;
 }
 
-/* Body & general */
+/* ========== Body & General ========== */
 body {
   margin: 0;
   font-family: 'Orbitron', system-ui, sans-serif;
@@ -69,7 +82,7 @@ aside {
   background: var(--card-bg);
   padding: 1.5rem 1rem;
   height: 100vh;
-  box-shadow: inset -1px 0 0 var(--accent + '33');
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
 }
@@ -108,17 +121,12 @@ nav a {
 }
 
 nav a:hover {
-  background: var(--tag-hover);
-  border-left: 3px solid var(--accent);
-  color: var(--text-color);
+  background: var(--hover-bg);
+  color: var(--hover-text);
+  border-left: 3px solid var(--hover-border);
 }
 
 /* Social icons */
-.social-icons {
-  text-align: center;
-  margin-top: 2rem;
-}
-
 .social-icons a {
   margin: 0 0.5rem;
   color: #999;
@@ -127,11 +135,11 @@ nav a:hover {
 }
 
 .social-icons a:hover {
-  color: var(--accent);
+  color: var(--hover-text);
   transform: scale(1.15);
 }
 
-/* Main */
+/* Main Content */
 main {
   flex: 1;
   padding: 2.5rem;
@@ -139,40 +147,7 @@ main {
   margin: auto;
 }
 
-/* Post cards */
-.post-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 1.8rem;
-  border: 1px solid var(--accent + '33');
-  margin-bottom: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), var(--border-glow);
-  transition: 0.3s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 0 20px var(--accent + 'cc');
-}
-
-.post-card h2 a {
-  color: var(--accent);
-  text-decoration: none;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
-}
-
-.post-card h2 a:hover {
-  text-shadow: 0 0 8px var(--accent), 0 0 15px var(--accent + 'bb');
-}
-
-.post-card a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-/* Search box */
+/* Search Box */
 .search-box {
   margin-bottom: 2.5rem;
   text-align: center;
@@ -185,38 +160,49 @@ main {
   color: var(--text-color);
   border: 1px solid var(--accent);
   border-radius: 8px;
+  box-shadow: var(--border-glow);
   font-size: 0.95rem;
 }
 
-/* Tags */
-.tag-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+/* Post Cards */
+.post-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(8px);
+  padding: 1.8rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  margin-bottom: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1), var(--border-glow);
+  transition: 0.3s ease;
 }
 
-.tag-link {
-  background: var(--tag-bg);
-  padding: 6px 12px;
+.post-card:hover {
+  transform: translateY(-5px);
+  background: var(--hover-bg);
+  box-shadow: 0 10px 20px rgba(0, 208, 255, 0.2);
+}
+
+.post-card h2 a {
   color: var(--accent);
-  border-radius: 6px;
   text-decoration: none;
-  font-size: 0.82rem;
-  border: 1px solid var(--accent + '44');
-  transition: 0.2s ease-in-out;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
-.tag-link:hover {
-  background: var(--tag-hover);
-  color: var(--text-color);
+.post-card h2 a:hover {
+  color: var(--hover-text);
+  text-shadow: 0 0 8px var(--hover-border);
 }
 
-/* Category buttons */
-.category-button {
+.post-card a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Tags & Category Buttons */
+.tag-link, .category-button {
   display: inline-block;
-  background-color: var(--card-bg);
-  border: 1px solid var(--accent + '44');
+  background-color: var(--tag-bg);
+  border: 1px solid rgba(0,0,0,0.1);
   color: var(--accent);
   padding: 6px 12px;
   margin: 2px 4px 4px 0;
@@ -226,9 +212,10 @@ main {
   transition: 0.2s ease-in-out;
 }
 
-.category-button:hover {
-  background-color: var(--tag-hover);
-  color: var(--text-color);
+.tag-link:hover, .category-button:hover {
+  background: var(--hover-bg);
+  color: var(--hover-text);
+  border-color: var(--hover-border);
 }
 
 /* Terminal */
@@ -241,42 +228,31 @@ main {
   border-radius: 6px;
   white-space: pre-wrap;
   font-size: 0.9rem;
-  box-shadow: inset 0 0 6px var(--accent + '44');
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
   max-height: 200px;
   overflow-y: auto;
 }
 
-.attack-path-terminal::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+/* Theme Selector */
+.theme-selector {
+  text-align: center;
+  margin: 1rem 0;
 }
 
-.attack-path-terminal:hover::-webkit-scrollbar {
-  width: 6px;
-}
-
-.attack-path-terminal::-webkit-scrollbar-track {
+.theme-selector select {
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
   background: var(--card-bg);
-}
-
-.attack-path-terminal {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-/* Theme toggle + selector */
-.theme-toggle, .theme-selector {
-  position: fixed;
-  top: 18px;
-  right: 20px;
-  z-index: 999;
-  font-size: 1.4rem;
+  color: var(--text-color);
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.theme-toggle:hover, .theme-selector:hover {
-  color: var(--accent);
+.theme-selector select:hover {
+  background: var(--hover-bg);
+  color: var(--hover-text);
+  border-color: var(--hover-border);
 }
 
 /* Footer */
@@ -290,7 +266,7 @@ footer {
 /* Responsive */
 @media screen and (max-width: 768px) {
   body { flex-direction: column; }
-  aside { width: 100%; height: auto; position: relative; padding: 1rem; border-bottom: 1px solid var(--accent + '33'); box-shadow: none; }
+  aside { width: 100%; height: auto; position: relative; padding: 1rem; border-bottom: 1px solid var(--accent); box-shadow: none; }
   main { padding: 1.5rem 1rem; }
   .site-title { font-size: 1.2rem; }
   .site-subtitle { font-size: 0.75rem; }
@@ -308,230 +284,76 @@ footer {
 }
 
 
-
     </style>
   </head>
   <body>
-    <!-- Sidebar -->
-    <div class="theme-toggle" title="Toggle Theme">
-  <i class="fas fa-circle-half-stroke"></i>
-</div>
-
-<!-- Theme Selector Dropdown -->
-<div class="theme-selector">
-  <select id="themeSelect" title="Select Theme">
-    <option value="0x0z0n-dark">0x0z0n Dark</option>
-    <option value="0x0z0n-light">0x0z0n Light</option>
-    <option value="minimal-dark">Minimalist Dark</option>
-    <option value="minimal-light">Minimalist Light</option>
-  </select>
-</div>
-
-
-    <aside>
-  <img src="assets/avatar.jpeg" alt="Profile" />
-  <div class="site-title">Kshitij Raut</div>
-  <div class="site-subtitle">Cyber Security Analyst</div>
-  <nav>
-    <a href="index.html">🏠 Home</a>
-    <a href="categories.html">📚 Categories</a>
-    <a href="tags.html">🏷️ Tags</a>
-    <a href="archives.html">🗃️ Archives</a>
-    <a href="about.html">ℹ️ About</a>
-  </nav>
-
-  <div class="social-icons">
-    <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn">
-      <i class="fab fa-linkedin"></i>
-    </a>
-    <a href="mailto:kshitijraut360@gmail.com" title="Gmail">
-      <i class="fas fa-envelope"></i>
-    </a>
-    <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube">
-      <i class="fab fa-youtube"></i>
-    </a>
-    <a href="https://github.com/0x0z0n" target="_blank" title="GitHub">
-  <i class="fab fa-github"></i>
-</a>
-
+  <!-- Theme Toggle Button -->
+  <div class="theme-toggle" title="Toggle Theme">
+    <i class="fas fa-circle-half-stroke"></i>
   </div>
 
-  <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #222;" />
+  <!-- Theme Selector Dropdown -->
+  <div class="theme-selector">
+    <select id="themeSelect" title="Select Theme">
+      <option value="0x0z0n-dark">0x0z0n Dark</option>
+      <option value="0x0z0n-light">0x0z0n Light</option>
+      <option value="minimal-dark">Minimalist Dark</option>
+      <option value="minimal-light">Minimalist Light</option>
+    </select>
+  </div>
 
-  <div class="profile-links">
-    <h3 style="font-size: 1rem; color: var(--accent); margin-bottom: 0.8rem; text-align: center;">🎯 Profile</h3>
+  <!-- Sidebar -->
+  <aside>
+    <img src="assets/avatar.jpeg" alt="Profile" />
+    <div class="site-title">Kshitij Raut</div>
+    <div class="site-subtitle">Cyber Security Analyst</div>
     <nav>
-      <a href="https://app.hackthebox.com/profile/1761906" target="_blank"><i class="fab fa-hackerrank"></i> HackTheBox</a>
-      <a href="https://tryhackme.com/p/0x0z0n" target="_blank"><i class="fas fa-terminal"></i> TryHackMe</a>
-      <a href="https://cyberdefenders.org/p/0x0z0n" target="_blank"><i class="fas fa-shield-alt"></i> CyberDefenders</a>
+      <a href="index.html">🏠 Home</a>
+      <a href="categories.html">📚 Categories</a>
+      <a href="tags.html">🏷️ Tags</a>
+      <a href="archives.html">🗃️ Archives</a>
+      <a href="about.html">ℹ️ About</a>
     </nav>
-  </div>
 
-  <div class="cheatsheet-link" style="margin-top: 2rem; text-align: center;">
-    <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" target="_blank" class="category-button" style="display:inline-block; font-size: 0.85rem;">🧠 Cheatsheet</a>
-  </div>
-</aside>
+    <div class="social-icons">
+      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+      <a href="mailto:kshitijraut360@gmail.com" title="Gmail"><i class="fas fa-envelope"></i></a>
+      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+      <a href="https://github.com/0x0z0n" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+    </div>
 
-    <!-- Main Content -->
-    <main>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search posts..." />
-      </div>
-      <section id="posts"></section>
-      <footer>
-        <p>&copy; 2025 0x0z0n</p>
-      </footer>
-    </main>
-    <!-- JavaScript -->
-    <script>
-      const searchInput = document.getElementById("searchInput");
-      const postsContainer = document.getElementById("posts");
-      let allPosts = [];
+    <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
 
-      function renderPosts(posts) {
-        postsContainer.innerHTML = "";
-        if (posts.length === 0) {
-          postsContainer.innerHTML = "No posts found.";
-          return;
-        }
-        posts.forEach(post => {
-          const article = document.createElement("article");
-          article.className = "post-card";
-          article.setAttribute("data-tags", post.tags.join(", "));
-          const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
-          // Prepare terminal view of attack_path if present
-          let attackPathText = "";
-          if (Array.isArray(post.attack_path) && post.attack_path.length > 0) {
-            attackPathText = post.attack_path.map(step => {
-              return `Step ${step.step} | User: ${step.user} | Technique: ${step.technique}\nResult: ${step.result}\nMitigation: ${step.mitigation}\n`;
-            }).join("\n");
-          }
-          article.innerHTML = `
-          
-      <h2>
-        <a href="${post.href}">${post.title}</a>
-      </h2>
-      <div>
-  <strong>Category:</strong><br/>
-  ${
-    categories
-      ? categories.split(', ').map(cat => {
-          const encoded = encodeURIComponent(cat.trim());
-          return `<a href="index.html?category=${encoded}" class="category-button">${cat.trim()}</a>`;
-        }).join('')
-      : `<span style="color:#888;">Uncategorized</span>`
-  }
-</div>
+    <div class="profile-links">
+      <h3 style="font-size:1rem; color:var(--accent); margin-bottom:0.8rem; text-align:center;">🎯 Profile</h3>
+      <nav>
+        <a href="https://app.hackthebox.com/profile/1761906" target="_blank"><i class="fab fa-hackerrank"></i> HackTheBox</a>
+        <a href="https://tryhackme.com/p/0x0z0n" target="_blank"><i class="fas fa-terminal"></i> TryHackMe</a>
+        <a href="https://cyberdefenders.org/p/0x0z0n" target="_blank"><i class="fas fa-shield-alt"></i> CyberDefenders</a>
+      </nav>
+    </div>
 
+    <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
+      <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" target="_blank" class="category-button" style="font-size:0.85rem;">🧠 Cheatsheet</a>
+    </div>
+  </aside>
 
-      <p>
-        <strong>Date:</strong> ${post.date}
-      </p>
-      <p>
-        <strong>Tags:</strong>
-      </p>
-      <div class="tag-container">
-            ${post.tags.map(tag =>
-              `
-        <a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-            ).join("")}
-          
-      </div>
-          ${attackPathText ? `
-      <pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
-        `;
-          postsContainer.appendChild(article);
-        });
-      }
+  <!-- Main Content -->
+  <main>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search posts..." />
+    </div>
+    <section id="posts"></section>
+    <footer>
+      <p>&copy; 2025 0x0z0n</p>
+    </footer>
+  </main>
 
-      function filterPosts() {
-        const query = searchInput.value.trim().toLowerCase();
-        const filtered = allPosts.filter(post => post.title.toLowerCase().includes(query) || (Array.isArray(post.category) ? post.category.some(cat => cat.toLowerCase().includes(query)) : (post.category || "").toLowerCase().includes(query)) || post.tags.some(tag => tag.toLowerCase().includes(query)) || (post.date && post.date.startsWith(query)));
-        renderPosts(filtered);
-      }
+  <!-- Shooting Star -->
+  <div id="shooting-star"></div>
 
-      function getParam(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name);
-      }
-      fetch("data/posts.json").then(res => res.json()).then(data => {
-        allPosts = data;
-        const tagParam = getParam("tag");
-        const catParam = getParam("category");
-        const dateParam = getParam("date");
-        let filtered = allPosts;
-        if (tagParam) {
-          searchInput.value = tagParam;
-          filtered = allPosts.filter(post => post.tags.some(tag => tag.toLowerCase() === tagParam.toLowerCase()));
-        } else if (catParam) {
-          searchInput.value = catParam;
-          filtered = allPosts.filter(post => Array.isArray(post.category) ? post.category.some(cat => cat.toLowerCase() === catParam.toLowerCase()) : (post.category || "").toLowerCase() === catParam.toLowerCase());
-        } else if (dateParam) {
-          searchInput.value = dateParam;
-          filtered = allPosts.filter(post => post.date && post.date.startsWith(dateParam));
-        }
-        renderPosts(filtered);
-      });
-      searchInput.addEventListener("input", filterPosts);
-    </script>
-    <script>
-const toggle = document.querySelector(".theme-toggle");
-const icon = toggle.querySelector("i");
-const star = document.getElementById("shooting-star");
+  <!-- JS Files -->
+  <script src="scripts.js"></script>
+</body>
 
-const currentTheme = localStorage.getItem("theme") || "dark";
-document.documentElement.setAttribute("data-theme", currentTheme);
-icon.className = currentTheme === "light" ? "fas fa-sun" : "fas fa-moon";
-
-toggle.addEventListener("click", () => {
-  const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
-
-  // Animate icon rotation + bounce
-  anime({
-    targets: icon,
-    rotate: '1turn',
-    scale: [0.6, 1.2, 1],
-    duration: 800,
-    easing: 'easeInOutBack',
-    complete: () => {
-      icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
-    }
-  });
-
-  // Shooting star effect (random path each time)
-  star.style.opacity = 1;
-  anime({
-    targets: star,
-    translateX: [0, 400 + Math.random() * 300],
-    translateY: [0, 200 + Math.random() * 200],
-    opacity: [1, 0],
-    scale: [1, 0.2],
-    duration: 900,
-    easing: 'easeOutExpo',
-    complete: () => {
-      star.style.transform = "";
-      star.style.opacity = 0;
-    }
-  });
-});
-</script>
-<script>
-const themeSelect = document.getElementById("themeSelect");
-const savedTheme = localStorage.getItem("themeStyle") || "0x0z0n-dark";
-document.documentElement.setAttribute("data-theme", savedTheme);
-themeSelect.value = savedTheme;
-
-themeSelect.addEventListener("change", () => {
-  const selected = themeSelect.value;
-  document.documentElement.setAttribute("data-theme", selected);
-  localStorage.setItem("themeStyle", selected);
-});
-</script>
-
-
-<div id="shooting-star"></div>
-
-  </body>
 </html>
