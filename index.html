@@ -10,8 +10,8 @@
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
    <link rel="icon" type="image/png" href="assets/tab.png" />
     <style>
-:root {
-  /* Default 0x0z0n-dark variables */
+      :root {
+  /* Default variables (0x0z0n-dark) */
   --bg-color: #0a0a0a;
   --card-bg: #141414;
   --text-color: #00ff95;
@@ -19,9 +19,6 @@
   --tag-bg: #0f0f0f;
   --tag-hover: #00ffcc;
   --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
-  --hover-bg: #222;         /* Dark hover background */
-  --hover-text: #80ffff;    /* Soft hover text color */
-  --hover-border: #00d0ff;  /* Hover border */
 }
 
 /* 0x0z0n-light */
@@ -33,9 +30,6 @@ html[data-theme="0x0z0n-light"] {
   --tag-bg: #e3eff9;
   --tag-hover: #007acc;
   --border-glow: 0 0 4px #007acc55;
-  --hover-bg: #e0e0e0;
-  --hover-text: #007acc;
-  --hover-border: #007acc;
 }
 
 /* Minimalist Dark */
@@ -47,9 +41,6 @@ html[data-theme="minimal-dark"] {
   --tag-bg: #202020;
   --tag-hover: #4db6ac;
   --border-glow: none;
-  --hover-bg: #2a2a2a;
-  --hover-text: #a0e0d0;
-  --hover-border: #4db6ac;
 }
 
 /* Minimalist Light */
@@ -61,9 +52,6 @@ html[data-theme="minimal-light"] {
   --tag-bg: #e3f2f1;
   --tag-hover: #00796b;
   --border-glow: none;
-  --hover-bg: #e0f0ef;
-  --hover-text: #00796b;
-  --hover-border: #00796b;
 }
 
 /* Body & general */
@@ -120,12 +108,17 @@ nav a {
 }
 
 nav a:hover {
-  background: var(--hover-bg);
-  color: var(--hover-text);
-  border-left: 3px solid var(--hover-border);
+  background: var(--tag-hover);
+  border-left: 3px solid var(--accent);
+  color: var(--text-color);
 }
 
 /* Social icons */
+.social-icons {
+  text-align: center;
+  margin-top: 2rem;
+}
+
 .social-icons a {
   margin: 0 0.5rem;
   color: #999;
@@ -134,7 +127,7 @@ nav a:hover {
 }
 
 .social-icons a:hover {
-  color: var(--hover-text);
+  color: var(--accent);
   transform: scale(1.15);
 }
 
@@ -160,9 +153,8 @@ main {
 }
 
 .post-card:hover {
-  transform: translateY(-5px);
-  background: var(--hover-bg);
-  box-shadow: 0 10px 20px rgba(0, 208, 255, 0.2);
+  transform: translateY(-6px);
+  box-shadow: 0 0 20px var(--accent + 'cc');
 }
 
 .post-card h2 a {
@@ -172,8 +164,7 @@ main {
 }
 
 .post-card h2 a:hover {
-  color: var(--hover-text);
-  text-shadow: 0 0 8px var(--hover-border), 0 0 15px var(--hover-border + 'bb');
+  text-shadow: 0 0 8px var(--accent), 0 0 15px var(--accent + 'bb');
 }
 
 .post-card a {
@@ -181,11 +172,50 @@ main {
   text-decoration: none;
 }
 
-/* Tags and category buttons */
-.tag-link,
+/* Search box */
+.search-box {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.search-box input {
+  padding: 0.7rem 1.2rem;
+  width: 280px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+/* Tags */
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag-link {
+  background: var(--tag-bg);
+  padding: 6px 12px;
+  color: var(--accent);
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  border: 1px solid var(--accent + '44');
+  transition: 0.2s ease-in-out;
+}
+
+.tag-link:hover {
+  background: var(--tag-hover);
+  color: var(--text-color);
+}
+
+/* Category buttons */
 .category-button {
   display: inline-block;
-  background-color: var(--tag-bg);
+  background-color: var(--card-bg);
   border: 1px solid var(--accent + '44');
   color: var(--accent);
   padding: 6px 12px;
@@ -196,11 +226,9 @@ main {
   transition: 0.2s ease-in-out;
 }
 
-.tag-link:hover,
 .category-button:hover {
-  background: var(--hover-bg);
-  color: var(--hover-text);
-  border-color: var(--hover-border + '55');
+  background-color: var(--tag-hover);
+  color: var(--text-color);
 }
 
 /* Terminal */
@@ -236,6 +264,21 @@ main {
   -ms-overflow-style: none;
 }
 
+/* Theme toggle + selector */
+.theme-toggle, .theme-selector {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 999;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle:hover, .theme-selector:hover {
+  color: var(--accent);
+}
+
 /* Footer */
 footer {
   text-align: center;
@@ -263,6 +306,7 @@ footer {
   .post-card h2 { font-size: 1.1rem; }
   footer { font-size: 0.7rem; }
 }
+
 
 
     </style>
