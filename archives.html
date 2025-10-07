@@ -480,79 +480,118 @@ html[data-theme="light"] .entry:hover {
       <h1>Archives</h1>
       <div class="timeline" id="archiveList"></div>
     </main>
-    <script>
-      fetch("data/posts.json").then(res => res.json()).then(posts => {
-        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        const grouped = {};
-        posts.forEach(post => {
-          const d = new Date(post.date);
-          const month = d.toLocaleDateString('en-GB', {
-            year: 'numeric',
-            month: 'short'
-          });
-          const day = d.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short'
-          });
-          if (!grouped[month]) grouped[month] = [];
-          grouped[month].push({
-            ...post,
-            formattedDate: day
-          });
-        });
-        const container = document.getElementById("archiveList");
-        container.innerHTML = "";
-        Object.entries(grouped).forEach(([month, entries]) => {
-          const monthDiv = document.createElement("div");
-          monthDiv.className = "month";
-          monthDiv.textContent = month;
-          container.appendChild(monthDiv);
-          entries.forEach(entry => {
-            const item = document.createElement("div");
-            item.className = "entry";
-            item.innerHTML = `
-        <span>${entry.formattedDate}</span>
-        <a href="${entry.href}">${entry.title}</a>`;
-            container.appendChild(item);
-          });
-        });
-      }).catch(err => {
-        document.getElementById("archiveList").innerHTML = "  Failed to load archive data";
-        console.error("Error loading posts.json:", err);
-      });
-    </script>
-    <script>
+<script>
+  // ===== THEME TOGGLE + PERSISTENCE =====
   const toggle = document.querySelector(".theme-toggle");
-const icon = toggle.querySelector("i");
-const star = document.getElementById("shooting-star");
+  const icon = toggle.querySelector("i");
+  const star = document.getElementById("shooting-star");
 
-const currentTheme = localStorage.getItem("theme") || "dark";
-document.documentElement.setAttribute("data-theme", currentTheme);
-icon.className = currentTheme === "light" ? "fas fa-sun" : "fas fa-moon";
+  // Load saved theme or default
+  const savedTheme = localStorage.getItem("themeStyle") || "0x0z0n-dark";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  icon.className = savedTheme.includes("light") ? "fas fa-sun" : "fas fa-moon";
 
-toggle.addEventListener("click", () => {
-  const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
-  localStorage.setItem("theme", newTheme);
-  icon.className = newTheme === "light" ? "fas fa-sun" : "fas fa-moon";
-
-  if (newTheme === "light") {
-    // Trigger shooting star animation
-    star.style.top = `${Math.random() * 40 + 10}px`;
-    star.style.left = `${Math.random() * 40 + 10}px`;
-    star.style.opacity = 1;
-    star.style.animation = "shoot 0.8s ease-out";
-
-    setTimeout(() => {
-      star.style.animation = "";
-      star.style.opacity = 0;
-    }, 800);
+  // Function to set theme
+  function setTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("themeStyle", theme);
+    icon.className = theme.includes("light") ? "fas fa-sun" : "fas fa-moon";
   }
-});
 
+  // Toggle click
+  toggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    const newTheme = current.includes("dark") ? "0x0z0n-light" : "0x0z0n-dark";
+    setTheme(newTheme);
 
+    if (newTheme.includes("light")) {
+      // Shooting star animation
+      star.style.top = `${Math.random() * 40 + 10}px`;
+      star.style.left = `${Math.random() * 40 + 10}px`;
+      star.style.opacity = 1;
+      star.style.animation = "shoot 0.8s ease-out";
 
+      setTimeout(() => {
+        star.style.animation = "";
+        star.style.opacity = 0;
+      }, 800);
+    }
+  });
+
+  // ===== HIDE .HTML WITH RANDOM SLUGS =====
+  (function(){
+    const pageMap = {
+      "index.html": "a1b2c3",
+      "about.html": "x9y8z7",
+      "categories.html": "c3d4e5",
+      "tags.html": "t1u2v3",
+      "archives.html": "r7s8t9",
+      "posts/htb_Imagery.html": "p0q1r2"
+      // Add more as needed
+    };
+
+    const reverseMap = Object.fromEntries(Object.entries(pageMap).map(([k,v])=>[v,k]));
+
+    const path = window.location.pathname.split("/").pop();
+    const slug = pageMap[path] || path;
+    history.replaceState(null, "", "/" + slug);
+
+    document.querySelectorAll("a").forEach(a=>{
+      const href = a.getAttribute("href");
+      if(href && pageMap[href]){
+        a.addEventListener("click", e=>{
+          e.preventDefault();
+          const targetSlug = pageMap[href];
+          history.pushState(null, "", "/" + targetSlug);
+          window.location.href = href;
+        });
+      }
+    });
+
+    window.addEventListener("popstate", ()=>{
+      const slugNow = window.location.pathname.split("/").pop();
+      if(reverseMap[slugNow]){
+        window.location.href = reverseMap[slugNow];
+      }
+    });
+  })();
+
+  // ===== ARCHIVE POSTS =====
+  fetch("data/posts.json").then(res => res.json()).then(posts => {
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const grouped = {};
+    posts.forEach(post => {
+      const d = new Date(post.date);
+      const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
+      const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      if (!grouped[month]) grouped[month] = [];
+      grouped[month].push({ ...post, formattedDate: day });
+    });
+
+    const container = document.getElementById("archiveList");
+    container.innerHTML = "";
+
+    Object.entries(grouped).forEach(([month, entries]) => {
+      const monthDiv = document.createElement("div");
+      monthDiv.className = "month";
+      monthDiv.textContent = month;
+      container.appendChild(monthDiv);
+
+      entries.forEach(entry => {
+        const item = document.createElement("div");
+        item.className = "entry";
+        item.innerHTML = `<span>${entry.formattedDate}</span>
+                          <a href="${entry.href}">${entry.title}</a>`;
+        container.appendChild(item);
+      });
+    });
+  }).catch(err => {
+    document.getElementById("archiveList").innerHTML = "Failed to load archive data";
+    console.error("Error loading posts.json:", err);
+  });
 </script>
+
 <div id="shooting-star"></div>
 
   </body>
