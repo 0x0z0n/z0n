@@ -3,7 +3,6 @@ const toggle = document.querySelector(".theme-toggle");
 const icon = toggle.querySelector("i");
 const themeSelect = document.getElementById("themeSelect");
 
-// ===== THEME PERSISTENCE =====
 // Get saved theme or default
 let savedTheme = localStorage.getItem("themeStyle") || "0x0z0n-dark";
 document.documentElement.setAttribute("data-theme", savedTheme);
@@ -36,51 +35,6 @@ toggle.addEventListener("click", () => {
 themeSelect.addEventListener("change", () => {
   setTheme(themeSelect.value);
 });
-
-// ===== HIDE .HTML WITH RANDOM SLUGS =====
-(function(){
-  // Map your real files to slugs
-  const pageMap = {
-    "index.html": "a1b2c3",
-    "about.html": "x9y8z7",
-    "categories.html": "c3d4e5",
-    "tags.html": "t1u2v3",
-    "archives.html": "r7s8t9",
-    "posts/htb_Imagery.html": "p0q1r2"
-    // Add all your pages here
-  };
-
-  const reverseMap = Object.fromEntries(Object.entries(pageMap).map(([k,v])=>[v,k]));
-
-  // Get current file
-  const path = window.location.pathname.split("/").pop();
-  const slug = pageMap[path] || path;
-
-  // Replace URL without reload
-  history.replaceState(null, "", "/" + slug);
-
-  // Intercept links to point to slug instead of .html
-  document.querySelectorAll("a").forEach(a=>{
-    const href = a.getAttribute("href");
-    if(href && pageMap[href]){
-      a.addEventListener("click", e=>{
-        e.preventDefault();
-        const targetSlug = pageMap[href];
-        history.pushState(null, "", "/" + targetSlug);
-        // Load the page (simulate navigation)
-        window.location.href = href;
-      });
-    }
-  });
-
-  // Handle back/forward navigation (optional)
-  window.addEventListener("popstate", ()=>{
-    const slugNow = window.location.pathname.split("/").pop();
-    if(reverseMap[slugNow]){
-      window.location.href = reverseMap[slugNow];
-    }
-  });
-})();
 
 // ===== Search Posts =====
 const searchInput = document.getElementById("searchInput");
