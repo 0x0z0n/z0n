@@ -17,7 +17,7 @@ Hints: True
 | 3 | `winrm_svc` | **Shadow Credentials** | A Bloodhound analysis showed that `p.agila` had `GenericWrite` permissions on `SERVICE ACCOUNTS` group members like `winrm_svc`. A shadow credential attack was performed on `winrm_svc`, allowing the attacker to get its NT hash and gain a WinRM shell. |
 | 4 | `administrator` | **ESC16 Vulnerability** | A vulnerable Certificate Authority was identified. The `userPrincipalName` of the `ca_svc` account was changed to `administrator`, and a certificate was requested for `ca_svc` with the new UPN. This certificate was then used to authenticate as the `administrator` and retrieve the NT hash, which provided root access to the domain controller. |
 
-
+![Map](Pictures/htb_Fluffy_Mind_Map.png)
 
 #### Initial Access & NTLM Hash Leak
 

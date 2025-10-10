@@ -23,7 +23,7 @@ Hints: True
 | 9 | `dc01$` | certipy-ad & bloodyAD | Used the forged `dc01$` identity and `certipy-ad` to enable Resource-Based Constrained Delegation (RBCD). This granted the `Mirage-Service$` account control over the DC computer object, a critical step for further privilege escalation. |
 | 10 | `Administrator` | RBCD, DCSync & Pass-the-Hash | Abused the newly configured RBCD to perform a DCSync attack, which allowed me to dump the NTLM hash for the domain `Administrator` account. I then used the `evil-winrm` tool with the `Administrator` hash to gain a root shell on the domain controller. |
 
-
+![Map](Pictures/htb_mirage_Mind_Map.png)
 
 ### Initial Enumeration
 

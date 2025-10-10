@@ -6,8 +6,6 @@ Operating System: Linux
 Hints: True
 ```
 
-
-
 #### 🏁 Summary of Attack Chain
 
 | Step | User / Access                  | Technique Used | Result |
@@ -23,7 +21,7 @@ Hints: True
 | 9 | eric -> root | Malicious Binary Replacement | Created a malicious `monitor` binary, signed it with the correct key to bypass the integrity check, and replaced the original binary. |
 | 10 | root | Root Shell | The cron job executed the malicious `monitor` binary as `root`, granting a reverse shell and the `root.txt` flag. |
 
-
+![Map](Pictures/htb_Era_Mind_Map.png)
 
 ### Initial Enumeration
 

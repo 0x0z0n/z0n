@@ -25,7 +25,7 @@ Hints: True
 | 10 | oliver -> root | Custom Executable & PATH Manipulation | Exploited `ndsudo` to run a malicious binary (`nvme`) with root privileges |
 | 11 | root | Root Shell | Gained a `root` shell and retrieved `root.txt` |
 ```
-
+![Map](Pictures/htb_Editor_Mind_Map.png)
 
 #### Initial Enumeration
 First, I performed an nmap scan and found several open ports. The most interesting finding was the domain editor.htb, which I added to my /etc/hosts file.

@@ -21,7 +21,7 @@ Hints: True
 | 6 | `Administrator` | **Mimikatz**, **impacket-wmiexec** | Used `Mimikatz` to dump the NTLM hash of the `Administrator` account from the domain controller. |
 | 7 | `Administrator` | **impacket-wmiexec** | Logged in as `Administrator` using the stolen NTLM hash to get full control of the machine and retrieve the root flag. |
 
-
+![Web](Pictures/htb_thefrizz_Mind_Map.png)
 
 #### Initial Access: Gibbon-LMS Exploitation
 
