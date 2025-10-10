@@ -6,11 +6,7 @@ Operating System: Linux
 Hints: True
 ```
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
 
-<!--
 
 #### 🏁 Summary of Attack Chain
 
@@ -27,7 +23,13 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 | 9    | (Post-exploitation) | Sudo configuration review                  | `mark` has `NOPASSWD` for `/usr/local/bin/charcol` — a clear privilege-escalation vector; inspect the binary for interactive/scheduler features. |
 | 10   | (Outcome)           | —                                          | User flag captured; potential privilege escalation path identified for follow-up investigation and mitigation.                                   |
 
+![Map](Pictures/htb_imagery_Mind_Map.png)
 
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
+
+<!--
 
 ### Recon – Nmap
 

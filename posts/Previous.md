@@ -20,6 +20,7 @@ Hints: True
 | 7 | `root` | **System Access** | Our malicious script created a SUID shell at `/tmp/rootsh`, allowing us to execute it as **root** and read the `root.txt` flag. |
 
 
+![Map](Pictures/htb_previous_Mind_Map.png)
 
 ### Initial Reconnaissance 
 

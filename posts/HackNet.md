@@ -26,6 +26,7 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 | 8    | `attacker (with imported key)`  | **GPG private key import & bulk decrypt**              | Imported the `armored_key.asc` and used the passphrase hint to decrypt backup `.gpg` files. Extracted SQL/backup contents and plaintext credentials (database passwords, root credentials). |
 | 9    | `root`                          | **Credential reuse / SSH login → root**                | Located credentials in decrypted backups (or found SSH root key) and authenticated as `root`. Retrieved `root.txt`. |
 
+![Map](Pictures/htb_hacknet_Mind_Map.png)
 
 ## Nmap
 

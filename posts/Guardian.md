@@ -25,7 +25,7 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 | 7 | `mark` | `sudo` Permission Abuse, File Modification | As `jamil`, the `sudo -l` command showed that we could run `/opt/scripts/utilities/utilities.py` as the user `mark` without a password. The script's `system-status` function was callable by any user. By exploiting the group-write permissions on the `status.py` file, we added a reverse shell command to the `system_status()` function. Executing the script then granted a shell as `mark`. |
 | 8 | `root` | `sudo` Permission Abuse, Binary Exploitation (LPE) | Checking `sudo -l` as `mark` revealed that the user could run `/usr/local/bin/safeapache2ctl` as root. A decompiled analysis of this binary showed it was a secure wrapper for `apache2ctl`, but it contained a flawed logic for validating the `-f` flag. The binary allowed the `LoadModule` directive if the specified path was within `/home/mark/confs/`, even if it pointed to a malicious file. We created a small C program to set the SUID bit on `/bin/bash`, compiled it into a shared object (`.so`) file, and wrote a simple Apache config file to load it. Running the binary with `sudo` executed our payload, granting a root shell by running `bash -p`. |
 
-
+![Map](Pictures/htb_guardian_Mind_Map.png)
 
 ### Initial Enumeration and Subdomain Discovery
 

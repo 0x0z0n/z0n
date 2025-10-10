@@ -19,6 +19,8 @@ Hints: True
 | 5 | `root` | `sudo -l`, CVE-2025-27591 | Identified a `sudo` vulnerability in the `/usr/bin/below` binary via the `sudo -l` command. Exploited a symlink attack by creating a symlink from `/etc/passwd` to a log file (`error_root.log`) that the binary would overwrite with root privileges. |
 | 6 | `root2` | `su` Command | The symlink attack successfully added a new user (`root2`) with root privileges to `/etc/passwd`. Switched to the `root2` user using the `su` command to gain a privileged shell and retrieve the `root.txt` flag. |
 
+![Map](Pictures/htb_Outbound_Mind_Map.png)
+
 ### Initial Enumeration
 
 

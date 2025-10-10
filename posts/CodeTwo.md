@@ -18,7 +18,7 @@ Hints: True
 | 6 | `marco` | **Sudo Enumeration** | Found `marco` could run `/usr/local/bin/npbackup-cli` as `root` without a password. |
 | 7 | `root` | **NPBackup Misconfiguration** | Exploited `npbackup-cli` by using a configuration file to force a backup of the `/root` directory, which revealed the `root.txt` flag. |
 
-
+![Web](Pictures/htb_codetwo_Mind_Map.png)
 
 This walkthrough details the steps to compromise the CodeTwo.htb machine, starting with an unauthenticated remote code execution vulnerability and ending with a root shell on the system.
 

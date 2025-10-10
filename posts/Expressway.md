@@ -31,6 +31,8 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 
 > TCP looked quiet (only SSH), UDP revealed IKE/IPsec. IKE Aggressive Mode + PSK → offline crackable hash → PSK reused as SSH credential. From user shell, sudo was vulnerable (CVE-2025-32463) and a chroot-based PoC escalated to root.
 
+![Map](Pictures/htb_expressway_Mind_Map.png)
+
 ---
 
 # Recon

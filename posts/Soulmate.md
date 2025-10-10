@@ -25,6 +25,8 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 | 6 | `root` | Erlang Shell Exploitation | As the `ben` user, a port scan on the loopback interface (`127.0.0.1`) revealed an Erlang-based SSH service listening on port **2222**. A connection to this service via `netcat` (`nc`) granted access to an Erlang interpreter shell. By checking the loaded modules (`m().`), the `os` module was found. The `os:cmd("whoami").` command was used to execute a shell command, which returned **`root`**, confirming that the service was running with root privileges and allowing for full system control. |
 
 
+![Map](Pictures/htb_soulmate_Mind_Map.png)
+
 ### Initial Enumeration 🕵️‍♂️
 
 The reconnaissance phase began with an **Nmap** scan to identify the network services running on the target machine `soulmate.htb`.
