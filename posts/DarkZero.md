@@ -31,6 +31,13 @@ Using the credentials **john.w:RFulUtONCOL!**, I performed service enumeration a
 
 ![DarkZero](Pictures/htb_DarkZero_Mind_Map.png)
 
+
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
+
+<!--
+
 ## Recon & host discovery
 
 I started with a full TCP nmap scan of the domain controller:
@@ -283,3 +290,4 @@ When `xp_dirtree` is executed, the SQL Server process on DC01 attempts to access
 
 
 
+-->
