@@ -1,6 +1,114 @@
 [
   
 {
+  "title": "HackTheBox: DarkZero",
+  "href": "posts/htb_DarkZero.html",
+  "date": "2025-10-11",
+  "category": [
+    "HackTheBox",
+    "Windows",
+    "Active Directory",
+    "Database"
+  ],
+  "tags": [
+    "T1046 - Network Service Discovery",
+    "T1190 - Exploit Public-Facing Application",
+    "T1539 - Steal Web Session Cookie",
+    "T1589.001 - Gather Victim Identity Information: Credentials",
+    "T1110.002 - Brute Force: Password Cracking",
+    "T1059 - Command and Scripting Interpreter",
+    "T1202 - Indirect Command Execution",
+    "T1505.003 - Web Shell",
+    "T1005 - Data from Local System",
+    "T1078 - Valid Accounts",
+    "T1548.003 - Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+    "T1083 - File and Directory Discovery",
+    "T1550.003 - Use Alternate Authentication Material",
+    "T1134.001 - Access Token Manipulation: Local/Impersonation",
+    "T1210 - Exploitation of MSSQL Linked Servers",
+    "T1086 - PowerShell"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Nmap / Port Enumeration",
+      "result": "Performed a full TCP and AD service scan; discovered MSSQL on 1433, Kerberos/LDAP services, and identified that DC01 is multihomed (10.10.11.89 / 172.16.20.1).",
+      "mitigation": "Restrict unnecessary services; limit external exposure; apply host-based firewalls and network segmentation."
+    },
+    {
+      "step": 2,
+      "user": "john.w",
+      "technique": "SMB / LDAP Authentication & Host Mapping",
+      "result": "Used valid credentials to enumerate SMB shares and generate hosts mapping. Only default shares were visible, but access confirmed.",
+      "mitigation": "Enforce least privilege for service accounts; monitor authentication attempts and SMB access."
+    },
+    {
+      "step": 3,
+      "user": "john.w",
+      "technique": "MSSQL Authentication & Linked Server Enumeration",
+      "result": "Connected to MSSQL on DC01; enumerated linked servers and found `DC02.darkzero.ext` with higher privilege mapping (dc01_sql_svc).",
+      "mitigation": "Restrict linked server trust and mappings; review service account privileges."
+    },
+    {
+      "step": 4,
+      "user": "john.w → dc01_sql_svc",
+      "technique": "Enable xp_cmdshell on Linked Server",
+      "result": "Switched context to linked server and enabled `xp_cmdshell`, allowing system command execution on DC02 under higher privileges.",
+      "mitigation": "Disable `xp_cmdshell` unless required; audit SQL server linked servers and service account rights."
+    },
+    {
+      "step": 5,
+      "user": "darkzero-ext - svc_sql",
+      "technique": "Remote Code Execution (Metasploit web_delivery)",
+      "result": "Executed Base64 PowerShell payload via `xp_cmdshell`, establishing meterpreter session on internal interface 172.16.20.2.",
+      "mitigation": "Restrict internal network access; monitor SQL command execution; apply endpoint protection."
+    },
+    {
+      "step": 6,
+      "user": "svc_sql",
+      "technique": "Pivot & Internal Recon",
+      "result": "Confirmed internal IP and enumerated local services to identify potential LPE vectors.",
+      "mitigation": "Harden internal services; monitor lateral movement and internal network flows."
+    },
+    {
+      "step": 7,
+      "user": "svc_sql → SYSTEM",
+      "technique": "Local Privilege Escalation (CVE-2024-30088)",
+      "result": "Exploited CVE-2024-30088 to escalate to `NT AUTHORITY\\SYSTEM` on DC02.",
+      "mitigation": "Patch local privilege escalation vulnerabilities; use AppLocker / Credential Guard where possible."
+    },
+    {
+      "step": 8,
+      "user": "SYSTEM on DC02",
+      "technique": "Rubeus Kerberos Ticket Capture",
+      "result": "Uploaded and ran Rubeus in monitor mode to capture TGT/TGS tickets in base64 `.kirbi` format when DC01 triggered SMB/kerberos requests.",
+      "mitigation": "Monitor ticket requests; restrict privileged account Kerberos usage; detect Rubeus-like activity."
+    },
+    {
+      "step": 9,
+      "user": "Attacker",
+      "technique": "Trigger Kerberos/NTLM via xp_dirtree",
+      "result": "Executed `xp_dirtree` from DC01 targeting DC02, causing ticket issuance/NTLM fallback captured by Rubeus on DC02.",
+      "mitigation": "Restrict SMB access between servers; monitor unusual SQL-triggered SMB connections; enforce Kerberos-only authentication."
+    },
+    {
+      "step": 10,
+      "user": "Attacker",
+      "technique": "Convert Captured Ticket to ccache",
+      "result": "Decoded base64 `.kirbi` → ccache and validated using `klist` to prepare for ticket-based attacks.",
+      "mitigation": "Secure ticket files; enforce Kerberos security policies; monitor for unusual ticket use or export."
+    },
+    {
+      "step": 11,
+      "user": "Administrator",
+      "technique": "Secrets Extraction & Privileged Access",
+      "result": "Used `impacket-secretsdump -k` and `evil-winrm` (or psexec with NTLM hash) to gain Administrator access and read root flag.",
+      "mitigation": "Apply least privilege, rotate admin credentials regularly; monitor administrative sessions; harden AD and endpoint security."
+    }
+  ]
+},
+{
   "title": "HackTheBox: Imagery",
   "href": "posts/htb_Imagery.html",
   "date": "2025-09-29",
