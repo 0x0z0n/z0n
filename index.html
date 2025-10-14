@@ -529,25 +529,35 @@ main {
   </main>
 
   <!-- Right Panel -->
-  <aside class="sidebar-right">
-    <h3 style="color: var(--accent); margin-bottom:1rem;">Popular Tags</h3>
-    <div class="tag-list">
-      <a href="#" class="tag-link">Web</a>
-      <a href="#" class="tag-link">Linux</a>
-      <a href="#" class="tag-link">Mobile</a>
-      <a href="#" class="tag-link">Crypto</a>
-      <a href="#" class="tag-link">Docker</a>
-      <a href="#" class="tag-link">Exploit</a>
-    </div>
+<aside class="sidebar-right">
 
-    <h3 style="color: var(--accent); margin:1.5rem 0 1rem;">Quick Links</h3>
+  <!-- 1️⃣ Categories Section -->
+  <div class="right-section categories-section">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Categories</h3>
+    <div id="categoryList"></div>
+  </div>
+
+  <!-- 2️⃣ Quick Links Section -->
+  <div class="right-section quicklinks-section" style="margin-top:2rem;">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Quick Links</h3>
     <div class="quick-links">
       <a href="categories.html" class="category-button">Categories</a>
       <a href="tags.html" class="category-button">Tags</a>
       <a href="archives.html" class="category-button">Archives</a>
       <a href="posts/Cheatsheet.html" class="category-button">Cheatsheet</a>
     </div>
-  </aside>
+  </div>
+
+  <!-- 3️⃣ Tags Section -->
+  <div class="right-section tags-section" style="margin-top:2rem;">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Search / Tags</h3>
+    <input type="text" id="tagSearch" placeholder="Search tags..." 
+           style="width: 100%; padding:0.5rem; margin-bottom:1rem; border-radius:6px; border:1px solid var(--accent); background:var(--card-bg); color:var(--text-color);"/>
+    <div id="tagList"></div>
+  </div>
+
+</aside>
+
 </div>
 
 
@@ -567,5 +577,78 @@ main {
       icon.classList.toggle("fa-chevron-right");
     });
   </script>
+  <script>
+fetch("data/posts.json")
+  .then(res => res.json())
+  .then(posts => {
+    const categories = {};
+    posts.forEach(post => {
+      const catField = post.category || "Uncategorized";
+      const catList = Array.isArray(catField) ? catField : [catField];
+      catList.forEach(cat => {
+        categories[cat] = (categories[cat] || 0) + 1;
+      });
+    });
+
+    const container = document.getElementById("categoryList");
+    let entries = Object.entries(categories);
+
+    const pinned = entries.filter(([cat]) => cat === "CheatSheet");
+    const others = entries.filter(([cat]) => cat !== "CheatSheet");
+    others.sort((a, b) => a[0].localeCompare(b[0]));
+    entries = [...pinned, ...others];
+
+    entries.forEach(([cat, count]) => {
+      const div = document.createElement("div");
+      div.className = "category-card";
+      const href = cat === "CheatSheet" ? "https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" 
+                                       : `index.html?category=${encodeURIComponent(cat)}`;
+      div.innerHTML = `<a href="${href}">${cat}</a> <small>${count} post${count>1?'s':''}</small>`;
+      container.appendChild(div);
+    });
+  })
+  .catch(err => {
+    console.error("Error loading categories:", err);
+    document.getElementById("categoryList").innerHTML = "Failed to load categories.";
+  });
+</script>
+
+<script>
+fetch("data/posts.json")
+  .then(res => res.json())
+  .then(posts => {
+    const tags = {};
+    posts.forEach(post => {
+      if(post.tags) {
+        post.tags.forEach(tag => {
+          tags[tag] = (tags[tag] || 0) + 1;
+        });
+      }
+    });
+
+    const container = document.getElementById("tagList");
+    Object.keys(tags).sort().forEach(tag => {
+      const a = document.createElement("a");
+      a.href = `index.html?tag=${encodeURIComponent(tag)}`;
+      a.className = "tag-link";
+      a.textContent = tag;
+      container.appendChild(a);
+    });
+
+    // Tag Search
+    const searchInput = document.getElementById("tagSearch");
+    searchInput.addEventListener("input", e => {
+      const val = e.target.value.toLowerCase();
+      Array.from(container.children).forEach(a => {
+        a.style.display = a.textContent.toLowerCase().includes(val) ? "inline-block" : "none";
+      });
+    });
+  })
+  .catch(err => {
+    console.error("Error loading tags:", err);
+    document.getElementById("tagList").innerHTML = "Failed to load tags.";
+  });
+</script>
+
 </body>
 </html>
