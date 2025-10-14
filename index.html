@@ -615,45 +615,51 @@ fetch("data/posts.json")
     });
   });
 </script>
+<!-- 1️⃣ Categories Section -->
+<div class="right-section categories-section">
+  <h3 style="color: var(--accent); margin-bottom:1rem;">Categories</h3>
+  <div id="categoryList"></div>
+</div>
+
 <script>
 fetch("data/posts.json")
   .then(res => res.json())
   .then(posts => {
-    const tagContainer = document.getElementById("tagList");
-    const tagInput = document.getElementById("tagSearch");
-
-    // Collect unique tags
-    const tags = {};
+    const categories = {};
     posts.forEach(post => {
-      if(post.tags) {
-        post.tags.forEach(tag => {
-          tags[tag] = (tags[tag] || 0) + 1;
-        });
-      }
-    });
-
-    const renderTags = tagArr => {
-      tagContainer.innerHTML = "";
-      tagArr.forEach(tag => {
-        const a = document.createElement("a");
-        a.href = `index.html?tag=${encodeURIComponent(tag)}`;
-        a.className = "tag-link";
-        a.textContent = tag;
-        tagContainer.appendChild(a);
+      const catField = post.category || "Uncategorized";
+      const catList = Array.isArray(catField) ? catField : [catField];
+      catList.forEach(cat => {
+        categories[cat] = (categories[cat] || 0) + 1;
       });
-    };
-
-    const tagList = Object.keys(tags).sort();
-    renderTags(tagList);
-
-    // Tag Search Input
-    tagInput.addEventListener("input", e => {
-      const val = e.target.value.toLowerCase();
-      const filtered = tagList.filter(tag => tag.toLowerCase().includes(val));
-      renderTags(filtered);
     });
+
+    const container = document.getElementById("categoryList");
+    let entries = Object.entries(categories);
+
+    // Pin Cheatsheet first
+    const pinned = entries.filter(([cat]) => cat === "CheatSheet");
+    const others = entries.filter(([cat]) => cat !== "CheatSheet");
+    others.sort((a,b) => a[0].localeCompare(b[0]));
+    entries = [...pinned, ...others];
+
+    // Render categories as buttons
+    entries.forEach(([cat, count]) => {
+      const a = document.createElement("a");
+      a.href = cat === "CheatSheet" 
+                ? "https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" 
+                : `index.html?category=${encodeURIComponent(cat)}`;
+      a.className = "category-button";
+      a.textContent = `${cat} (${count})`;
+      container.appendChild(a);
+    });
+  })
+  .catch(err => {
+    console.error("Error loading categories:", err);
+    document.getElementById("categoryList").innerHTML = "Failed to load categories.";
   });
 </script>
+
 
 
 </body>
