@@ -623,7 +623,6 @@ fetch("data/posts.json")
             </div>
             ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
             ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
-            ${stepText ? `<div class="field"><span class="label">Description:</span>${escapeHTML(stepText)}</div>` : ""}
           </div>
         `;
       }).join("");
