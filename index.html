@@ -231,23 +231,82 @@ main {
   border-color: var(--hover-border);
 }
 
-/* Terminal / Attack Path */
+/* Terminal / Attack Path - UPDATED (theme-aware, step block ready) */
 .attack-path-terminal {
-  max-height: 200px;
+  max-height: 300px;           /* taller container for multiple steps */
   overflow-y: auto;
   background-color: var(--card-bg);
-  color: var(--terminal-color);
-  padding: 8px;
-  font-family: monospace;
-  font-size: 12px;
+  padding: 10px;
   border-radius: 6px;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.12);
+  color: var(--text-color);
+  font-family: monospace;
+  font-size: 13px;
 }
 
-/* Hide scrollbar */
-.attack-path-terminal::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+/* Hide scrollbar visually but keep scrolling */
+.attack-path-terminal::-webkit-scrollbar { width: 0; height: 0; }
+.attack-path-terminal { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* ===== Attack Step Blocks ===== */
+.attack-step {
+  border-left: 4px solid var(--terminal-color);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+  border-radius: 6px;
+  color: var(--text-color);
+}
+
+/* Top row with Step | User | Technique */
+.attack-step .top {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+/* Small pill-style labels */
+.attack-step .pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  background: rgba(0,0,0,0.06);
+  color: var(--hover-text);
+}
+
+/* Meta values (numbers, usernames, techniques) */
+.attack-step .meta-value {
+  font-weight: 600;
+  color: var(--terminal-color);
+  margin-right: 6px;
+}
+
+/* Multi-line fields: Result, Mitigation */
+.attack-step .field {
+  margin: 6px 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  white-space: pre-wrap; /* preserve newlines */
+}
+
+/* label in field like "Result:" or "Mitigation:" */
+.attack-step .field .label {
+  display: block;
+  font-weight: 700;
+  color: var(--hover-text);
+  margin-bottom: 4px;
+}
+
+/* subtle hover */
+.attack-step:hover {
+  transform: translateY(-2px);
+  transition: transform 0.12s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
 /* Footer */
@@ -424,10 +483,7 @@ main {
     padding: 1rem 0;
   }
 }
-
 </style>
-
-
 
  </head>
 <body>
@@ -563,29 +619,37 @@ fetch("data/posts.json")
     // normalize tags array
     const getTags = post => Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []);
 
-    // build the attack-path HTML only if content exists
-    const buildAttackPathHTML = attack_path => {
-      if (!attack_path) return "";
-      // if array, map items; if string, just use string
-      if (Array.isArray(attack_path)) {
-        const lines = attack_path.map((step, i) => {
-          if (step === null || step === undefined) return `${i + 1}.`;
-          if (typeof step === "object") {
-            // prefer common fields
-            const text = step.description || step.result || step.step || JSON.stringify(step);
-            return `${i + 1}. ${text}`;
-          }
-          return `${i + 1}. ${String(step)}`;
-        });
-        const content = lines.join("\n").trim();
-        if (!content) return "";
-        return `<div class="attack-path-terminal"><pre style="margin:0; white-space:pre-wrap;">${escapeHTML(content)}</pre></div>`;
-      } else {
-        const content = String(attack_path).trim();
-        if (!content) return "";
-        return `<div class="attack-path-terminal"><pre style="margin:0; white-space:pre-wrap;">${escapeHTML(content)}</pre></div>`;
-      }
-    };
+const buildAttackPathHTML = attack_path => {
+  if (!attack_path) return "";
+  if (!Array.isArray(attack_path)) attack_path = [attack_path];
+
+  const blocks = attack_path.map((step, i) => {
+    if (!step) return "";
+
+    const stepNum = i + 1;
+    const stepText = step.step || "";
+    const user = step.user || "";
+    const technique = step.technique || "";
+    const result = step.result || "";
+    const mitigation = step.mitigation || "";
+
+    return `
+      <div class="attack-step">
+        <div class="top">
+          <span class="pill"><span class="meta-value">Step ${stepNum}</span></span>
+          ${user ? `<span class="pill">User: <span class="meta-value">${escapeHTML(user)}</span></span>` : ""}
+          ${technique ? `<span class="pill">Technique: <span class="meta-value">${escapeHTML(technique)}</span></span>` : ""}
+        </div>
+        ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
+        ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
+        ${stepText ? `<div class="field"><span class="label">Description:</span>${escapeHTML(stepText)}</div>` : ""}
+      </div>
+    `;
+  });
+
+  return blocks.length ? `<div class="attack-path-terminal">${blocks.join("")}</div>` : "";
+};
+
 
     // Render posts (keeps postsContainer grid-friendly)
     const renderPosts = filteredPosts => {
