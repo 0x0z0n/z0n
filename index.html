@@ -641,9 +641,18 @@ fetch("data/posts.json")
     };
 
     const renderPosts = (filteredPosts, scrollToTop = false) => {
+      // Save main scroll
+      const containerScroll = postsContainer.scrollTop;
+
+      // Save attack-path terminal scrolls
+      const terminalScrolls = {};
+      document.querySelectorAll(".attack-path-terminal").forEach((term, idx) => {
+        terminalScrolls[idx] = term.scrollTop;
+      });
+
       postsContainer.innerHTML = "";
 
-      filteredPosts.forEach(post => {
+      filteredPosts.forEach((post, i) => {
         const div = document.createElement("div");
         div.className = "post-card";
 
@@ -668,10 +677,18 @@ fetch("data/posts.json")
         `;
 
         postsContainer.appendChild(div);
+
+        // Restore terminal scroll
+        const term = div.querySelector(".attack-path-terminal");
+        if (term && terminalScrolls[i] !== undefined) {
+          term.scrollTop = terminalScrolls[i];
+        }
       });
 
       if (scrollToTop) {
         postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        postsContainer.scrollTop = containerScroll;
       }
     };
 
