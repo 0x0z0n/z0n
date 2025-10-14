@@ -640,7 +640,7 @@ fetch("data/posts.json")
       }).join("");
     };
 
-    const renderPosts = (filteredPosts, scrollToTop = false) => {
+    const renderPosts = (filteredPosts, scrollToTop = true) => {
       postsContainer.innerHTML = "";
 
       filteredPosts.forEach(post => {
