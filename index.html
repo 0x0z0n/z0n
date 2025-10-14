@@ -594,121 +594,184 @@ main {
 </script>
 
 <script>
+
 fetch("data/posts.json")
   .then(res => res.json())
   .then(posts => {
     const postsContainer = document.getElementById("posts");
     const categoryContainer = document.getElementById("categoryList");
     const tagContainer = document.getElementById("tagList");
+    const searchInput = document.getElementById("searchInput");
 
-    // ===== Render Posts =====
+    // escape user-generated text for safe HTML insertion
+    const escapeHTML = str =>
+      String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    // normalize category array for convenience
+    const getCategories = post =>
+      Array.isArray(post.category) ? post.category : (post.category ? [post.category] : []);
+
+    // normalize tags array
+    const getTags = post => Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []);
+
+    // build the attack-path HTML only if content exists
+    const buildAttackPathHTML = attack_path => {
+      if (!attack_path) return "";
+      // if array, map items; if string, just use string
+      if (Array.isArray(attack_path)) {
+        const lines = attack_path.map((step, i) => {
+          if (step === null || step === undefined) return `${i + 1}.`;
+          if (typeof step === "object") {
+            // prefer common fields
+            const text = step.description || step.result || step.step || JSON.stringify(step);
+            return `${i + 1}. ${text}`;
+          }
+          return `${i + 1}. ${String(step)}`;
+        });
+        const content = lines.join("\n").trim();
+        if (!content) return "";
+        return `<div class="attack-path-terminal"><pre style="margin:0; white-space:pre-wrap;">${escapeHTML(content)}</pre></div>`;
+      } else {
+        const content = String(attack_path).trim();
+        if (!content) return "";
+        return `<div class="attack-path-terminal"><pre style="margin:0; white-space:pre-wrap;">${escapeHTML(content)}</pre></div>`;
+      }
+    };
+
+    // Render posts (keeps postsContainer grid-friendly)
     const renderPosts = filteredPosts => {
+      // replace content (clears old event handlers inside)
       postsContainer.innerHTML = "";
 
       filteredPosts.forEach(post => {
         const div = document.createElement("div");
         div.className = "post-card";
 
-        // Categories buttons (clickable to filter)
-        const categoriesHTML = (post.category || []).map(cat => 
-          `<button class="category-button post-cat-btn">${cat}</button>`
-        ).join(" ");
+        // categories as buttons inside post (data-cat for filtering)
+        const categoriesHTML = getCategories(post)
+          .map(cat => `<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`)
+          .join(" ");
 
-        // Tags links
-        const tagsHTML = (post.tags || []).map(tag => 
-          `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
-        ).join(" ");
+        // tags as links (we attach click handler when creating sidebar tags too)
+        const tagsHTML = getTags(post)
+          .map(tag => `<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`)
+          .join(" ");
 
-        // Attack path terminal
-        let attackPathHTML = "";
-        if (Array.isArray(post.attack_path)) {
-          attackPathHTML = `<div class="attack-path-terminal">
-            ${post.attack_path.map((step, i) => {
-              if (typeof step === "object") return `${i+1}. ${step.description || JSON.stringify(step)}`;
-              return `${i+1}. ${step}`;
-            }).join("\n")}
-          </div>`;
-        } else if (post.attack_path) {
-          attackPathHTML = `<div class="attack-path-terminal">${post.attack_path}</div>`;
-        }
+        // build attack path only if present
+        const attackPathHTML = buildAttackPathHTML(post.attack_path);
+
+        // post-meta: ONLY date (as requested)
+        const dateOnly = escapeHTML(post.date || "");
 
         div.innerHTML = `
-          <h2><a href="${post.href}">${post.title}</a></h2>
-          <div class="post-meta">${post.date} • ${post.category.join(", ")}</div>
-          <p class="post-excerpt">${post.excerpt || ""}</p>
-          <div class="post-categories">${categoriesHTML}</div>
-          <div class="post-tags">${tagsHTML}</div>
+          <h2><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
+          <div class="post-meta">${dateOnly}</div>
+          <p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p>
+          <div class="post-categories" style="margin-top:8px;">${categoriesHTML}</div>
+          <div class="post-tags" style="margin-top:8px;">${tagsHTML}</div>
           ${attackPathHTML}
         `;
 
         postsContainer.appendChild(div);
       });
 
-      // ===== Category buttons inside posts =====
-      document.querySelectorAll(".post-cat-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const category = btn.textContent;
-          const filtered = posts.filter(post => post.category.includes(category));
+      // use event delegation on postsContainer for category buttons and post-tag links
+      postsContainer.onclick = (e) => {
+        // category button inside post
+        const catBtn = e.target.closest?.(".post-cat-btn");
+        if (catBtn) {
+          const cat = catBtn.getAttribute("data-cat");
+          if (!cat) return;
+          const filtered = posts.filter(p => getCategories(p).includes(cat));
           renderPosts(filtered);
-        });
-      });
+          postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        // tag link inside post
+        const tagLink = e.target.closest?.(".post-tag-link");
+        if (tagLink) {
+          const tag = tagLink.getAttribute("data-tag");
+          if (!tag) return;
+          const filtered = posts.filter(p => getTags(p).includes(tag));
+          renderPosts(filtered);
+          postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      };
     };
 
+    // initial render (all posts)
     renderPosts(posts);
 
-    // ===== Unified Search =====
-    const searchInput = document.getElementById("searchInput");
-    searchInput.addEventListener("input", e => {
-      const val = e.target.value.toLowerCase();
-      const filtered = posts.filter(post =>
-        post.title.toLowerCase().includes(val) ||
-        post.excerpt?.toLowerCase().includes(val) ||
-        post.category?.some(cat => cat.toLowerCase().includes(val)) ||
-        post.tags?.some(tag => tag.toLowerCase().includes(val))
-      );
+    // Search: unified (title, excerpt, categories, tags)
+    searchInput?.addEventListener("input", e => {
+      const q = (e.target.value || "").toLowerCase().trim();
+      const filtered = posts.filter(post => {
+        if (!q) return true;
+        if ((post.title || "").toLowerCase().includes(q)) return true;
+        if ((post.excerpt || "").toLowerCase().includes(q)) return true;
+        if (getCategories(post).some(c => c.toLowerCase().includes(q))) return true;
+        if (getTags(post).some(t => t.toLowerCase().includes(q))) return true;
+        return false;
+      });
       renderPosts(filtered);
     });
 
-    // ===== Sidebar Categories =====
-    const categories = {};
-    posts.forEach(post => {
-      (Array.isArray(post.category) ? post.category : [post.category || "Uncategorized"])
-        .forEach(cat => { categories[cat] = (categories[cat] || 0) + 1; });
-    });
+    // Build sidebar categories (unique + counts)
+    const categoriesCount = {};
+    posts.forEach(p => getCategories(p).forEach(cat => categoriesCount[cat] = (categoriesCount[cat]||0) + 1));
 
-    let catEntries = Object.entries(categories);
+    // pinned cheatsheet first, then alphabetical
+    let catEntries = Object.entries(categoriesCount);
     const pinned = catEntries.filter(([cat]) => cat.toLowerCase() === "cheatsheet");
     const others = catEntries.filter(([cat]) => cat.toLowerCase() !== "cheatsheet").sort((a,b) => a[0].localeCompare(b[0]));
     catEntries = [...pinned, ...others];
 
     catEntries.forEach(([cat, count]) => {
       const a = document.createElement("a");
-      a.href = cat.toLowerCase() === "cheatsheet"
-                ? "https://0x0z0n.github.io/z0n/posts/Cheatsheet.html"
-                : `index.html?category=${encodeURIComponent(cat)}`;
+      a.href = "#";
       a.className = "category-button";
       a.textContent = `${cat} (${count})`;
+      a.dataset.cat = cat;
+      a.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const filtered = posts.filter(p => getCategories(p).includes(cat));
+        renderPosts(filtered);
+        postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       categoryContainer.appendChild(a);
     });
 
-    // ===== Sidebar Tags =====
-    const tags = {};
-    posts.forEach(post => post.tags?.forEach(tag => {
-      tags[tag] = (tags[tag] || 0) + 1;
-    }));
-
-    Object.keys(tags).sort().forEach(tag => {
+    // Build sidebar tags (unique + counts)
+    const tagsCount = {};
+    posts.forEach(p => getTags(p).forEach(tag => tagsCount[tag] = (tagsCount[tag]||0) + 1));
+    Object.keys(tagsCount).sort().forEach(tag => {
       const a = document.createElement("a");
-      a.href = `index.html?tag=${encodeURIComponent(tag)}`;
+      a.href = "#";
       a.className = "tag-link";
-      a.textContent = `${tag} (${tags[tag]})`;
+      a.textContent = `${tag} (${tagsCount[tag]})`;
+      a.dataset.tag = tag;
+      a.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const filtered = posts.filter(p => getTags(p).includes(tag));
+        renderPosts(filtered);
+        postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
       tagContainer.appendChild(a);
     });
 
   })
-  .catch(err => console.error("Error loading posts.json:", err));
-
+  .catch(err => {
+    console.error("Error loading posts.json:", err);
+  });
 </script>
+
 
 
 
