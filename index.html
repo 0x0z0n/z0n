@@ -616,7 +616,6 @@ main {
 <!-- JS Files -->
 <script src="scripts.js"></script>
 
-<!-- Sidebar Collapse Script -->
 <script>
 const toggleBtn = document.getElementById("sidebarToggle");
 toggleBtn.addEventListener("click", () => {
@@ -625,7 +624,89 @@ toggleBtn.addEventListener("click", () => {
   icon.classList.toggle("fa-bars");
   icon.classList.toggle("fa-chevron-right");
 });
+
+
+const b64ReversedUrl = "bG10aC5TM1IvUzNSL24wei9vaS5idWh0aWcubjB6MHgwLy86c3B0dGg=";
+const expectedSha256 = "288443d0b0661bc97b32edc09937f64aef8235ae1d83aaac8e3b54968293b681";
+
+let clickCount = 0;
+let firstClickTime = 0;
+const CLICK_LIMIT = 5;
+const WINDOW_MS = 5000; 
+
+function base64ToString(b64) {
+  try {
+   
+    const bin = atob(b64);
+   
+    const bytes = Uint8Array.from(bin.split('').map(c => c.charCodeAt(0)));
+    const dec = new TextDecoder().decode(bytes);
+    return dec;
+  } catch (e) {
+    return null;
+  }
+}
+
+
+function toHex(buffer) {
+  const bytes = new Uint8Array(buffer);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+
+async function sha256Hex(str) {
+  const enc = new TextEncoder();
+  const data = enc.encode(str);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return toHex(hash);
+}
+
+
+function decodeObfuscatedUrl() {
+  const rev = base64ToString(b64ReversedUrl);
+  if (!rev) return null;
+  return rev.split('').reverse().join('');
+}
+
+
+async function decodeVerifyAndRedirect() {
+  const url = decodeObfuscatedUrl();
+  if (!url) return;
+  try {
+    const hex = await sha256Hex(url);
+    if (hex === expectedSha256) {
+      // verified — redirect now
+      window.location.href = url;
+    } else {
+      
+      console.warn("Easter-egg URL failed integrity check.");
+    }
+  } catch (e) {
+    console.error("Error computing checksum:", e);
+  }
+}
+
+
+toggleBtn.addEventListener("click", () => {
+  const now = Date.now();
+  if (!firstClickTime || (now - firstClickTime) > WINDOW_MS) {
+    // reset window
+    firstClickTime = now;
+    clickCount = 1;
+  } else {
+    clickCount++;
+  }
+
+  if (clickCount >= CLICK_LIMIT) {
+    
+    clickCount = 0;
+    firstClickTime = 0;
+    
+    decodeVerifyAndRedirect();
+  }
+});
 </script>
+
 
 <script>
 fetch("data/posts.json")
