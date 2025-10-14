@@ -278,7 +278,18 @@ nav a:hover {
   letter-spacing: 4px;
 }
 
-
+/* small skip button */
+.skip-intro {
+  margin-top: 1rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-block;
+}
 
 /* fade + slide out */
 .intro-hide {
@@ -652,6 +663,7 @@ main {
   <div class="intro-inner">
     <div id="introLines" class="intro-lines" aria-hidden="true"></div>
     <div id="accessGranted" class="access-granted" aria-hidden="true">ACCESS GRANTED</div>
+    <button id="skipIntro" class="skip-intro" title="Skip intro">Skip</button>
   </div>
 </div>
   <!-- Theme Controls (Top-Right) -->
@@ -1043,12 +1055,14 @@ fetch("data/posts.json")
   const overlay = document.getElementById('introOverlay');
   const linesEl = document.getElementById('introLines');
   const accessEl = document.getElementById('accessGranted');
+  const skipBtn = document.getElementById('skipIntro');
 
   // Messages to show
   const lines = [
     "Establishing connection...",
     "Scanning security systems...",
     "Bypassing firewall...",
+    "Penetration successful."
   ];
 
   const localKey = "introShown_v1"; // change key to reset behaviour
