@@ -231,6 +231,29 @@ main {
   border-color: var(--hover-border);
 }
 
+.terminal-style {
+  max-height: 400px; /* adjust height as needed */
+  overflow-y: auto;
+  background-color: #0a0a0a;
+  color: #00ff95;
+  font-family: "Courier New", Courier, monospace;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 10px #000000;
+  margin-top: 10px;
+}
+
+/* Hide scrollbar but allow scrolling */
+.terminal-style::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+.terminal-style {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+
 /* Terminal / Attack Path */
 .attack-path-terminal {
   background-color: var(--card-bg);
@@ -313,6 +336,8 @@ main {
   transition: transform 0.12s ease;
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
+
+
 
 /* Footer */
 footer {
@@ -621,33 +646,38 @@ fetch("data/posts.json")
     const getTags = post =>
       Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []);
 
-    const buildAttackPathHTML = attack_path => {
-      if (!attack_path) return "";
-      if (!Array.isArray(attack_path)) attack_path = [attack_path];
+const buildAttackPathHTML = attack_path => {
+  if (!attack_path) return "";
+  if (!Array.isArray(attack_path)) attack_path = [attack_path];
 
-      return attack_path.map((step, i) => {
-        if (!step) return "";
-        const stepNum = i + 1;
-        const stepText = step.step || "";
-        const user = step.user || "";
-        const technique = step.technique || "";
-        const result = step.result || "";
-        const mitigation = step.mitigation || "";
+  const blocks = attack_path.map((step, i) => {
+    if (!step) return "";
 
-        return `
-          <div class="attack-step">
-            <div class="top">
-              <span class="pill"><span class="meta-value">Step ${stepNum}</span></span>
-              ${user ? `<span class="pill">User: <span class="meta-value">${escapeHTML(user)}</span></span>` : ""}
-              ${technique ? `<span class="pill">Technique: <span class="meta-value">${escapeHTML(technique)}</span></span>` : ""}
-            </div>
-            ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
-            ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
-            ${stepText ? `<div class="field"><span class="label">Description:</span>${escapeHTML(stepText)}</div>` : ""}
-          </div>
-        `;
-      }).join("");
-    };
+    const stepNum = i + 1;
+    const stepText = step.step || "";
+    const user = step.user || "";
+    const technique = step.technique || "";
+    const result = step.result || "";
+    const mitigation = step.mitigation || "";
+
+    return `
+      <div class="attack-step">
+        <div class="top">
+          <span class="pill"><span class="meta-value">Step ${stepNum}</span></span>
+          ${user ? `<span class="pill">User: <span class="meta-value">${escapeHTML(user)}</span></span>` : ""}
+          ${technique ? `<span class="pill">Technique: <span class="meta-value">${escapeHTML(technique)}</span></span>` : ""}
+        </div>
+        ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
+        ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
+        ${stepText ? `<div class="field"><span class="label">Description:</span>${escapeHTML(stepText)}</div>` : ""}
+      </div>
+    `;
+  });
+
+  return blocks.length 
+    ? `<div class="attack-path-terminal terminal-style">${blocks.join("")}</div>` 
+    : "";
+};
 
     // Modified renderPosts: only scroll if explicit argument scrollToTop=true
     const renderPosts = (filteredPosts, scrollToTop = false) => {
