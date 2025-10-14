@@ -2,382 +2,277 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <title>0x0z0n Blog | Home </title>
+    <title>0x0z0n Blog | Home</title>
     <link rel="icon" type="image/png" href="assets/tab.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-   <link rel="icon" type="image/png" href="assets/tab.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
     <style>
-/* ========== Theme Variables ========== */
-:root {
-  /* Default 0x0z0n-dark */
-  --bg-color: #0a0a0a;
-  --card-bg: #141414;
-  --text-color: #00ff95;
-  --accent: #00d0ff;
-  --tag-bg: #0f0f0f;
-  --tag-hover: #00ffcc;
-  --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
-  --hover-bg: #222;
-  --hover-text: #80ffff;
-  --hover-border: #00d0ff;
-}
-
-/* 0x0z0n-light */
-html[data-theme="0x0z0n-light"] {
-  --bg-color: #f4f7f9;
-  --card-bg: #ffffff;
-  --text-color: #1a1a1a;
-  --accent: #007acc;
-  --tag-bg: #e3eff9;
-  --tag-hover: #007acc;
-  --border-glow: 0 0 4px #007acc55;
-  --hover-bg: #e0e0e0;
-  --hover-text: #007acc;
-  --hover-border: #007acc;
-}
-
-/* Minimalist Dark */
-html[data-theme="minimal-dark"] {
-  --bg-color: #121212;
-  --card-bg: #1c1c1c;
-  --text-color: #dcdcdc;
-  --accent: #80cbc4;
-  --tag-bg: #202020;
-  --tag-hover: #4db6ac;
-  --border-glow: none;
-  --hover-bg: #2a2a2a;
-  --hover-text: #a0e0d0;
-  --hover-border: #4db6ac;
-}
-
-/* Minimalist Light */
-html[data-theme="minimal-light"] {
-  --bg-color: #f7f7f7;
-  --card-bg: #ffffff;
-  --text-color: #333333;
-  --accent: #00796b;
-  --tag-bg: #e3f2f1;
-  --tag-hover: #00796b;
-  --border-glow: none;
-  --hover-bg: #e0f0ef;
-  --hover-text: #00796b;
-  --hover-border: #00796b;
-}
-
-/* ========== Body & General ========== */
-body {
-  margin: 0;
-  font-family: 'Orbitron', system-ui, sans-serif;
-  background: var(--bg-color);
-  color: var(--text-color);
-  display: flex;
-  position: relative;
-}
-
-/* Theme Controls (Top-Right) */
-.theme-controls {
-  position: fixed;
-  top: 15px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 1000;
-}
-
-.theme-toggle {
-  cursor: pointer;
-  font-size: 1.4rem;
-  color: var(--accent);
-  transition: transform 0.3s ease;
-}
-
-.theme-toggle:hover {
-  transform: scale(1.2);
-}
-
-.theme-selector select {
-  padding: 4px 8px;
-  font-size: 0.9rem;
-  border-radius: 6px;
-  border: 1px solid var(--accent);
-  background: var(--card-bg);
-  color: var(--text-color);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.theme-selector select:hover {
-  background: var(--hover-bg);
-  color: var(--hover-text);
-  border-color: var(--hover-border);
-}
-
-/* Sidebar */
-aside {
-  width: 250px;
-  background: var(--card-bg);
-  padding: 1.5rem 1rem;
-  height: 100vh;
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-}
-
-aside img {
-  width: 100px;
-  border-radius: 50%;
-  display: block;
-  margin: 0 auto 1rem;
-  border: 2px solid var(--accent);
-  box-shadow: var(--border-glow);
-}
-
-.site-title {
-  text-align: center;
-  margin: 0.5rem 0 0.2rem;
-  font-size: 1.4rem;
-}
-
-.site-subtitle {
-  text-align: center;
-  color: #888;
-  font-size: 0.8rem;
-}
-
-nav a {
-  display: block;
-  color: var(--text-color);
-  text-decoration: none;
-  padding: 0.55rem 1rem;
-  border-radius: 8px;
-  margin: 0.4rem 0;
-  background: var(--card-bg);
-  border-left: 3px solid transparent;
-  transition: all 0.3s ease;
-}
-
-nav a:hover {
-  background: var(--hover-bg);
-  color: var(--hover-text);
-  border-left: 3px solid var(--hover-border);
-}
-
-/* Social icons */
-.social-icons a {
-  margin: 0 0.5rem;
-  color: #999;
-  font-size: 1.4rem;
-  transition: 0.3s ease;
-}
-
-.social-icons a:hover {
-  color: var(--hover-text);
-  transform: scale(1.15);
-}
-
-/* Main Content */
-main {
-  flex: 1;
-  padding: 2.5rem;
-  max-width: 1000px;
-  margin: auto;
-}
-
-/* Search Box */
-.search-box {
-  margin-bottom: 2.5rem;
-  text-align: center;
-}
-
-.search-box input {
-  padding: 0.7rem 1.2rem;
-  width: 280px;
-  background: var(--card-bg);
-  color: var(--text-color);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  box-shadow: var(--border-glow);
-  font-size: 0.95rem;
-}
-
-/* Post Cards */
-.post-card {
-  background: var(--card-bg);
-  backdrop-filter: blur(8px);
-  padding: 1.8rem;
-  border: 1px solid rgba(0,0,0,0.1);
-  margin-bottom: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1), var(--border-glow);
-  transition: 0.3s ease;
-}
-
-.post-card:hover {
-  transform: translateY(-5px);
-  background: var(--hover-bg);
-  box-shadow: 0 10px 20px rgba(0, 208, 255, 0.2);
-}
-
-.post-card h2 a {
-  color: var(--accent);
-  text-decoration: none;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
-}
-
-.post-card h2 a:hover {
-  color: var(--hover-text);
-  text-shadow: 0 0 8px var(--hover-border);
-}
-
-.post-card a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-/* Tags & Category Buttons */
-.tag-link, .category-button {
-  display: inline-block;
-  background-color: var(--tag-bg);
-  border: 1px solid rgba(0,0,0,0.1);
-  color: var(--accent);
-  padding: 6px 12px;
-  margin: 2px 4px 4px 0;
-  font-size: 0.82rem;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: 0.2s ease-in-out;
-}
-
-.tag-link:hover, .category-button:hover {
-  background: var(--hover-bg);
-  color: var(--hover-text);
-  border-color: var(--hover-border);
-}
-
-/* Terminal / Attack Path */
-.attack-path-terminal {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  font-family: monospace;
-  padding: 10px;
-  margin-top: 12px;
-  border-radius: 6px;
-  white-space: pre-wrap;
-  font-size: 0.9rem;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
-  max-height: 200px;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
-}
-.attack-path-terminal::-webkit-scrollbar {
-  width: 0;  /* Chrome, Safari */
-  height: 0;
-}
-
-/* Footer */
-footer {
-  text-align: center;
-  color: #555;
-  font-size: 0.8rem;
-  margin-top: 4rem;
-}
-
-/* Responsive */
-@media screen and (max-width: 768px) {
-  body { flex-direction: column; }
-  aside { width: 100%; height: auto; position: relative; padding: 1rem; border-bottom: 1px solid var(--accent); box-shadow: none; }
-  main { padding: 1.5rem 1rem; }
-  .site-title { font-size: 1.2rem; }
-  .site-subtitle { font-size: 0.75rem; }
-  nav a { padding: 0.5rem 0.8rem; font-size: 0.95rem; }
-  .social-icons a { font-size: 1.2rem; }
-  .search-box input { width: 90%; }
-}
-
-@media screen and (max-width: 480px) {
-  .post-card { padding: 1.2rem; }
-  .category-button, .tag-link { font-size: 0.75rem; padding: 5px 10px; }
-  .attack-path-terminal { font-size: 0.78rem; }
-  .post-card h2 { font-size: 1.1rem; }
-  footer { font-size: 0.7rem; }
-}
-</style>
-
+      /* === Theme Variables === */
+      :root {
+        --bg-color: #0a0a0a;
+        --card-bg: #141414;
+        --text-color: #00ff95;
+        --accent: #00d0ff;
+        --tag-bg: #0f0f0f;
+        --tag-hover: #00ffcc;
+        --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
+        --hover-bg: #222;
+        --hover-text: #80ffff;
+        --hover-border: #00d0ff;
+      }
+      html[data-theme="0x0z0n-light"] {
+        --bg-color: #f4f7f9;
+        --card-bg: #ffffff;
+        --text-color: #1a1a1a;
+        --accent: #007acc;
+        --tag-bg: #e3eff9;
+        --tag-hover: #007acc;
+        --border-glow: 0 0 4px #007acc55;
+        --hover-bg: #e0e0e0;
+        --hover-text: #007acc;
+        --hover-border: #007acc;
+      }
+      html[data-theme="minimal-dark"] {
+        --bg-color: #121212;
+        --card-bg: #1c1c1c;
+        --text-color: #dcdcdc;
+        --accent: #80cbc4;
+        --tag-bg: #202020;
+        --tag-hover: #4db6ac;
+        --border-glow: none;
+        --hover-bg: #2a2a2a;
+        --hover-text: #a0e0d0;
+        --hover-border: #4db6ac;
+      }
+      html[data-theme="minimal-light"] {
+        --bg-color: #f7f7f7;
+        --card-bg: #ffffff;
+        --text-color: #333333;
+        --accent: #00796b;
+        --tag-bg: #e3f2f1;
+        --tag-hover: #00796b;
+        --border-glow: none;
+        --hover-bg: #e0f0ef;
+        --hover-text: #00796b;
+        --hover-border: #00796b;
+      }
+      body {
+        margin: 0;
+        font-family: 'Orbitron', system-ui, sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        position: relative;
+      }
+      .theme-controls {
+        position: fixed;
+        top: 15px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+      }
+      .theme-toggle {
+        cursor: pointer;
+        font-size: 1.4rem;
+        color: var(--accent);
+        transition: transform 0.3s ease;
+      }
+      .theme-toggle:hover {
+        transform: scale(1.2);
+      }
+      .theme-selector select {
+        padding: 4px 8px;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        border: 1px solid var(--accent);
+        background: var(--card-bg);
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .theme-selector select:hover {
+        background: var(--hover-bg);
+        color: var(--hover-text);
+        border-color: var(--hover-border);
+      }
+      aside {
+        width: 250px;
+        background: var(--card-bg);
+        padding: 1.5rem 1rem;
+        height: 100vh;
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+      }
+      aside img {
+        width: 100px;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto 1rem;
+        border: 2px solid var(--accent);
+        box-shadow: var(--border-glow);
+      }
+      .site-title {
+        text-align: center;
+        margin: 0.5rem 0 0.2rem;
+        font-size: 1.4rem;
+      }
+      .site-subtitle {
+        text-align: center;
+        color: #888;
+        font-size: 0.8rem;
+      }
+      nav a {
+        display: block;
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 0.55rem 1rem;
+        border-radius: 8px;
+        margin: 0.4rem 0;
+        background: var(--card-bg);
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+      nav a:hover {
+        background: var(--hover-bg);
+        color: var(--hover-text);
+        border-left: 3px solid var(--hover-border);
+      }
+      main {
+        flex: 1;
+        padding: 2.5rem;
+        max-width: 1000px;
+        margin: auto;
+      }
+      .search-box {
+        margin-bottom: 2.5rem;
+        text-align: center;
+      }
+      .search-box input {
+        padding: 0.7rem 1.2rem;
+        width: 280px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        box-shadow: var(--border-glow);
+        font-size: 0.95rem;
+      }
+      .post-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(8px);
+        padding: 1.8rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-bottom: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), var(--border-glow);
+        transition: 0.3s ease;
+      }
+      .post-card:hover {
+        transform: translateY(-5px);
+        background: var(--hover-bg);
+        box-shadow: 0 10px 20px rgba(0, 208, 255, 0.2);
+      }
+      .post-card h2 a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: color 0.3s ease, text-shadow 0.3s ease;
+      }
+      .post-card h2 a:hover {
+        color: var(--hover-text);
+        text-shadow: 0 0 8px var(--hover-border);
+      }
+      .tag-link, .category-button {
+        display: inline-block;
+        background-color: var(--tag-bg);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        color: var(--accent);
+        padding: 6px 12px;
+        margin: 2px 4px 4px 0;
+        font-size: 0.82rem;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: 0.2s ease-in-out;
+      }
+      .tag-link:hover, .category-button:hover {
+        background: var(--hover-bg);
+        color: var(--hover-text);
+        border-color: var(--hover-border);
+      }
+      footer {
+        text-align: center;
+        color: #555;
+        font-size: 0.8rem;
+        margin-top: 4rem;
+      }
+      @media screen and (max-width: 768px) {
+        body { flex-direction: column; }
+        aside { width: 100%; height: auto; position: relative; padding: 1rem; border-bottom: 1px solid var(--accent); box-shadow: none; }
+        main { padding: 1.5rem 1rem; }
+        .search-box input { width: 90%; }
+      }
+    </style>
   </head>
+
   <body>
-  <!-- Theme Controls (Top-Right) -->
-  <div class="theme-controls">
-    <div class="theme-toggle" title="Toggle Theme">
-      <i class="fas fa-circle-half-stroke"></i>
-    </div>
-    <div class="theme-selector">
-      <select id="themeSelect" title="Select Theme">
-        <option value="0x0z0n-dark">0x0z0n Dark</option>
-        <option value="0x0z0n-light">0x0z0n Light</option>
-        <option value="minimal-dark">Minimalist Dark</option>
-        <option value="minimal-light">Minimalist Light</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Sidebar -->
-  <aside>
-    <img src="assets/avatar.jpeg" alt="Profile" />
-    <div class="site-title">Kshitij Raut</div>
-    <div class="site-subtitle">Cyber Security Analyst</div>
-    <nav>
-      <a href="index.html">🏠 Home</a>
-      <a href="categories.html">📚 Categories</a>
-      <a href="tags.html">🏷️ Tags</a>
-      <a href="archives.html">🗃️ Archives</a>
-      <a href="about.html">ℹ️ About</a>
-    </nav>
-
-    <div class="social-icons">
-      <a href="https://www.linkedin.com/in/kshitijnraut/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-      <a href="mailto:kshitijraut360@gmail.com" title="Gmail"><i class="fas fa-envelope"></i></a>
-      <a href="https://www.youtube.com/@0x0z0n" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
-      <a href="https://github.com/0x0z0n" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+    <!-- Theme Controls -->
+    <div class="theme-controls">
+      <div class="theme-toggle" title="Toggle Theme">
+        <i class="fas fa-circle-half-stroke"></i>
+      </div>
+      <div class="theme-selector">
+        <select id="themeSelect" title="Select Theme">
+          <option value="0x0z0n-dark">0x0z0n Dark</option>
+          <option value="0x0z0n-light">0x0z0n Light</option>
+          <option value="minimal-dark">Minimalist Dark</option>
+          <option value="minimal-light">Minimalist Light</option>
+        </select>
+      </div>
     </div>
 
-    <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
-
-    <div class="profile-links">
-      <h3 style="font-size:1rem; color:var(--accent); margin-bottom:0.8rem; text-align:center;">🎯 Profile</h3>
+    <!-- Sidebar -->
+    <aside>
+      <img src="assets/avatar.jpeg" alt="Profile" />
+      <div class="site-title">0x0z0n</div>
+      <div class="site-subtitle">Security Research Blog</div>
       <nav>
-        <a href="https://app.hackthebox.com/profile/1761906" target="_blank"><i class="fab fa-hackerrank"></i> HackTheBox</a>
-        <a href="https://tryhackme.com/p/0x0z0n" target="_blank"><i class="fas fa-terminal"></i> TryHackMe</a>
-        <a href="https://cyberdefenders.org/p/0x0z0n" target="_blank"><i class="fas fa-shield-alt"></i> CyberDefenders</a>
+        <a href="index.html">🏠 Home</a>
+        <a href="categories.html">📚 Categories</a>
+        <a href="tags.html">🏷️ Tags</a>
+        <a href="archives.html">🗃️ Archives</a>
+        <a href="about.html">ℹ️ About</a>
       </nav>
-    </div>
 
-    <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
-      <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" target="_blank" class="category-button" style="font-size:0.85rem;">🧠 Cheatsheet</a>
-    </div>
-  </aside>
+      <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
 
-  <!-- Main Content -->
-  <main>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search posts..." />
-    </div>
-    <section id="posts"></section>
-    <footer>
-      <p>&copy; 2025 0x0z0n</p>
-    </footer>
-  </main>
+      <div class="profile-links">
+        <h3 style="font-size:1rem; color:var(--accent); margin-bottom:0.8rem; text-align:center;">🎯 Profiles</h3>
+        <nav>
+          <a href="#" target="_blank"><i class="fas fa-terminal"></i> HackTheBox</a>
+          <a href="#" target="_blank"><i class="fas fa-shield-alt"></i> TryHackMe</a>
+          <a href="#" target="_blank"><i class="fas fa-code"></i> CyberDefenders</a>
+        </nav>
+      </div>
 
-  <!-- Shooting Star -->
-  <div id="shooting-star"></div>
+      <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
+        <a href="posts/Cheatsheet.html" target="_blank" class="category-button" style="font-size:0.85rem;">🧠 Cheatsheet</a>
+      </div>
+    </aside>
 
-  <!-- JS Files -->
-  <script src="scripts.js"></script>
-</body>
+    <!-- Main Content -->
+    <main>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search posts..." />
+      </div>
+      <section id="posts"></section>
+      <footer><p>&copy; 2025 0x0z0n</p></footer>
+    </main>
 
-
+    <div id="shooting-star"></div>
+    <script src="scripts.js"></script>
+  </body>
 </html>
