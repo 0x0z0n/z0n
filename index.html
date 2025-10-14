@@ -581,9 +581,9 @@ fetch("data/posts.json")
         const div = document.createElement("div");
         div.className = "post-card";
 
-        // Categories buttons
+        // Categories buttons (clickable to filter)
         const categoriesHTML = (post.category || []).map(cat => 
-          `<a href="index.html?category=${encodeURIComponent(cat)}" class="category-button">${cat}</a>`
+          `<button class="category-button post-cat-btn">${cat}</button>`
         ).join(" ");
 
         // Tags links
@@ -591,10 +591,19 @@ fetch("data/posts.json")
           `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`
         ).join(" ");
 
-        // Attack path terminal (scrollable, hidden scrollbar)
-        const attackPathHTML = post.attack_path 
-          ? `<div class="attack-path-terminal">${post.attack_path}</div>` 
-          : "";
+        // Attack path terminal (fix array rendering)
+        let attackPathHTML = "";
+        if (Array.isArray(post.attack_path)) {
+          attackPathHTML = `<div class="attack-path-terminal">
+            ${post.attack_path.map((step, i) => {
+              // if step is object, try description or JSON stringify
+              if (typeof step === "object") return `${i+1}. ${step.description || JSON.stringify(step)}`;
+              return `${i+1}. ${step}`;
+            }).join("\n")}
+          </div>`;
+        } else if (post.attack_path) {
+          attackPathHTML = `<div class="attack-path-terminal">${post.attack_path}</div>`;
+        }
 
         div.innerHTML = `
           <h2><a href="${post.href}">${post.title}</a></h2>
@@ -606,6 +615,15 @@ fetch("data/posts.json")
         `;
 
         postsContainer.appendChild(div);
+      });
+
+      // ===== Add click listeners for category buttons inside posts =====
+      document.querySelectorAll(".post-cat-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const category = btn.textContent;
+          const filtered = posts.filter(post => post.category.includes(category));
+          renderPosts(filtered);
+        });
       });
     };
 
@@ -624,7 +642,7 @@ fetch("data/posts.json")
       renderPosts(filtered);
     });
 
-    // ===== Render Categories =====
+    // ===== Render Categories Sidebar =====
     const categories = {};
     posts.forEach(post => {
       (Array.isArray(post.category) ? post.category : [post.category || "Uncategorized"])
@@ -646,7 +664,7 @@ fetch("data/posts.json")
       categoryContainer.appendChild(a);
     });
 
-    // ===== Render Tags =====
+    // ===== Render Tags Sidebar =====
     const tags = {};
     posts.forEach(post => post.tags?.forEach(tag => {
       tags[tag] = (tags[tag] || 0) + 1;
@@ -664,6 +682,7 @@ fetch("data/posts.json")
   })
   .catch(err => console.error("Error loading posts.json:", err));
 </script>
+
 
 
 </body>
