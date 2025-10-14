@@ -577,46 +577,52 @@ main {
       icon.classList.toggle("fa-chevron-right");
     });
   </script>
-  <script>
-fetch("data/posts.json")
-  .then(res => res.json())
-  .then(posts => {
-    const categories = {};
-    posts.forEach(post => {
-      const catField = post.category || "Uncategorized";
-      const catList = Array.isArray(catField) ? catField : [catField];
-      catList.forEach(cat => {
-        categories[cat] = (categories[cat] || 0) + 1;
-      });
-    });
-
-    const container = document.getElementById("categoryList");
-    let entries = Object.entries(categories);
-
-    const pinned = entries.filter(([cat]) => cat === "CheatSheet");
-    const others = entries.filter(([cat]) => cat !== "CheatSheet");
-    others.sort((a, b) => a[0].localeCompare(b[0]));
-    entries = [...pinned, ...others];
-
-    entries.forEach(([cat, count]) => {
-      const div = document.createElement("div");
-      div.className = "category-card";
-      const href = cat === "CheatSheet" ? "https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" 
-                                       : `index.html?category=${encodeURIComponent(cat)}`;
-      div.innerHTML = `<a href="${href}">${cat}</a> <small>${count} post${count>1?'s':''}</small>`;
-      container.appendChild(div);
-    });
-  })
-  .catch(err => {
-    console.error("Error loading categories:", err);
-    document.getElementById("categoryList").innerHTML = "Failed to load categories.";
-  });
-</script>
-
 <script>
 fetch("data/posts.json")
   .then(res => res.json())
   .then(posts => {
+    const postsContainer = document.getElementById("posts");
+
+    // Render posts initially
+    const renderPosts = filteredPosts => {
+      postsContainer.innerHTML = "";
+      filteredPosts.forEach(post => {
+        const div = document.createElement("div");
+        div.className = "post-card";
+        div.innerHTML = `
+          <h2><a href="${post.href}">${post.title}</a></h2>
+          <div class="post-meta">${post.date} • ${post.category.join(", ")}</div>
+          <p class="post-excerpt">${post.excerpt || ""}</p>
+          <a class="read-more" href="${post.href}">Read More</a>
+        `;
+        postsContainer.appendChild(div);
+      });
+    };
+
+    renderPosts(posts);
+
+    // Search Input
+    const searchInput = document.getElementById("searchInput");
+    searchInput.addEventListener("input", e => {
+      const val = e.target.value.toLowerCase();
+      const filtered = posts.filter(post =>
+        post.title.toLowerCase().includes(val) ||
+        post.excerpt?.toLowerCase().includes(val) ||
+        (post.category?.join(" ").toLowerCase().includes(val)) ||
+        (post.tags?.join(" ").toLowerCase().includes(val))
+      );
+      renderPosts(filtered);
+    });
+  });
+</script>
+<script>
+fetch("data/posts.json")
+  .then(res => res.json())
+  .then(posts => {
+    const tagContainer = document.getElementById("tagList");
+    const tagInput = document.getElementById("tagSearch");
+
+    // Collect unique tags
     const tags = {};
     posts.forEach(post => {
       if(post.tags) {
@@ -626,29 +632,29 @@ fetch("data/posts.json")
       }
     });
 
-    const container = document.getElementById("tagList");
-    Object.keys(tags).sort().forEach(tag => {
-      const a = document.createElement("a");
-      a.href = `index.html?tag=${encodeURIComponent(tag)}`;
-      a.className = "tag-link";
-      a.textContent = tag;
-      container.appendChild(a);
-    });
-
-    // Tag Search
-    const searchInput = document.getElementById("tagSearch");
-    searchInput.addEventListener("input", e => {
-      const val = e.target.value.toLowerCase();
-      Array.from(container.children).forEach(a => {
-        a.style.display = a.textContent.toLowerCase().includes(val) ? "inline-block" : "none";
+    const renderTags = tagArr => {
+      tagContainer.innerHTML = "";
+      tagArr.forEach(tag => {
+        const a = document.createElement("a");
+        a.href = `index.html?tag=${encodeURIComponent(tag)}`;
+        a.className = "tag-link";
+        a.textContent = tag;
+        tagContainer.appendChild(a);
       });
+    };
+
+    const tagList = Object.keys(tags).sort();
+    renderTags(tagList);
+
+    // Tag Search Input
+    tagInput.addEventListener("input", e => {
+      const val = e.target.value.toLowerCase();
+      const filtered = tagList.filter(tag => tag.toLowerCase().includes(val));
+      renderTags(filtered);
     });
-  })
-  .catch(err => {
-    console.error("Error loading tags:", err);
-    document.getElementById("tagList").innerHTML = "Failed to load tags.";
   });
 </script>
+
 
 </body>
 </html>
