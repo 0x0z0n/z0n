@@ -582,6 +582,7 @@ fetch("data/posts.json")
   .then(posts => {
     const postsContainer = document.getElementById("posts");
     const categoryContainer = document.getElementById("categoryList");
+    const tagContainer = document.getElementById("tagList");
 
     // ===== Render Posts =====
     const renderPosts = filteredPosts => {
@@ -620,12 +621,12 @@ fetch("data/posts.json")
         .forEach(cat => { categories[cat] = (categories[cat] || 0) + 1; });
     });
 
-    let entries = Object.entries(categories);
-    const pinned = entries.filter(([cat]) => cat.toLowerCase() === "cheatsheet");
-    const others = entries.filter(([cat]) => cat.toLowerCase() !== "cheatsheet").sort((a,b) => a[0].localeCompare(b[0]));
-    entries = [...pinned, ...others];
+    let catEntries = Object.entries(categories);
+    const pinned = catEntries.filter(([cat]) => cat.toLowerCase() === "cheatsheet");
+    const others = catEntries.filter(([cat]) => cat.toLowerCase() !== "cheatsheet").sort((a,b) => a[0].localeCompare(b[0]));
+    catEntries = [...pinned, ...others];
 
-    entries.forEach(([cat, count]) => {
+    catEntries.forEach(([cat, count]) => {
       const a = document.createElement("a");
       a.href = cat.toLowerCase() === "cheatsheet"
                 ? "https://0x0z0n.github.io/z0n/posts/Cheatsheet.html"
@@ -635,9 +636,25 @@ fetch("data/posts.json")
       categoryContainer.appendChild(a);
     });
 
+    // ===== Render Tags =====
+    const tags = {};
+    posts.forEach(post => post.tags?.forEach(tag => {
+      tags[tag] = (tags[tag] || 0) + 1;
+    }));
+
+    const tagList = Object.keys(tags).sort();
+    tagList.forEach(tag => {
+      const a = document.createElement("a");
+      a.href = `index.html?tag=${encodeURIComponent(tag)}`;
+      a.className = "tag-link";
+      a.textContent = `${tag} (${tags[tag]})`;
+      tagContainer.appendChild(a);
+    });
+
   })
   .catch(err => console.error("Error loading posts.json:", err));
 </script>
+
 
 </body>
 </html>
