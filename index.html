@@ -71,49 +71,6 @@ html[data-theme="minimal-light"] {
   --terminal-color: #00796b;
 }
 
-/*  Cyber Purple Theme — Enhanced Neon Edition */
-html[data-theme="cyber-purple"] {
-  --bg-color: radial-gradient(circle at 30% 20%, #0b0014 0%, #06000b 80%);
-  --card-bg: rgba(26, 0, 43, 0.9);
-  --text-color: #e9d6ff;
-  
-  /* Accents */
-  --accent: #c770ff;            /* Vibrant but readable neon */
-  --accent-soft: #a050ff;
-  --accent-glow: #c770ff80;
-
-  /* Tags / Highlights */
-  --tag-bg: #24003e;
-  --tag-hover: #d48fff;
-  
-  /* Borders and Glow */
-  --border-glow: 
-    0 0 6px #a050ff,
-    0 0 12px #a050ff60,
-    inset 0 0 8px #a050ff20;
-  --hover-border: #d48fff;
-
-  /* Interactive / Hover States */
-  --hover-bg: #310052;
-  --hover-text: #f5d0ff;
-  
-  /* Terminal / Accent Text */
-  --terminal-color: #da77ff;
-
-  /* Optional subtle inner glow for depth */
-  --inner-glow: inset 0 0 20px rgba(164, 69, 255, 0.08);
-}
-
-/* Optional enhancement: neon pulse for buttons or links */
-.neon-pulse {
-  animation: neonPulse 2s infinite alternate;
-}
-
-@keyframes neonPulse {
-  from { text-shadow: 0 0 4px var(--accent), 0 0 8px var(--accent-soft); }
-  to   { text-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent-soft); }
-}
-
 
 
 /* ========== Body & General ========== */
@@ -676,8 +633,6 @@ main {
         <option value="0x0z0n-light">0x0z0n Light</option>
         <option value="minimal-dark">Minimalist Dark</option>
         <option value="minimal-light">Minimalist Light</option>
-        <option value="cyber-purple">Night Purple</option>
-
       </select>
     </div>
   </div>
