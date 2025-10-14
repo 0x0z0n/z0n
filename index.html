@@ -414,6 +414,57 @@ a.read-more:hover {
     font-size: 1.1rem;
   }
 }
+
+/* ===== Layout Grid for Left Sidebar | Main | Right Panel ===== */
+.layout {
+  display: grid;
+  grid-template-columns: 250px 1fr 280px; /* left sidebar | main | right panel */
+  gap: 1.5rem;
+  transition: all 0.4s ease-in-out;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+/* Main content adjusts automatically */
+main {
+  padding: 2.5rem 0;
+  max-width: none;
+}
+
+/* Right Panel */
+.sidebar-right {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 12px;
+  height: fit-content;
+  position: sticky;
+  top: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 250px 1fr;
+  }
+  .sidebar-right {
+    display: none; /* hide right panel on medium screens */
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr; /* single column */
+  }
+  aside.sidebar-left {
+    width: 100%;
+    height: auto;
+    border-bottom: 1px solid var(--accent);
+  }
+  main {
+    padding: 1rem 0;
+  }
+}
+
 </style>
 
 
@@ -439,44 +490,66 @@ a.read-more:hover {
     <i class="fas fa-bars"></i>
   </button>
 
-  <!-- Layout Wrapper -->
-  <div class="layout">
-    <!-- Sidebar -->
-    <aside>
-      <img src="assets/avatar.jpeg" alt="Profile" />
-      <div class="site-title">0x0z0n</div>
-      <div class="site-subtitle">Cyber Security Blog</div>
+<!-- Layout Wrapper -->
+<div class="layout">
+  <!-- Left Sidebar -->
+  <aside class="sidebar-left">
+    <img src="assets/avatar.jpeg" alt="Profile" />
+    <div class="site-title">0x0z0n</div>
+    <div class="site-subtitle">Cyber Security Blog</div>
 
-      <nav>
-        <a href="index.html">🏠 Home</a>
-        <a href="categories.html">📚 Categories</a>
-        <a href="tags.html">🏷️ Tags</a>
-        <a href="archives.html">🗃️ Archives</a>
-      </nav>
+    <nav>
+      <a href="index.html">🏠 Home</a>
+      <a href="categories.html">📚 Categories</a>
+      <a href="tags.html">🏷️ Tags</a>
+      <a href="archives.html">🗃️ Archives</a>
+    </nav>
 
-      <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
+    <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
 
-      <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
-        <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" 
-           target="_blank" 
-           class="category-button" 
-           style="font-size:0.85rem;">
-           🧠 Cheatsheet
-        </a>
-      </div>
-    </aside>
+    <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
+      <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" 
+         target="_blank" 
+         class="category-button" 
+         style="font-size:0.85rem;">
+         🧠 Cheatsheet
+      </a>
+    </div>
+  </aside>
 
-    <!-- Main Content -->
-    <main>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search posts..." />
-      </div>
-      <section id="posts"></section>
-      <footer>
-        <p>&copy; 2025 0x0z0n</p>
-      </footer>
-    </main>
-  </div>
+  <!-- Main Content -->
+  <main>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search posts..." />
+    </div>
+    <section id="posts"></section>
+    <footer>
+      <p>&copy; 2025 0x0z0n</p>
+    </footer>
+  </main>
+
+  <!-- Right Panel -->
+  <aside class="sidebar-right">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Popular Tags</h3>
+    <div class="tag-list">
+      <a href="#" class="tag-link">Web</a>
+      <a href="#" class="tag-link">Linux</a>
+      <a href="#" class="tag-link">Mobile</a>
+      <a href="#" class="tag-link">Crypto</a>
+      <a href="#" class="tag-link">Docker</a>
+      <a href="#" class="tag-link">Exploit</a>
+    </div>
+
+    <h3 style="color: var(--accent); margin:1.5rem 0 1rem;">Quick Links</h3>
+    <div class="quick-links">
+      <a href="categories.html" class="category-button">Categories</a>
+      <a href="tags.html" class="category-button">Tags</a>
+      <a href="archives.html" class="category-button">Archives</a>
+      <a href="posts/Cheatsheet.html" class="category-button">Cheatsheet</a>
+    </div>
+  </aside>
+</div>
+
 
   <!-- Shooting Star -->
   <div id="shooting-star"></div>
