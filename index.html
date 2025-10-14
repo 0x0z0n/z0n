@@ -640,72 +640,59 @@ fetch("data/posts.json")
       }).join("");
     };
 
-    const renderPosts = (filteredPosts, scrollToTop = false) => {
-      // Save main scroll
-      const containerScroll = postsContainer.scrollTop;
+    // Create post elements once
+    const postElements = posts.map(post => {
+      const div = document.createElement("div");
+      div.className = "post-card";
 
-      // Save attack-path terminal scrolls
-      const terminalScrolls = {};
-      document.querySelectorAll(".attack-path-terminal").forEach((term, idx) => {
-        terminalScrolls[idx] = term.scrollTop;
+      const categoriesHTML = getCategories(post)
+        .map(cat => `<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`)
+        .join(" ");
+
+      const tagsHTML = getTags(post)
+        .map(tag => `<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`)
+        .join(" ");
+
+      const attackPathHTML = buildAttackPathHTML(post.attack_path);
+      const dateOnly = escapeHTML(post.date || "");
+
+      div.innerHTML = `
+        <h2><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
+        <div class="post-meta">${dateOnly}</div>
+        <p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p>
+        <div class="post-categories" style="margin-top:8px;">${categoriesHTML}</div>
+        <div class="post-tags" style="margin-top:8px;">${tagsHTML}</div>
+        ${attackPathHTML ? `<div class="attack-path-terminal terminal-style">${attackPathHTML}</div>` : ""}
+      `;
+
+      postsContainer.appendChild(div);
+      return { post, el: div };
+    });
+
+    // Filter posts by showing/hiding instead of re-rendering
+    const filterPosts = filteredPosts => {
+      postElements.forEach(({ post, el }) => {
+        const match = filteredPosts.includes(post);
+        el.style.display = match ? "" : "none";
       });
-
-      postsContainer.innerHTML = "";
-
-      filteredPosts.forEach((post, i) => {
-        const div = document.createElement("div");
-        div.className = "post-card";
-
-        const categoriesHTML = getCategories(post)
-          .map(cat => `<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`)
-          .join(" ");
-
-        const tagsHTML = getTags(post)
-          .map(tag => `<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`)
-          .join(" ");
-
-        const attackPathHTML = buildAttackPathHTML(post.attack_path);
-        const dateOnly = escapeHTML(post.date || "");
-
-        div.innerHTML = `
-          <h2><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
-          <div class="post-meta">${dateOnly}</div>
-          <p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p>
-          <div class="post-categories" style="margin-top:8px;">${categoriesHTML}</div>
-          <div class="post-tags" style="margin-top:8px;">${tagsHTML}</div>
-          ${attackPathHTML ? `<div class="attack-path-terminal terminal-style">${attackPathHTML}</div>` : ""}
-        `;
-
-        postsContainer.appendChild(div);
-
-        // Restore terminal scroll
-        const term = div.querySelector(".attack-path-terminal");
-        if (term && terminalScrolls[i] !== undefined) {
-          term.scrollTop = terminalScrolls[i];
-        }
-      });
-
-      if (scrollToTop) {
-        postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        postsContainer.scrollTop = containerScroll;
-      }
     };
 
-    renderPosts(posts);
+    // Initial render
+    filterPosts(posts);
 
     // Search input filtering
     searchInput?.addEventListener("input", e => {
       const q = (e.target.value || "").toLowerCase().trim();
+      if (!q) return filterPosts(posts);
+
       const filtered = posts.filter(post => {
-        if (!q) return true;
         if ((post.title || "").toLowerCase().includes(q)) return true;
         if ((post.excerpt || "").toLowerCase().includes(q)) return true;
         if (getCategories(post).some(c => c.toLowerCase().includes(q))) return true;
         if (getTags(post).some(t => t.toLowerCase().includes(q))) return true;
         return false;
       });
-      renderPosts(filtered, false);
+      filterPosts(filtered);
     });
 
     // Delegated clicks inside posts for categories & tags
@@ -714,7 +701,7 @@ fetch("data/posts.json")
       if (catBtn) {
         const cat = catBtn.dataset.cat;
         if (!cat) return;
-        renderPosts(posts.filter(p => getCategories(p).includes(cat)), true);
+        filterPosts(posts.filter(p => getCategories(p).includes(cat)));
         return;
       }
 
@@ -722,7 +709,7 @@ fetch("data/posts.json")
       if (tagLink) {
         const tag = tagLink.dataset.tag;
         if (!tag) return;
-        renderPosts(posts.filter(p => getTags(p).includes(tag)), true);
+        filterPosts(posts.filter(p => getTags(p).includes(tag)));
         return;
       }
     };
@@ -743,7 +730,7 @@ fetch("data/posts.json")
       a.dataset.cat = cat;
       a.addEventListener("click", ev => {
         ev.preventDefault();
-        renderPosts(posts.filter(p => getCategories(p).includes(cat)), true);
+        filterPosts(posts.filter(p => getCategories(p).includes(cat)));
       });
       categoryContainer.appendChild(a);
     });
@@ -759,7 +746,7 @@ fetch("data/posts.json")
       a.dataset.tag = tag;
       a.addEventListener("click", ev => {
         ev.preventDefault();
-        renderPosts(posts.filter(p => getTags(p).includes(tag)), true);
+        filterPosts(posts.filter(p => getTags(p).includes(tag)));
       });
       tagContainer.appendChild(a);
     });
@@ -767,6 +754,7 @@ fetch("data/posts.json")
   })
   .catch(err => console.error("Error loading posts.json:", err));
 </script>
+
 
 
 
