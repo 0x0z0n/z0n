@@ -482,6 +482,50 @@ main {
   }
 }
 
+.archive-list {
+  max-height: 150px; /* compact height */
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--text-color);
+  border-top: 1px solid var(--hover-border);
+  padding-top: 6px;
+}
+
+/* Hide scrollbar */
+.archive-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.archive-list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Month heading */
+.archive-list .month {
+  font-weight: 700;
+  margin-top: 6px;
+  color: var(--accent);
+}
+
+/* Individual entry */
+.archive-list .entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.archive-list .entry a {
+  color: var(--text-color);
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.archive-list .entry a:hover {
+  color: var(--hover-text);
+}
+
 </style>
 
  </head>
@@ -518,6 +562,13 @@ main {
       <a href="index.html">Home</a>
       <a href="archives.html">Activity</a>
     </nav>
+
+    <!-- Archive Section (Bottom Left) -->
+<div id="archivePanel" style="margin-top:2rem;">
+  <h3 style="color: var(--accent); font-size:0.9rem; margin-bottom:0.5rem;">Archive</h3>
+  <div id="archiveList" class="archive-list"></div>
+</div>
+
 
   </aside>
 
@@ -735,6 +786,51 @@ fetch("data/posts.json")
   .catch(err => console.error("Error loading posts.json:", err));
 </script>
 
+<script>
+fetch("data/posts.json")
+  .then(res => res.json())
+  .then(posts => {
+    // Sort descending by date
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const grouped = {};
+    posts.forEach(post => {
+      const d = new Date(post.date);
+      const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
+      const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+      if (!grouped[month]) grouped[month] = [];
+      grouped[month].push({
+        ...post,
+        formattedDate: day
+      });
+    });
+
+    const container = document.getElementById("archiveList");
+    container.innerHTML = "";
+
+    Object.entries(grouped).forEach(([month, entries]) => {
+      const monthDiv = document.createElement("div");
+      monthDiv.className = "month";
+      monthDiv.textContent = month;
+      container.appendChild(monthDiv);
+
+      entries.forEach(entry => {
+        const item = document.createElement("div");
+        item.className = "entry";
+        item.innerHTML = `
+          <span>${entry.formattedDate}</span>
+          <a href="${entry.href}">${entry.title}</a>
+        `;
+        container.appendChild(item);
+      });
+    });
+  })
+  .catch(err => {
+    document.getElementById("archiveList").innerHTML = "Failed to load archive data";
+    console.error("Error loading posts.json:", err);
+  });
+</script>
 
 
 
