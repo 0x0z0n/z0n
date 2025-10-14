@@ -623,7 +623,7 @@ fetch("data/posts.json")
         if (!step) return "";
 
         const stepNum = i + 1;
-        const { step: stepText = "", user = "", technique = "", result = "", mitigation = "" } = step;
+        const { user = "", technique = "", result = "", mitigation = "" } = step;
 
         return `
           <div class="attack-step">
@@ -634,7 +634,6 @@ fetch("data/posts.json")
             </div>
             ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
             ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
-            ${stepText ? `<div class="field"><span class="label">Description:</span>${escapeHTML(stepText)}</div>` : ""}
           </div>
         `;
       }).join("");
@@ -647,57 +646,83 @@ fetch("data/posts.json")
         const div = document.createElement("div");
         div.className = "post-card";
 
-        const categoriesHTML = getCategories(post)
+        // Prepare categories and tags as space-separated strings (escaped)
+        const categoriesArr = getCategories(post);
+        const categoriesStr = categoriesArr.map(c => escapeHTML(c)).join(" ");
+        const categoriesHTML = categoriesArr
           .map(cat => `<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`)
           .join(" ");
 
-        const tagsHTML = getTags(post)
+        const tagsArr = getTags(post);
+        const tagsStr = tagsArr.map(t => escapeHTML(t)).join(" ");
+        const tagsHTML = tagsArr
           .map(tag => `<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`)
           .join(" ");
 
         const attackPathHTML = buildAttackPathHTML(post.attack_path);
         const dateOnly = escapeHTML(post.date || "");
 
+        // New formatted layout per your example
         div.innerHTML = `
-          <h2><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
-          <div class="post-meta">${dateOnly}</div>
-          <p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p>
+          <h2 style="margin:0 0 6px 0;"><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
+          <div class="post-meta" style="margin-bottom:6px;"><strong>Date:</strong> ${dateOnly}</div>
+          <div class="post-meta" style="margin-bottom:6px;"><strong>Categories:</strong><br>${categoriesStr}</div>
+          <div class="post-meta" style="margin-bottom:8px;"><strong>Tags:</strong><br>${tagsStr}</div>
+          ${attackPathHTML ? `<div style="margin-top:10px;"><strong>Attack Chain:</strong><div class="attack-path-terminal terminal-style" style="margin-top:8px;">${attackPathHTML}</div></div>` : ""}
+          <div style="margin-top:10px;"><p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p></div>
           <div class="post-categories" style="margin-top:8px;">${categoriesHTML}</div>
           <div class="post-tags" style="margin-top:8px;">${tagsHTML}</div>
-          ${attackPathHTML ? `<div class="attack-path-terminal terminal-style">${attackPathHTML}</div>` : ""}
         `;
 
         postsContainer.appendChild(div);
       });
 
+      // Only scroll if explicitly allowed
       if (scrollToTop) {
         postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     };
 
+    // Initial render
     renderPosts(posts);
 
-    // Search input filtering
-    searchInput?.addEventListener("input", e => {
-      const q = (e.target.value || "").toLowerCase().trim();
+    // --- Helper to filter posts and update search input + URL ---
+    const updateSearch = q => {
+      searchInput.value = q;
       const filtered = posts.filter(post => {
-        if (!q) return true;
-        if ((post.title || "").toLowerCase().includes(q)) return true;
-        if ((post.excerpt || "").toLowerCase().includes(q)) return true;
-        if (getCategories(post).some(c => c.toLowerCase().includes(q))) return true;
-        if (getTags(post).some(t => t.toLowerCase().includes(q))) return true;
-        return false;
+        const query = q.toLowerCase();
+        return (
+          (post.title || "").toLowerCase().includes(query) ||
+          (post.excerpt || "").toLowerCase().includes(query) ||
+          getCategories(post).some(c => c.toLowerCase().includes(query)) ||
+          getTags(post).some(t => t.toLowerCase().includes(query))
+        );
       });
-      renderPosts(filtered, false);
+      renderPosts(filtered, false); // false prevents scrolling
+
+      // Update URL without reloading
+      const url = new URL(window.location);
+      if (q) {
+        url.searchParams.set("search", q);
+      } else {
+        url.searchParams.delete("search");
+      }
+      window.history.replaceState({}, "", url);
+    };
+
+    // Search input listener
+    searchInput?.addEventListener("input", e => {
+      updateSearch(e.target.value);
     });
 
-    // Delegated clicks inside posts for categories & tags
+    // Delegated clicks inside posts
     postsContainer.onclick = e => {
       const catBtn = e.target.closest(".post-cat-btn");
       if (catBtn) {
         const cat = catBtn.dataset.cat;
         if (!cat) return;
-        renderPosts(posts.filter(p => getCategories(p).includes(cat)), true);
+        updateSearch(cat); // update search + URL
+        e.preventDefault();
         return;
       }
 
@@ -705,7 +730,8 @@ fetch("data/posts.json")
       if (tagLink) {
         const tag = tagLink.dataset.tag;
         if (!tag) return;
-        renderPosts(posts.filter(p => getTags(p).includes(tag)), true);
+        updateSearch(tag); // update search + URL
+        e.preventDefault();
         return;
       }
     };
@@ -726,7 +752,7 @@ fetch("data/posts.json")
       a.dataset.cat = cat;
       a.addEventListener("click", ev => {
         ev.preventDefault();
-        renderPosts(posts.filter(p => getCategories(p).includes(cat)), true);
+        updateSearch(cat); // use search + URL, no scroll
       });
       categoryContainer.appendChild(a);
     });
@@ -742,14 +768,20 @@ fetch("data/posts.json")
       a.dataset.tag = tag;
       a.addEventListener("click", ev => {
         ev.preventDefault();
-        renderPosts(posts.filter(p => getTags(p).includes(tag)), true);
+        updateSearch(tag); // use search + URL, no scroll
       });
       tagContainer.appendChild(a);
     });
 
+    // Optional: load search from URL on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get("search") || "";
+    if (q) updateSearch(q);
+
   })
   .catch(err => console.error("Error loading posts.json:", err));
 </script>
+
 
 
 
