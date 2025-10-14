@@ -663,7 +663,6 @@ main {
   <div class="intro-inner">
     <div id="introLines" class="intro-lines" aria-hidden="true"></div>
     <div id="accessGranted" class="access-granted" aria-hidden="true">ACCESS GRANTED</div>
-    <button id="skipIntro" class="skip-intro" title="Skip intro">Skip</button>
   </div>
 </div>
   <!-- Theme Controls (Top-Right) -->
@@ -1055,14 +1054,12 @@ fetch("data/posts.json")
   const overlay = document.getElementById('introOverlay');
   const linesEl = document.getElementById('introLines');
   const accessEl = document.getElementById('accessGranted');
-  const skipBtn = document.getElementById('skipIntro');
 
   // Messages to show
   const lines = [
     "Establishing connection...",
     "Scanning security systems...",
-    "Bypassing firewall...",
-    "Penetration successful."
+    "Bypassing firewall..."
   ];
 
   const localKey = "introShown_v1"; // change key to reset behaviour
@@ -1139,12 +1136,6 @@ fetch("data/posts.json")
     try { localStorage.setItem(localKey, '1'); } catch(e){}
     setTimeout(()=> overlay.style.display='none', 300);
   }
-
-  skipBtn?.addEventListener('click', skipIntro);
-  overlay.addEventListener('click', (e) => {
-    // if user clicks outside the button, skip too
-    if (e.target === overlay) skipIntro();
-  });
 
   // start the intro as soon as possible
   // but allow page to continue loading; we don't block resources
