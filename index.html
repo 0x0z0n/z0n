@@ -231,28 +231,30 @@ main {
   border-color: var(--hover-border);
 }
 
-/* Terminal / Attack Path */
-.terminal-style, .attack-path-terminal {
+/* ===== Terminal / Attack Path (scrollable but hidden scrollbar) ===== */
+.terminal-style,
+.attack-path-terminal {
   font-family: monospace;
   font-size: 12px;
   border-radius: 6px;
   padding: 12px;
-  overflow-y: auto;
-  box-shadow: inset 0 0 10px #000000;
+  overflow-y: auto;               /* enable vertical scrolling */
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE & Edge */
 }
 
-.terminal-style {
-  max-height: 400px;
-  background-color: #0a0a0a;
-  color: #00ff95;
-}
-
-/* Hide scrollbar */
+/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
 .terminal-style::-webkit-scrollbar,
 .attack-path-terminal::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+  width: 0;
+  height: 0;
 }
+
+/* Fixed height for scrolling area */
+.terminal-style { max-height: 400px; background-color: #0a0a0a; color: #00ff95; }
+.attack-path-terminal { max-height: 320px; min-height: 80px; background-color: var(--card-bg); color: var(--terminal-color); }
+
 
 .attack-path-terminal {
   background-color: var(--card-bg);
