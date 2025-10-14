@@ -201,6 +201,89 @@ nav a:hover {
   transform: scale(1.15);
 }
 
+/* Intro Overlay */
+#introOverlay {
+  position: fixed;
+  inset: 0;
+  background: #000; /* pure black background */
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  animation: introFadeIn 200ms ease;
+}
+
+.intro-inner {
+  text-align: center;
+  max-width: 90%;
+  padding: 2rem;
+}
+
+.intro-lines {
+  font-family: 'Courier New', monospace;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: #00ff55; /* neon green */
+  text-shadow:
+    0 0 6px rgba(0,255,85,0.25),
+    0 0 20px rgba(0,255,85,0.08),
+    0 0 40px rgba(0,255,85,0.04);
+  letter-spacing: 0.6px;
+  white-space: pre-line;
+  min-height: 6.2rem; /* reserve space while typing */
+  opacity: 0;
+}
+
+.access-granted {
+  margin-top: 1.25rem;
+  font-family: 'Orbitron', system-ui, sans-serif;
+  font-size: 2rem;
+  color: #00ff55;
+  text-shadow:
+    0 0 12px rgba(0,255,85,0.35),
+    0 0 30px rgba(0,255,85,0.12),
+    0 6px 24px rgba(0,0,0,0.6);
+  transform: scale(0.9);
+  opacity: 0;
+  letter-spacing: 4px;
+}
+
+/* small skip button */
+.skip-intro {
+  margin-top: 1rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-block;
+}
+
+/* fade + slide out */
+.intro-hide {
+  animation: introHide 600ms ease forwards;
+}
+
+@keyframes introFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes introHide {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); visibility: hidden; }
+}
+
+/* small responsiveness */
+@media (max-width:480px) {
+  .intro-lines { font-size: 1rem; min-height:5rem; }
+  .access-granted { font-size: 1.4rem; }
+}
+
+
 /* Main Content */
 main {
   flex: 1;
@@ -546,6 +629,14 @@ main {
 
  </head>
 <body>
+  <!-- Intro Loading Overlay -->
+<div id="introOverlay" aria-hidden="true">
+  <div class="intro-inner">
+    <div id="introLines" class="intro-lines" aria-hidden="true"></div>
+    <div id="accessGranted" class="access-granted" aria-hidden="true">ACCESS GRANTED</div>
+    <button id="skipIntro" class="skip-intro" title="Skip intro">Skip</button>
+  </div>
+</div>
   <!-- Theme Controls (Top-Right) -->
   <div class="theme-controls">
     <div class="theme-toggle" title="Toggle Theme">
@@ -930,8 +1021,112 @@ fetch("data/posts.json")
   });
 </script>
 
+<script>
+(function(){
+  const overlay = document.getElementById('introOverlay');
+  const linesEl = document.getElementById('introLines');
+  const accessEl = document.getElementById('accessGranted');
+  const skipBtn = document.getElementById('skipIntro');
+
+  // Messages to show
+  const lines = [
+    "Establishing connection...",
+    "Scanning security systems...",
+    "Bypassing firewall...",
+    "Penetration successful."
+  ];
+
+  const localKey = "introShown_v1"; // change key to reset behaviour
+
+  // If already shown, hide overlay immediately
+  if (localStorage.getItem(localKey)) {
+    overlay.style.display = "none";
+    return;
+  }
+
+  // Typing helpers
+  function typeLine(text, targetEl, speed = 25) {
+    return new Promise(resolve => {
+      targetEl.style.opacity = 1;
+      let i = 0;
+      const step = () => {
+        if (i <= text.length) {
+          targetEl.textContent = text.slice(0, i);
+          i++;
+          setTimeout(step, speed);
+        } else {
+          // small pause after finishing a line
+          setTimeout(resolve, 400);
+        }
+      };
+      step();
+    });
+  }
+
+  async function playIntro() {
+    // ensure overlay visible
+    overlay.style.display = "flex";
+
+    // sequentially type lines (we use a local buffer to append lines)
+    let buffer = "";
+    for (let idx = 0; idx < lines.length; idx++) {
+      const line = lines[idx];
+      buffer += (idx === 0 ? "" : "\n") + line;
+      // type only the new portion while keeping previous lines
+      // we render full buffer but animate typing of new line
+      // find start index for new line
+      const newLineStart = buffer.lastIndexOf(line);
+      // quickly set existing portion, then animate last line
+      linesEl.textContent = buffer.slice(0, newLineStart);
+      await typeLine(line, linesEl, 24);
+      // brief pause
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    // show ACCESS GRANTED with a small scale & fade-in
+    accessEl.style.opacity = 1;
+    accessEl.style.transform = "scale(1.02)";
+    accessEl.style.transition = "transform 260ms ease, opacity 260ms ease";
+    // small bounce
+    setTimeout(() => {
+      accessEl.style.transform = "scale(1)";
+    }, 50);
+
+    // keep visible a moment then hide overlay
+    setTimeout(() => {
+      overlay.classList.add('intro-hide');
+      // persist shown so it won't show again
+      try { localStorage.setItem(localKey, '1'); } catch(e){}
+      // fully remove from DOM after animation
+      setTimeout(() => {
+        overlay.style.display = "none";
+      }, 700);
+    }, 900); // time after ACCESS GRANTED
+  }
+
+  // Allow skipping the intro
+  function skipIntro() {
+    overlay.classList.add('intro-hide');
+    try { localStorage.setItem(localKey, '1'); } catch(e){}
+    setTimeout(()=> overlay.style.display='none', 300);
+  }
+
+  skipBtn?.addEventListener('click', skipIntro);
+  overlay.addEventListener('click', (e) => {
+    // if user clicks outside the button, skip too
+    if (e.target === overlay) skipIntro();
+  });
+
+  // start the intro as soon as possible
+  // but allow page to continue loading; we don't block resources
+  requestAnimationFrame(() => {
+    playIntro().catch(()=>{ overlay.style.display='none'; });
+  });
+})();
+</script>
 
 
 
 </body>
+
 </html>
