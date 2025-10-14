@@ -593,7 +593,6 @@ fetch("data/posts.json")
           <h2><a href="${post.href}">${post.title}</a></h2>
           <div class="post-meta">${post.date} • ${post.category.join(", ")}</div>
           <p class="post-excerpt">${post.excerpt || ""}</p>
-          <a class="read-more" href="${post.href}">Read More</a>
         `;
         postsContainer.appendChild(div);
       });
@@ -632,7 +631,6 @@ fetch("data/posts.json")
           <h2><a href="${post.href}">${post.title}</a></h2>
           <div class="post-meta">${post.date} • ${post.category.join(", ")}</div>
           <p class="post-excerpt">${post.excerpt || ""}</p>
-          <a class="read-more" href="${post.href}">Read More</a>
         `;
         postsContainer.appendChild(div);
       });
@@ -704,9 +702,6 @@ fetch("data/posts.json")
   })
   .catch(err => console.error("Error loading posts.json:", err));
 </script>
-
-
-
 
 </body>
 </html>
