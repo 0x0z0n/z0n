@@ -306,10 +306,94 @@ footer {
   .post-card h2 { font-size: 1.1rem; }
   footer { font-size: 0.7rem; }
 }
+
+/* ===== Sidebar Toggle Button ===== */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 15px;
+  background: var(--card-bg);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 1.3rem;
+  padding: 6px 10px;
+  z-index: 1100;
+  cursor: pointer;
+  box-shadow: var(--border-glow);
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+  color: var(--hover-text);
+  border-color: var(--hover-border);
+}
+
+/* ===== Layout Animation ===== */
+.layout {
+  display: flex;
+  transition: all 0.4s ease-in-out;
+}
+
+aside {
+  width: 250px;
+  transition: all 0.4s ease-in-out;
+  overflow: hidden;
+}
+
+/* Collapsed Sidebar */
+body.sidebar-collapsed aside {
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  border: none;
+}
+
+body.sidebar-collapsed main {
+  flex: 1;
+  transition: all 0.4s ease-in-out;
+  padding-left: 2rem;
+}
+
+/* ===== Post Grid ===== */
+#posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.8rem;
+  transition: all 0.4s ease-in-out;
+}
+
+/* Adjust when sidebar is collapsed */
+body.sidebar-collapsed #posts {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+/* ===== Mobile Optimization ===== */
+@media screen and (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  aside {
+    width: 100%;
+    height: auto;
+  }
+  body.sidebar-collapsed aside {
+    display: none;
+  }
+  #posts {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-toggle {
+    top: 10px;
+    left: 10px;
+  }
+}
+
 </style>
 
-  </head>
-  <body>
+ </head>
+<body>
   <!-- Theme Controls (Top-Right) -->
   <div class="theme-controls">
     <div class="theme-toggle" title="Toggle Theme">
@@ -325,44 +409,66 @@ footer {
     </div>
   </div>
 
-  <!-- Sidebar -->
-  <aside>
-    <img src="assets/avatar.jpeg" alt="Profile" />
-    <div class="site-title">0x0z0n</div>
-    <div class="site-subtitle">Cyber Securtiy Blog</div>
-    <nav>
-      <a href="index.html">🏠 Home</a>
-      <a href="categories.html">📚 Categories</a>
-      <a href="tags.html">🏷️ Tags</a>
-      <a href="archives.html">🗃️ Archives</a>
-      <a href="about.html">ℹ️ About</a>
-    </nav>
+  <!-- Sidebar Toggle Button -->
+  <button id="sidebarToggle" class="sidebar-toggle" title="Toggle Sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
 
+  <!-- Layout Wrapper -->
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside>
+      <img src="assets/avatar.jpeg" alt="Profile" />
+      <div class="site-title">0x0z0n</div>
+      <div class="site-subtitle">Cyber Security Blog</div>
 
-    <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
+      <nav>
+        <a href="index.html">🏠 Home</a>
+        <a href="categories.html">📚 Categories</a>
+        <a href="tags.html">🏷️ Tags</a>
+        <a href="archives.html">🗃️ Archives</a>
+        <a href="about.html">ℹ️ About</a>
+      </nav>
 
-    <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
-      <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" target="_blank" class="category-button" style="font-size:0.85rem;">🧠 Cheatsheet</a>
-    </div>
-  </aside>
+      <hr style="margin:1.5rem 0; border:0; border-top:1px solid #222;" />
 
-  <!-- Main Content -->
-  <main>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search posts..." />
-    </div>
-    <section id="posts"></section>
-    <footer>
-      <p>&copy; 2025 0x0z0n</p>
-    </footer>
-  </main>
+      <div class="cheatsheet-link" style="margin-top:2rem; text-align:center;">
+        <a href="https://0x0z0n.github.io/z0n/posts/Cheatsheet.html" 
+           target="_blank" 
+           class="category-button" 
+           style="font-size:0.85rem;">
+           🧠 Cheatsheet
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search posts..." />
+      </div>
+      <section id="posts"></section>
+      <footer>
+        <p>&copy; 2025 0x0z0n</p>
+      </footer>
+    </main>
+  </div>
 
   <!-- Shooting Star -->
   <div id="shooting-star"></div>
 
   <!-- JS Files -->
   <script src="scripts.js"></script>
+
+  <!-- Sidebar Collapse Script -->
+  <script>
+    const toggleBtn = document.getElementById("sidebarToggle");
+    toggleBtn.addEventListener("click", () => {
+      document.body.classList.toggle("sidebar-collapsed");
+      const icon = toggleBtn.querySelector("i");
+      icon.classList.toggle("fa-bars");
+      icon.classList.toggle("fa-chevron-right");
+    });
+  </script>
 </body>
-
-
 </html>
