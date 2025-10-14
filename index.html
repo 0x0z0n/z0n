@@ -551,8 +551,6 @@ main {
   <!-- 3️⃣ Tags Section -->
   <div class="right-section tags-section" style="margin-top:2rem;">
     <h3 style="color: var(--accent); margin-bottom:1rem;">Search / Tags</h3>
-    <input type="text" id="tagSearch" placeholder="Search tags..." 
-           style="width: 100%; padding:0.5rem; margin-bottom:1rem; border-radius:6px; border:1px solid var(--accent); background:var(--card-bg); color:var(--text-color);"/>
     <div id="tagList"></div>
   </div>
 
@@ -564,54 +562,17 @@ main {
   <!-- Shooting Star -->
   <div id="shooting-star"></div>
 
-  <!-- JS Files -->
-  <script src="scripts.js"></script>
+<!-- JS Files -->
+<script src="scripts.js"></script>
 
-  <!-- Sidebar Collapse Script -->
-  <script>
-    const toggleBtn = document.getElementById("sidebarToggle");
-    toggleBtn.addEventListener("click", () => {
-      document.body.classList.toggle("sidebar-collapsed");
-      const icon = toggleBtn.querySelector("i");
-      icon.classList.toggle("fa-bars");
-      icon.classList.toggle("fa-chevron-right");
-    });
-  </script>
+<!-- Sidebar Collapse Script -->
 <script>
-fetch("data/posts.json")
-  .then(res => res.json())
-  .then(posts => {
-    const postsContainer = document.getElementById("posts");
-
-    // Render posts initially
-    const renderPosts = filteredPosts => {
-      postsContainer.innerHTML = "";
-      filteredPosts.forEach(post => {
-        const div = document.createElement("div");
-        div.className = "post-card";
-        div.innerHTML = `
-          <h2><a href="${post.href}">${post.title}</a></h2>
-          <div class="post-meta">${post.date} • ${post.category.join(", ")}</div>
-          <p class="post-excerpt">${post.excerpt || ""}</p>
-        `;
-        postsContainer.appendChild(div);
-      });
-    };
-
-    renderPosts(posts);
-
-    // Search Input
-    const searchInput = document.getElementById("searchInput");
-    searchInput.addEventListener("input", e => {
-      const val = e.target.value.toLowerCase();
-      const filtered = posts.filter(post =>
-        post.title.toLowerCase().includes(val) ||
-        post.excerpt?.toLowerCase().includes(val) ||
-        (post.category?.join(" ").toLowerCase().includes(val)) ||
-        (post.tags?.join(" ").toLowerCase().includes(val))
-      );
-      renderPosts(filtered);
-    });
+  const toggleBtn = document.getElementById("sidebarToggle");
+  toggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("sidebar-collapsed");
+    const icon = toggleBtn.querySelector("i");
+    icon.classList.toggle("fa-bars");
+    icon.classList.toggle("fa-chevron-right");
   });
 </script>
 
@@ -620,6 +581,7 @@ fetch("data/posts.json")
   .then(res => res.json())
   .then(posts => {
     const postsContainer = document.getElementById("posts");
+    const categoryContainer = document.getElementById("categoryList");
 
     // ===== Render Posts =====
     const renderPosts = filteredPosts => {
@@ -635,49 +597,23 @@ fetch("data/posts.json")
         postsContainer.appendChild(div);
       });
     };
+
     renderPosts(posts);
 
-    // ===== Search Input =====
+    // ===== Unified Search =====
     const searchInput = document.getElementById("searchInput");
     searchInput.addEventListener("input", e => {
       const val = e.target.value.toLowerCase();
       const filtered = posts.filter(post =>
         post.title.toLowerCase().includes(val) ||
         post.excerpt?.toLowerCase().includes(val) ||
-        (post.category?.join(" ").toLowerCase().includes(val)) ||
-        (post.tags?.join(" ").toLowerCase().includes(val))
+        post.category?.some(cat => cat.toLowerCase().includes(val)) ||
+        post.tags?.some(tag => tag.toLowerCase().includes(val))
       );
       renderPosts(filtered);
     });
 
-    // ===== Render Tags =====
-    const tagContainer = document.getElementById("tagList");
-    const tagInput = document.getElementById("tagSearch");
-    const tags = {};
-    posts.forEach(post => {
-      post.tags?.forEach(tag => { tags[tag] = (tags[tag] || 0) + 1; });
-    });
-    const tagList = Object.keys(tags).sort();
-    const renderTags = tagArr => {
-      tagContainer.innerHTML = "";
-      tagArr.forEach(tag => {
-        const a = document.createElement("a");
-        a.href = `index.html?tag=${encodeURIComponent(tag)}`;
-        a.className = "tag-link";
-        a.textContent = tag;
-        tagContainer.appendChild(a);
-      });
-    };
-    renderTags(tagList);
-
-    tagInput.addEventListener("input", e => {
-      const val = e.target.value.toLowerCase();
-      const filtered = tagList.filter(tag => tag.toLowerCase().includes(val));
-      renderTags(filtered);
-    });
-
     // ===== Render Categories =====
-    const categoryContainer = document.getElementById("categoryList");
     const categories = {};
     posts.forEach(post => {
       (Array.isArray(post.category) ? post.category : [post.category || "Uncategorized"])
