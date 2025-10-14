@@ -23,6 +23,7 @@
   --hover-bg: #222;
   --hover-text: #80ffff;
   --hover-border: #00d0ff;
+  --terminal-color: #0f0; /* New variable for attack path terminal */
 }
 
 /* 0x0z0n-light */
@@ -37,6 +38,7 @@ html[data-theme="0x0z0n-light"] {
   --hover-bg: #e0e0e0;
   --hover-text: #007acc;
   --hover-border: #007acc;
+  --terminal-color: #00796b;
 }
 
 /* Minimalist Dark */
@@ -51,6 +53,7 @@ html[data-theme="minimal-dark"] {
   --hover-bg: #2a2a2a;
   --hover-text: #a0e0d0;
   --hover-border: #4db6ac;
+  --terminal-color: #80cbc4;
 }
 
 /* Minimalist Light */
@@ -65,6 +68,7 @@ html[data-theme="minimal-light"] {
   --hover-bg: #e0f0ef;
   --hover-text: #00796b;
   --hover-border: #00796b;
+  --terminal-color: #00796b;
 }
 
 /* ========== Body & General ========== */
@@ -229,23 +233,21 @@ main {
 
 /* Terminal / Attack Path */
 .attack-path-terminal {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  font-family: monospace;
-  padding: 10px;
-  margin-top: 12px;
-  border-radius: 6px;
-  white-space: pre-wrap;
-  font-size: 0.9rem;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
   max-height: 200px;
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE 10+ */
+  background-color: var(--card-bg);
+  color: var(--terminal-color);
+  padding: 8px;
+  font-family: monospace;
+  font-size: 12px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
 }
+
+/* Hide scrollbar */
 .attack-path-terminal::-webkit-scrollbar {
-  width: 0;  /* Chrome, Safari */
-  height: 0;
+  width: 0px;
+  background: transparent;
 }
 
 /* Footer */
@@ -373,47 +375,6 @@ body.sidebar-collapsed main {
   }
 }
 
-
-/* ===== Responsive ===== */
-@media screen and (max-width: 1024px) {
-  #posts {
-    max-width: 95%;
-    padding: 0 1rem;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  body {
-    flex-direction: column;
-  }
-  aside {
-    width: 100%;
-    height: auto;
-    padding: 1rem;
-    border-bottom: 1px solid var(--accent);
-  }
-  body.sidebar-collapsed aside {
-    display: none;
-  }
-  #posts {
-    max-width: 100%;
-    padding: 0 1rem;
-  }
-  .sidebar-toggle {
-    top: 10px;
-    left: 10px;
-  }
-}
-
-@media screen and (max-width: 600px) {
-  .post-card {
-    padding: 1.4rem;
-  }
-  .post-card h2 {
-    font-size: 1.1rem;
-  }
-}
-
 /* ===== Layout Grid for Left Sidebar | Main | Right Panel ===== */
 .layout {
   display: grid;
@@ -464,25 +425,8 @@ main {
   }
 }
 
-.attack-path-terminal {
-  max-height: 200px;        /* adjust as needed */
-  overflow-y: auto;
-  background-color: #000;
-  color: #0f0;
-  padding: 8px;
-  font-family: monospace;
-  font-size: 12px;
-  border-radius: 6px;
-}
-
-/* Hide scrollbar */
-.attack-path-terminal::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
-}
-
-
 </style>
+
 
 
  </head>
