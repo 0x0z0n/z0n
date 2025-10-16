@@ -738,7 +738,6 @@ toggleBtn.addEventListener("click", () => {
   if(clickCount>=CLICK_LIMIT){ clickCount=0; firstClickTime=0; decodeVerifyAndRedirect(); }
 });
 
-
 /* ================= Theme Toggle + Selector ================= */
 const toggle = document.querySelector(".theme-toggle");
 const icon = toggle.querySelector("i");
@@ -760,7 +759,6 @@ toggle.addEventListener("click", ()=>{
   setTheme(current.includes("dark") ? (current.includes("minimal") ? "minimal-light" : "0x0z0n-light") : (current.includes("minimal") ? "minimal-dark" : "0x0z0n-dark"));
 });
 themeSelect.addEventListener("change", ()=>setTheme(themeSelect.value));
-
 
 /* ================= Posts, Search, Sidebar, Archive ================= */
 const searchInput = document.getElementById("searchInput");
@@ -796,31 +794,39 @@ function renderPosts(posts, scrollTop=false){
     div.innerHTML=`<h2><a href="${escapeHTML(post.href||"#")}">${escapeHTML(post.title||"Untitled")}</a></h2><div class="post-meta">${escapeHTML(post.date||"")}</div><p class="post-excerpt">${escapeHTML(post.excerpt||"")}</p><div class="post-categories">${categoriesHTML}</div><div class="post-tags">${tagsHTML}</div>${attackHTML?`<div class="attack-path-terminal terminal-style">${attackHTML}</div>`:""}`;
     postsContainer.appendChild(div);
   });
+  // Only scroll if explicitly requested
   if(scrollTop) postsContainer.scrollIntoView({behavior:"smooth", block:"start"});
-  else window.scrollTo(0,scrollPos);
+  else window.scrollTo(0, scrollPos);
 }
 
-function filterPosts(){
+function filterPosts(scrollTop=false){
   const query=searchInput.value.trim().toLowerCase();
-  renderPosts(allPosts.filter(post=> (post.title||"").toLowerCase().includes(query) || getCategories(post).some(c=>c.toLowerCase().includes(query)) || getTags(post).some(t=>t.toLowerCase().includes(query)) || (post.date && post.date.startsWith(query))));
+  const filtered=allPosts.filter(post=> 
+    (post.title||"").toLowerCase().includes(query) ||
+    getCategories(post).some(c=>c.toLowerCase().includes(query)) ||
+    getTags(post).some(t=>t.toLowerCase().includes(query)) ||
+    (post.date && post.date.startsWith(query))
+  );
+  renderPosts(filtered, scrollTop);
 }
 
 function populateSidebarAndArchive(posts){
-  // Sidebar: categories
-  const categoriesCount={}; const tagsCount={}; const grouped={};
+  const categoriesCount={}, tagsCount={}, grouped={};
   posts.forEach(post=>{
     getCategories(post).forEach(c=>categoriesCount[c]=(categoriesCount[c]||0)+1);
     getTags(post).forEach(t=>tagsCount[t]=(tagsCount[t]||0)+1);
-    // archive grouping
-    const d=new Date(post.date); const month=d.toLocaleDateString('en-GB',{year:'numeric',month:'short'}); const day=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    if(!grouped[month]) grouped[month]=[]; grouped[month].push({...post, formattedDate:day});
+    const d=new Date(post.date); 
+    const month=d.toLocaleDateString('en-GB',{year:'numeric',month:'short'}); 
+    const day=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+    if(!grouped[month]) grouped[month]=[]; 
+    grouped[month].push({...post, formattedDate:day});
   });
 
   // categories
   categoryContainer.innerHTML="";
   Object.entries(categoriesCount).forEach(([cat,count])=>{
     const a=document.createElement("a"); a.href="#"; a.className="category-button"; a.textContent=`${cat} (${count})`; a.dataset.cat=cat;
-    a.addEventListener("click",ev=>{ ev.preventDefault(); renderPosts(allPosts.filter(p=>getCategories(p).includes(cat)),true); });
+    a.addEventListener("click",ev=>{ ev.preventDefault(); searchInput.value=cat; filterPosts(true); });
     categoryContainer.appendChild(a);
   });
 
@@ -828,7 +834,7 @@ function populateSidebarAndArchive(posts){
   tagContainer.innerHTML="";
   Object.keys(tagsCount).sort().forEach(tag=>{
     const a=document.createElement("a"); a.href="#"; a.className="tag-link"; a.textContent=`${tag} (${tagsCount[tag]})`; a.dataset.tag=tag;
-    a.addEventListener("click",ev=>{ ev.preventDefault(); renderPosts(allPosts.filter(p=>getTags(p).includes(tag)),true); });
+    a.addEventListener("click",ev=>{ ev.preventDefault(); searchInput.value=tag; filterPosts(true); });
     tagContainer.appendChild(a);
   });
 
@@ -852,19 +858,18 @@ fetch("data/posts.json").then(res=>res.json()).then(posts=>{
   // initial URL param search
   const params=new URLSearchParams(window.location.search);
   const query=params.get("search")||params.get("category")||params.get("tag")||params.get("date");
-  if(query){ searchInput.value=query; filterPosts(); }
+  if(query){ searchInput.value=query; filterPosts(false); searchInput.blur(); } // NO dropdown
 
-  searchInput.addEventListener("input",filterPosts);
+  searchInput.addEventListener("input",()=>filterPosts(false));
 
   // delegated post clicks
   postsContainer.onclick=e=>{
     const catBtn=e.target.closest(".post-cat-btn");
     const tagLink=e.target.closest(".post-tag-link");
-    if(catBtn) renderPosts(allPosts.filter(p=>getCategories(p).includes(catBtn.dataset.cat)),true);
-    if(tagLink) renderPosts(allPosts.filter(p=>getTags(p).includes(tagLink.dataset.tag)),true);
+    if(catBtn){ searchInput.value=catBtn.dataset.cat; filterPosts(true); }
+    if(tagLink){ searchInput.value=tagLink.dataset.tag; filterPosts(true); }
   };
 }).catch(err=>console.error("Error loading posts.json:",err));
-
 
 /* ================= Intro Overlay Animation ================= */
 (function(){
