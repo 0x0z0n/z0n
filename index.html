@@ -767,6 +767,7 @@ const categoryContainer = document.getElementById("categoryList");
 const tagContainer = document.getElementById("tagList");
 const archiveContainer = document.getElementById("archiveList");
 let allPosts = [];
+let categoriesCount = {}, tagsCount = {}, archivesGrouped = {};
 
 function escapeHTML(str){ return String(str??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
 function getCategories(post){ return Array.isArray(post.category)?post.category:(post.category?[post.category]:[]); }
@@ -783,25 +784,29 @@ function buildAttackPathHTML(attack_path){
 }
 
 function renderPosts(posts, scrollTop=false){
-  postsContainer.innerHTML="";
-  if(posts.length===0){ postsContainer.innerHTML="No posts found."; return; }
+  postsContainer.innerHTML = posts.length===0 ? "No posts found." : "";
   const scrollPos = window.scrollY;
   posts.forEach(post=>{
-    const div=document.createElement("div"); div.className="post-card";
-    const categoriesHTML=getCategories(post).map(cat=>`<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`).join(" ");
-    const tagsHTML=getTags(post).map(tag=>`<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`).join(" ");
-    const attackHTML=buildAttackPathHTML(post.attack_path);
-    div.innerHTML=`<h2><a href="${escapeHTML(post.href||"#")}">${escapeHTML(post.title||"Untitled")}</a></h2><div class="post-meta">${escapeHTML(post.date||"")}</div><p class="post-excerpt">${escapeHTML(post.excerpt||"")}</p><div class="post-categories">${categoriesHTML}</div><div class="post-tags">${tagsHTML}</div>${attackHTML?`<div class="attack-path-terminal terminal-style">${attackHTML}</div>`:""}`;
+    const div = document.createElement("div"); 
+    div.className = "post-card";
+    const categoriesHTML = getCategories(post).map(cat=>`<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`).join(" ");
+    const tagsHTML = getTags(post).map(tag=>`<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`).join(" ");
+    const attackHTML = buildAttackPathHTML(post.attack_path);
+    div.innerHTML = `<h2><a href="${escapeHTML(post.href||"#")}">${escapeHTML(post.title||"Untitled")}</a></h2>
+                     <div class="post-meta">${escapeHTML(post.date||"")}</div>
+                     <p class="post-excerpt">${escapeHTML(post.excerpt||"")}</p>
+                     <div class="post-categories">${categoriesHTML}</div>
+                     <div class="post-tags">${tagsHTML}</div>
+                     ${attackHTML?`<div class="attack-path-terminal terminal-style">${attackHTML}</div>`:""}`;
     postsContainer.appendChild(div);
   });
-  // Only scroll if explicitly requested
   if(scrollTop) postsContainer.scrollIntoView({behavior:"smooth", block:"start"});
   else window.scrollTo(0, scrollPos);
 }
 
 function filterPosts(scrollTop=false){
-  const query=searchInput.value.trim().toLowerCase();
-  const filtered=allPosts.filter(post=> 
+  const query = searchInput.value.trim().toLowerCase();
+  const filtered = allPosts.filter(post=>
     (post.title||"").toLowerCase().includes(query) ||
     getCategories(post).some(c=>c.toLowerCase().includes(query)) ||
     getTags(post).some(t=>t.toLowerCase().includes(query)) ||
@@ -810,66 +815,76 @@ function filterPosts(scrollTop=false){
   renderPosts(filtered, scrollTop);
 }
 
-function populateSidebarAndArchive(posts){
-  const categoriesCount={}, tagsCount={}, grouped={};
-  posts.forEach(post=>{
-    getCategories(post).forEach(c=>categoriesCount[c]=(categoriesCount[c]||0)+1);
-    getTags(post).forEach(t=>tagsCount[t]=(tagsCount[t]||0)+1);
-    const d=new Date(post.date); 
-    const month=d.toLocaleDateString('en-GB',{year:'numeric',month:'short'}); 
-    const day=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    if(!grouped[month]) grouped[month]=[]; 
-    grouped[month].push({...post, formattedDate:day});
-  });
-
+function populateSidebarAndArchive(){
   // categories
-  categoryContainer.innerHTML="";
+  categoryContainer.innerHTML = "";
   Object.entries(categoriesCount).forEach(([cat,count])=>{
-    const a=document.createElement("a"); a.href="#"; a.className="category-button"; a.textContent=`${cat} (${count})`; a.dataset.cat=cat;
-    a.addEventListener("click",ev=>{ ev.preventDefault(); searchInput.value=cat; filterPosts(true); });
+    const a = document.createElement("a"); 
+    a.href="#"; a.className="category-button"; 
+    a.textContent = `${cat} (${count})`; 
+    a.dataset.cat = cat;
+    a.addEventListener("click", ev=>{ ev.preventDefault(); searchInput.value=cat; filterPosts(true); });
     categoryContainer.appendChild(a);
   });
 
   // tags
-  tagContainer.innerHTML="";
+  tagContainer.innerHTML = "";
   Object.keys(tagsCount).sort().forEach(tag=>{
-    const a=document.createElement("a"); a.href="#"; a.className="tag-link"; a.textContent=`${tag} (${tagsCount[tag]})`; a.dataset.tag=tag;
-    a.addEventListener("click",ev=>{ ev.preventDefault(); searchInput.value=tag; filterPosts(true); });
+    const a = document.createElement("a"); 
+    a.href="#"; a.className="tag-link"; 
+    a.textContent = `${tag} (${tagsCount[tag]})`; 
+    a.dataset.tag = tag;
+    a.addEventListener("click", ev=>{ ev.preventDefault(); searchInput.value=tag; filterPosts(true); });
     tagContainer.appendChild(a);
   });
 
   // archive
-  archiveContainer.innerHTML="";
-  Object.entries(grouped).forEach(([month,entries])=>{
-    const monthDiv=document.createElement("div"); monthDiv.className="month"; monthDiv.textContent=month; archiveContainer.appendChild(monthDiv);
+  archiveContainer.innerHTML = "";
+  Object.entries(archivesGrouped).forEach(([month,entries])=>{
+    const monthDiv = document.createElement("div"); monthDiv.className="month"; monthDiv.textContent = month;
+    archiveContainer.appendChild(monthDiv);
     entries.forEach(entry=>{
-      const item=document.createElement("div"); item.className="entry"; item.innerHTML=`<span>${entry.formattedDate}</span> <a href="${entry.href}">${entry.title}</a>`;
+      const item = document.createElement("div"); item.className="entry"; 
+      item.innerHTML = `<span>${entry.formattedDate}</span> <a href="${entry.href}">${entry.title}</a>`;
       archiveContainer.appendChild(item);
     });
   });
 }
 
-// Fetch posts once and populate everything
+// single-pass fetch & process
 fetch("data/posts.json").then(res=>res.json()).then(posts=>{
-  allPosts=posts;
+  allPosts = posts;
+  categoriesCount = {}; tagsCount = {}; archivesGrouped = {};
+
+  posts.forEach(post=>{
+    getCategories(post).forEach(c=>categoriesCount[c]=(categoriesCount[c]||0)+1);
+    getTags(post).forEach(t=>tagsCount[t]=(tagsCount[t]||0)+1);
+
+    const d = new Date(post.date); 
+    const month = d.toLocaleDateString('en-GB',{year:'numeric',month:'short'});
+    const day = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+    if(!archivesGrouped[month]) archivesGrouped[month]=[];
+    archivesGrouped[month].push({...post, formattedDate:day});
+  });
+
+  populateSidebarAndArchive();
   renderPosts(allPosts);
-  populateSidebarAndArchive(allPosts);
 
   // initial URL param search
-  const params=new URLSearchParams(window.location.search);
-  const query=params.get("search")||params.get("category")||params.get("tag")||params.get("date");
-  if(query){ searchInput.value=query; filterPosts(false); searchInput.blur(); } // NO dropdown
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get("search")||params.get("category")||params.get("tag")||params.get("date");
+  if(query){ searchInput.value=query; filterPosts(false); searchInput.blur(); }
 
-  searchInput.addEventListener("input",()=>filterPosts(false));
+  searchInput.addEventListener("input", ()=>filterPosts(false));
 
   // delegated post clicks
-  postsContainer.onclick=e=>{
-    const catBtn=e.target.closest(".post-cat-btn");
-    const tagLink=e.target.closest(".post-tag-link");
-    if(catBtn){ searchInput.value=catBtn.dataset.cat; filterPosts(true); }
-    if(tagLink){ searchInput.value=tagLink.dataset.tag; filterPosts(true); }
+  postsContainer.onclick = e=>{
+    const catBtn = e.target.closest(".post-cat-btn");
+    const tagLink = e.target.closest(".post-tag-link");
+    if(catBtn){ searchInput.value = catBtn.dataset.cat; filterPosts(true); }
+    if(tagLink){ searchInput.value = tagLink.dataset.tag; filterPosts(true); }
   };
-}).catch(err=>console.error("Error loading posts.json:",err));
+}).catch(err=>console.error("Error loading posts.json:", err));
 
 /* ================= Intro Overlay Animation ================= */
 (function(){
@@ -889,6 +904,7 @@ fetch("data/posts.json").then(res=>res.json()).then(posts=>{
   requestAnimationFrame(()=>playIntro().catch(()=>overlay.style.display='none'));
 })();
 </script>
+
 
 
 </body>
