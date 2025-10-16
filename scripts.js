@@ -122,3 +122,20 @@ fetch("data/posts.json")
   });
 
 searchInput.addEventListener("input", filterPosts);
+
+// --- Auto Search via URL Query ---
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get("search") || params.get("category");
+  
+  if (query) {
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      searchInput.value = query;
+
+      // Trigger input event to reuse your existing filtering logic
+      const event = new Event("input");
+      searchInput.dispatchEvent(event);
+    }
+  }
+});
