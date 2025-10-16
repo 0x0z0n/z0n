@@ -783,9 +783,8 @@ function buildAttackPathHTML(attack_path){
   }).join("");
 }
 
-function renderPosts(posts, scrollTop=false){
+function renderPosts(posts){
   postsContainer.innerHTML = posts.length===0 ? "No posts found." : "";
-  const scrollPos = window.scrollY;
   posts.forEach(post=>{
     const div = document.createElement("div"); 
     div.className = "post-card";
@@ -800,11 +799,10 @@ function renderPosts(posts, scrollTop=false){
                      ${attackHTML?`<div class="attack-path-terminal terminal-style">${attackHTML}</div>`:""}`;
     postsContainer.appendChild(div);
   });
-  if(scrollTop) postsContainer.scrollIntoView({behavior:"smooth", block:"start"});
-  else window.scrollTo(0, scrollPos);
 }
 
-function filterPosts(scrollTop=false){
+
+function filterPosts(){
   const query = searchInput.value.trim().toLowerCase();
   const filtered = allPosts.filter(post=>
     (post.title||"").toLowerCase().includes(query) ||
@@ -812,8 +810,9 @@ function filterPosts(scrollTop=false){
     getTags(post).some(t=>t.toLowerCase().includes(query)) ||
     (post.date && post.date.startsWith(query))
   );
-  renderPosts(filtered, scrollTop);
+  renderPosts(filtered);
 }
+
 
 function populateSidebarAndArchive(){
   // categories
