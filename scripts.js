@@ -131,13 +131,15 @@ window.addEventListener("DOMContentLoaded", () => {
   if (query) {
     const searchInput = document.getElementById("searchInput");
 
-    // Wait for posts to finish loading before triggering search
     const trySearch = () => {
-      if (!searchInput) return;
-      searchInput.value = query;
-      const event = new Event("input", { bubbles: true });
-      searchInput.dispatchEvent(event);
-    };
+  if (!searchInput) return;
+  const currentScroll = window.scrollY; // store current scroll position
+  searchInput.value = query;
+  const event = new Event("input", { bubbles: true });
+  searchInput.dispatchEvent(event);
+  window.scrollTo(0, currentScroll); // restore previous scroll
+};
+
 
     // Try after short delay (ensures fetch and DOM build are done)
     setTimeout(trySearch, 800);
