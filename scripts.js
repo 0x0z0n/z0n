@@ -42,7 +42,9 @@ const postsContainer = document.getElementById("posts");
 let allPosts = [];
 
 function renderPosts(posts) {
+  const scrollPos = window.scrollY; // save scroll position
   postsContainer.innerHTML = "";
+  
   if(posts.length === 0){
     postsContainer.innerHTML = "No posts found.";
     return;
@@ -54,7 +56,6 @@ function renderPosts(posts) {
     article.setAttribute("data-tags", post.tags.join(", "));
     const categories = Array.isArray(post.category) ? post.category.join(", ") : post.category;
 
-    // Attack path terminal
     let attackPathText = "";
     if(Array.isArray(post.attack_path) && post.attack_path.length > 0){
       attackPathText = post.attack_path.map(step =>
@@ -63,23 +64,26 @@ function renderPosts(posts) {
     }
 
     article.innerHTML = `
-      <h2><a href="${post.href}">${post.title}</a></h2>
+      <h2><a href="${post.href}" tabindex="-1">${post.title}</a></h2>
       <div><strong>Category:</strong><br/>${
         categories ? categories.split(', ').map(cat => {
           const encoded = encodeURIComponent(cat.trim());
-          return `<a href="index.html?category=${encoded}" class="category-button">${cat.trim()}</a>`;
+          return `<a href="index.html?category=${encoded}" class="category-button" tabindex="-1">${cat.trim()}</a>`;
         }).join('') : `<span style="color:#888;">Uncategorized</span>`
       }</div>
       <p><strong>Date:</strong> ${post.date}</p>
       <p><strong>Tags:</strong></p>
       <div class="tag-container">
-        ${post.tags.map(tag => `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link">${tag}</a>`).join("")}
+        ${post.tags.map(tag => `<a href="index.html?tag=${encodeURIComponent(tag)}" class="tag-link" tabindex="-1">${tag}</a>`).join("")}
       </div>
       ${attackPathText ? `<pre class="attack-path-terminal">${attackPathText}</pre>` : ""}
     `;
     postsContainer.appendChild(article);
   });
+
+  window.scrollTo(0, scrollPos); // restore scroll position
 }
+
 
 function filterPosts() {
   const query = searchInput.value.trim().toLowerCase();
