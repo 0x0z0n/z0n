@@ -123,19 +123,23 @@ fetch("data/posts.json")
 
 searchInput.addEventListener("input", filterPosts);
 
-// --- Auto Search via URL Query ---
+// --- Auto Search via URL Query (with timing fix) ---
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const query = params.get("search") || params.get("category");
-  
+
   if (query) {
     const searchInput = document.getElementById("searchInput");
-    if (searchInput) {
-      searchInput.value = query;
 
-      // Trigger input event to reuse your existing filtering logic
-      const event = new Event("input");
+    // Wait for posts to finish loading before triggering search
+    const trySearch = () => {
+      if (!searchInput) return;
+      searchInput.value = query;
+      const event = new Event("input", { bubbles: true });
       searchInput.dispatchEvent(event);
-    }
+    };
+
+    // Try after short delay (ensures fetch and DOM build are done)
+    setTimeout(trySearch, 800);
   }
 });
