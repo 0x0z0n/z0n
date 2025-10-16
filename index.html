@@ -705,10 +705,8 @@ main {
   <!-- Shooting Star -->
   <div id="shooting-star"></div>
 
-<!-- JS Files -->
-<script src="scripts.js"></script>
-
 <script>
+/* ================= Sidebar Toggle + Easter Egg ================= */
 const toggleBtn = document.getElementById("sidebarToggle");
 toggleBtn.addEventListener("click", () => {
   document.body.classList.toggle("sidebar-collapsed");
@@ -717,42 +715,30 @@ toggleBtn.addEventListener("click", () => {
   icon.classList.toggle("fa-chevron-right");
 });
 
-
 const b64ReversedUrl = "bG10aC5TM1IvUzNSL24wei9vaS5idWh0aWcubjB6MHgwLy86c3B0dGg=";
 const expectedSha256 = "288443d0b0661bc97b32edc09937f64aef8235ae1d83aaac8e3b54968293b681";
-
 let clickCount = 0;
 let firstClickTime = 0;
 const CLICK_LIMIT = 8;
-const WINDOW_MS = 5000; 
+const WINDOW_MS = 5000;
 
 function base64ToString(b64) {
   try {
-   
     const bin = atob(b64);
-   
-    const bytes = Uint8Array.from(bin.split('').map(c => c.charCodeAt(0)));
-    const dec = new TextDecoder().decode(bytes);
-    return dec;
-  } catch (e) {
-    return null;
-  }
+    const bytes = Uint8Array.from(bin.split("").map(c => c.charCodeAt(0)));
+    return new TextDecoder().decode(bytes);
+  } catch (e) { return null; }
 }
-
 
 function toHex(buffer) {
-  const bytes = new Uint8Array(buffer);
-  return Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
-
 
 async function sha256Hex(str) {
   const enc = new TextEncoder();
-  const data = enc.encode(str);
-  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hash = await crypto.subtle.digest("SHA-256", enc.encode(str));
   return toHex(hash);
 }
-
 
 function decodeObfuscatedUrl() {
   const rev = base64ToString(b64ReversedUrl);
@@ -760,240 +746,221 @@ function decodeObfuscatedUrl() {
   return rev.split('').reverse().join('');
 }
 
-
 async function decodeVerifyAndRedirect() {
   const url = decodeObfuscatedUrl();
   if (!url) return;
-  try {
-    const hex = await sha256Hex(url);
-    if (hex === expectedSha256) {
-      // verified — redirect now
-      window.location.href = url;
-    } else {
-      
-      console.warn("Easter-egg URL failed integrity check.");
-    }
-  } catch (e) {
-    console.error("Error computing checksum:", e);
+  const hex = await sha256Hex(url);
+  if (hex === expectedSha256) {
+    window.location.href = url;
+  } else {
+    console.warn("Easter-egg URL failed integrity check.");
   }
 }
-
 
 toggleBtn.addEventListener("click", () => {
   const now = Date.now();
   if (!firstClickTime || (now - firstClickTime) > WINDOW_MS) {
-    // reset window
     firstClickTime = now;
     clickCount = 1;
   } else {
     clickCount++;
   }
-
   if (clickCount >= CLICK_LIMIT) {
-    
     clickCount = 0;
     firstClickTime = 0;
-    
     decodeVerifyAndRedirect();
   }
 });
-</script>
 
 
-<script>
+/* ================= Theme Toggle + Selector ================= */
+const toggle = document.querySelector(".theme-toggle");
+const icon = toggle.querySelector("i");
+const themeSelect = document.getElementById("themeSelect");
+let savedTheme = localStorage.getItem("themeStyle") || "0x0z0n-dark";
+document.documentElement.setAttribute("data-theme", savedTheme);
+icon.className = savedTheme.includes("light") ? "fas fa-sun" : "fas fa-moon";
+themeSelect.value = savedTheme;
+
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("themeStyle", theme);
+  icon.className = theme.includes("light") ? "fas fa-sun" : "fas fa-moon";
+  themeSelect.value = theme;
+}
+
+toggle.addEventListener("click", () => {
+  const current = document.documentElement.getAttribute("data-theme");
+  let newTheme = current.includes("dark") 
+    ? (current.includes("minimal") ? "minimal-light" : "0x0z0n-light") 
+    : (current.includes("minimal") ? "minimal-dark" : "0x0z0n-dark");
+  setTheme(newTheme);
+});
+
+themeSelect.addEventListener("change", () => setTheme(themeSelect.value));
+
+
+/* ================= Posts, Search, Categories, Tags ================= */
+const searchInput = document.getElementById("searchInput");
+const postsContainer = document.getElementById("posts");
+let allPosts = [];
+
+function escapeHTML(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getCategories(post) {
+  return Array.isArray(post.category) ? post.category : (post.category ? [post.category] : []);
+}
+
+function getTags(post) {
+  return Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []);
+}
+
+function buildAttackPathHTML(attack_path) {
+  if (!attack_path) return "";
+  if (!Array.isArray(attack_path)) attack_path = [attack_path];
+  return attack_path.map((step, i) => {
+    if (!step) return "";
+    const stepNum = i + 1;
+    const { step: stepText = "", user = "", technique = "", result = "", mitigation = "" } = step;
+    return `
+      <div class="attack-step">
+        <div class="top">
+          <span class="pill">Step ${stepNum}</span>
+          ${user ? `<span class="pill">User: ${escapeHTML(user)}</span>` : ""}
+          ${technique ? `<span class="pill">Technique: ${escapeHTML(technique)}</span>` : ""}
+        </div>
+        ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
+        ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+function renderPosts(posts, scrollToTop = false) {
+  postsContainer.innerHTML = "";
+  posts.forEach(post => {
+    const div = document.createElement("div");
+    div.className = "post-card";
+    const categoriesHTML = getCategories(post).map(cat => `<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`).join(" ");
+    const tagsHTML = getTags(post).map(tag => `<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`).join(" ");
+    const attackPathHTML = buildAttackPathHTML(post.attack_path);
+    div.innerHTML = `
+      <h2><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
+      <div class="post-meta">${escapeHTML(post.date || "")}</div>
+      <p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p>
+      <div class="post-categories">${categoriesHTML}</div>
+      <div class="post-tags">${tagsHTML}</div>
+      ${attackPathHTML ? `<div class="attack-path-terminal terminal-style">${attackPathHTML}</div>` : ""}
+    `;
+    postsContainer.appendChild(div);
+  });
+  if (scrollToTop) postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function filterPosts() {
+  const query = searchInput.value.trim().toLowerCase();
+  const filtered = allPosts.filter(post =>
+    (post.title || "").toLowerCase().includes(query) ||
+    getCategories(post).some(c => c.toLowerCase().includes(query)) ||
+    getTags(post).some(t => t.toLowerCase().includes(query)) ||
+    (post.date && post.date.startsWith(query))
+  );
+  renderPosts(filtered);
+}
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+// Fetch posts, render, search, categories/tags
 fetch("data/posts.json")
   .then(res => res.json())
   .then(posts => {
-    const postsContainer = document.getElementById("posts");
-    const categoryContainer = document.getElementById("categoryList");
-    const tagContainer = document.getElementById("tagList");
-    const searchInput = document.getElementById("searchInput");
+    allPosts = posts;
 
-    const escapeHTML = str =>
-      String(str ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+    // Initial filtering from URL params
+    const tagParam = getParam("tag");
+    const catParam = getParam("category");
+    const dateParam = getParam("date");
+    let filtered = allPosts;
 
-    const getCategories = post =>
-      Array.isArray(post.category) ? post.category : (post.category ? [post.category] : []);
+    if (tagParam) {
+      searchInput.value = tagParam;
+      filtered = allPosts.filter(p => getTags(p).some(t => t.toLowerCase() === tagParam.toLowerCase()));
+    } else if (catParam) {
+      searchInput.value = catParam;
+      filtered = allPosts.filter(p => getCategories(p).some(c => c.toLowerCase() === catParam.toLowerCase()));
+    } else if (dateParam) {
+      searchInput.value = dateParam;
+      filtered = allPosts.filter(p => p.date && p.date.startsWith(dateParam));
+    }
+    renderPosts(filtered);
 
-    const getTags = post =>
-      Array.isArray(post.tags) ? post.tags : (post.tags ? [post.tags] : []);
+    searchInput.addEventListener("input", filterPosts);
 
-    const buildAttackPathHTML = attack_path => {
-      if (!attack_path) return "";
-      if (!Array.isArray(attack_path)) attack_path = [attack_path];
-
-      return attack_path.map((step, i) => {
-        if (!step) return "";
-
-        const stepNum = i + 1;
-        const { step: stepText = "", user = "", technique = "", result = "", mitigation = "" } = step;
-
-        return `
-          <div class="attack-step">
-            <div class="top">
-              <span class="pill"><span class="meta-value">Step ${stepNum}</span></span>
-              ${user ? `<span class="pill">User: <span class="meta-value">${escapeHTML(user)}</span></span>` : ""}
-              ${technique ? `<span class="pill">Technique: <span class="meta-value">${escapeHTML(technique)}</span></span>` : ""}
-            </div>
-            ${result ? `<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>` : ""}
-            ${mitigation ? `<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>` : ""}
-          </div>
-        `;
-      }).join("");
-    };
-
-    const renderPosts = (filteredPosts, scrollToTop = false) => {
-      postsContainer.innerHTML = "";
-
-      filteredPosts.forEach(post => {
-        const div = document.createElement("div");
-        div.className = "post-card";
-
-        const categoriesHTML = getCategories(post)
-          .map(cat => `<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`)
-          .join(" ");
-
-        const tagsHTML = getTags(post)
-          .map(tag => `<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`)
-          .join(" ");
-
-        const attackPathHTML = buildAttackPathHTML(post.attack_path);
-        const dateOnly = escapeHTML(post.date || "");
-
-        div.innerHTML = `
-          <h2><a href="${escapeHTML(post.href || "#")}">${escapeHTML(post.title || "Untitled")}</a></h2>
-          <div class="post-meta">${dateOnly}</div>
-          <p class="post-excerpt">${escapeHTML(post.excerpt || "")}</p>
-          <div class="post-categories" style="margin-top:8px;">${categoriesHTML}</div>
-          <div class="post-tags" style="margin-top:8px;">${tagsHTML}</div>
-          ${attackPathHTML ? `<div class="attack-path-terminal terminal-style">${attackPathHTML}</div>` : ""}
-        `;
-
-        postsContainer.appendChild(div);
-      });
-
-      if (scrollToTop) {
-        postsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    };
-
-    renderPosts(posts);
-
-    // Search input filtering
-    searchInput?.addEventListener("input", e => {
-      const q = (e.target.value || "").toLowerCase().trim();
-      const filtered = posts.filter(post => {
-        if (!q) return true;
-        if ((post.title || "").toLowerCase().includes(q)) return true;
-        if ((post.excerpt || "").toLowerCase().includes(q)) return true;
-        if (getCategories(post).some(c => c.toLowerCase().includes(q))) return true;
-        if (getTags(post).some(t => t.toLowerCase().includes(q))) return true;
-        return false;
-      });
-      renderPosts(filtered, false);
-    });
-
-    // Delegated clicks inside posts for categories & tags
+    // Delegated clicks for categories/tags in posts
     postsContainer.onclick = e => {
       const catBtn = e.target.closest(".post-cat-btn");
-      if (catBtn) {
-        const cat = catBtn.dataset.cat;
-        if (!cat) return;
-        renderPosts(posts.filter(p => getCategories(p).includes(cat)), true);
-        return;
-      }
-
       const tagLink = e.target.closest(".post-tag-link");
-      if (tagLink) {
-        const tag = tagLink.dataset.tag;
-        if (!tag) return;
-        renderPosts(posts.filter(p => getTags(p).includes(tag)), true);
-        return;
-      }
+      if (catBtn) renderPosts(allPosts.filter(p => getCategories(p).includes(catBtn.dataset.cat)), true);
+      if (tagLink) renderPosts(allPosts.filter(p => getTags(p).includes(tagLink.dataset.tag)), true);
     };
 
     // Sidebar: categories with counts
+    const categoryContainer = document.getElementById("categoryList");
     const categoriesCount = {};
-    posts.forEach(p => getCategories(p).forEach(cat => categoriesCount[cat] = (categoriesCount[cat]||0)+1));
-    const catEntries = [
-      ...Object.entries(categoriesCount).filter(([cat]) => cat.toLowerCase() === "cheatsheet"),
-      ...Object.entries(categoriesCount).filter(([cat]) => cat.toLowerCase() !== "cheatsheet").sort((a,b)=>a[0].localeCompare(b[0]))
-    ];
-
-    catEntries.forEach(([cat, count]) => {
+    allPosts.forEach(p => getCategories(p).forEach(c => categoriesCount[c] = (categoriesCount[c]||0)+1));
+    Object.entries(categoriesCount).forEach(([cat, count]) => {
       const a = document.createElement("a");
-      a.href = "#";
-      a.className = "category-button";
-      a.textContent = `${cat} (${count})`;
-      a.dataset.cat = cat;
-      a.addEventListener("click", ev => {
-        ev.preventDefault();
-        renderPosts(posts.filter(p => getCategories(p).includes(cat)), true);
-      });
+      a.href="#"; a.className="category-button"; a.textContent=`${cat} (${count})`; a.dataset.cat=cat;
+      a.addEventListener("click", ev => { ev.preventDefault(); renderPosts(allPosts.filter(p => getCategories(p).includes(cat)), true); });
       categoryContainer.appendChild(a);
     });
 
     // Sidebar: tags with counts
+    const tagContainer = document.getElementById("tagList");
     const tagsCount = {};
-    posts.forEach(p => getTags(p).forEach(tag => tagsCount[tag] = (tagsCount[tag]||0)+1));
+    allPosts.forEach(p => getTags(p).forEach(t => tagsCount[t] = (tagsCount[t]||0)+1));
     Object.keys(tagsCount).sort().forEach(tag => {
       const a = document.createElement("a");
-      a.href = "#";
-      a.className = "tag-link";
-      a.textContent = `${tag} (${tagsCount[tag]})`;
-      a.dataset.tag = tag;
-      a.addEventListener("click", ev => {
-        ev.preventDefault();
-        renderPosts(posts.filter(p => getTags(p).includes(tag)), true);
-      });
+      a.href="#"; a.className="tag-link"; a.textContent=`${tag} (${tagsCount[tag]})`; a.dataset.tag=tag;
+      a.addEventListener("click", ev => { ev.preventDefault(); renderPosts(allPosts.filter(p => getTags(p).includes(tag)), true); });
       tagContainer.appendChild(a);
     });
 
   })
   .catch(err => console.error("Error loading posts.json:", err));
-</script>
 
-<script>
+
+/* ================= Archive List ================= */
 fetch("data/posts.json")
   .then(res => res.json())
   .then(posts => {
-    // Sort descending by date
-    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
+    posts.sort((a,b)=>new Date(b.date)-new Date(a.date));
     const grouped = {};
     posts.forEach(post => {
       const d = new Date(post.date);
-      const month = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short' });
-      const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-
+      const month = d.toLocaleDateString('en-GB', {year:'numeric', month:'short'});
+      const day = d.toLocaleDateString('en-GB', {day:'2-digit', month:'short'});
       if (!grouped[month]) grouped[month] = [];
-      grouped[month].push({
-        ...post,
-        formattedDate: day
-      });
+      grouped[month].push({...post, formattedDate: day});
     });
 
     const container = document.getElementById("archiveList");
     container.innerHTML = "";
-
     Object.entries(grouped).forEach(([month, entries]) => {
       const monthDiv = document.createElement("div");
-      monthDiv.className = "month";
-      monthDiv.textContent = month;
-      container.appendChild(monthDiv);
-
+      monthDiv.className = "month"; monthDiv.textContent = month; container.appendChild(monthDiv);
       entries.forEach(entry => {
         const item = document.createElement("div");
         item.className = "entry";
-        item.innerHTML = `
-          <span>${entry.formattedDate}</span>
-          <a href="${entry.href}">${entry.title}</a>
-        `;
+        item.innerHTML = `<span>${entry.formattedDate}</span> <a href="${entry.href}">${entry.title}</a>`;
         container.appendChild(item);
       });
     });
@@ -1002,102 +969,60 @@ fetch("data/posts.json")
     document.getElementById("archiveList").innerHTML = "Failed to load archive data";
     console.error("Error loading posts.json:", err);
   });
-</script>
 
-<script>
+
+/* ================= Intro Overlay Animation ================= */
 (function(){
   const overlay = document.getElementById('introOverlay');
   const linesEl = document.getElementById('introLines');
   const accessEl = document.getElementById('accessGranted');
+  const lines = ["Establishing connection...", "Scanning security systems...", "Bypassing firewall..."];
+  const localKey = "introShown_v1";
+  if(localStorage.getItem(localKey)){ overlay.style.display="none"; return; }
 
-  // Messages to show
-  const lines = [
-    "Establishing connection...",
-    "Scanning security systems...",
-    "Bypassing firewall..."
-  ];
-
-  const localKey = "introShown_v1"; // change key to reset behaviour
-
-  // If already shown, hide overlay immediately
-  if (localStorage.getItem(localKey)) {
-    overlay.style.display = "none";
-    return;
-  }
-
-  // Typing helpers
-  function typeLine(text, targetEl, speed = 25) {
-    return new Promise(resolve => {
-      targetEl.style.opacity = 1;
-      let i = 0;
-      const step = () => {
-        if (i <= text.length) {
-          targetEl.textContent = text.slice(0, i);
-          i++;
-          setTimeout(step, speed);
-        } else {
-          // small pause after finishing a line
-          setTimeout(resolve, 400);
-        }
-      };
+  function typeLine(text, targetEl, speed=25){
+    return new Promise(resolve=>{
+      targetEl.style.opacity=1; let i=0;
+      const step=()=>{ if(i<=text.length){ targetEl.textContent=text.slice(0,i); i++; setTimeout(step,speed); } else { setTimeout(resolve,400); } };
       step();
     });
   }
 
-  async function playIntro() {
-    // ensure overlay visible
-    overlay.style.display = "flex";
-
-    // sequentially type lines (we use a local buffer to append lines)
-    let buffer = "";
-    for (let idx = 0; idx < lines.length; idx++) {
-      const line = lines[idx];
-      buffer += (idx === 0 ? "" : "\n") + line;
-      // type only the new portion while keeping previous lines
-      // we render full buffer but animate typing of new line
-      // find start index for new line
+  async function playIntro(){
+    overlay.style.display="flex";
+    let buffer="";
+    for(let idx=0;idx<lines.length;idx++){
+      const line=lines[idx]; buffer+=(idx===0?"":"\n")+line;
       const newLineStart = buffer.lastIndexOf(line);
-      // quickly set existing portion, then animate last line
-      linesEl.textContent = buffer.slice(0, newLineStart);
-      await typeLine(line, linesEl, 24);
-      // brief pause
-      await new Promise(r => setTimeout(r, 200));
+      linesEl.textContent=buffer.slice(0,newLineStart);
+      await typeLine(line, linesEl,24);
+      await new Promise(r=>setTimeout(r,200));
     }
-
-    // show ACCESS GRANTED with a small scale & fade-in
-    accessEl.style.opacity = 1;
-    accessEl.style.transform = "scale(1.02)";
-    accessEl.style.transition = "transform 260ms ease, opacity 260ms ease";
-    // small bounce
-    setTimeout(() => {
-      accessEl.style.transform = "scale(1)";
-    }, 50);
-
-    // keep visible a moment then hide overlay
-    setTimeout(() => {
-      overlay.classList.add('intro-hide');
-      // persist shown so it won't show again
-      try { localStorage.setItem(localKey, '1'); } catch(e){}
-      // fully remove from DOM after animation
-      setTimeout(() => {
-        overlay.style.display = "none";
-      }, 700);
-    }, 900); // time after ACCESS GRANTED
+    accessEl.style.opacity=1; accessEl.style.transform="scale(1.02)";
+    setTimeout(()=>accessEl.style.transform="scale(1)",50);
+    setTimeout(()=>{
+      overlay.classList.add('intro-hide'); try{ localStorage.setItem(localKey,'1'); }catch(e){}
+      setTimeout(()=>overlay.style.display="none",700);
+    },900);
   }
 
-  // Allow skipping the intro
-  function skipIntro() {
-    overlay.classList.add('intro-hide');
-    try { localStorage.setItem(localKey, '1'); } catch(e){}
-    setTimeout(()=> overlay.style.display='none', 300);
-  }
-
-  // start the intro as soon as possible
-  // but allow page to continue loading; we don't block resources
-  requestAnimationFrame(() => {
-    playIntro().catch(()=>{ overlay.style.display='none'; });
-  });
+  requestAnimationFrame(()=>{ playIntro().catch(()=>overlay.style.display='none'); });
 })();
+
+
+/* ================= Auto Search from URL ================= */
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get("search") || params.get("category");
+  if(query){
+    setTimeout(()=>{
+      const currentScroll = window.scrollY;
+      searchInput.value=query;
+      searchInput.dispatchEvent(new Event("input",{bubbles:true}));
+      window.scrollTo(0,currentScroll);
+    }, 800); // delay ensures posts loaded
+  }
+});
 </script>
 
 
