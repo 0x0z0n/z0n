@@ -484,10 +484,14 @@ main {
   background: var(--card-bg);
   padding: 1.5rem;
   border-radius: 12px;
-  height: fit-content;
+
   position: sticky;
   top: 1.5rem;
+
+  max-height: 80vh;       /* Limit to viewport height */
+  overflow-y: auto;        /* Enable scroll if content exceeds */
 }
+
 
 /* ===== Posts Layout (Vertical Single Column) ===== */
 #posts {
@@ -566,6 +570,13 @@ main {
     padding: 0 0.5rem;
   }
 }
+
+@media screen and (max-width: 1024px) {
+  .sidebar-right {
+    display: none; /* already in your CSS */
+  }
+}
+
 
 .archive-list {
   max-height: 150px; /* compact height */
