@@ -716,7 +716,7 @@ main {
   <!-- Shooting Star -->
   <div id="shooting-star"></div>
 
-<script>
+  <script>
 /* ================= Sidebar Toggle + Easter Egg ================= */
 const toggleBtn = document.getElementById("sidebarToggle");
 toggleBtn.addEventListener("click", () => {
@@ -812,7 +812,6 @@ function renderPosts(posts){
   });
 }
 
-
 function filterPosts(){
   const query = searchInput.value.trim().toLowerCase();
   const filtered = allPosts.filter(post=>
@@ -823,7 +822,6 @@ function filterPosts(){
   );
   renderPosts(filtered);
 }
-
 
 function populateSidebarAndArchive(){
   // categories
@@ -848,17 +846,28 @@ function populateSidebarAndArchive(){
     tagContainer.appendChild(a);
   });
 
-  // archive
+  // archive (sorted chronologically)
   archiveContainer.innerHTML = "";
-  Object.entries(archivesGrouped).forEach(([month,entries])=>{
-    const monthDiv = document.createElement("div"); monthDiv.className="month"; monthDiv.textContent = month;
-    archiveContainer.appendChild(monthDiv);
-    entries.forEach(entry=>{
-      const item = document.createElement("div"); item.className="entry"; 
-      item.innerHTML = `<span>${entry.formattedDate}</span> <a href="${entry.href}">${entry.title}</a>`;
-      archiveContainer.appendChild(item);
+  Object.entries(archivesGrouped)
+    .sort((a, b) => {
+      const da = new Date(a[0].replace(/(\w{3}) (\d{4})/, '01 $1 $2'));
+      const db = new Date(b[0].replace(/(\w{3}) (\d{4})/, '01 $1 $2'));
+      return db - da; // newest month first
+    })
+    .forEach(([month, entries]) => {
+      entries.sort((a, b) => new Date(b.date) - new Date(a.date)); // sort days
+      const monthDiv = document.createElement("div");
+      monthDiv.className = "month";
+      monthDiv.textContent = month;
+      archiveContainer.appendChild(monthDiv);
+
+      entries.forEach(entry => {
+        const item = document.createElement("div");
+        item.className = "entry";
+        item.innerHTML = `<span>${entry.formattedDate}</span> <a href="${entry.href}">${entry.title}</a>`;
+        archiveContainer.appendChild(item);
+      });
     });
-  });
 }
 
 // single-pass fetch & process
@@ -914,7 +923,6 @@ fetch("data/posts.json").then(res=>res.json()).then(posts=>{
   requestAnimationFrame(()=>playIntro().catch(()=>overlay.style.display='none'));
 })();
 </script>
-
 
 
 </body>
