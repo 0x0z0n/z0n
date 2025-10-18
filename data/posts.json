@@ -1860,7 +1860,6 @@
         }
     ]
 },
-/*
   {
     "title": "HackTheBox: Academy",
     "href": "posts/htb_Academy.html",
@@ -5693,7 +5692,6 @@
       }
     ]
   },
-  */
   {
     "title": "HackTheBox: Heal",
     "href": "posts/htb_Heal.html",
