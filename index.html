@@ -26,20 +26,6 @@
   --terminal-color: #0f0; /* attack path terminal */
 }
 
-/* 0x0z0n-light */
-html[data-theme="0x0z0n-light"] {
-  --bg-color: #f4f7f9;
-  --card-bg: #ffffff;
-  --text-color: #1a1a1a;
-  --accent: #007acc;
-  --tag-bg: #e3eff9;
-  --tag-hover: #007acc;
-  --border-glow: 0 0 4px #007acc55;
-  --hover-bg: #e0e0e0;
-  --hover-text: #007acc;
-  --hover-border: #007acc;
-  --terminal-color: #00796b;
-}
 
 /* Minimalist Dark */
 html[data-theme="minimal-dark"] {
@@ -55,6 +41,23 @@ html[data-theme="minimal-dark"] {
   --hover-border: #4db6ac;
   --terminal-color: #80cbc4;
 }
+
+/* 0x0z0n-light */
+html[data-theme="0x0z0n-light"] {
+  --bg-color: #f4f7f9;
+  --card-bg: #ffffff;
+  --text-color: #1a1a1a;
+  --accent: #007acc;
+  --tag-bg: #e3eff9;
+  --tag-hover: #007acc;
+  --border-glow: 0 0 4px #007acc55;
+  --hover-bg: #e0e0e0;
+  --hover-text: #007acc;
+  --hover-border: #007acc;
+  --terminal-color: #00796b;
+}
+
+
 
 /* Minimalist Light */
 html[data-theme="minimal-light"] {
@@ -640,9 +643,9 @@ main {
     </div>
     <div class="theme-selector">
       <select id="themeSelect" title="Select Theme">
+        <option value="minimal-dark">Minimalist Dark</option>
         <option value="0x0z0n-dark">0x0z0n Dark</option>
         <option value="0x0z0n-light">0x0z0n Light</option>
-        <option value="minimal-dark">Minimalist Dark</option>
         <option value="minimal-light">Minimalist Light</option>
       </select>
     </div>
