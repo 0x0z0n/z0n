@@ -6,7 +6,7 @@ Operating System: Linux
 Hints: True
 ```
 
-## ✅ Summary
+##  Summary
 
 | Step | User / Access | Technique Used                | Result                                                                   |
 | :--- | :------------ | :---------------------------- | :----------------------------------------------------------------------- |
@@ -22,7 +22,7 @@ Hints: True
 
 ---
 
-## 🔎 Initial Enumeration
+##  Initial Enumeration
 
 ### 1. **Nmap Scan**
 
@@ -38,7 +38,7 @@ nmap dog.htb -sV -A -Pn -T4
 
 ---
 
-## 🗂️ Git Repository Leak
+##  Git Repository Leak
 
 ### 2. **Git Dump**
 
@@ -62,7 +62,7 @@ $database = 'mysql://root:BackDropJ2024DS2024@127.0.0.1/backdrop';
 
 ---
 
-## 🧱 Initial Access
+##  Initial Access
 
 ### 4. **Login as Tiffany**
 
@@ -75,7 +75,7 @@ $database = 'mysql://root:BackDropJ2024DS2024@127.0.0.1/backdrop';
 
 ---
 
-## 🖼️ File Upload for Code Execution
+##  File Upload for Code Execution
 
 ### 5. **Module Upload**
 
@@ -89,7 +89,7 @@ $database = 'mysql://root:BackDropJ2024DS2024@127.0.0.1/backdrop';
 
 ---
 
-## 🔐 Privilege Escalation to johncusack
+## Privilege Escalation to johncusack
 
 ### 6. **Database Password Reuse**
 
@@ -109,7 +109,7 @@ ssh johncusack@dog.htb
 
 ---
 
-## 🐝 Privilege Escalation to root
+##  Privilege Escalation to root
 
 ### 7. **Custom Command-Line Tool 'bee'**
 
@@ -139,7 +139,7 @@ Revealed:
 
 
 
-## 🔧 Mitigation Advice
+##  Mitigation Advice
 
 * Prevent `.git` directory exposure by properly configuring the web server.
 * Never reuse database credentials as login passwords.

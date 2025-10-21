@@ -17,7 +17,7 @@ Hints: True
 | 5 | `root` | Cron Job Execution | A cron job executed the vulnerable script as the `root` user, which triggered the malicious payload. This created a SUID binary of `/bin/bash`, allowing for a privileged shell and access to the `root.txt` flag. |
 
 
-## 🔍 Nmap Scan
+##  Nmap Scan
 
 A port scan on `Eureka.htb` reveals two open ports.
 
@@ -31,7 +31,7 @@ The HTTP service on port 80 redirects to `furni.htb`. To proceed, you must add `
 
 -----
 
-## 🖥️ Nuclei Scan
+##  Nuclei Scan
 
 Running a Nuclei scan on `http://furni.htb` identifies several interesting endpoints, notably the `/actuator/heapdump` endpoint, which exposes a **critical vulnerability**.
 
@@ -43,7 +43,7 @@ This endpoint allows the download of a **Java heap dump**, a snapshot of the mem
 
 -----
 
-## 💾 Analyzing the Heap Dump
+##  Analyzing the Heap Dump
 
 The downloaded `heapdump` file can contain sensitive information. Using a tool like **JDumpSpider**, you can extract credentials and other configuration details.
 
@@ -128,7 +128,7 @@ You can now use these credentials to switch to the `miranda-wise` user.
 
 -----
 
-## ⬆️ Privilege Escalation to Root
+## Privilege Escalation to Root
 
 The `miranda-wise` user is part of the `developers` group. We can look for scripts or files that this group has elevated privileges on. Navigating to `/opt` reveals a script named `log_analyse.sh`.
 
@@ -176,7 +176,7 @@ We can exploit this by writing a malicious entry to the log file that the script
 
 -----
 
-## ✅ Summary
+## Summary
 
   * **User Compromise**: An exposed Spring Boot heap dump provided database and internal service credentials. The database credentials led to an initial SSH foothold. The internal Eureka server credentials were used to register a fake service, which received login credentials for another user, `miranda-wise`.
   * **Privilege Escalation**: The `miranda-wise` user was able to exploit a **command injection vulnerability** in a root-owned `log_analyse.sh` script. By manipulating a log file that the user could write to, a setuid binary of `bash` was created, granting `root` access.

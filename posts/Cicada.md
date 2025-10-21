@@ -16,7 +16,7 @@ Hints: True
 | 4 | `emily.oscars` | **Initial Shell Access** | Gained an initial shell on the system using **`evil-winrm`** with the discovered `emily.oscars` credentials. Located and retrieved the `user.txt` flag. |
 | 5 | `Administrator` | **Privilege Escalation** | Enumerated the current user's privileges and found the `SeBackupPrivilege`. Used this privilege to download the `SAM` and `SYSTEM` registry hives. Extracted the **`Administrator` NTLM hash** using **`pypykatz`** and used it to log in with `evil-winrm` and get the `root.txt` flag. |
 
-### ⚙️ Initial Access
+###  Initial Access
 
 1.  **Nmap Scan & SMB Reconnaissance**:
 
@@ -72,7 +72,7 @@ Hints: True
         cat user.txt
         ```
 
-### 🔑 Privilege Escalation
+###  Privilege Escalation
 
 1.  **Exploit SeBackupPrivilege**:
 

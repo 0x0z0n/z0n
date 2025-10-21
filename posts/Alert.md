@@ -18,7 +18,7 @@ Hints: True
 | 6 | `root` | **Privilege Escalation** | Enumerated the system and discovered a local service on port `8080`. Also found a writable directory `/opt/Website_Monitor/` where a PHP script was being executed as **root** by a cron job. Created a reverse shell payload in a PHP file and placed it in the directory. |
 | 7 | `root` | **Reverse Shell** | Set up a Netcat listener and waited for the cron job to run. The script was executed as `root`, which triggered the reverse shell and granted full administrator privileges, allowing for retrieval of the `root.txt` flag. |
 
-### **1. Initial Reconnaissance** 🕵️
+### **1. Initial Reconnaissance** 
 
 First, run an **Nmap** scan to identify open ports and services.
 
@@ -33,7 +33,7 @@ This scan reveals two open ports:
 
 -----
 
-### **2. Gaining a Foothold** 💻
+### **2. Gaining a Foothold** 
 
 The website on port 80 allows the upload of markdown files. We'll use a **host header fuzzing** tool to find subdomains.
 
@@ -108,7 +108,7 @@ ssh albert@alert.htb
 
 -----
 
-### **3. Privilege Escalation** 📈
+### **3. Privilege Escalation** 
 
 Once you have a shell as `albert`, run a comprehensive enumeration script like **LinPEAS** to find a path to root.
 

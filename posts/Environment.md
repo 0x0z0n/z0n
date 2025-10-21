@@ -18,7 +18,7 @@ Hints: True
 
 -----
 
-### 🗺️ Enumeration
+### Enumeration
 
 I began with a standard **Nmap** scan to identify open ports and services on the target machine.
 
@@ -65,7 +65,7 @@ The scan identified several interesting pages, including `/login`, `/logout`, an
 
 -----
 
-### 🛡️ Initial Access: Environment Variable Bypass
+### Initial Access: Environment Variable Bypass
 
 Upon navigating to the `/login` page and attempting to log in, I observed that the application displayed a detailed error message, including part of the source code.
 
@@ -87,7 +87,7 @@ By adding `?--env=preprod` to the URL, I bypassed the login and gained access to
 
 -----
 
-### 🐚 Shell as `www-data`
+### Shell as `www-data`
 
 Within the admin panel, I found a **profile** page with a file upload functionality. My goal was to upload a webshell to gain command execution.
 
@@ -131,7 +131,7 @@ www-data@environment:/home/hish$ cat user.txt
 
 -----
 
-### 🔐 Privilege Escalation to `hish`
+### Privilege Escalation to `hish`
 
 While enumerating `hish`'s home directory, I found a `backup` directory containing a GPG-encrypted file named `keyvault.gpg`.
 
@@ -172,7 +172,7 @@ The password for `ENVIRONMENT.HTB` was **`marXXXXXXXXXXXXXXX`**. I used this pas
 
 -----
 
-### 👑 Privilege Escalation to `root`
+### Privilege Escalation to `root`
 
 The final step was to escalate from `hish` to `root`. I started by checking `hish`'s `sudo` permissions.
 

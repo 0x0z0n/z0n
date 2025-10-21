@@ -18,7 +18,7 @@ Hints: True
 | 6 | `root` | **Privilege Escalation** | While enumerating the system, a database file (`instant.db`) was found containing a difficult-to-crack `root` password hash. A further search uncovered a `Solar-Putty` backup file (`sessions-backup.dat`) in the `/opt` directory. |
 | 7 | `root` | **Credential Decryption** | A Python script was used to decrypt the `sessions-backup.dat` file, which contained the `root` user's password. This password was then used to switch users with `su`, granting full **root** privileges and allowing for retrieval of the `root.txt` flag. |
 
-## 💻 Initial Reconnaissance
+##  Initial Reconnaissance
 
 The first step was to perform a comprehensive Nmap scan to identify open ports and services on the target machine.
 
@@ -46,9 +46,9 @@ The scan revealed two open ports: **22 (SSH)** and **80 (HTTP)**. The web server
 
 -----
 
-## 🕵️ Exploiting the Web Server
+##  Exploiting the Web Server
 
-### 🔍 Analyzing the APK
+###  Analyzing the APK
 
 The "Instant Wallet" website offered a downloadable Android application package (**APK**). The APK was downloaded and decompiled using **`apktool`** to inspect its contents.
 
@@ -71,7 +71,7 @@ By examining the decompiled files, specifically `network_security_config.xml` lo
 
 These new hostnames were added to the `/etc/hosts` file for proper resolution.
 
-### 📜 Exploring with Dirsearch
+### Exploring with Dirsearch
 
 Next, **`dirsearch`** was used to scan the `swagger-ui.instant.htb` subdomain for hidden directories and files.
 
@@ -85,7 +85,7 @@ Task Completed
 
 This scan revealed the `/apidocs` directory, which contained an API documentation page.
 
-### 🔑 JWT Token Manipulation
+###  JWT Token Manipulation
 
 The `/apidocs` page described an API that used a **JSON Web Token (JWT)** for authentication. By registering a new user via the API, a valid JWT was obtained.
 
@@ -126,7 +126,7 @@ Decoding this token confirmed its admin privileges.
 }
 ```
 
-### 🔓 Gaining User Access
+###  Gaining User Access
 
 With the admin token, it was possible to access privileged API endpoints. The `/api/v1/admin/read/log` endpoint was identified as a potential target for **directory traversal**. By using this vulnerability, the `/etc/passwd` file was successfully read.
 
@@ -158,9 +158,9 @@ The extracted key was saved locally, its permissions were set to `600`, and then
 
 -----
 
-## 🚀 Privilege Escalation
+##  Privilege Escalation
 
-### 🔎 Hunting for Credentials
+###  Hunting for Credentials
 
 After gaining user access, the file system was enumerated for potential privilege escalation vectors. A database file, `instant.db`, was found in `/home/shirohige/projects/mywallet/Instant-Api/mywallet/instance/`.
 
@@ -174,7 +174,7 @@ Inspecting the database revealed a **PBKDF2-SHA256** password hash for the **roo
 
 A search of the `/opt` directory uncovered a backup file named `sessions-backup.dat` and a GitHub repository for a decryption script.
 
-### 🔓 Cracking the Password
+###  Cracking the Password
 
 The `SolarPuttyDecrypterPy` script from the repository was used with the `sessions-backup.dat` file and a wordlist (`rockyou.txt`) to decrypt the password.
 
@@ -188,9 +188,8 @@ password：12**XXXXXXXXXXXXX
 
 This successfully decrypted the password, providing the credentials for the `root` user. The password was then used to switch users with **`su`** to gain full root access.
 
------
 
-## 📝 Summary
+##  Summary
 
   - **User Access:** The initial foothold was gained by downloading and analyzing an APK from the web server. This revealed two subdomains and a hardcoded admin JWT token. A directory traversal vulnerability in an admin API endpoint was exploited to read the `shirohige` user's private SSH key, allowing login to the server.
 

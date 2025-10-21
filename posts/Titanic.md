@@ -5,7 +5,7 @@ Difficulty: Easy
 Operating System: Linux
 Hints: True
 ```
-## ✅ Summary
+##  Summary
 
 | Step | User / Access | Technique Used                          | Result                                                                                                       |
 | :--- | :------------ | :-------------------------------------- | :----------------------------------------------------------------------------------------------------------- |
@@ -18,7 +18,7 @@ Hints: True
 | 7    | `root`        | **ImageMagick Exploit (CVE-2024-xxxx)** | Created malicious `libxcb.so.1` to execute code during image processing, exfiltrating `root.txt`.            |
 
 
-## 🔍 Step 1 – Initial Enumeration
+##  Step 1 – Initial Enumeration
 
 **Nmap Scan:**
 
@@ -37,7 +37,7 @@ nmap -sV -T4 titanic.htb
 
 ---
 
-## 📁 Step 2 – File Read (Directory Traversal)
+##  Step 2 – File Read (Directory Traversal)
 
 Visited `http://titanic.htb` and clicked **Book Now**.
 
@@ -55,7 +55,7 @@ http://titanic.htb/download?ticket=../../../../../../../home/developer/user.txt
 
 ---
 
-## 🔎 Step 3 – Subdomain Fuzzing
+##  Step 3 – Subdomain Fuzzing
 
 Added entry to `/etc/hosts`:
 
@@ -67,7 +67,7 @@ Visited `http://dev.titanic.htb` → Found a **Gitea service (version 1.22.1)**.
 
 ---
 
-## 🗄️ Step 4 – Gitea Database Download
+##  Step 4 – Gitea Database Download
 
 Knowing Gitea's database is usually located at `/data/gitea.db`, used directory traversal again:
 
@@ -79,7 +79,7 @@ http://titanic.htb/download?ticket=../../../../../../home/developer/gitea/data/g
 
 ---
 
-## 🔑 Step 5 – Crack Developer Password
+##  Step 5 – Crack Developer Password
 
 Extracted password hash from the database:
 `e531d398946137baea70ed6a680a54385ecff131309c0bd8f225f284406b7cbc8efc5dbef30bf1682619263444ea594cfb56`
@@ -123,7 +123,7 @@ find_matching_password(dictionary_file, target_hash, salt)
 
 ---
 
-## 🚪 Step 6 – Login as Developer
+##  Step 6 – Login as Developer
 
 ```bash
 ssh developer@titanic.htb
@@ -133,7 +133,7 @@ Located `user.txt` at `/home/developer/user.txt` and retrieved it.
 
 ---
 
-## ⚡ Step 7 – Privilege Escalation via ImageMagick (CVE)
+##  Step 7 – Privilege Escalation via ImageMagick (CVE)
 
 In `/opt/scripts/identify_image.sh`, identified that `libxcb.so.1` could be exploited.
 

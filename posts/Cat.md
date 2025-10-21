@@ -21,7 +21,7 @@ Hints: True
 | 8    | `root`        | **Sensitive Data Exposure**    | Extracted the root password from the employee-management repository’s index.php file. Used this password to switch to `root` and retrieve `root.txt`.                                                                                     |
 
 
-## 🔍 Step 1 – Initial Enumeration
+##  Step 1 – Initial Enumeration
 
 **Nmap Scan:**
 
@@ -41,7 +41,7 @@ nmap -sC -sV cat.htb
 
 ---
 
-## 🔎 Step 2 – Git Repository Leak
+##  Step 2 – Git Repository Leak
 
 Browsing `http://cat.htb/.git/` revealed a publicly exposed Git repository.
 
@@ -55,7 +55,7 @@ This revealed full application source code.
 
 ---
 
-## ⚠️ Step 3 – XSS Vulnerability
+##  Step 3 – XSS Vulnerability
 
 In `view_cat.php`, the code outputs the username directly without sanitization:
 
@@ -78,7 +78,7 @@ In `view_cat.php`, the code outputs the username directly without sanitization:
 
 ---
 
-## 🔐 Step 4 – SQL Injection (SQLite)
+##  Step 4 – SQL Injection (SQLite)
 
 In `accept_cat.php`:
 
@@ -111,7 +111,7 @@ Password was cracked online via [CrackStation](https://crackstation.net/).
 
 ---
 
-## 🚪 Step 5 – User Access (rosa)
+##  Step 5 – User Access (rosa)
 
 With the cracked password, logged in as `rosa`.
 
@@ -127,7 +127,7 @@ cat /home/rosa/user.txt
 
 ---
 
-## 📚 Step 6 – Local Port Forwarding
+##  Step 6 – Local Port Forwarding
 
 Found port `3000` open internally, running a Git service (Gitea v1.22.0).
 
@@ -141,7 +141,7 @@ Access Gitea at `http://127.0.0.1:3000`.
 
 ---
 
-## ⚡ Step 7 – Privilege Escalation via Stored XSS (CVE-2024-6886)
+##  Step 7 – Privilege Escalation via Stored XSS (CVE-2024-6886)
 
 Identified a known vulnerability in Gitea v1.22.0 (Stored XSS).
 
@@ -166,7 +166,7 @@ swaks --to "jobert@localhost" --from "axel@localhost" \
 
 ---
 
-## 👑 Step 8 – Root Access
+##  Step 8 – Root Access
 
 Used the obtained password from index.php to escalate to root:
 
@@ -183,7 +183,7 @@ cat /root/root.txt
 
 ---
 
-## ✅ Summary
+## Summary
 
 * **User:** Found git leak → XSS cookie theft → SQLi to get rosa's credentials → Log into rosa → Found user.txt.
 * **Root:** Port 3000 forwarded → Gitea (v1.22.0) XSS exploit → Admin accessed repository → Index file disclosed root password → Got root.txt.
