@@ -105,7 +105,7 @@ The methodology has three steps: data acquisition, pre-processing, and classific
 - Three blocks of convolution, activation, and max pooling layers followed by fully connected layers with softmax activation.
 - Feature extraction is handled by convolutional/pooling layers, classification by fully connected layers, non-linearity by activation layers.
 
-![CropVision](Pictures/Pictures/PRJ_CropVision_Architecture.jpg)
+![CropVision](Pictures/PRJ_CropVision_Architecture.jpg)
 
 	Convolutional neural networks (CNN) can be used for the creation of a computational model that works on the unstructured image inputs and converts them to corresponding classification output labels. They belong to the category of multi-layer neural networks which can be trained to learn the required features for classification purposes.
 
@@ -124,7 +124,7 @@ The methodology has three steps: data acquisition, pre-processing, and classific
 ## Working of Proposed System: Flowchart
 
 
-![CropVision](Pictures/Pictures/PRJ_CropViosion_WorkFlow.jpg)
+![CropVision](Pictures/PRJ_CropViosion_WorkFlow.jpg)
 
 # Advantages & Disadvantages
 
