@@ -107,15 +107,15 @@ The methodology has three steps: data acquisition, pre-processing, and classific
 
 ![CropVision](Pictures/PRJ_CropVision_Architecture.jpg)
 
-	Convolutional neural networks (CNN) can be used for the creation of a computational model that works on the unstructured image inputs and converts them to corresponding classification output labels. They belong to the category of multi-layer neural networks which can be trained to learn the required features for classification purposes.
+Convolutional neural networks (CNN) can be used for the creation of a computational model that works on the unstructured image inputs and converts them to corresponding classification output labels. They belong to the category of multi-layer neural networks which can be trained to learn the required features for classification purposes.
 
 
 
-	Convolutional layer applies convolution operation for extraction of features. With the increase in depth, the complexity of the extracted features increases. The size of the filter is fixed to 5 × 5 whereas number of filters is increased progressively as we move from one block to another. The number of filters is 20 in the first convolutional block while it is increased to 50 in the second and 80 in the third. This increase in the number of filters is necessary to compensate for the reduction in the size of the feature maps caused by the use of pooling layers in each of the blocks.
+Convolutional layer applies convolution operation for extraction of features. With the increase in depth, the complexity of the extracted features increases. The size of the filter is fixed to 5 × 5 whereas number of filters is increased progressively as we move from one block to another. The number of filters is 20 in the first convolutional block while it is increased to 50 in the second and 80 in the third. This increase in the number of filters is necessary to compensate for the reduction in the size of the feature maps caused by the use of pooling layers in each of the blocks.
 
 
 
-	Each block consists of a convolutional, activation and a max pooling layer. Three such blocks followed by fully connected layers and softmax activation are used in this architecture. Convolutional and pooling layers are used for feature extraction whereas the fully connected layers are used for classification. Activation layers are used for introducing non-linearity into the network.
+Each block consists of a convolutional, activation and a max pooling layer. Three such blocks followed by fully connected layers and softmax activation are used in this architecture. Convolutional and pooling layers are used for feature extraction whereas the fully connected layers are used for classification. Activation layers are used for introducing non-linearity into the network.
 
 
 
