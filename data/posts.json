@@ -2581,7 +2581,8 @@
     "date": "2025-01-26",
     "category": [
         "HackTheBox",
-        "Windows"
+        "Windows",
+        "Active Directory"
     ],
     "tags": [
         "Port Scanning (T1046)",
@@ -2783,7 +2784,8 @@
     "date": "2025-01-15",
     "category": [
         "HackTheBox",
-        "Windows"
+        "Windows",
+        "Active Directory"
     ],
     "tags": [
         "Port Scanning (T1046)",
