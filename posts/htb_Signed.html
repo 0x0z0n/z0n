@@ -26,7 +26,7 @@ body {
   color: var(--text);
   font-family: "Segoe UI", sans-serif;
   display: grid;
-  grid-template-columns: 260px 1fr 300px;
+  grid-template-columns: 260px 1fr 320px;
   min-height: 100vh;
 }
 
@@ -140,6 +140,56 @@ pre:hover .copy-btn { opacity: 1; }
   transition: 0.2s;
 }
 .context button:hover { background: #66ff99; }
+
+/* === ATTACK PATH MODAL === */
+#attackModal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#attackModal .inner {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 80%;
+  overflow-y: auto;
+}
+#attackModal h2 {
+  text-align: center;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+#attackModal table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text);
+}
+#attackModal th, #attackModal td {
+  border: 1px solid var(--border);
+  padding: 0.6rem;
+}
+#attackModal th {
+  background: #161616;
+  color: var(--accent);
+}
+#attackModal button.close {
+  display: block;
+  margin: 1rem auto 0 auto;
+  background: var(--accent);
+  color: #111;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -159,13 +209,22 @@ pre:hover .copy-btn { opacity: 1; }
     <div id="machineCard" class="card">Loading...</div>
   </aside>
 
+  <!-- Modal for Attack Path -->
+  <div id="attackModal">
+    <div class="inner">
+      <h2>Attack Chain</h2>
+      <div id="attackTable"></div>
+      <button class="close" onclick="closeAttackModal()">Close</button>
+    </div>
+  </div>
+
 <script>
-const mdFile = "Signed.md"; // 👈 only change this
+const mdFile = "Signed.md"; // 👈 only change this for new machine
 
 fetch(mdFile)
   .then(res => res.text())
   .then(md => {
-    // Parse front-matter manually
+    // === Parse front matter ===
     const frontMatterMatch = md.match(/^---([\s\S]*?)---/);
     let meta = {};
     if (frontMatterMatch) {
@@ -173,17 +232,17 @@ fetch(mdFile)
       fm.split("\n").forEach(line => {
         const [key, ...rest] = line.split(":");
         if (!key) return;
-        const value = rest.join(":").trim().replace(/^["']|["']$/g, "");
-        try { meta[key.trim()] = JSON.parse(value); } catch { meta[key.trim()] = value; }
+        const value = rest.join(":").trim();
+        try { meta[key.trim()] = JSON.parse(value); }
+        catch { meta[key.trim()] = value.replace(/^["']|["']$/g, ""); }
       });
-      md = md.replace(frontMatterMatch[0], ""); // remove front-matter
+      md = md.replace(frontMatterMatch[0], "");
     }
 
-    // Render markdown
-    const html = marked.parse(md);
-    document.getElementById("content").innerHTML = html;
+    // === Render markdown ===
+    document.getElementById("content").innerHTML = marked.parse(md);
 
-    // Build TOC
+    // === Build TOC ===
     const toc = document.getElementById("toc");
     document.querySelectorAll("#content h1, #content h2, #content h3").forEach(h => {
       const id = h.textContent.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
@@ -193,32 +252,6 @@ fetch(mdFile)
       if (h.tagName === "H2") li.style.marginLeft = "0.6rem";
       if (h.tagName === "H3") li.style.marginLeft = "1.3rem";
       toc.appendChild(li);
-    });
-
-    // Highlight active heading
-    const links = document.querySelectorAll("#toc a");
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          links.forEach(a => a.classList.remove("active"));
-          const active = document.querySelector(`#toc a[href="#${e.target.id}"]`);
-          if (active) active.classList.add("active");
-        }
-      });
-    }, { threshold: 0.5 });
-    document.querySelectorAll("#content h1, #content h2, #content h3").forEach(h => observer.observe(h));
-
-    // Copy buttons
-    document.querySelectorAll("pre").forEach(pre => {
-      const btn = document.createElement("button");
-      btn.textContent = "Copy";
-      btn.className = "copy-btn";
-      pre.appendChild(btn);
-      btn.onclick = () => {
-        navigator.clipboard.writeText(pre.innerText.trim());
-        btn.textContent = "Copied!";
-        setTimeout(() => (btn.textContent = "Copy"), 1500);
-      };
     });
 
     // === Build Context Panel ===
@@ -235,15 +268,74 @@ fetch(mdFile)
       <b>Difficulty:</b> ${meta.difficulty || "N/A"}<br>
       <b>IP:</b> ${meta.ip || "N/A"}</p>
       ${tagsHTML}
-      <button onclick="viewAttackPath('${meta.attack_path || '#'}')">View Attack Chain</button>
+      <button onclick="showAttackPath()">View Attack Chain</button>
       ${meta.related ? `<h3>Related</h3><ul>${meta.related.map(r => `<li>${r}</li>`).join("")}</ul>` : ""}
     `;
+
+    // Store attack path for modal use
+    window.attackPath = meta.attack_path ? JSON.parse(meta.attack_path) : null;
   });
 
-function viewAttackPath(path) {
-  if (path === "#" || !path) return alert("Attack path not available.");
-  window.open(path, "_blank");
+// === Modal Control ===
+function showAttackPath() {
+  if (!window.attackPath) return alert("Attack path not available.");
+  const tableDiv = document.getElementById("attackTable");
+  const path = window.attackPath;
+  let html = `<table><tr><th>Step</th><th>User / Access</th><th>Technique</th><th>Result</th></tr>`;
+  path.forEach(p => {
+    html += `<tr><td>${p.step}</td><td>${p.user}</td><td>${p.technique}</td><td>${p.result}</td></tr>`;
+  });
+  html += `</table>`;
+  tableDiv.innerHTML = html;
+  document.getElementById("attackModal").style.display = "flex";
+}
+
+function closeAttackModal() {
+  document.getElementById("attackModal").style.display = "none";
 }
 </script>
+
+<script>
+  // === Load and parse Markdown ===
+  fetch("../path/signed.md")
+    .then(res => res.text())
+    .then(text => {
+      // Extract YAML front-matter
+      const match = /^---([\s\S]*?)---/.exec(text);
+      let metadata = {};
+      let markdown = text;
+
+      if (match) {
+        const yamlText = match[1].trim();
+        markdown = text.replace(match[0], "");
+        yamlText.split("\n").forEach(line => {
+          const [key, ...rest] = line.split(":");
+          metadata[key.trim()] = rest.join(":").trim();
+        });
+      }
+
+      // Render markdown content in center
+      document.getElementById("writeup").innerHTML = marked.parse(markdown);
+
+      // Fill right context
+      document.getElementById("summary").innerHTML = `
+        <strong>${metadata.title}</strong><br>
+        <small>${metadata.date}</small>
+      `;
+
+      // Optional: tags list if present
+      if (metadata.tags) {
+        const tagsArray = metadata.tags
+          .replace(/^- /gm, "") // clean if YAML-style list
+          .split("\n")
+          .map(t => t.trim())
+          .filter(Boolean);
+
+        document.getElementById("tags").innerHTML = tagsArray
+          .map(t => `<li>${t}</li>`)
+          .join("");
+      }
+    });
+  </script>
 </body>
 </html>
