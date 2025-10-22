@@ -43,31 +43,12 @@ body {
   bottom: 0;
   overflow-y: auto;
 }
-.sidebar h2 {
-  font-size: 1.2rem;
-  color: var(--accent);
-  margin-bottom: 1rem;
-}
-.sidebar ul {
-  list-style: none;
-  padding-left: 0;
-}
-.sidebar li {
-  margin: 0.6rem 0;
-}
-.sidebar a {
-  color: var(--link);
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: 0.2s;
-}
-.sidebar a.active {
-  color: var(--accent);
-  font-weight: bold;
-}
-.sidebar a:hover {
-  text-decoration: underline;
-}
+.sidebar h2 { font-size: 1.2rem; color: var(--accent); margin-bottom: 1rem; }
+.sidebar ul { list-style: none; padding-left: 0; }
+.sidebar li { margin: 0.6rem 0; }
+.sidebar a { color: var(--link); text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
+.sidebar a.active { color: var(--accent); font-weight: bold; }
+.sidebar a:hover { text-decoration: underline; }
 
 /* === Main Content === */
 main {
@@ -76,14 +57,9 @@ main {
   padding: 3rem 4rem;
   max-width: 1000px;
 }
-h1, h2, h3 {
-  color: var(--accent);
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-}
-a {
-  color: var(--link);
-}
+h1, h2, h3 { color: var(--accent); margin-top: 2.5rem; margin-bottom: 1rem; }
+a { color: var(--link); }
+
 pre {
   background: var(--card);
   border-left: 4px solid var(--accent);
@@ -93,13 +69,10 @@ pre {
   position: relative;
   margin: 1.5rem 0;
 }
-pre code {
-  font-family: monospace;
-}
+pre code { font-family: monospace; display: block; }
 .copy-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 6px; right: 6px;
   font-size: 0.8rem;
   border: none;
   background: var(--accent);
@@ -111,6 +84,7 @@ pre code {
   transition: 0.2s;
 }
 pre:hover .copy-btn { opacity: 1; }
+
 blockquote {
   border-left: 4px solid var(--accent);
   background: #161616;
@@ -119,17 +93,10 @@ blockquote {
   color: #ccc;
   margin: 1.5rem 0;
 }
-img {
-  max-width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 0 10px #000;
-  margin: 1.5rem 0;
-}
+img { max-width: 100%; border-radius: 8px; box-shadow: 0 0 10px #000; margin: 1.5rem 0; }
 
 /* === Scroll Highlight === */
-section {
-  scroll-margin-top: 100px;
-}
+section { scroll-margin-top: 100px; }
 </style>
 </head>
 
@@ -145,7 +112,8 @@ section {
   </main>
 
 <script>
-const mdFile = "Signed.md"; // 👈 only change this
+const mdFile = "Signed.md"; 
+
 fetch(mdFile)
   .then(res => res.text())
   .then(md => {
@@ -166,17 +134,23 @@ fetch(mdFile)
       toc.appendChild(li);
     });
 
-    // Copy button for code blocks
+    // Add Copy buttons to all <pre> blocks
     document.querySelectorAll("pre").forEach(pre => {
+      const code = pre.querySelector("code");
+      if (!code) return;
       const btn = document.createElement("button");
       btn.textContent = "Copy";
       btn.className = "copy-btn";
       pre.appendChild(btn);
-      btn.onclick = () => {
-        navigator.clipboard.writeText(pre.innerText.trim());
-        btn.textContent = "Copied!";
-        setTimeout(() => (btn.textContent = "Copy"), 1500);
-      };
+
+      btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(code.innerText.trim())
+          .then(() => {
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 1500);
+          })
+          .catch(() => alert("Failed to copy code"));
+      });
     });
 
     // Highlight active heading in TOC
