@@ -1,6 +1,34 @@
 [
   
 {
+  "title": "CropVision: Tomato Leaf Disease Detection",
+  "href": "posts/CropVision.html",
+  "date": "2025-10-22",
+  "category": [
+    "Artificial Intelligence",
+    "Computer Vision",
+    "Machine Learning"
+      ],
+  "tags": [
+    "Convolutional Neural Network (CNN)",
+    "LeNet Variant",
+    "Faster-RCNN (ResNet-34)",
+    "PlantVillage Dataset",
+    "Image Preprocessing",
+    "Data Augmentation",
+    "Transfer Learning",
+    "Keras/TensorFlow",
+    "OpenCV",
+    "Evaluation: Accuracy 94-95%",
+    "Confusion Matrix",
+    "Feature Extraction",
+    "Classification",
+    "Model Optimization",
+    "Real-world Noise Robustness"
+    ],
+  "attack_path": []
+}
+,{
    "title": "HackTheBox: Signed",
    "href": "posts/htb_Signed.html",
    "date": "2025-10-21",
