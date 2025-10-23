@@ -6,7 +6,7 @@ Operating System: Windows
 Hints: True
 ```
 
-**CVE-2025-33073** — critical privilege escalation vulnerability that bypasses NTLM reflection mitigations. Also referred to as the *Reflective Kerberos Relay Attack* or *NTLM Reflection SMB Flaw*.
+**CVE-2025-33073**  critical privilege escalation vulnerability that bypasses NTLM reflection mitigations. Also referred to as the *Reflective Kerberos Relay Attack* or *NTLM Reflection SMB Flaw*.
 
 
 
@@ -16,7 +16,7 @@ Hints: True
 | :--: | :----------------: | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
 |   1  |        `N/A`       | **Port & AD Service Enumeration**      | nmap revealed AD services (DNS, LDAP, Kerberos, SMB, RDP) on `TARGET_IP` and identified the domain `reflection.thm`.        |
 |   2  |       `sawan`      | **SMB Auth & Host Mapping**            | Valid lab creds (`sawan:R3flect0r`) used to confirm SMB connectivity and ability to register DNS records.                   |
-|   3  |       `sawan`      | **DNS Marshalled Record Registration** | Registered `localhost1UWhRCA...` pointing at attacker — crafted record decodes to a local hostname when processed by LSA.   |
+|   3  |       `sawan`      | **DNS Marshalled Record Registration** | Registered `localhost1UWhRCA...` pointing at attacker  crafted record decodes to a local hostname when processed by LSA.   |
 |   4  |     `Attacker`     | **PetitPotam / MS-EFSRPC Coercion**    | Coerced a SYSTEM service (lsass) on the target to authenticate to the attacker's listener.                                  |
 |   5  | `SYSTEM` (coerced) | **Local NTLM Authentication Trigger**  | SMB client treats the connection as local (SspIsTargetLocalhost → TRUE) and performs token insertion rather than challenge. |
 |   6  |     `Attacker`     | **NTLM Relay (ntlmrelayx)**            | Relayed SYSTEM authentication back to the target SMB service; `ntlmrelayx` extracted SAM/credentials.                       |
@@ -38,9 +38,9 @@ NTLM reflection attacks have plagued Windows systems for nearly two decades. NTL
 
 Microsoft has released a series of mitigations over the years, but researchers have continued to find bypasses:
 
-* **MS08-068 (2008)** — Prevented SMB-to-SMB NTLM reflection.
-* **MS09-013 (2009)** — Fixed HTTP-to-SMB reflection.
-* **MS15-076 (2015)** — Patched DCOM-to-DCOM reflection.
+* **MS08-068 (2008)**  Prevented SMB-to-SMB NTLM reflection.
+* **MS09-013 (2009)**  Fixed HTTP-to-SMB reflection.
+* **MS15-076 (2015)**  Patched DCOM-to-DCOM reflection.
 
 Despite these fixes, creative workarounds continue to emerge as researchers study the exact behavior of the mitigations.
 
@@ -70,11 +70,11 @@ The vulnerability abuses this optimization and the logic used to detect "local" 
 
 
 
-## Exploitation mechanism — step-by-step
+## Exploitation mechanism  step-by-step
 
-### Step 1 — DNS record manipulation
+### Step 1  DNS record manipulation
 
-The attack begins by creating a malicious DNS record containing *marshalled* target information. This technique — originally documented by James Forshaw — encodes additional data into DNS names.
+The attack begins by creating a malicious DNS record containing *marshalled* target information. This technique  originally documented by James Forshaw  encodes additional data into DNS names.
 
 Example DNS names used in the attack:
 
@@ -85,7 +85,7 @@ localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA
 
 Each name contains a hostname prefix (`srv1` or `localhost`) and appended marshalled data (`1UWhRCA...`).
 
-### Step 2 — target name processing
+### Step 2  target name processing
 
 When Windows processes the target name for authentication, it constructs a service principal like:
 
@@ -95,7 +95,7 @@ cifs/srv11UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA
 
 The LSA function `LsapCheckMarshalledTargetInfo` strips the marshalled data, leaving `cifs/srv1`. The extracted hostname (`srv1`) is used for localhost detection.
 
-### Step 3 — localhost detection logic
+### Step 3  localhost detection logic
 
 The `SspIsTargetLocalhost` function compares the extracted hostname against:
 
@@ -105,11 +105,11 @@ The `SspIsTargetLocalhost` function compares the extracted hostname against:
 
 A match causes Windows to treat the authentication as a local authentication request.
 
-### Step 4 — authentication coercion
+### Step 4  authentication coercion
 
 The attacker coerces a SYSTEM service (typically `lsass.exe`) to authenticate to their controlled server. Tools like **PetitPotam** exploit the MS-EFSRPC protocol to force authentication without user interaction.
 
-### Step 5 — local authentication bypass
+### Step 5  local authentication bypass
 
 When the SMB client connects to the attacker-controlled server:
 
@@ -119,7 +119,7 @@ When the SMB client connects to the attacker-controlled server:
 * Client sends `NTLM_NEGOTIATE` with workstation and domain names.
 * Attacker's server sets the `Negotiate Local Call` flag and inserts the SYSTEM token into the server context.
 
-### Step 6 — token relay and impersonation
+### Step 6  token relay and impersonation
 
 The attacker's relay server receives the SYSTEM authentication from the coerced service and relays it back to the victim machine over SMB. Because the server accepted the authentication as local, the attacker gains a SYSTEM context on the target and can perform privileged actions (e.g., dump SAM hashes, execute arbitrary code).
 
@@ -242,7 +242,7 @@ When successful, `ntlmrelayx` should extract SAM hashes from the target host. Us
 
 
 
-## Bonus — cracking hashes
+## Bonus  cracking hashes
 
 While not strictly necessary for domain-controller targets, you can crack dumped hashes offline (e.g., with `hashcat`) to obtain plaintext local admin passwords.
 
@@ -281,7 +281,7 @@ To extract domain credentials from a DC, create a SOCKS proxy for relayed sessio
  proxychains4 -q impacket-secretsdump TARGET_IP -no-pass -just-dc -use-vss
 ```
 
-The output can include NTLM hashes for domain accounts — use these for lab questions requiring the SVC account hash or other domain credentials.
+The output can include NTLM hashes for domain accounts  use these for lab questions requiring the SVC account hash or other domain credentials.
 
 
 
@@ -302,7 +302,7 @@ Use `whoami` to confirm `SYSTEM` or elevated context.
 
 ![NTLM_Relay](TryHackMe_Reflection_nt_SYSTEM.jpg)
 
-## How it works — short recap
+## How it works  short recap
 
 1. Craft a marshalled DNS name that decodes to a local hostname.
 2. Register that DNS name to point at the attacker-controlled server.
@@ -315,7 +315,7 @@ Use `whoami` to confirm `SYSTEM` or elevated context.
 
 ## References & further reading
 
-* Synacktiv: *NTLM Reflection is dead, long live NTLM Reflection — In-depth analysis of CVE-2025-33073* (research / writeup) - https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025
+* Synacktiv: *NTLM Reflection is dead, long live NTLM Reflection  In-depth analysis of CVE-2025-33073* (research / writeup) - https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025
 * TryHackMe: NTLM Reflection room (lab): https://tryhackme.com/room/ntlmreflectioncve202533073?sharerId=62051b3adc1733004ac877ef
 
 
