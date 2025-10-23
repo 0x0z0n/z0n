@@ -10,6 +10,7 @@
     "Active Directory"
   ],
   "tags": [
+    "NTLM Reflection - CVE-2025-33073",
     "T1046 - Network Service Discovery",
     "T1078 - Valid Accounts",
     "T1210 - Exploitation of Remote Services",
