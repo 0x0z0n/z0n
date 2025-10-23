@@ -1,6 +1,107 @@
 [
   
 {
+  "title": "TryHackMe : NTLM Reflection",
+  "href": "posts/NTLMRefelction/index.html",
+  "date": "2025-10-23",
+  "category": [
+    "HackTheBox",
+    "Windows",
+    "Active Directory"
+  ],
+  "tags": [
+    "T1046 - Network Service Discovery",
+    "T1078 - Valid Accounts",
+    "T1210 - Exploitation of Remote Services",
+    "T1558 - Steal or Forge Kerberos Tickets",
+    "T1558.005 - Ccache Files",
+    "T1550.003 - Use Alternate Authentication Material",
+    "T1496 - Resource Hijacking (NTLM/SMB Relay)",
+    "T1110 - Brute Force (hash cracking)",
+    "T1134.001 - Access Token Manipulation: Impersonation",
+    "T1531 - Account Discovery",
+    "T1562.001 - Disable Security Tools: Disable or Modify Tools (SMB signing bypass)"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Nmap / Port & AD Service Enumeration",
+      "result": "Performed aggressive scan; discovered AD services (DNS, LDAP, Kerberos, SMB, RDP) and identified domain `reflection.thm` with host REFLECTION. Confirmed target reachable and services for later coercion.",
+      "mitigation": "Limit exposed services, apply network segmentation and host-based firewalls; monitor and alert on unexpected AD-facing services."
+    },
+    {
+      "step": 2,
+      "user": "sawan",
+      "technique": "Valid Account / SMB Authentication",
+      "result": "Used provided low-privileged credentials (`sawan:R3flect0r`) to confirm SMB connectivity and to register DNS records via authenticated channels where permitted.",
+      "mitigation": "Avoid shared/test credentials; enforce strong passwords, MFA for privileged accounts, and monitor authenticated changes to DNS and SMB."
+    },
+    {
+      "step": 3,
+      "user": "attacker",
+      "technique": "DNS Marshalled Record Registration",
+      "result": "Created marshalled DNS record `localhost1UWhRCA...` pointing to attacker IP. When processed by LSA, the marshalled data is stripped leaving a local hostname, enabling 'local' detection to trigger.",
+      "mitigation": "Harden DNS update permissions, monitor DNS zone changes, restrict authenticated dynamic updates and validate record contents."
+    },
+    {
+      "step": 4,
+      "user": "attacker",
+      "technique": "Coercion via PetitPotam (MS-EFSRPC)",
+      "result": "Used PetitPotam to coerce a SYSTEM service (lsass) on the target to initiate authentication to attacker-controlled listener, causing a SYSTEM-auth NTLM attempt to the attacker's server.",
+      "mitigation": "Apply MS guidance and patches for MS-EFSRPC/Coercion vectors, disable unnecessary RPC endpoints, monitor for unusual MS-EFSRPC calls and outbound SMB auth."
+    },
+    {
+      "step": 5,
+      "user": "SYSTEM (coerced)",
+      "technique": "Local NTLM Authentication Trigger / Token Insertion",
+      "result": "SMB client evaluated the marshalled name as local (`SspIsTargetLocalhost` → TRUE) and performed local authentication optimization; 'Negotiate Local Call' allowed token insertion (no challenge-response).",
+      "mitigation": "Enforce SMB signing, apply vendor patches (CVE fix), restrict local-auth optimizations where possible and monitor NTLM_NEGOTIATE patterns."
+    },
+    {
+      "step": 6,
+      "user": "attacker",
+      "technique": "NTLM Relay (impacket-ntlmrelayx)",
+      "result": "Relayed the received SYSTEM authentication back to the target SMB service; `ntlmrelayx` captured/extracted SAM or authenticated session and opened interactive or socks-assisted channels.",
+      "mitigation": "Deploy SMB signing, harden LSA/SMB client behavior via policy, monitor for relay-like sessions and anomalous SMB connections originating from internal hosts."
+    },
+    {
+      "step": 7,
+      "user": "attacker",
+      "technique": "Interactive SMB Shell / SOCKS Pivot",
+      "result": "Using `-i` or `-socks` in `ntlmrelayx`, attacker opened an SMB client shell or SOCKS proxy; gained administrative SMB access to enumerate filesystem and services.",
+      "mitigation": "Alert on anomalous SMB client sessions and unexpected SMB servers on localhost; limit SMB client privileges and internal outbound SMB."
+    },
+    {
+      "step": 8,
+      "user": "attacker",
+      "technique": "NTDS/Secrets Extraction via proxy (impacket-secretsdump + VSS)",
+      "result": "Through SOCKS proxy used `impacket-secretsdump -no-pass -just-dc -use-vss` to extract NTDS.dit and domain NTLM hashes for accounts including svc/System-equivalent accounts.",
+      "mitigation": "Limit ability to create VSS snapshots to admin roles, monitor for VSS and secretsdump-style activity, and protect domain controllers with stricter egress controls."
+    },
+    {
+      "step": 9,
+      "user": "attacker",
+      "technique": "Pass-the-Hash / Remote Exec (impacket-smbexec / smbexec.py)",
+      "result": "Used extracted NTLM hashes with `smbexec.py`/`evil-winrm` to obtain elevated shell (svc/Administrator) on target; confirmed elevated context via `whoami`.",
+      "mitigation": "Use LAPS/managed service account hygiene, rotate/secure service account credentials, monitor for use of lateral-auth tooling and suspicious authenticated sessions."
+    },
+    {
+      "step": 10,
+      "user": "Administrator / SYSTEM",
+      "technique": "Filesystem & Secrets Access",
+      "result": "With elevated privileges, read sensitive locations (SYSVOL, backups, root flags) and obtained required lab flags or secrets.",
+      "mitigation": "Harden access controls on sensitive FS locations, monitor privileged file reads and backup exports, implement least privilege and strong auditing on DCs."
+    },
+    {
+      "step": 11,
+      "user": "attacker (optional)",
+      "technique": "Kerberos Subkey / Reflection Variant",
+      "result": "Abused Kerberos subkey storage to create or reuse subkeys tied to `NT AUTHORITY\\SYSTEM`, enabling Kerberos-based token elevation/reflection in environments where Kerberos paths are available.",
+      "mitigation": "Monitor for unusual Kerberos subkey/ccache usage, protect service accounts and machine accounts, apply Kerberos hardening guidance and relevant patches."
+    }
+  ]
+},{
   "title": "Project: CropVision",
   "href": "posts/CropVision.html",
   "date": "2025-10-22",
