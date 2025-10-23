@@ -16,7 +16,7 @@ Hints: True
 | :--: | :----------------: | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
 |   1  |        `N/A`       | **Port & AD Service Enumeration**      | nmap revealed AD services (DNS, LDAP, Kerberos, SMB, RDP) on `TARGET_IP` and identified the domain `reflection.thm`.        |
 |   2  |       `sawan`      | **SMB Auth & Host Mapping**            | Valid lab creds (`sawan:R3flect0r`) used to confirm SMB connectivity and ability to register DNS records.                   |
-|   3  |       `sawan`      | **DNS Marshalled Record Registration** | Registered `localhost1UWhRCA...` pointing at attacker  crafted record decodes to a local hostname when processed by LSA.   |
+|   3  |       `sawan`      | **DNS Marshalled Record Registration** | Registered `localhost1UWhRCA..` pointing at attacker  crafted record decodes to a local hostname when processed by LSA.   |
 |   4  |     `Attacker`     | **PetitPotam / MS-EFSRPC Coercion**    | Coerced a SYSTEM service (lsass) on the target to authenticate to the attacker's listener.                                  |
 |   5  | `SYSTEM` (coerced) | **Local NTLM Authentication Trigger**  | SMB client treats the connection as local (SspIsTargetLocalhost → TRUE) and performs token insertion rather than challenge. |
 |   6  |     `Attacker`     | **NTLM Relay (ntlmrelayx)**            | Relayed SYSTEM authentication back to the target SMB service; `ntlmrelayx` extracted SAM/credentials.                       |
