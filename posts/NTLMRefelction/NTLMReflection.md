@@ -26,7 +26,7 @@ Hints: True
 |  10  |   `Administrator`  | **Filesystem / Flag Access**           | With elevated privileges read sensitive locations (SYSVOL, NTDS backups, root flag).                                        |
 |  11  |     `Attacker`     | **Kerberos variant / Subkey abuse**    | Optionally abused Kerberos subkey storage to obtain SYSTEM tokens via Kerberos reflection techniques.  
 
-
+![NTLM_Relay](TryHackMe_NTLM_Reflection_mindmap.png)
 
 ## Introduction
 
