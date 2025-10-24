@@ -729,7 +729,7 @@ toggleBtn.addEventListener("click", () => {
   icon.classList.toggle("fa-chevron-right");
 });
 
-const b64ReversedUrl = "bG10aC5TM1IvUzNSL24wei9vaS5idWh0aWcubjB6MHgwLy86c3B0dGg=";
+const r3S = "bG10aC5TM1IvUzNSL24wei9vaS5idWh0aWcubjB6MHgwLy86c3B0dGg=";
 const expectedSha256 = "288443d0b0661bc97b32edc09937f64aef8235ae1d83aaac8e3b54968293b681";
 let clickCount = 0, firstClickTime = 0;
 const CLICK_LIMIT = 8, WINDOW_MS = 5000;
@@ -743,7 +743,7 @@ function base64ToString(b64){
 
 function toHex(buffer){ return Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
 async function sha256Hex(str){ return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))); }
-function decodeObfuscatedUrl(){ const rev=base64ToString(b64ReversedUrl); return rev ? rev.split('').reverse().join('') : null; }
+function decodeObfuscatedUrl(){ const rev=base64ToString(r3S); return rev ? rev.split('').reverse().join('') : null; }
 async function decodeVerifyAndRedirect(){ const url=decodeObfuscatedUrl(); if(!url) return; if(await sha256Hex(url)===expectedSha256) window.location.href=url; else console.warn("Easter-egg URL failed integrity check."); }
 
 toggleBtn.addEventListener("click", () => {
