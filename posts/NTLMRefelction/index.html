@@ -34,6 +34,7 @@
     display: flex;
     min-height: 100vh;
     overflow: hidden;
+    scroll-behavior: smooth;
   }
 
   .sidebar, main {
@@ -41,6 +42,7 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+    scroll-behavior: smooth;
   }
 
   .sidebar {
@@ -52,29 +54,35 @@
     top: 0;
     left: 0;
     bottom: 0;
+    transition: transform 0.3s ease;
+    will-change: transform;
   }
 
-  /* Sidebar heading and links */
   .sidebar h2 {
-    color: #ffffff; /* White heading */
+    color: #ffffff;
     margin-bottom: 1rem;
   }
-  .sidebar ul { list-style: none; padding: 0; }
+
+  .sidebar ul { list-style: none; padding: 0; margin: 0; }
   .sidebar a {
-    color: #ffffff; /* White links */
+    color: #ffffff;
     text-decoration: none;
+    display: block;
+    padding: 0.25rem 0;
     transition: color 0.3s ease;
   }
-  .sidebar a:hover { color: var(--link); } /* Yellow on hover */
+
+  .sidebar a:hover { color: var(--link); }
   .sidebar a.active { color: var(--accent); }
 
   main {
     flex: 1;
     margin-left: 300px;
     padding: 3rem 5rem 3rem 3rem;
-    height: 100vh;
     overflow-y: auto;
     position: relative;
+    transition: transform 0.3s ease;
+    will-change: transform;
   }
 
   #content {
@@ -88,7 +96,10 @@
     color: var(--accent);
     margin-top: 2.5rem;
     cursor: pointer;
+    transition: color 0.2s ease;
   }
+
+  h1:hover, h2:hover, h3:hover { color: #00ff99; }
 
   pre {
     background: var(--card);
@@ -96,7 +107,6 @@
     padding: 1rem;
     overflow-x: auto;
     border-radius: 6px;
-    position: relative;
   }
 
   blockquote {
@@ -106,7 +116,6 @@
     border-radius: 6px;
   }
 
-  /* === IMAGE FIX === */
   img {
     display: block;
     margin: 1.5rem auto;
@@ -115,73 +124,57 @@
     max-width: 100%;
     height: auto;
     object-fit: contain;
+    transition: opacity 0.4s ease, transform 0.3s ease;
+    opacity: 0;
   }
 
-  /* Collapsible sections */
+  img.loaded {
+    opacity: 1;
+    transform: scale(1);
+  }
+
   .collapsible-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease;
+    transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     will-change: max-height;
   }
-  .collapsible-content.open { overflow: visible; }
-
-  /* === NEW: List color rules === */
-  main ul, main ol {
-    color: var(--link); /* Yellow for lists inside main content */
+  .collapsible-content.open {
+    overflow: visible;
   }
 
-  /* Sidebar "On this page" content should remain white */
-  .sidebar ul li a { color: #ffffff; }
+  main ul, main ol { color: var(--link); }
 
-  /* ======= Transparent / Hidden Scrollbars ======= */
+  .sidebar::-webkit-scrollbar,
+  main::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+  }
 
-/* For WebKit browsers (Chrome, Edge, Safari) */
-.sidebar::-webkit-scrollbar,
-main::-webkit-scrollbar {
-  width: 8px;
-  background: transparent; /* Invisible track */
-}
+  .sidebar::-webkit-scrollbar-thumb,
+  main::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+  }
 
-.sidebar::-webkit-scrollbar-thumb,
-main::-webkit-scrollbar-thumb {
-  background: transparent; /* Invisible thumb */
-  border-radius: 10px;
-}
+  .sidebar:hover::-webkit-scrollbar-thumb,
+  main:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-/* On hover, show a subtle scrollbar for usability */
-.sidebar:hover::-webkit-scrollbar-thumb,
-main:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15); /* faint white */
-}
+  #content a {
+    color: #00d0ff;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(0, 208, 255, 0.5);
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
 
-/* For Firefox */
-.sidebar,
-main {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent; /* hide by default */
-}
-
-.sidebar:hover,
-main:hover {
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent; /* faint on hover */
-}
-
-/* ======= Link Styling for Main Content ======= */
-#content a {
-  color: #00d0ff; /* Cyan blue - easy to read on dark background */
-  font-weight: 600;
-  text-decoration: none;
-  border-bottom: 1px dashed rgba(0, 208, 255, 0.5);
-  transition: color 0.3s ease, border-color 0.3s ease;
-}
-
-#content a:hover {
-  color: #00d0ff; /* Switch to your yellow accent on hover */
-  border-color: #ffeb3b;
-  text-shadow: 0 0 8px rgba(255, 235, 59, 0.4);
-}
-
+  #content a:hover {
+    color: #ffeb3b;
+    border-color: #ffeb3b;
+    text-shadow: 0 0 8px rgba(255, 235, 59, 0.4);
+  }
   </style>
 </head>
 
@@ -206,13 +199,13 @@ main:hover {
       document.getElementById("content").innerHTML = marked.parse(md);
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
-      // Wrap collapsible sections
+      // Smooth collapsible setup
       headings.forEach((heading, i) => {
-        const currentLevel = parseInt(heading.tagName.replace("H",""));
+        const level = parseInt(heading.tagName.replace("H",""));
         let nextHead = null;
         for (let j = i + 1; j < headings.length; j++) {
           const lvl = parseInt(headings[j].tagName.replace("H",""));
-          if (lvl <= currentLevel) { nextHead = headings[j]; break; }
+          if (lvl <= level) { nextHead = headings[j]; break; }
         }
 
         const wrapper = document.createElement("div");
@@ -224,25 +217,26 @@ main:hover {
           el = nxt;
         }
         heading.after(wrapper);
-
-        const id = safeId(heading.textContent);
-        heading.id = id;
+        heading.id = safeId(heading.textContent);
 
         // Start expanded
+        wrapper.classList.add("open");
         wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+
         heading.addEventListener("click", () => {
-          const collapsed = heading.classList.toggle("collapsed");
-          if (collapsed) {
-            wrapper.classList.remove("open");
+          heading.classList.toggle("collapsed");
+          if (heading.classList.contains("collapsed")) {
             wrapper.style.maxHeight = "0px";
           } else {
             wrapper.classList.add("open");
-            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+            requestAnimationFrame(() => {
+              wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+            });
           }
         });
       });
 
-      // Table of Contents
+      // Build TOC
       const toc = document.getElementById("toc");
       headings.forEach(h => {
         const li = document.createElement("li");
@@ -250,36 +244,27 @@ main:hover {
         toc.appendChild(li);
       });
 
-      // === DYNAMIC HEIGHT FIX ===
-      function updateCollapsibleHeights() {
-        document.querySelectorAll(".collapsible-content").forEach(section => {
-          const trigger = section.previousElementSibling;
-          if (!trigger.classList.contains("collapsed")) {
-            section.style.maxHeight = section.scrollHeight + "px";
+      // Image fade-in observer
+      const imgObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("loaded");
+            imgObserver.unobserve(entry.target);
           }
         });
-      }
+      }, { threshold: 0.2 });
 
-      // Attach to all images
-      function attachImageListeners() {
-        document.querySelectorAll("#content img").forEach(img => {
-          if (!img.dataset.listenerAdded) {
-            img.dataset.listenerAdded = true;
-            img.addEventListener("load", updateCollapsibleHeights);
-          }
-        });
-      }
-
-      attachImageListeners();
-      window.addEventListener("load", updateCollapsibleHeights);
-      window.addEventListener("resize", updateCollapsibleHeights);
-
-      // Observe DOM for new markdown images
-      const observer = new MutationObserver(() => {
-        attachImageListeners();
-        updateCollapsibleHeights();
+      document.querySelectorAll("#content img").forEach(img => {
+        imgObserver.observe(img);
       });
-      observer.observe(document.getElementById("content"), { childList: true, subtree: true });
+
+      // Update collapsible heights dynamically
+      const updateHeights = () => {
+        document.querySelectorAll(".collapsible-content.open").forEach(sec => {
+          sec.style.maxHeight = sec.scrollHeight + "px";
+        });
+      };
+      window.addEventListener("resize", updateHeights);
     });
   </script>
 </body>
