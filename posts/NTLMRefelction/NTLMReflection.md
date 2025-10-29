@@ -297,6 +297,7 @@ Use `whoami` to confirm `SYSTEM` or elevated context.
 
 ## References & further reading
 
-* Synacktiv: *NTLM Reflection is dead, long live NTLM Reflection  In-depth analysis of CVE-2025-33073* (research / writeup) - https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025
-* TryHackMe: NTLM Reflection room (lab): https://tryhackme.com/room/ntlmreflectioncve202533073?sharerId=62051b3adc1733004ac877ef
+Synacktiv: NTLM Reflection is dead, long live NTLM Reflection  In-depth analysis of CVE-2025-33073 (research / writeup) - https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025
+
+TryHackMe: NTLM Reflection room (lab): https://tryhackme.com/room/ntlmreflectioncve202533073?sharerId=62051b3adc1733004ac877ef
 
