@@ -36,25 +36,13 @@
     overflow: hidden;
   }
 
-  /* Scrollbars */
   .sidebar, main {
     height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-  }
-  .sidebar::-webkit-scrollbar,
-  main::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-  }
-  .sidebar::-webkit-scrollbar-thumb,
-  main::-webkit-scrollbar-thumb {
-    background: transparent;
   }
 
-  /* Sidebar */
   .sidebar {
     width: 300px;
     background: #101010;
@@ -65,23 +53,11 @@
     left: 0;
     bottom: 0;
   }
-  .sidebar h2 {
-    font-size: 1.2rem;
-    color: var(--accent);
-    margin-bottom: 1rem;
-  }
-  .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
-  .sidebar li { margin: 0.6rem 0; }
-  .sidebar a {
-    color: var(--link);
-    text-decoration: none;
-    font-size: 0.95rem;
-    transition: 0.2s;
-  }
-  .sidebar a.active { color: var(--accent); font-weight: bold; }
-  .sidebar a:hover { text-decoration: underline; }
+  .sidebar h2 { color: var(--accent); margin-bottom: 1rem; }
+  .sidebar ul { list-style: none; padding: 0; }
+  .sidebar a { color: var(--link); text-decoration: none; }
+  .sidebar a.active { color: var(--accent); }
 
-  /* Main */
   main {
     flex: 1;
     margin-left: 300px;
@@ -97,29 +73,12 @@
     z-index: 1;
   }
 
-  /* Headings */
   h1, h2, h3 {
     color: var(--accent);
     margin-top: 2.5rem;
-    margin-bottom: 1rem;
     cursor: pointer;
-    position: relative;
-    user-select: none;
-  }
-  h1::after, h2::after, h3::after {
-    content: "▼";
-    font-size: 0.8rem;
-    margin-left: 0.6rem;
-    color: var(--link);
-    transition: transform 0.2s;
-  }
-  h1.collapsed::after, h2.collapsed::after, h3.collapsed::after {
-    transform: rotate(-90deg);
   }
 
-  a { color: var(--link); }
-
-  /* Code blocks */
   pre {
     background: var(--card);
     border-left: 4px solid var(--accent);
@@ -127,59 +86,31 @@
     overflow-x: auto;
     border-radius: 6px;
     position: relative;
-    margin: 1.5rem 0;
   }
-  pre code { font-family: monospace; display: block; }
-  .copy-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    font-size: 0.8rem;
-    border: none;
-    background: var(--accent);
-    color: #111;
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    opacity: 0;
-    cursor: pointer;
-    transition: 0.2s;
-  }
-  pre:hover .copy-btn { opacity: 1; }
 
-  /* Blockquotes */
   blockquote {
     border-left: 4px solid var(--accent);
     background: #161616;
     padding: 1rem 1.3rem;
     border-radius: 6px;
-    color: #ccc;
-    margin: 1.5rem 0;
   }
 
-  /* Images – fully use right blank space */
+  /* === FIXED IMAGE RENDERING === */
   img {
     display: block;
     margin: 1.5rem auto;
     border-radius: 8px;
     box-shadow: 0 0 10px #000;
-    width: calc(100% + 60px);
-    max-width: none;
-    margin-right: -60px;
+    width: auto;
+    max-width: 100%;
     height: auto;
     object-fit: contain;
   }
 
-  @media (max-width: 1200px) {
-    img {
-      width: 100%;
-      margin-right: 0;
-    }
-  }
-
-  /* Collapsible */
+  /* Collapsible sections (allow overflow for images) */
   .collapsible-content {
-    overflow: hidden;
-    transition: max-height 0.28s ease;
+    overflow: visible !important;
+    transition: max-height 0.3s ease;
     will-change: max-height;
   }
   </style>
@@ -228,86 +159,49 @@
         const id = safeId(heading.textContent);
         heading.id = id;
 
-        // Set initial expanded height
-        requestAnimationFrame(() => wrapper.style.maxHeight = wrapper.scrollHeight + "px");
-
+        // Start collapsed visually
+        wrapper.style.maxHeight = wrapper.scrollHeight + "px";
         heading.addEventListener("click", () => {
           const collapsed = heading.classList.toggle("collapsed");
-          if (collapsed) {
-            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-            wrapper.getBoundingClientRect();
-            wrapper.style.maxHeight = "0px";
-          } else {
-            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-          }
+          wrapper.style.maxHeight = collapsed ? "0px" : wrapper.scrollHeight + "px";
         });
       });
 
-      // Build Table of Contents
+      // Table of Contents
       const toc = document.getElementById("toc");
       headings.forEach(h => {
         const li = document.createElement("li");
         li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-        if (h.tagName === "H2") li.style.marginLeft = "0.5rem";
-        if (h.tagName === "H3") li.style.marginLeft = "1.5rem";
         toc.appendChild(li);
       });
 
-      // Copy buttons
-      document.querySelectorAll("pre").forEach(pre => {
-        const code = pre.querySelector("code");
-        if (!code) return;
-        const btn = document.createElement("button");
-        btn.textContent = "Copy";
-        btn.className = "copy-btn";
-        pre.appendChild(btn);
-        btn.addEventListener("click", () => {
-          navigator.clipboard.writeText(code.innerText.trim()).then(() => {
-            btn.textContent = "Copied!";
-            setTimeout(() => btn.textContent = "Copy", 1500);
-          });
-        });
-      });
-
-      // Highlight active TOC link
-      const links = Array.from(document.querySelectorAll("#toc a"));
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-          if (e.isIntersecting) {
-            links.forEach(a => a.classList.remove("active"));
-            const active = document.querySelector(`#toc a[href="#${e.target.id}"]`);
-            if (active) active.classList.add("active");
-          }
-        });
-      }, { threshold: 0.4 });
-      headings.forEach(h => observer.observe(h));
-
-      // --- FIX: Ensure images render fully ---
-      function refreshCollapsibleHeights() {
+      // === FIX: Wait for all images before setting height ===
+      const images = Array.from(document.querySelectorAll("#content img"));
+      let loaded = 0;
+      function adjustHeights() {
         document.querySelectorAll(".collapsible-content").forEach(w => {
-          if (!w.previousElementSibling.classList.contains("collapsed")) {
+          if (!w.previousElementSibling.classList.contains("collapsed"))
             w.style.maxHeight = w.scrollHeight + "px";
+        });
+      }
+
+      if (images.length === 0) adjustHeights();
+      else {
+        images.forEach(img => {
+          if (img.complete) {
+            loaded++;
+            if (loaded === images.length) adjustHeights();
+          } else {
+            img.addEventListener("load", () => {
+              loaded++;
+              if (loaded === images.length) adjustHeights();
+            });
           }
         });
       }
 
-      // After all images have loaded
-      setTimeout(() => {
-        document.querySelectorAll("#content img").forEach(img => {
-          if (!img.complete) img.addEventListener("load", refreshCollapsibleHeights);
-        });
-      }, 300);
-
-      window.addEventListener("load", refreshCollapsibleHeights);
+      window.addEventListener("resize", adjustHeights);
     });
-
-  // Resize fix
-  window.addEventListener("resize", () => {
-    document.querySelectorAll(".collapsible-content").forEach(w => {
-      if (parseFloat(w.style.maxHeight || "0") > 0)
-        w.style.maxHeight = w.scrollHeight + "px";
-    });
-  });
   </script>
 </body>
 </html>
