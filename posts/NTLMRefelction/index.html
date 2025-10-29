@@ -34,19 +34,17 @@ html, body {
   color: var(--text);
   display: flex;
   min-height: 100vh;
-  overflow: hidden; /* keep layout fixed; inner panels scroll */
+  overflow: hidden;
 }
 
-/* Transparent scrollbars but scrolling still works */
+/* === Scrollbars === */
 .sidebar, main {
-  height: 100vh;                 /* crucial: allow internal scrolling */
+  height: 100vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: transparent transparent; /* Firefox */
+  scrollbar-color: transparent transparent;
 }
-
-/* Chrome, Edge, Safari scrollbar transparency */
 .sidebar::-webkit-scrollbar,
 main::-webkit-scrollbar {
   width: 8px;
@@ -58,9 +56,6 @@ main::-webkit-scrollbar-thumb {
 }
 .sidebar::-webkit-scrollbar-track,
 main::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -85,9 +80,7 @@ main::-webkit-scrollbar-track {
   padding-left: 0;
   margin: 0;
 }
-.sidebar li {
-  margin: 0.6rem 0;
-}
+.sidebar li { margin: 0.6rem 0; }
 .sidebar a {
   color: var(--link);
   text-decoration: none;
@@ -98,19 +91,25 @@ main::-webkit-scrollbar-track {
   color: var(--accent);
   font-weight: bold;
 }
-.sidebar a:hover {
-  text-decoration: underline;
-}
+.sidebar a:hover { text-decoration: underline; }
 
 /* === Main Content === */
 main {
   flex: 1;
   margin-left: 280px;
-  padding: 3rem 4rem;
-  max-width: 1000px;
+  padding: 3rem 4rem 3rem 3rem;
+  height: 100vh;
+  overflow-y: auto;
   position: relative;
-  /* height set above to 100vh */
 }
+
+/* Text area max width, but images can overflow */
+#content {
+  max-width: 1000px;
+  margin-right: auto;
+  position: relative;
+}
+
 h1, h2, h3 {
   color: var(--accent);
   margin-top: 2.5rem;
@@ -132,6 +131,7 @@ h1.collapsed::after, h2.collapsed::after, h3.collapsed::after {
 
 a { color: var(--link); }
 
+/* === Code Blocks === */
 pre {
   background: var(--card);
   border-left: 4px solid var(--accent);
@@ -159,9 +159,7 @@ pre code {
   cursor: pointer;
   transition: 0.2s;
 }
-pre:hover .copy-btn {
-  opacity: 1;
-}
+pre:hover .copy-btn { opacity: 1; }
 
 blockquote {
   border-left: 4px solid var(--accent);
@@ -171,17 +169,19 @@ blockquote {
   color: #ccc;
   margin: 1.5rem 0;
 }
+
+/* === Images expand fluidly === */
 img {
-  max-width: 100%;
+  display: block;
+  margin: 1.5rem 0;
   border-radius: 8px;
   box-shadow: 0 0 10px #000;
-  margin: 1.5rem 0;
+  max-width: calc(100% + 150px); /* expand into right blank space */
+  width: auto;
+  margin-right: -150px; /* use right space */
 }
 
-/* === Scroll Highlight === */
-section { scroll-margin-top: 100px; }
-
-/* === Collapsible content === */
+/* === Collapsible sections === */
 .collapsible-content {
   overflow: hidden;
   transition: max-height 0.28s ease;
@@ -203,33 +203,24 @@ section { scroll-margin-top: 100px; }
 
 <script>
 const mdFile = "NTLMReflection.md";
-
-function safeId(text) {
-  return text.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
-}
+const safeId = t => t.trim().toLowerCase().replace(/\s+/g,"-").replace(/[^\w-]/g,"");
 
 fetch(mdFile)
   .then(res => res.text())
   .then(md => {
     document.getElementById("content").innerHTML = marked.parse(md);
-
-    // Collect headings (after content inserted)
     const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
-    // Wrap content after each heading into a collapsible container
     headings.forEach((heading, i) => {
-      // find the next heading of same or higher level
-      const currentLevel = parseInt(heading.tagName.replace('H',''), 10);
+      const currentLevel = parseInt(heading.tagName.replace("H",""));
       let nextHead = null;
       for (let j = i + 1; j < headings.length; j++) {
-        const lvl = parseInt(headings[j].tagName.replace('H',''), 10);
+        const lvl = parseInt(headings[j].tagName.replace("H",""));
         if (lvl <= currentLevel) { nextHead = headings[j]; break; }
       }
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'collapsible-content';
-
-      // Move nodes between heading and nextHead into wrapper
+      const wrapper = document.createElement("div");
+      wrapper.className = "collapsible-content";
       let el = heading.nextElementSibling;
       while (el && el !== nextHead) {
         const nxt = el.nextElementSibling;
@@ -238,96 +229,64 @@ fetch(mdFile)
       }
       heading.after(wrapper);
 
-      // prepare id for linking
-      const id = safeId(heading.textContent || heading.innerText || `heading-${i}`);
+      const id = safeId(heading.textContent);
       heading.id = id;
+      requestAnimationFrame(() => wrapper.style.maxHeight = wrapper.scrollHeight + "px");
 
-      // default expanded: set explicit maxHeight to current scrollHeight
-      // use requestAnimationFrame to ensure measurement is correct
-      requestAnimationFrame(() => {
-        wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-      });
-
-      // toggle with smooth animation; robust technique to animate to/from auto height
-      heading.addEventListener('click', () => {
-        const isCollapsed = heading.classList.toggle('collapsed');
-
-        if (isCollapsed) {
-          // collapse: set current height then animate to 0
+      heading.addEventListener("click", () => {
+        const collapsed = heading.classList.toggle("collapsed");
+        if (collapsed) {
           wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-          // force reflow
           wrapper.getBoundingClientRect();
           wrapper.style.maxHeight = "0px";
         } else {
-          // expand: from 0 to scrollHeight
           wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-          // after transition ends, remove max-height to allow internal changes (optional)
-          const onTransitionEnd = (e) => {
-            if (e.propertyName === 'max-height') {
-              // allow it to grow/shrink naturally later
-              wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-              wrapper.removeEventListener('transitionend', onTransitionEnd);
-            }
-          };
-          wrapper.addEventListener('transitionend', onTransitionEnd);
         }
       });
     });
 
-    // Build TOC
-    const toc = document.getElementById('toc');
+    const toc = document.getElementById("toc");
     headings.forEach(h => {
-      const li = document.createElement('li');
+      const li = document.createElement("li");
       li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-      if (h.tagName === 'H2') li.style.marginLeft = '0.5rem';
-      if (h.tagName === 'H3') li.style.marginLeft = '1.5rem';
+      if (h.tagName === "H2") li.style.marginLeft = "0.5rem";
+      if (h.tagName === "H3") li.style.marginLeft = "1.5rem";
       toc.appendChild(li);
     });
 
-    // Add copy buttons to code blocks
-    document.querySelectorAll('pre').forEach(pre => {
-      const code = pre.querySelector('code');
+    document.querySelectorAll("pre").forEach(pre => {
+      const code = pre.querySelector("code");
       if (!code) return;
-      const btn = document.createElement('button');
-      btn.textContent = 'Copy';
-      btn.className = 'copy-btn';
+      const btn = document.createElement("button");
+      btn.textContent = "Copy";
+      btn.className = "copy-btn";
       pre.appendChild(btn);
-      btn.addEventListener('click', () => {
+      btn.addEventListener("click", () => {
         navigator.clipboard.writeText(code.innerText.trim())
           .then(() => {
-            btn.textContent = 'Copied!';
-            setTimeout(() => btn.textContent = 'Copy', 1500);
-          })
-          .catch(() => alert('Failed to copy code'));
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 1500);
+          });
       });
     });
 
-    // Highlight active heading in TOC using IntersectionObserver
-    const links = Array.from(document.querySelectorAll('#toc a'));
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          links.forEach(a => a.classList.remove('active'));
-          const active = document.querySelector(`#toc a[href="#${entry.target.id}"]`);
-          if (active) active.classList.add('active');
+    const links = Array.from(document.querySelectorAll("#toc a"));
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(a => a.classList.remove("active"));
+          const active = document.querySelector(`#toc a[href="#${e.target.id}"]`);
+          if (active) active.classList.add("active");
         }
       });
     }, { threshold: 0.4 });
-
-    headings.forEach(h => io.observe(h));
-  })
-  .catch(err => {
-    console.error(err);
-    document.getElementById('content').innerText = 'Failed to load writeup.';
+    headings.forEach(h => observer.observe(h));
   });
 
-// Recalculate wrapper heights on window resize (important for responsive)
-window.addEventListener('resize', () => {
-  document.querySelectorAll('.collapsible-content').forEach(wrapper => {
-    // if currently expanded (not zero), update to new scrollHeight
-    if (parseFloat(wrapper.style.maxHeight || '0') > 0) {
-      wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
-    }
+window.addEventListener("resize", () => {
+  document.querySelectorAll(".collapsible-content").forEach(w => {
+    if (parseFloat(w.style.maxHeight || "0") > 0)
+      w.style.maxHeight = w.scrollHeight + "px";
   });
 });
 </script>
