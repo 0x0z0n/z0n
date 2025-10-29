@@ -10,6 +10,22 @@ Hints: True
 
 
 
+## Attack Chain
+
+| Step |    User / Access   | Technique Used                         | Result                                                                                                                      |
+| :--: | :----------------: | :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- |
+|   1  |        `N/A`       | **Port & AD Service Enumeration**      | nmap revealed AD services (DNS, LDAP, Kerberos, SMB, RDP) on `TARGET_IP` and identified the domain `reflection.thm`.        |
+|   2  |       `sawan`      | **SMB Auth & Host Mapping**            | Valid lab creds (`sawan:R3flect0r`) used to confirm SMB connectivity and ability to register DNS records.                   |
+|   3  |       `sawan`      | **DNS Marshalled Record Registration** | Registered `localhost1UWhRCA..` pointing at attacker  crafted record decodes to a local hostname when processed by LSA.   |
+|   4  |     `Attacker`     | **PetitPotam / MS-EFSRPC Coercion**    | Coerced a SYSTEM service (lsass) on the target to authenticate to the attacker's listener.                                  |
+|   5  | `SYSTEM` (coerced) | **Local NTLM Authentication Trigger**  | SMB client treats the connection as local (SspIsTargetLocalhost → TRUE) and performs token insertion rather than challenge. |
+|   6  |     `Attacker`     | **NTLM Relay (ntlmrelayx)**            | Relayed SYSTEM authentication back to the target SMB service; `ntlmrelayx` extracted SAM/credentials.                       |
+|   7  |     `Attacker`     | **Interactive SMB / Shell**            | Using `-i` or `-socks` with `ntlmrelayx` opened an SMB client shell or socks proxy for further actions.                     |
+|   8  |     `Attacker`     | **NTDS/Secrets Extraction**            | Via SOCKS + `impacket-secretsdump -no-pass -just-dc -use-vss` extracted NTDS.dit/NTLM hashes for domain accounts.           |
+|   9  |     `Attacker`     | **Pass-the-Hash / smbexec**            | Used extracted hashes with `smbexec.py` or `evil-winrm` to get an elevated shell (svc/Administrator) on the DC.             |
+|  10  |   `Administrator`  | **Filesystem / Flag Access**           | With elevated privileges read sensitive locations (SYSVOL, NTDS backups, root flag).                                        |
+|  11  |     `Attacker`     | **Kerberos variant / Subkey abuse**    | Optionally abused Kerberos subkey storage to obtain SYSTEM tokens via Kerberos reflection techniques.  
+
 ![NTLM_Relay](TryHackMe_NTLM_Reflection_mindmap.png)
 
 ## Introduction
@@ -297,7 +313,6 @@ Use `whoami` to confirm `SYSTEM` or elevated context.
 
 ## References & further reading
 
-Synacktiv: NTLM Reflection is dead, long live NTLM Reflection  In-depth analysis of CVE-2025-33073 (research / writeup) - https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025
-
-TryHackMe: NTLM Reflection room (lab): https://tryhackme.com/room/ntlmreflectioncve202533073
+* Synacktiv: *NTLM Reflection is dead, long live NTLM Reflection  In-depth analysis of CVE-2025-33073* (research / writeup) - https://www.synacktiv.com/en/publications/ntlm-reflection-is-dead-long-live-ntlm-reflection-an-in-depth-analysis-of-cve-2025
+* TryHackMe: NTLM Reflection room (lab): https://tryhackme.com/room/ntlmreflectioncve202533073?sharerId=62051b3adc1733004ac877ef
 
