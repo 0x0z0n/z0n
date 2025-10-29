@@ -24,7 +24,6 @@
     --border: #333;
   }
 
-  /* === Base === */
   * { box-sizing: border-box; }
   html, body {
     height: 100%;
@@ -37,7 +36,7 @@
     overflow: hidden;
   }
 
-  /* === Scrollbars === */
+  /* Scrollbars */
   .sidebar, main {
     height: 100vh;
     overflow-y: auto;
@@ -54,12 +53,8 @@
   main::-webkit-scrollbar-thumb {
     background: transparent;
   }
-  .sidebar::-webkit-scrollbar-track,
-  main::-webkit-scrollbar-track {
-    background: transparent;
-  }
 
-  /* === Sidebar === */
+  /* Sidebar */
   .sidebar {
     width: 280px;
     background: #101010;
@@ -75,11 +70,7 @@
     color: var(--accent);
     margin-bottom: 1rem;
   }
-  .sidebar ul {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-  }
+  .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
   .sidebar li { margin: 0.6rem 0; }
   .sidebar a {
     color: var(--link);
@@ -87,13 +78,10 @@
     font-size: 0.95rem;
     transition: 0.2s;
   }
-  .sidebar a.active {
-    color: var(--accent);
-    font-weight: bold;
-  }
+  .sidebar a.active { color: var(--accent); font-weight: bold; }
   .sidebar a:hover { text-decoration: underline; }
 
-  /* === Main Content === */
+  /* Main */
   main {
     flex: 1;
     margin-left: 300px;
@@ -103,14 +91,13 @@
     position: relative;
   }
 
-  /* Text area max width, allow images to extend */
   #content {
     max-width: 1500px;
     position: relative;
     z-index: 1;
   }
 
-  /* === Headings === */
+  /* Headings */
   h1, h2, h3 {
     color: var(--accent);
     margin-top: 2.5rem;
@@ -132,7 +119,7 @@
 
   a { color: var(--link); }
 
-  /* === Code Blocks === */
+  /* Code blocks */
   pre {
     background: var(--card);
     border-left: 4px solid var(--accent);
@@ -142,10 +129,7 @@
     position: relative;
     margin: 1.5rem 0;
   }
-  pre code {
-    font-family: monospace;
-    display: block;
-  }
+  pre code { font-family: monospace; display: block; }
   .copy-btn {
     position: absolute;
     top: 6px;
@@ -162,7 +146,7 @@
   }
   pre:hover .copy-btn { opacity: 1; }
 
-  /* === Blockquotes === */
+  /* Blockquotes */
   blockquote {
     border-left: 4px solid var(--accent);
     background: #161616;
@@ -172,20 +156,19 @@
     margin: 1.5rem 0;
   }
 
-  /* === Images — fill right blank space dynamically === */
+  /* Images – fully use right blank space */
   img {
     display: block;
     margin: 1.5rem auto;
     border-radius: 8px;
     box-shadow: 0 0 10px #000;
-    width: calc(100% + 50px); /* extend into right side */
+    width: calc(100% + 60px);
     max-width: none;
-    margin-right: -50px; /* use right blank space */
+    margin-right: -60px;
     height: auto;
     object-fit: contain;
   }
 
-  /* Ensure images are responsive on smaller screens */
   @media (max-width: 1200px) {
     img {
       width: 100%;
@@ -193,7 +176,7 @@
     }
   }
 
-  /* === Collapsible sections === */
+  /* Collapsible */
   .collapsible-content {
     overflow: hidden;
     transition: max-height 0.28s ease;
@@ -223,6 +206,7 @@
       document.getElementById("content").innerHTML = marked.parse(md);
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
+      // Wrap collapsible sections
       headings.forEach((heading, i) => {
         const currentLevel = parseInt(heading.tagName.replace("H",""));
         let nextHead = null;
@@ -243,6 +227,8 @@
 
         const id = safeId(heading.textContent);
         heading.id = id;
+
+        // Set initial expanded height
         requestAnimationFrame(() => wrapper.style.maxHeight = wrapper.scrollHeight + "px");
 
         heading.addEventListener("click", () => {
@@ -257,6 +243,7 @@
         });
       });
 
+      // Build Table of Contents
       const toc = document.getElementById("toc");
       headings.forEach(h => {
         const li = document.createElement("li");
@@ -266,6 +253,7 @@
         toc.appendChild(li);
       });
 
+      // Copy buttons
       document.querySelectorAll("pre").forEach(pre => {
         const code = pre.querySelector("code");
         if (!code) return;
@@ -274,14 +262,14 @@
         btn.className = "copy-btn";
         pre.appendChild(btn);
         btn.addEventListener("click", () => {
-          navigator.clipboard.writeText(code.innerText.trim())
-            .then(() => {
-              btn.textContent = "Copied!";
-              setTimeout(() => btn.textContent = "Copy", 1500);
-            });
+          navigator.clipboard.writeText(code.innerText.trim()).then(() => {
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 1500);
+          });
         });
       });
 
+      // Highlight active TOC link
       const links = Array.from(document.querySelectorAll("#toc a"));
       const observer = new IntersectionObserver(entries => {
         entries.forEach(e => {
@@ -293,8 +281,27 @@
         });
       }, { threshold: 0.4 });
       headings.forEach(h => observer.observe(h));
+
+      // --- FIX: Ensure images render fully ---
+      function refreshCollapsibleHeights() {
+        document.querySelectorAll(".collapsible-content").forEach(w => {
+          if (!w.previousElementSibling.classList.contains("collapsed")) {
+            w.style.maxHeight = w.scrollHeight + "px";
+          }
+        });
+      }
+
+      // After all images have loaded
+      setTimeout(() => {
+        document.querySelectorAll("#content img").forEach(img => {
+          if (!img.complete) img.addEventListener("load", refreshCollapsibleHeights);
+        });
+      }, 300);
+
+      window.addEventListener("load", refreshCollapsibleHeights);
     });
 
+  // Resize fix
   window.addEventListener("resize", () => {
     document.querySelectorAll(".collapsible-content").forEach(w => {
       if (parseFloat(w.style.maxHeight || "0") > 0)
