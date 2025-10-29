@@ -54,18 +54,33 @@
     bottom: 0;
   }
 
-  /* Sidebar heading and links */
+  /* Sidebar heading and nested TOC styling */
   .sidebar h2 {
-    color: #ffffff; /* White heading */
+    color: #ffffff;
     margin-bottom: 1rem;
   }
-  .sidebar ul { list-style: none; padding: 0; }
+
+  .sidebar ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .sidebar ul ul {
+    padding-left: 1.2rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    margin-top: 0.3rem;
+  }
+
   .sidebar a {
-    color: #ffffff; /* White links */
+    color: #ffffff;
     text-decoration: none;
     transition: color 0.3s ease;
+    font-size: 0.95rem;
+    display: block;
+    padding: 0.25rem 0;
   }
-  .sidebar a:hover { color: var(--link); } /* Yellow on hover */
+
+  .sidebar a:hover { color: var(--link); }
   .sidebar a.active { color: var(--accent); }
 
   main {
@@ -106,7 +121,7 @@
     border-radius: 6px;
   }
 
-  /* === IMAGE FIX === */
+  /* Images */
   img {
     display: block;
     margin: 1.5rem auto;
@@ -124,49 +139,37 @@
     transition: max-height 0.4s ease;
     will-change: max-height;
   }
+
   .collapsible-content.open { overflow: visible; }
 
-  /* === NEW: List color rules === */
+  /* Lists inside main content */
   main ul, main ol {
-    color: var(--link); /* Yellow for lists inside main content */
+    color: var(--link);
   }
 
-  /* Sidebar "On this page" content should remain white */
-  .sidebar ul li a { color: #ffffff; }
+  /* Transparent scrollbars */
+  .sidebar::-webkit-scrollbar, main::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+  }
 
-  /* ======= Transparent / Hidden Scrollbars ======= */
+  .sidebar::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+  }
 
-/* For WebKit browsers (Chrome, Edge, Safari) */
-.sidebar::-webkit-scrollbar,
-main::-webkit-scrollbar {
-  width: 8px;
-  background: transparent; /* Invisible track */
-}
+  .sidebar:hover::-webkit-scrollbar-thumb, main:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
 
-.sidebar::-webkit-scrollbar-thumb,
-main::-webkit-scrollbar-thumb {
-  background: transparent; /* Invisible thumb */
-  border-radius: 10px;
-}
+  .sidebar, main {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
 
-/* On hover, show a subtle scrollbar for usability */
-.sidebar:hover::-webkit-scrollbar-thumb,
-main:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15); /* faint white */
-}
-
-/* For Firefox */
-.sidebar,
-main {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent; /* hide by default */
-}
-
-.sidebar:hover,
-main:hover {
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent; /* faint on hover */
-}
-
+  .sidebar:hover, main:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
   </style>
 </head>
 
@@ -191,7 +194,7 @@ main:hover {
       document.getElementById("content").innerHTML = marked.parse(md);
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
-      // Wrap collapsible sections
+      // Collapsible logic
       headings.forEach((heading, i) => {
         const currentLevel = parseInt(heading.tagName.replace("H",""));
         let nextHead = null;
@@ -213,29 +216,37 @@ main:hover {
         const id = safeId(heading.textContent);
         heading.id = id;
 
-        // Start expanded
+        // Expanded by default
         wrapper.style.maxHeight = wrapper.scrollHeight + "px";
         heading.addEventListener("click", () => {
           const collapsed = heading.classList.toggle("collapsed");
-          if (collapsed) {
-            wrapper.classList.remove("open");
-            wrapper.style.maxHeight = "0px";
-          } else {
-            wrapper.classList.add("open");
-            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-          }
+          wrapper.style.maxHeight = collapsed ? "0px" : wrapper.scrollHeight + "px";
+          wrapper.classList.toggle("open", !collapsed);
         });
       });
 
-      // Table of Contents
+      // === Hierarchical TOC builder ===
       const toc = document.getElementById("toc");
+      let currentLists = [toc];
+
       headings.forEach(h => {
+        const level = parseInt(h.tagName.substring(1));
+        const id = safeId(h.textContent);
         const li = document.createElement("li");
-        li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-        toc.appendChild(li);
+        li.innerHTML = `<a href="#${id}">${h.textContent}</a>`;
+
+        if (!currentLists[level]) {
+          const ul = document.createElement("ul");
+          currentLists[level - 1].lastElementChild?.appendChild(ul);
+          currentLists[level] = ul;
+        }
+
+        // Adjust depth hierarchy
+        currentLists = currentLists.slice(0, level + 1);
+        currentLists[level].appendChild(li);
       });
 
-      // === DYNAMIC HEIGHT FIX ===
+      // === Dynamic height update for collapsibles ===
       function updateCollapsibleHeights() {
         document.querySelectorAll(".collapsible-content").forEach(section => {
           const trigger = section.previousElementSibling;
@@ -245,7 +256,7 @@ main:hover {
         });
       }
 
-      // Attach to all images
+      // Image loading fix for collapsibles
       function attachImageListeners() {
         document.querySelectorAll("#content img").forEach(img => {
           if (!img.dataset.listenerAdded) {
@@ -259,7 +270,6 @@ main:hover {
       window.addEventListener("load", updateCollapsibleHeights);
       window.addEventListener("resize", updateCollapsibleHeights);
 
-      // Observe DOM for new markdown images
       const observer = new MutationObserver(() => {
         attachImageListeners();
         updateCollapsibleHeights();
