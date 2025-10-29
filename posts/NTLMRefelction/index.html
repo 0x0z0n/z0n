@@ -11,7 +11,7 @@
   <meta property="og:site_name" content="0x0z0n" />
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
@@ -22,11 +22,13 @@
     --text: #f5f5f5;
     --card: #181818;
     --border: #333;
+    --indent: 1.3rem;
   }
 
   * { box-sizing: border-box; }
-  html, body {
-    height: 100%;
+  html { height: 100%; scroll-behavior: smooth; }
+
+  body {
     margin: 0;
     font-family: "Segoe UI", sans-serif;
     background: var(--bg);
@@ -34,79 +36,113 @@
     display: flex;
     min-height: 100vh;
     overflow: hidden;
-    scroll-behavior: smooth;
   }
 
-  .sidebar, main {
-    height: 100vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scroll-behavior: smooth;
-  }
-
+  /* === Sidebar (Docs style) === */
   .sidebar {
-    width: 300px;
-    background: #101010;
+    width: 280px;
+    background: #111;
     border-right: 1px solid var(--border);
     padding: 1.5rem;
-    position: fixed;
+    height: 100vh;
+    position: sticky;
     top: 0;
-    left: 0;
-    bottom: 0;
-    transition: transform 0.3s ease;
-    will-change: transform;
+    overflow-y: auto;
   }
 
   .sidebar h2 {
-    color: #ffffff;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
     margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .sidebar ul { list-style: none; padding: 0; margin: 0; }
+  .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
+  .sidebar li { margin: 0.4rem 0; }
   .sidebar a {
-    color: #ffffff;
+    color: #ccc;
     text-decoration: none;
     display: block;
     padding: 0.25rem 0;
-    transition: color 0.3s ease;
+    font-size: 0.95rem;
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
   }
 
-  .sidebar a:hover { color: var(--link); }
-  .sidebar a.active { color: var(--accent); }
+  .sidebar a:hover {
+    color: var(--link);
+    border-left: 2px solid var(--accent);
+    padding-left: 0.4rem;
+  }
+  .sidebar a.active { color: var(--accent); font-weight: bold; }
 
+  /* === Main Content === */
   main {
     flex: 1;
-    margin-left: 300px;
-    padding: 3rem 5rem 3rem 3rem;
+    padding: 2.5rem 4rem;
     overflow-y: auto;
-    position: relative;
-    transition: transform 0.3s ease;
-    will-change: transform;
+    height: 100vh;
   }
 
   #content {
-    max-width: 1600px;
-    width: 100%;
-    position: relative;
-    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+    line-height: 1.7;
+    font-size: 1rem;
   }
 
+  #content p { margin: 1rem 0; }
+
+  /* === Headings (Docs collapsible) === */
   h1, h2, h3 {
     color: var(--accent);
     margin-top: 2.5rem;
     cursor: pointer;
+    position: relative;
     transition: color 0.2s ease;
   }
 
   h1:hover, h2:hover, h3:hover { color: #00ff99; }
 
+  h1::before, h2::before, h3::before {
+    content: "\f0da";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    margin-right: 0.5rem;
+    color: var(--link);
+    transition: transform 0.25s ease;
+  }
+
+  h1.collapsed::before, h2.collapsed::before, h3.collapsed::before {
+    transform: rotate(0deg);
+  }
+  h1::before, h2::before, h3::before { transform: rotate(90deg); }
+
+  /* === Collapsible Content === */
+  .collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    border-left: 2px solid var(--border);
+    margin-left: var(--indent);
+    padding-left: 1rem;
+  }
+  .collapsible-content.open {
+    overflow: visible;
+  }
+
+  /* === Code blocks & quotes === */
   pre {
     background: var(--card);
     border-left: 4px solid var(--accent);
     padding: 1rem;
     overflow-x: auto;
     border-radius: 6px;
+    font-family: "Consolas", monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
   }
 
   blockquote {
@@ -114,18 +150,23 @@
     background: #161616;
     padding: 1rem 1.3rem;
     border-radius: 6px;
+    color: #dcdcdc;
+    font-style: italic;
+    margin: 1.2rem 0;
   }
 
+  /* === Image Fix (Docs layout) === */
   img {
     display: block;
-    margin: 1.5rem auto;
-    border-radius: 8px;
-    box-shadow: 0 0 10px #000;
     max-width: 100%;
     height: auto;
+    border-radius: 8px;
+    margin: 1.5rem auto;
     object-fit: contain;
-    transition: opacity 0.4s ease, transform 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
     opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.5s ease, transform 0.5s ease;
   }
 
   img.loaded {
@@ -133,47 +174,53 @@
     transform: scale(1);
   }
 
-  .collapsible-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-    will-change: max-height;
-  }
-  .collapsible-content.open {
-    overflow: visible;
-  }
-
-  main ul, main ol { color: var(--link); }
-
-  .sidebar::-webkit-scrollbar,
-  main::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-  }
-
-  .sidebar::-webkit-scrollbar-thumb,
-  main::-webkit-scrollbar-thumb {
-    background: transparent;
-    border-radius: 10px;
-  }
-
-  .sidebar:hover::-webkit-scrollbar-thumb,
-  main:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-  }
-
+  /* === Links === */
   #content a {
     color: #00d0ff;
     font-weight: 600;
     text-decoration: none;
     border-bottom: 1px dashed rgba(0, 208, 255, 0.5);
     transition: color 0.3s ease, border-color 0.3s ease;
+    word-break: break-word;
   }
 
   #content a:hover {
     color: #ffeb3b;
     border-color: #ffeb3b;
     text-shadow: 0 0 8px rgba(255, 235, 59, 0.4);
+  }
+
+  /* === TOC hierarchy === */
+  #toc li ul {
+    padding-left: 1rem;
+    border-left: 1px dashed #333;
+    margin-top: 0.2rem;
+  }
+
+  /* === Scrollbars === */
+  .sidebar::-webkit-scrollbar, main::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+  }
+
+  /* === Responsive adjustments === */
+  @media (max-width: 992px) {
+    body { flex-direction: column; overflow: auto; }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    main {
+      padding: 1.5rem;
+      height: auto;
+    }
   }
   </style>
 </head>
@@ -199,7 +246,7 @@
       document.getElementById("content").innerHTML = marked.parse(md);
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
-      // Smooth collapsible setup
+      // === Collapsible Sections ===
       headings.forEach((heading, i) => {
         const level = parseInt(heading.tagName.replace("H",""));
         let nextHead = null;
@@ -219,52 +266,53 @@
         heading.after(wrapper);
         heading.id = safeId(heading.textContent);
 
-        // Start expanded
         wrapper.classList.add("open");
         wrapper.style.maxHeight = wrapper.scrollHeight + "px";
 
         heading.addEventListener("click", () => {
           heading.classList.toggle("collapsed");
+          wrapper.classList.toggle("open");
           if (heading.classList.contains("collapsed")) {
             wrapper.style.maxHeight = "0px";
           } else {
-            wrapper.classList.add("open");
-            requestAnimationFrame(() => {
-              wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-            });
+            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
           }
         });
       });
 
-      // Build TOC
+      // === Nested TOC ===
       const toc = document.getElementById("toc");
+      const tocStack = [{ level: 0, ul: toc }];
+
       headings.forEach(h => {
+        const level = parseInt(h.tagName.replace("H",""));
         const li = document.createElement("li");
         li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-        toc.appendChild(li);
+
+        while (tocStack.length > 1 && tocStack[tocStack.length-1].level >= level) tocStack.pop();
+        let parent = tocStack[tocStack.length-1];
+        parent.ul.appendChild(li);
+
+        const next = headings[headings.indexOf(h)+1];
+        if (next && parseInt(next.tagName.replace("H","")) > level) {
+          const ul = document.createElement("ul");
+          li.appendChild(ul);
+          tocStack.push({ level, ul });
+        }
       });
 
-      // Image fade-in observer
-      const imgObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("loaded");
-            imgObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.2 });
-
+      // === Image Fade-in ===
       document.querySelectorAll("#content img").forEach(img => {
-        imgObserver.observe(img);
+        img.addEventListener("load", () => img.classList.add("loaded"));
+        if (img.complete) img.classList.add("loaded");
       });
 
-      // Update collapsible heights dynamically
-      const updateHeights = () => {
+      // === Resize collapse fix ===
+      window.addEventListener("resize", () => {
         document.querySelectorAll(".collapsible-content.open").forEach(sec => {
           sec.style.maxHeight = sec.scrollHeight + "px";
         });
-      };
-      window.addEventListener("resize", updateHeights);
+      });
     });
   </script>
 </body>
