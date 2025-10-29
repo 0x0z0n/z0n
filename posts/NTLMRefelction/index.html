@@ -61,14 +61,15 @@
   main {
     flex: 1;
     margin-left: 300px;
-    padding: 3rem 4rem 3rem 3rem;
+    padding: 3rem 5rem 3rem 3rem;
     height: 100vh;
     overflow-y: auto;
     position: relative;
   }
 
   #content {
-    max-width: none;
+    max-width: 1600px;
+    width: 100%;
     position: relative;
     z-index: 1;
   }
@@ -95,23 +96,26 @@
     border-radius: 6px;
   }
 
-  /* === FIXED IMAGE RENDERING === */
+  /* === IMAGE FIX (Centered + Fully Visible + Responsive) === */
   img {
     display: block;
     margin: 1.5rem auto;
     border-radius: 8px;
     box-shadow: 0 0 10px #000;
-    width: auto;
     max-width: 100%;
     height: auto;
     object-fit: contain;
   }
 
-  /* Collapsible sections (allow overflow for images) */
+  /* Collapsible sections */
   .collapsible-content {
-    overflow: visible !important;
-    transition: max-height 0.3s ease;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
     will-change: max-height;
+  }
+  .collapsible-content.open {
+    overflow: visible;
   }
   </style>
 </head>
@@ -159,11 +163,17 @@
         const id = safeId(heading.textContent);
         heading.id = id;
 
-        // Start collapsed visually
+        // Start expanded
         wrapper.style.maxHeight = wrapper.scrollHeight + "px";
         heading.addEventListener("click", () => {
           const collapsed = heading.classList.toggle("collapsed");
-          wrapper.style.maxHeight = collapsed ? "0px" : wrapper.scrollHeight + "px";
+          if (collapsed) {
+            wrapper.classList.remove("open");
+            wrapper.style.maxHeight = "0px";
+          } else {
+            wrapper.classList.add("open");
+            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+          }
         });
       });
 
@@ -175,32 +185,36 @@
         toc.appendChild(li);
       });
 
-      // === FIX: Wait for all images before setting height ===
-      const images = Array.from(document.querySelectorAll("#content img"));
-      let loaded = 0;
-      function adjustHeights() {
-        document.querySelectorAll(".collapsible-content").forEach(w => {
-          if (!w.previousElementSibling.classList.contains("collapsed"))
-            w.style.maxHeight = w.scrollHeight + "px";
-        });
-      }
-
-      if (images.length === 0) adjustHeights();
-      else {
-        images.forEach(img => {
-          if (img.complete) {
-            loaded++;
-            if (loaded === images.length) adjustHeights();
-          } else {
-            img.addEventListener("load", () => {
-              loaded++;
-              if (loaded === images.length) adjustHeights();
-            });
+      // === DYNAMIC HEIGHT FIX ===
+      function updateCollapsibleHeights() {
+        document.querySelectorAll(".collapsible-content").forEach(section => {
+          const trigger = section.previousElementSibling;
+          if (!trigger.classList.contains("collapsed")) {
+            section.style.maxHeight = section.scrollHeight + "px";
           }
         });
       }
 
-      window.addEventListener("resize", adjustHeights);
+      // Attach to all images
+      function attachImageListeners() {
+        document.querySelectorAll("#content img").forEach(img => {
+          if (!img.dataset.listenerAdded) {
+            img.dataset.listenerAdded = true;
+            img.addEventListener("load", updateCollapsibleHeights);
+          }
+        });
+      }
+
+      attachImageListeners();
+      window.addEventListener("load", updateCollapsibleHeights);
+      window.addEventListener("resize", updateCollapsibleHeights);
+
+      // Observe DOM for new markdown images
+      const observer = new MutationObserver(() => {
+        attachImageListeners();
+        updateCollapsibleHeights();
+      });
+      observer.observe(document.getElementById("content"), { childList: true, subtree: true });
     });
   </script>
 </body>
