@@ -133,6 +133,40 @@
 
   /* Sidebar "On this page" content should remain white */
   .sidebar ul li a { color: #ffffff; }
+
+  /* ======= Transparent / Hidden Scrollbars ======= */
+
+/* For WebKit browsers (Chrome, Edge, Safari) */
+.sidebar::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  width: 8px;
+  background: transparent; /* Invisible track */
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+  background: transparent; /* Invisible thumb */
+  border-radius: 10px;
+}
+
+/* On hover, show a subtle scrollbar for usability */
+.sidebar:hover::-webkit-scrollbar-thumb,
+main:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); /* faint white */
+}
+
+/* For Firefox */
+.sidebar,
+main {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent; /* hide by default */
+}
+
+.sidebar:hover,
+main:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent; /* faint on hover */
+}
+
   </style>
 </head>
 
