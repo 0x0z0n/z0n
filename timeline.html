@@ -62,11 +62,10 @@
       color: var(--accent);
       text-align: center;
       margin: 1.5rem 0;
-      text-shadow: 0 0 12px var(--accent);
+      text-shadow: 0 0 3px var(--accent);
       letter-spacing: 1px;
       border-bottom: 2px solid var(--accent);
       padding-bottom: 0.8rem;
-      animation: glowPulse 2s infinite alternate;
     }
 
     @keyframes glowPulse {
@@ -104,7 +103,6 @@
     }
 
     .month::before {
-      content: "🗓️";
       margin-right: 0.5rem;
       opacity: 0.8;
     }
@@ -197,9 +195,6 @@
   </style>
 </head>
 <body>
-  <div class="theme-toggle" title="Toggle Theme">
-    <i class="fas fa-circle-half-stroke"></i>
-  </div>
 
   <main>
     <h1> Activity </h1>
@@ -207,21 +202,6 @@
   </main>
 
   <script>
-    // ===== Theme Toggle + Persistence =====
-    const toggle = document.querySelector(".theme-toggle");
-    const icon = toggle.querySelector("i");
-    const savedTheme = localStorage.getItem("themeStyle") || "0x0z0n-dark";
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    icon.className = savedTheme.includes("light") ? "fas fa-sun" : "fas fa-moon";
-
-    toggle.addEventListener("click", () => {
-      const current = document.documentElement.getAttribute("data-theme");
-      const newTheme = current.includes("dark") ? "0x0z0n-light" : "0x0z0n-dark";
-      document.documentElement.setAttribute("data-theme", newTheme);
-      localStorage.setItem("themeStyle", newTheme);
-      icon.className = newTheme.includes("light") ? "fas fa-sun" : "fas fa-moon";
-    });
-
     // ===== Load Archive Posts =====
     fetch("data/posts.json")
       .then(res => res.json())
@@ -254,7 +234,7 @@
       })
       .catch(err => {
         document.getElementById("archiveList").innerHTML =
-          "<p style='color:red; text-align:center;'>⚠️ Failed to load archive data.</p>";
+          "<p style='color:red; text-align:center;'> Failed to load archive data.</p>";
         console.error("Error loading posts.json:", err);
       });
   </script>
