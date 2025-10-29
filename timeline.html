@@ -7,145 +7,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
+    /* ====================== Base Colors ====================== */
     :root {
-      --bg-color: #0d1117;
+      --bg-color: #0a0a0a;
       --card-bg: #161b22;
       --text-color: #c9d1d9;
-      --accent: #32cd32;
-      --tag-bg: #0f0f0f;
-      --tag-hover: #28a428;
-      --border-glow: 0 0 10px #32cd32, 0 0 20px #32cd3244;
+      --accent: #00ff95;
+      --tag-hover: #19ff8a;
+      --border-glow: 0 0 12px #00ff9544, 0 0 24px #00ff9522;
     }
 
     html[data-theme="0x0z0n-light"] {
       --bg-color: #f7f9fb;
       --card-bg: #ffffff;
       --text-color: #1f1f1f;
-      --accent: #0066cc;
-      --tag-bg: #d7ebff;
-      --tag-hover: #004499;
-      --border-glow: 0 0 6px #007acc44, 0 0 12px #007acc22;
+      --accent: #007acc;
+      --tag-hover: #005a9e;
+      --border-glow: 0 0 10px #007acc33, 0 0 20px #007acc22;
     }
 
+    /* ====================== Layout ====================== */
     html, body {
       margin: 0;
-      font-family: 'Orbitron', sans-serif;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
       background: var(--bg-color);
       color: var(--text-color);
       height: 100%;
       display: flex;
       flex-direction: column;
+      scroll-behavior: smooth;
     }
 
     main {
       flex: 1;
-      max-width: 1000px;
-      margin: auto;
+      max-width: 950px;
+      margin: 2rem auto;
       width: 100%;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      border-radius: 16px;
+      box-shadow: inset 0 0 25px rgba(0,255,149,0.05);
+      background: linear-gradient(to bottom right, #0b0f12, #0a0a0a);
+      padding-bottom: 2rem;
     }
 
+    /* ====================== Header ====================== */
     h1 {
       font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
       color: var(--accent);
       text-align: center;
-      margin: 0;
-      text-shadow: 0 0 6px var(--accent);
-      position: sticky;
-      top: 0;
-      background: var(--bg-color);
-      z-index: 10;
-      padding: 1rem 0;
+      margin: 1.5rem 0;
+      text-shadow: 0 0 12px var(--accent);
+      letter-spacing: 1px;
       border-bottom: 2px solid var(--accent);
+      padding-bottom: 0.8rem;
+      animation: glowPulse 2s infinite alternate;
     }
 
+    @keyframes glowPulse {
+      from { text-shadow: 0 0 8px var(--accent); }
+      to { text-shadow: 0 0 16px var(--accent), 0 0 32px var(--accent); }
+    }
+
+    /* ====================== Timeline ====================== */
     .timeline {
       flex: 1;
       overflow-y: auto;
+      margin: 1rem 2rem;
       border-left: 3px solid var(--accent);
-      margin: 1rem;
-      padding-left: 1rem;
+      padding-left: 1.5rem;
+      position: relative;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: -3px;
+      top: 0;
+      bottom: 0;
+      border-left: 3px dashed rgba(0,255,149,0.2);
     }
 
     .month {
       margin-top: 2rem;
-      font-size: 1.5rem;
-      color: var(--accent);
+      font-size: 1.4rem;
       font-weight: 600;
-      text-shadow: 0 0 6px var(--accent);
+      color: var(--accent);
+      text-shadow: 0 0 8px var(--accent);
+      position: relative;
+      padding-left: 0.3rem;
     }
 
+    .month::before {
+      content: "🗓️";
+      margin-right: 0.5rem;
+      opacity: 0.8;
+    }
+
+    /* ====================== Entries ====================== */
     .entry {
       margin: 1rem 0;
-      padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+      padding: 0.75rem 1rem;
       border-radius: 10px;
       position: relative;
-      font-size: 1.1rem;
       transition: all 0.3s ease;
+      background: rgba(20, 24, 30, 0.4);
+      border: 1px solid transparent;
     }
 
     .entry::before {
       content: '';
       position: absolute;
-      left: -1.4rem;
-      top: 0.6rem;
-      width: 14px;
-      height: 14px;
+      left: -1.5rem;
+      top: 1rem;
+      width: 12px;
+      height: 12px;
       background: var(--accent);
       border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent);
-      transition: background 0.3s ease;
+      box-shadow: 0 0 10px var(--accent);
+      transition: all 0.3s ease;
+    }
+
+    .entry:hover {
+      background: rgba(22, 27, 34, 0.7);
+      border: 1px solid var(--accent);
+      box-shadow: var(--border-glow);
+      transform: translateX(5px);
     }
 
     .entry a {
       color: var(--accent);
       text-decoration: none;
       font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: color 0.2s ease;
     }
 
     .entry a:hover {
       color: var(--tag-hover);
-      text-shadow: 0 0 8px var(--tag-hover)44;
+      text-shadow: 0 0 12px var(--tag-hover);
     }
 
     .entry span {
       display: inline-block;
-      width: 5.5rem;
+      width: 5rem;
+      font-family: 'Orbitron', sans-serif;
       color: var(--accent);
       font-weight: 600;
     }
 
-    .entry:hover {
-      background: rgba(22, 27, 34, 0.6);
-      backdrop-filter: blur(8px);
-      padding: 1rem;
+    /* ====================== Scrollbar ====================== */
+    .timeline::-webkit-scrollbar {
+      width: 6px;
+    }
+    .timeline::-webkit-scrollbar-thumb {
+      background: var(--accent);
       border-radius: 10px;
-      box-shadow: 0 0 12px rgba(50, 205, 50, 0.4);
     }
 
+    /* ====================== Theme Toggle ====================== */
     .theme-toggle {
       position: fixed;
-      top: 1rem;
-      right: 1rem;
+      top: 1.2rem;
+      right: 1.2rem;
       font-size: 1.5rem;
       color: var(--accent);
       cursor: pointer;
       z-index: 20;
-      text-shadow: 0 0 8px var(--accent);
+      text-shadow: 0 0 10px var(--accent);
+      transition: all 0.3s ease;
     }
 
-    /* Hide scrollbar */
-    .timeline::-webkit-scrollbar { display: none; }
-    .timeline { -ms-overflow-style: none; scrollbar-width: none; }
+    .theme-toggle:hover {
+      transform: rotate(20deg) scale(1.1);
+      color: var(--tag-hover);
+      text-shadow: 0 0 14px var(--tag-hover);
+    }
 
     @media screen and (max-width: 768px) {
-      main { padding: 0; }
-      .timeline { margin: 0.5rem; }
+      main { margin: 1rem; }
+      .timeline { margin: 0.5rem 1rem; }
+      .entry span { width: 4rem; }
     }
   </style>
 </head>
@@ -155,7 +202,7 @@
   </div>
 
   <main>
-    <h1>Timeline</h1>
+    <h1> Activity </h1>
     <div class="timeline" id="archiveList"></div>
   </main>
 
@@ -169,9 +216,7 @@
 
     toggle.addEventListener("click", () => {
       const current = document.documentElement.getAttribute("data-theme");
-      let newTheme;
-      if(current.includes("dark")) newTheme = current.includes("minimal") ? "minimal-light" : "0x0z0n-light";
-      else newTheme = current.includes("minimal") ? "minimal-dark" : "0x0z0n-dark";
+      const newTheme = current.includes("dark") ? "0x0z0n-light" : "0x0z0n-dark";
       document.documentElement.setAttribute("data-theme", newTheme);
       localStorage.setItem("themeStyle", newTheme);
       icon.className = newTheme.includes("light") ? "fas fa-sun" : "fas fa-moon";
@@ -208,7 +253,8 @@
         });
       })
       .catch(err => {
-        document.getElementById("archiveList").innerHTML = "<p style='color:red;'>Failed to load archive data.</p>";
+        document.getElementById("archiveList").innerHTML =
+          "<p style='color:red; text-align:center;'>⚠️ Failed to load archive data.</p>";
         console.error("Error loading posts.json:", err);
       });
   </script>
