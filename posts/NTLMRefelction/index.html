@@ -53,9 +53,19 @@
     left: 0;
     bottom: 0;
   }
-  .sidebar h2 { color: var(--accent); margin-bottom: 1rem; }
+
+  /* Sidebar heading and links */
+  .sidebar h2 {
+    color: #ffffff; /* White heading */
+    margin-bottom: 1rem;
+  }
   .sidebar ul { list-style: none; padding: 0; }
-  .sidebar a { color: var(--link); text-decoration: none; }
+  .sidebar a {
+    color: #ffffff; /* White links */
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  .sidebar a:hover { color: var(--link); } /* Yellow on hover */
   .sidebar a.active { color: var(--accent); }
 
   main {
@@ -96,7 +106,7 @@
     border-radius: 6px;
   }
 
-  /* === IMAGE FIX (Centered + Fully Visible + Responsive) === */
+  /* === IMAGE FIX === */
   img {
     display: block;
     margin: 1.5rem auto;
@@ -114,9 +124,15 @@
     transition: max-height 0.4s ease;
     will-change: max-height;
   }
-  .collapsible-content.open {
-    overflow: visible;
+  .collapsible-content.open { overflow: visible; }
+
+  /* === NEW: List color rules === */
+  main ul, main ol {
+    color: var(--link); /* Yellow for lists inside main content */
   }
+
+  /* Sidebar "On this page" content should remain white */
+  .sidebar ul li a { color: #ffffff; }
   </style>
 </head>
 
