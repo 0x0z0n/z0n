@@ -22,7 +22,6 @@
     --text: #f5f5f5;
     --card: #181818;
     --border: #333;
-    --indent: 1.3rem;
   }
 
   * { box-sizing: border-box; }
@@ -38,7 +37,7 @@
     overflow: hidden;
   }
 
-  /* === Sidebar (Docs style) === */
+  /* === Sidebar === */
   .sidebar {
     width: 280px;
     background: #111;
@@ -76,6 +75,7 @@
     border-left: 2px solid var(--accent);
     padding-left: 0.4rem;
   }
+
   .sidebar a.active { color: var(--accent); font-weight: bold; }
 
   /* === Main Content === */
@@ -95,45 +95,18 @@
 
   #content p { margin: 1rem 0; }
 
-  /* === Headings (Docs collapsible) === */
+  /* === Headings === */
   h1, h2, h3 {
     color: var(--accent);
     margin-top: 2.5rem;
-    cursor: pointer;
     position: relative;
-    transition: color 0.2s ease;
   }
 
-  h1:hover, h2:hover, h3:hover { color: #00ff99; }
-
-  h1::before, h2::before, h3::before {
-    content: "\f0da";
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    margin-right: 0.5rem;
-    color: var(--link);
-    transition: transform 0.25s ease;
+  h1:hover, h2:hover, h3:hover {
+    color: #00ff99;
   }
 
-  h1.collapsed::before, h2.collapsed::before, h3.collapsed::before {
-    transform: rotate(0deg);
-  }
-  h1::before, h2::before, h3::before { transform: rotate(90deg); }
-
-  /* === Collapsible Content === */
-  .collapsible-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-    border-left: 2px solid var(--border);
-    margin-left: var(--indent);
-    padding-left: 1rem;
-  }
-  .collapsible-content.open {
-    overflow: visible;
-  }
-
-  /* === Code blocks & quotes === */
+  /* === Code blocks === */
   pre {
     background: var(--card);
     border-left: 4px solid var(--accent);
@@ -143,6 +116,7 @@
     font-family: "Consolas", monospace;
     font-size: 0.95rem;
     line-height: 1.4;
+    position: relative;
   }
 
   blockquote {
@@ -155,7 +129,6 @@
     margin: 1.2rem 0;
   }
 
-  /* === Image Fix (Docs layout) === */
   img {
     display: block;
     max-width: 100%;
@@ -163,10 +136,10 @@
     border-radius: 8px;
     margin: 1.5rem auto;
     object-fit: contain;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 10px rgba(0,0,0,0.6);
     opacity: 0;
     transform: scale(0.97);
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.6s ease, transform 0.6s ease;
   }
 
   img.loaded {
@@ -174,12 +147,11 @@
     transform: scale(1);
   }
 
-  /* === Links === */
   #content a {
     color: #00d0ff;
     font-weight: 600;
     text-decoration: none;
-    border-bottom: 1px dashed rgba(0, 208, 255, 0.5);
+    border-bottom: 1px dashed rgba(0,208,255,0.5);
     transition: color 0.3s ease, border-color 0.3s ease;
     word-break: break-word;
   }
@@ -187,20 +159,16 @@
   #content a:hover {
     color: #ffeb3b;
     border-color: #ffeb3b;
-    text-shadow: 0 0 8px rgba(255, 235, 59, 0.4);
   }
 
-  /* === TOC hierarchy === */
   #toc li ul {
     padding-left: 1rem;
     border-left: 1px dashed #333;
     margin-top: 0.2rem;
   }
 
-  /* === Scrollbars === */
   .sidebar::-webkit-scrollbar, main::-webkit-scrollbar {
     width: 8px;
-    background: transparent;
   }
 
   .sidebar::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb {
@@ -208,20 +176,45 @@
     border-radius: 10px;
   }
 
-  /* === Responsive adjustments === */
-  @media (max-width: 992px) {
-    body { flex-direction: column; overflow: auto; }
-    .sidebar {
-      width: 100%;
-      height: auto;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-    }
-    main {
-      padding: 1.5rem;
-      height: auto;
-    }
+@media (max-width: 992px) {
+  body {
+    display: block;
+    overflow-x: hidden;
   }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    background: #111;
+    padding: 1rem;
+    position: relative;
+    top: 0;
+    z-index: 2;
+  }
+
+  main {
+    width: 100%;
+    padding: 1.5rem;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Optional: make code blocks scrollable */
+  pre {
+    overflow-x: auto;
+  }
+
+  /* Images stay in place and scale properly */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+  }
+}
+
   </style>
 </head>
 
@@ -232,7 +225,7 @@
   </nav>
 
   <main>
-    <a href="../../index.html" style="display:inline-block;margin-bottom:2rem;color:var(--link);font-weight:bold;">← Back to Home</a>
+    <a href="../index.html" style="display:inline-block;margin-bottom:2rem;color:var(--link);font-weight:bold;">← Back to Home</a>
     <div id="content">Loading writeup...</div>
   </main>
 
@@ -244,57 +237,23 @@
     .then(res => res.text())
     .then(md => {
       document.getElementById("content").innerHTML = marked.parse(md);
+
+      // Assign IDs for headings
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
+      headings.forEach(h => h.id = safeId(h.textContent));
 
-      // === Collapsible Sections ===
-      headings.forEach((heading, i) => {
-        const level = parseInt(heading.tagName.replace("H",""));
-        let nextHead = null;
-        for (let j = i + 1; j < headings.length; j++) {
-          const lvl = parseInt(headings[j].tagName.replace("H",""));
-          if (lvl <= level) { nextHead = headings[j]; break; }
-        }
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "collapsible-content";
-        let el = heading.nextElementSibling;
-        while (el && el !== nextHead) {
-          const nxt = el.nextElementSibling;
-          wrapper.appendChild(el);
-          el = nxt;
-        }
-        heading.after(wrapper);
-        heading.id = safeId(heading.textContent);
-
-        wrapper.classList.add("open");
-        wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-
-        heading.addEventListener("click", () => {
-          heading.classList.toggle("collapsed");
-          wrapper.classList.toggle("open");
-          if (heading.classList.contains("collapsed")) {
-            wrapper.style.maxHeight = "0px";
-          } else {
-            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-          }
-        });
-      });
-
-      // === Nested TOC ===
+      // === Generate TOC ===
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
-
       headings.forEach(h => {
-        const level = parseInt(h.tagName.replace("H",""));
+        const level = parseInt(h.tagName.replace("H", ""));
         const li = document.createElement("li");
         li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-
-        while (tocStack.length > 1 && tocStack[tocStack.length-1].level >= level) tocStack.pop();
-        let parent = tocStack[tocStack.length-1];
+        while (tocStack.length > 1 && tocStack[tocStack.length - 1].level >= level) tocStack.pop();
+        const parent = tocStack[tocStack.length - 1];
         parent.ul.appendChild(li);
-
-        const next = headings[headings.indexOf(h)+1];
-        if (next && parseInt(next.tagName.replace("H","")) > level) {
+        const next = headings[headings.indexOf(h) + 1];
+        if (next && parseInt(next.tagName.replace("H", "")) > level) {
           const ul = document.createElement("ul");
           li.appendChild(ul);
           tocStack.push({ level, ul });
@@ -305,13 +264,6 @@
       document.querySelectorAll("#content img").forEach(img => {
         img.addEventListener("load", () => img.classList.add("loaded"));
         if (img.complete) img.classList.add("loaded");
-      });
-
-      // === Resize collapse fix ===
-      window.addEventListener("resize", () => {
-        document.querySelectorAll(".collapsible-content.open").forEach(sec => {
-          sec.style.maxHeight = sec.scrollHeight + "px";
-        });
       });
     });
   </script>
