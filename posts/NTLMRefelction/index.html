@@ -14,180 +14,192 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<style>
-:root {
-  --accent: #4caf50;
-  --link: #ffeb3b;
-  --bg: #0c0c0c;
-  --text: #f5f5f5;
-  --card: #181818;
-  --border: #333;
-}
+  <style>
+  :root {
+    --accent: #4caf50;
+    --link: #ffeb3b;
+    --bg: #0c0c0c;
+    --text: #f5f5f5;
+    --card: #181818;
+    --border: #333;
+  }
 
-/* === Base === */
-* { box-sizing: border-box; }
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  min-height: 100vh;
-  overflow: hidden;
-}
+  /* === Base === */
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow: hidden;
+  }
 
-/* === Scrollbars === */
-.sidebar, main {
-  height: 100vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-.sidebar::-webkit-scrollbar,
-main::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
-}
-.sidebar::-webkit-scrollbar-thumb,
-main::-webkit-scrollbar-thumb {
-  background: transparent;
-}
-.sidebar::-webkit-scrollbar-track,
-main::-webkit-scrollbar-track {
-  background: transparent;
-}
+  /* === Scrollbars === */
+  .sidebar, main {
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .sidebar::-webkit-scrollbar,
+  main::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+  }
+  .sidebar::-webkit-scrollbar-thumb,
+  main::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+  .sidebar::-webkit-scrollbar-track,
+  main::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-/* === Sidebar === */
-.sidebar {
-  width: 280px;
-  background: #101010;
-  border-right: 1px solid var(--border);
-  padding: 1.5rem;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-}
-.sidebar h2 {
-  font-size: 1.2rem;
-  color: var(--accent);
-  margin-bottom: 1rem;
-}
-.sidebar ul {
-  list-style: none;
-  padding-left: 0;
-  margin: 0;
-}
-.sidebar li { margin: 0.6rem 0; }
-.sidebar a {
-  color: var(--link);
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: 0.2s;
-}
-.sidebar a.active {
-  color: var(--accent);
-  font-weight: bold;
-}
-.sidebar a:hover { text-decoration: underline; }
+  /* === Sidebar === */
+  .sidebar {
+    width: 280px;
+    background: #101010;
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+  }
+  .sidebar h2 {
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .sidebar ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  .sidebar li { margin: 0.6rem 0; }
+  .sidebar a {
+    color: var(--link);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: 0.2s;
+  }
+  .sidebar a.active {
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .sidebar a:hover { text-decoration: underline; }
 
-/* === Main Content === */
-main {
-  flex: 1;
-  margin-left: 280px;
-  padding: 3rem 4rem 3rem 3rem;
-  height: 100vh;
-  overflow-y: auto;
-  position: relative;
-}
+  /* === Main Content === */
+  main {
+    flex: 1;
+    margin-left: 280px;
+    padding: 3rem 4rem 3rem 3rem;
+    height: 100vh;
+    overflow-y: auto;
+    position: relative;
+  }
 
-/* Text area max width, but images can overflow */
-#content {
-  max-width: 1000px;
-  margin-right: auto;
-  position: relative;
-}
+  /* Text area max width, allow images to extend */
+  #content {
+    max-width: 1000px;
+    position: relative;
+    z-index: 1;
+  }
 
-h1, h2, h3 {
-  color: var(--accent);
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-}
-h1::after, h2::after, h3::after {
-  content: "▼";
-  font-size: 0.8rem;
-  margin-left: 0.6rem;
-  color: var(--link);
-  transition: transform 0.2s;
-}
-h1.collapsed::after, h2.collapsed::after, h3.collapsed::after {
-  transform: rotate(-90deg);
-}
+  /* === Headings === */
+  h1, h2, h3 {
+    color: var(--accent);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+  }
+  h1::after, h2::after, h3::after {
+    content: "▼";
+    font-size: 0.8rem;
+    margin-left: 0.6rem;
+    color: var(--link);
+    transition: transform 0.2s;
+  }
+  h1.collapsed::after, h2.collapsed::after, h3.collapsed::after {
+    transform: rotate(-90deg);
+  }
 
-a { color: var(--link); }
+  a { color: var(--link); }
 
-/* === Code Blocks === */
-pre {
-  background: var(--card);
-  border-left: 4px solid var(--accent);
-  padding: 1rem;
-  overflow-x: auto;
-  border-radius: 6px;
-  position: relative;
-  margin: 1.5rem 0;
-}
-pre code {
-  font-family: monospace;
-  display: block;
-}
-.copy-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  font-size: 0.8rem;
-  border: none;
-  background: var(--accent);
-  color: #111;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  opacity: 0;
-  cursor: pointer;
-  transition: 0.2s;
-}
-pre:hover .copy-btn { opacity: 1; }
+  /* === Code Blocks === */
+  pre {
+    background: var(--card);
+    border-left: 4px solid var(--accent);
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 6px;
+    position: relative;
+    margin: 1.5rem 0;
+  }
+  pre code {
+    font-family: monospace;
+    display: block;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 0.8rem;
+    border: none;
+    background: var(--accent);
+    color: #111;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    opacity: 0;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  pre:hover .copy-btn { opacity: 1; }
 
-blockquote {
-  border-left: 4px solid var(--accent);
-  background: #161616;
-  padding: 1rem 1.3rem;
-  border-radius: 6px;
-  color: #ccc;
-  margin: 1.5rem 0;
-}
+  /* === Blockquotes === */
+  blockquote {
+    border-left: 4px solid var(--accent);
+    background: #161616;
+    padding: 1rem 1.3rem;
+    border-radius: 6px;
+    color: #ccc;
+    margin: 1.5rem 0;
+  }
 
-/* === Images expand fluidly === */
-img {
-  display: block;
-  margin: 1.5rem 0;
-  border-radius: 8px;
-  box-shadow: 0 0 10px #000;
-  max-width: calc(100% + 150px); /* expand into right blank space */
-  width: auto;
-  margin-right: -150px; /* use right space */
-}
+  /* === Images — fill right blank space dynamically === */
+  img {
+    display: block;
+    margin: 1.5rem auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #000;
+    width: calc(100% + 200px); /* extend into right side */
+    max-width: none;
+    margin-right: -200px; /* use right blank space */
+    height: auto;
+    object-fit: contain;
+  }
 
-/* === Collapsible sections === */
-.collapsible-content {
-  overflow: hidden;
-  transition: max-height 0.28s ease;
-  will-change: max-height;
-}
-</style>
+  /* Ensure images are responsive on smaller screens */
+  @media (max-width: 1200px) {
+    img {
+      width: 100%;
+      margin-right: 0;
+    }
+  }
+
+  /* === Collapsible sections === */
+  .collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.28s ease;
+    will-change: max-height;
+  }
+  </style>
 </head>
 
 <body>
@@ -201,94 +213,94 @@ img {
     <div id="content">Loading writeup...</div>
   </main>
 
-<script>
-const mdFile = "NTLMReflection.md";
-const safeId = t => t.trim().toLowerCase().replace(/\s+/g,"-").replace(/[^\w-]/g,"");
+  <script>
+  const mdFile = "NTLMReflection.md";
+  const safeId = t => t.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
 
-fetch(mdFile)
-  .then(res => res.text())
-  .then(md => {
-    document.getElementById("content").innerHTML = marked.parse(md);
-    const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
+  fetch(mdFile)
+    .then(res => res.text())
+    .then(md => {
+      document.getElementById("content").innerHTML = marked.parse(md);
+      const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
-    headings.forEach((heading, i) => {
-      const currentLevel = parseInt(heading.tagName.replace("H",""));
-      let nextHead = null;
-      for (let j = i + 1; j < headings.length; j++) {
-        const lvl = parseInt(headings[j].tagName.replace("H",""));
-        if (lvl <= currentLevel) { nextHead = headings[j]; break; }
-      }
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "collapsible-content";
-      let el = heading.nextElementSibling;
-      while (el && el !== nextHead) {
-        const nxt = el.nextElementSibling;
-        wrapper.appendChild(el);
-        el = nxt;
-      }
-      heading.after(wrapper);
-
-      const id = safeId(heading.textContent);
-      heading.id = id;
-      requestAnimationFrame(() => wrapper.style.maxHeight = wrapper.scrollHeight + "px");
-
-      heading.addEventListener("click", () => {
-        const collapsed = heading.classList.toggle("collapsed");
-        if (collapsed) {
-          wrapper.style.maxHeight = wrapper.scrollHeight + "px";
-          wrapper.getBoundingClientRect();
-          wrapper.style.maxHeight = "0px";
-        } else {
-          wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+      headings.forEach((heading, i) => {
+        const currentLevel = parseInt(heading.tagName.replace("H",""));
+        let nextHead = null;
+        for (let j = i + 1; j < headings.length; j++) {
+          const lvl = parseInt(headings[j].tagName.replace("H",""));
+          if (lvl <= currentLevel) { nextHead = headings[j]; break; }
         }
-      });
-    });
 
-    const toc = document.getElementById("toc");
-    headings.forEach(h => {
-      const li = document.createElement("li");
-      li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-      if (h.tagName === "H2") li.style.marginLeft = "0.5rem";
-      if (h.tagName === "H3") li.style.marginLeft = "1.5rem";
-      toc.appendChild(li);
-    });
-
-    document.querySelectorAll("pre").forEach(pre => {
-      const code = pre.querySelector("code");
-      if (!code) return;
-      const btn = document.createElement("button");
-      btn.textContent = "Copy";
-      btn.className = "copy-btn";
-      pre.appendChild(btn);
-      btn.addEventListener("click", () => {
-        navigator.clipboard.writeText(code.innerText.trim())
-          .then(() => {
-            btn.textContent = "Copied!";
-            setTimeout(() => btn.textContent = "Copy", 1500);
-          });
-      });
-    });
-
-    const links = Array.from(document.querySelectorAll("#toc a"));
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          links.forEach(a => a.classList.remove("active"));
-          const active = document.querySelector(`#toc a[href="#${e.target.id}"]`);
-          if (active) active.classList.add("active");
+        const wrapper = document.createElement("div");
+        wrapper.className = "collapsible-content";
+        let el = heading.nextElementSibling;
+        while (el && el !== nextHead) {
+          const nxt = el.nextElementSibling;
+          wrapper.appendChild(el);
+          el = nxt;
         }
-      });
-    }, { threshold: 0.4 });
-    headings.forEach(h => observer.observe(h));
-  });
+        heading.after(wrapper);
 
-window.addEventListener("resize", () => {
-  document.querySelectorAll(".collapsible-content").forEach(w => {
-    if (parseFloat(w.style.maxHeight || "0") > 0)
-      w.style.maxHeight = w.scrollHeight + "px";
+        const id = safeId(heading.textContent);
+        heading.id = id;
+        requestAnimationFrame(() => wrapper.style.maxHeight = wrapper.scrollHeight + "px");
+
+        heading.addEventListener("click", () => {
+          const collapsed = heading.classList.toggle("collapsed");
+          if (collapsed) {
+            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+            wrapper.getBoundingClientRect();
+            wrapper.style.maxHeight = "0px";
+          } else {
+            wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+          }
+        });
+      });
+
+      const toc = document.getElementById("toc");
+      headings.forEach(h => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
+        if (h.tagName === "H2") li.style.marginLeft = "0.5rem";
+        if (h.tagName === "H3") li.style.marginLeft = "1.5rem";
+        toc.appendChild(li);
+      });
+
+      document.querySelectorAll("pre").forEach(pre => {
+        const code = pre.querySelector("code");
+        if (!code) return;
+        const btn = document.createElement("button");
+        btn.textContent = "Copy";
+        btn.className = "copy-btn";
+        pre.appendChild(btn);
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(code.innerText.trim())
+            .then(() => {
+              btn.textContent = "Copied!";
+              setTimeout(() => btn.textContent = "Copy", 1500);
+            });
+        });
+      });
+
+      const links = Array.from(document.querySelectorAll("#toc a"));
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            links.forEach(a => a.classList.remove("active"));
+            const active = document.querySelector(`#toc a[href="#${e.target.id}"]`);
+            if (active) active.classList.add("active");
+          }
+        });
+      }, { threshold: 0.4 });
+      headings.forEach(h => observer.observe(h));
+    });
+
+  window.addEventListener("resize", () => {
+    document.querySelectorAll(".collapsible-content").forEach(w => {
+      if (parseFloat(w.style.maxHeight || "0") > 0)
+        w.style.maxHeight = w.scrollHeight + "px";
+    });
   });
-});
-</script>
+  </script>
 </body>
 </html>
