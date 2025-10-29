@@ -30,13 +30,7 @@ body {
   color: var(--text);
   display: flex;
   min-height: 100vh;
-  overflow: hidden; /* hide scrollbar globally */
 }
-
-/* Hide scrollbar but allow scroll */
-.sidebar::-webkit-scrollbar,
-main::-webkit-scrollbar { display: none; }
-.sidebar, main { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* === Sidebar === */
 .sidebar {
@@ -47,7 +41,7 @@ main::-webkit-scrollbar { display: none; }
   position: fixed;
   top: 0;
   bottom: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 .sidebar h2 { font-size: 1.2rem; color: var(--accent); margin-bottom: 1rem; }
 .sidebar ul { list-style: none; padding-left: 0; }
@@ -62,26 +56,8 @@ main {
   margin-left: 280px;
   padding: 3rem 4rem;
   max-width: 1000px;
-  overflow-y: scroll; /* still scrollable */
 }
-h1, h2, h3 {
-  color: var(--accent);
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  cursor: pointer;
-  position: relative;
-}
-h1::after, h2::after, h3::after {
-  content: "▼";
-  font-size: 0.8rem;
-  margin-left: 0.6rem;
-  color: var(--link);
-  transition: transform 0.2s;
-}
-h1.collapsed::after, h2.collapsed::after, h3.collapsed::after {
-  transform: rotate(-90deg);
-}
-
+h1, h2, h3 { color: var(--accent); margin-top: 2.5rem; margin-bottom: 1rem; }
 a { color: var(--link); }
 
 pre {
@@ -121,12 +97,6 @@ img { max-width: 100%; border-radius: 8px; box-shadow: 0 0 10px #000; margin: 1.
 
 /* === Scroll Highlight === */
 section { scroll-margin-top: 100px; }
-
-/* Collapsible content container */
-.collapsible-content {
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-}
 </style>
 </head>
 
@@ -150,38 +120,11 @@ fetch(mdFile)
     const html = marked.parse(md);
     document.getElementById("content").innerHTML = html;
 
-    // Wrap sections for collapse
-    const headings = document.querySelectorAll("#content h1, #content h2, #content h3");
-    headings.forEach((heading, i) => {
-      const nextHead = [...headings].find((h, idx) => idx > i && h.tagName <= heading.tagName);
-      const section = document.createElement("div");
-      section.className = "collapsible-content";
-      let sibling = heading.nextElementSibling;
-
-      while (sibling && sibling !== nextHead) {
-        const next = sibling.nextElementSibling;
-        section.appendChild(sibling);
-        sibling = next;
-      }
-      heading.after(section);
-
-      // Default expanded
-      section.style.maxHeight = section.scrollHeight + "px";
-
-      // Toggle on click
-      heading.addEventListener("click", () => {
-        const isCollapsed = heading.classList.toggle("collapsed");
-        if (isCollapsed) {
-          section.style.maxHeight = 0;
-        } else {
-          section.style.maxHeight = section.scrollHeight + "px";
-        }
-      });
-    });
-
     // Generate TOC (Headings)
     const toc = document.getElementById("toc");
-    headings.forEach(h => {
+    const headers = document.querySelectorAll("#content h1, #content h2, #content h3");
+
+    headers.forEach(h => {
       const id = h.textContent.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
       h.id = id;
       const li = document.createElement("li");
@@ -212,18 +155,23 @@ fetch(mdFile)
 
     // Highlight active heading in TOC
     const links = document.querySelectorAll("#toc a");
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        const id = entry.target.getAttribute("id");
-        if (entry.isIntersecting) {
-          links.forEach(a => a.classList.remove("active"));
-          const active = document.querySelector(`#toc a[href="#${id}"]`);
-          if (active) active.classList.add("active");
-        }
-      });
-    }, { threshold: 0.4 });
+    const sections = Array.from(headers);
 
-    headings.forEach(sec => observer.observe(sec));
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          const id = entry.target.getAttribute("id");
+          if (entry.isIntersecting) {
+            links.forEach(a => a.classList.remove("active"));
+            const active = document.querySelector(`#toc a[href="#${id}"]`);
+            if (active) active.classList.add("active");
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+
+    sections.forEach(sec => observer.observe(sec));
   });
 </script>
 </body>
