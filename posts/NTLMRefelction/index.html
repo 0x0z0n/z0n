@@ -23,6 +23,8 @@
   --card: #181818;
   --border: #333;
 }
+
+/* === Base === */
 body {
   margin: 0;
   font-family: "Segoe UI", sans-serif;
@@ -30,6 +32,32 @@ body {
   color: var(--text);
   display: flex;
   min-height: 100vh;
+  overflow: hidden; /* prevent global scroll */
+}
+
+/* Transparent scrollbars but scrolling still works */
+.sidebar, main {
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent; /* Firefox */
+}
+
+/* Chrome, Edge, Safari scrollbar transparency */
+.sidebar::-webkit-scrollbar,
+main::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* === Sidebar === */
@@ -41,14 +69,32 @@ body {
   position: fixed;
   top: 0;
   bottom: 0;
-  overflow-y: auto;
 }
-.sidebar h2 { font-size: 1.2rem; color: var(--accent); margin-bottom: 1rem; }
-.sidebar ul { list-style: none; padding-left: 0; }
-.sidebar li { margin: 0.6rem 0; }
-.sidebar a { color: var(--link); text-decoration: none; font-size: 0.95rem; transition: 0.2s; }
-.sidebar a.active { color: var(--accent); font-weight: bold; }
-.sidebar a:hover { text-decoration: underline; }
+.sidebar h2 {
+  font-size: 1.2rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.sidebar ul {
+  list-style: none;
+  padding-left: 0;
+}
+.sidebar li {
+  margin: 0.6rem 0;
+}
+.sidebar a {
+  color: var(--link);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+.sidebar a.active {
+  color: var(--accent);
+  font-weight: bold;
+}
+.sidebar a:hover {
+  text-decoration: underline;
+}
 
 /* === Main Content === */
 main {
@@ -57,7 +103,24 @@ main {
   padding: 3rem 4rem;
   max-width: 1000px;
 }
-h1, h2, h3 { color: var(--accent); margin-top: 2.5rem; margin-bottom: 1rem; }
+h1, h2, h3 {
+  color: var(--accent);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  position: relative;
+}
+h1::after, h2::after, h3::after {
+  content: "▼";
+  font-size: 0.8rem;
+  margin-left: 0.6rem;
+  color: var(--link);
+  transition: transform 0.2s;
+}
+h1.collapsed::after, h2.collapsed::after, h3.collapsed::after {
+  transform: rotate(-90deg);
+}
+
 a { color: var(--link); }
 
 pre {
@@ -69,10 +132,14 @@ pre {
   position: relative;
   margin: 1.5rem 0;
 }
-pre code { font-family: monospace; display: block; }
+pre code {
+  font-family: monospace;
+  display: block;
+}
 .copy-btn {
   position: absolute;
-  top: 6px; right: 6px;
+  top: 6px;
+  right: 6px;
   font-size: 0.8rem;
   border: none;
   background: var(--accent);
@@ -83,7 +150,9 @@ pre code { font-family: monospace; display: block; }
   cursor: pointer;
   transition: 0.2s;
 }
-pre:hover .copy-btn { opacity: 1; }
+pre:hover .copy-btn {
+  opacity: 1;
+}
 
 blockquote {
   border-left: 4px solid var(--accent);
@@ -93,10 +162,21 @@ blockquote {
   color: #ccc;
   margin: 1.5rem 0;
 }
-img { max-width: 100%; border-radius: 8px; box-shadow: 0 0 10px #000; margin: 1.5rem 0; }
+img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #000;
+  margin: 1.5rem 0;
+}
 
 /* === Scroll Highlight === */
 section { scroll-margin-top: 100px; }
+
+/* === Collapsible content === */
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
 </style>
 </head>
 
@@ -120,11 +200,38 @@ fetch(mdFile)
     const html = marked.parse(md);
     document.getElementById("content").innerHTML = html;
 
-    // Generate TOC (Headings)
-    const toc = document.getElementById("toc");
-    const headers = document.querySelectorAll("#content h1, #content h2, #content h3");
+    // === Wrap sections for collapse ===
+    const headings = document.querySelectorAll("#content h1, #content h2, #content h3");
+    headings.forEach((heading, i) => {
+      const nextHead = [...headings].find((h, idx) => idx > i && h.tagName <= heading.tagName);
+      const section = document.createElement("div");
+      section.className = "collapsible-content";
+      let sibling = heading.nextElementSibling;
 
-    headers.forEach(h => {
+      while (sibling && sibling !== nextHead) {
+        const next = sibling.nextElementSibling;
+        section.appendChild(sibling);
+        sibling = next;
+      }
+      heading.after(section);
+
+      // Default expanded
+      section.style.maxHeight = section.scrollHeight + "px";
+
+      // Toggle collapse
+      heading.addEventListener("click", () => {
+        const isCollapsed = heading.classList.toggle("collapsed");
+        if (isCollapsed) {
+          section.style.maxHeight = 0;
+        } else {
+          section.style.maxHeight = section.scrollHeight + "px";
+        }
+      });
+    });
+
+    // === Generate Table of Contents ===
+    const toc = document.getElementById("toc");
+    headings.forEach(h => {
       const id = h.textContent.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
       h.id = id;
       const li = document.createElement("li");
@@ -134,7 +241,7 @@ fetch(mdFile)
       toc.appendChild(li);
     });
 
-    // Add Copy buttons to all <pre> blocks
+    // === Copy button for <pre> blocks ===
     document.querySelectorAll("pre").forEach(pre => {
       const code = pre.querySelector("code");
       if (!code) return;
@@ -153,25 +260,20 @@ fetch(mdFile)
       });
     });
 
-    // Highlight active heading in TOC
+    // === Highlight active heading in TOC ===
     const links = document.querySelectorAll("#toc a");
-    const sections = Array.from(headers);
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const id = entry.target.getAttribute("id");
+        if (entry.isIntersecting) {
+          links.forEach(a => a.classList.remove("active"));
+          const active = document.querySelector(`#toc a[href="#${id}"]`);
+          if (active) active.classList.add("active");
+        }
+      });
+    }, { threshold: 0.4 });
 
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          const id = entry.target.getAttribute("id");
-          if (entry.isIntersecting) {
-            links.forEach(a => a.classList.remove("active"));
-            const active = document.querySelector(`#toc a[href="#${id}"]`);
-            if (active) active.classList.add("active");
-          }
-        });
-      },
-      { threshold: 0.4 }
-    );
-
-    sections.forEach(sec => observer.observe(sec));
+    headings.forEach(sec => observer.observe(sec));
   });
 </script>
 </body>
