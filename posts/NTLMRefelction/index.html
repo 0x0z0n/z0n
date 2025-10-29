@@ -38,7 +38,7 @@
     overflow: hidden;
   }
 
-  /* === Sidebar (Docs style) === */
+  /* === Sidebar === */
   .sidebar {
     width: 280px;
     background: #111;
@@ -95,7 +95,7 @@
 
   #content p { margin: 1rem 0; }
 
-  /* === Headings (Docs collapsible) === */
+  /* === Headings === */
   h1, h2, h3 {
     color: var(--accent);
     margin-top: 2.5rem;
@@ -113,24 +113,30 @@
     margin-right: 0.5rem;
     color: var(--link);
     transition: transform 0.25s ease;
+    transform: rotate(90deg);
   }
 
-  h1.collapsed::before, h2.collapsed::before, h3.collapsed::before {
+  h1.collapsed::before,
+  h2.collapsed::before,
+  h3.collapsed::before {
     transform: rotate(0deg);
   }
-  h1::before, h2::before, h3::before { transform: rotate(90deg); }
 
-  /* === Collapsible Content === */
+  /* === Collapsible Content (Improved) === */
   .collapsible-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
+    max-height: none;
+    overflow: visible;
+    transition: max-height 0.35s ease;
     border-left: 2px solid var(--border);
     margin-left: var(--indent);
     padding-left: 1rem;
+    transform-origin: top;
+    will-change: max-height;
   }
+
   .collapsible-content.open {
     overflow: visible;
+    transition: max-height 0.45s ease;
   }
 
   /* === Code blocks & quotes === */
@@ -155,7 +161,7 @@
     margin: 1.2rem 0;
   }
 
-  /* === Image Fix (Docs layout) === */
+  /* === Stable Images === */
   img {
     display: block;
     max-width: 100%;
@@ -166,7 +172,9 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
     opacity: 0;
     transform: scale(0.97);
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    position: relative;
+    z-index: 0;
   }
 
   img.loaded {
@@ -208,18 +216,25 @@
     border-radius: 10px;
   }
 
-  /* === Responsive adjustments === */
+  /* === Responsive === */
   @media (max-width: 992px) {
-    body { flex-direction: column; overflow: auto; }
+    body {
+      flex-direction: column-reverse;
+      overflow: auto;
+    }
+
+    main {
+      order: -1;
+      padding: 1.5rem;
+      height: auto;
+    }
+
     .sidebar {
       width: 100%;
       height: auto;
       border-right: none;
-      border-bottom: 1px solid var(--border);
-    }
-    main {
-      padding: 1.5rem;
-      height: auto;
+      border-top: 1px solid var(--border);
+      border-bottom: none;
     }
   }
   </style>
@@ -246,17 +261,17 @@
       document.getElementById("content").innerHTML = marked.parse(md);
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
 
-      // === Collapsible Sections ===
+      // === Collapsible Sections (open by default) ===
       headings.forEach((heading, i) => {
-        const level = parseInt(heading.tagName.replace("H",""));
+        const level = parseInt(heading.tagName.replace("H", ""));
         let nextHead = null;
         for (let j = i + 1; j < headings.length; j++) {
-          const lvl = parseInt(headings[j].tagName.replace("H",""));
+          const lvl = parseInt(headings[j].tagName.replace("H", ""));
           if (lvl <= level) { nextHead = headings[j]; break; }
         }
 
         const wrapper = document.createElement("div");
-        wrapper.className = "collapsible-content";
+        wrapper.className = "collapsible-content open";
         let el = heading.nextElementSibling;
         while (el && el !== nextHead) {
           const nxt = el.nextElementSibling;
@@ -266,12 +281,11 @@
         heading.after(wrapper);
         heading.id = safeId(heading.textContent);
 
-        wrapper.classList.add("open");
+        // expand by default
         wrapper.style.maxHeight = wrapper.scrollHeight + "px";
 
         heading.addEventListener("click", () => {
           heading.classList.toggle("collapsed");
-          wrapper.classList.toggle("open");
           if (heading.classList.contains("collapsed")) {
             wrapper.style.maxHeight = "0px";
           } else {
@@ -280,34 +294,38 @@
         });
       });
 
-      // === Nested TOC ===
+      // === TOC ===
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
 
       headings.forEach(h => {
-        const level = parseInt(h.tagName.replace("H",""));
+        const level = parseInt(h.tagName.replace("H", ""));
         const li = document.createElement("li");
         li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
 
-        while (tocStack.length > 1 && tocStack[tocStack.length-1].level >= level) tocStack.pop();
-        let parent = tocStack[tocStack.length-1];
+        while (tocStack.length > 1 && tocStack[tocStack.length - 1].level >= level) tocStack.pop();
+        let parent = tocStack[tocStack.length - 1];
         parent.ul.appendChild(li);
 
-        const next = headings[headings.indexOf(h)+1];
-        if (next && parseInt(next.tagName.replace("H","")) > level) {
+        const next = headings[headings.indexOf(h) + 1];
+        if (next && parseInt(next.tagName.replace("H", "")) > level) {
           const ul = document.createElement("ul");
           li.appendChild(ul);
           tocStack.push({ level, ul });
         }
       });
 
-      // === Image Fade-in ===
+      // === Image Fade-in + Layout Stability ===
       document.querySelectorAll("#content img").forEach(img => {
-        img.addEventListener("load", () => img.classList.add("loaded"));
+        img.addEventListener("load", () => {
+          img.classList.add("loaded");
+          const openSections = document.querySelectorAll(".collapsible-content.open");
+          openSections.forEach(sec => sec.style.maxHeight = sec.scrollHeight + "px");
+        });
         if (img.complete) img.classList.add("loaded");
       });
 
-      // === Resize collapse fix ===
+      // === Resize fix ===
       window.addEventListener("resize", () => {
         document.querySelectorAll(".collapsible-content.open").forEach(sec => {
           sec.style.maxHeight = sec.scrollHeight + "px";
