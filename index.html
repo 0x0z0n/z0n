@@ -625,6 +625,17 @@ main {
   color: var(--hover-text);
 }
 
+/* ===== Globally Hide All Scrollbars (keep scroll functionality) ===== */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE & Edge */
+}
+
+*::-webkit-scrollbar {
+  width: 0 !important; /* Chrome, Safari, Opera */
+  height: 0 !important;
+  background: transparent !important;
+}
 
 
 </style>
