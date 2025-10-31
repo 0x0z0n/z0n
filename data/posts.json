@@ -626,7 +626,7 @@
             "step": 2,
             "user": "z0n",
             "technique": "Authentication Bypass",
-            "result": "The `ftp.soulmate.htb` subdomain was found to be running a vulnerable version of **CrushFTP**. A quick search led to a publicly available exploit for **CVE-2025-31161**, an authentication bypass vulnerability. This exploit was used to create a new user account, `hyh`, with a chosen password, granting initial access to the FTP panel.",
+            "result": "The `ftp.soulmate.htb` subdomain was found to be running a vulnerable version of **CrushFTP**. A quick search led to a publicly available exploit for **CVE-2025-31161**, an authentication bypass vulnerability. This exploit was used to create a new user account, `z0n`, with a chosen password, granting initial access to the FTP panel.",
             "mitigation": "Keep all software, especially public-facing services, updated to their latest versions to patch known vulnerabilities. Regularly monitor for newly disclosed CVEs related to your installed software."
         },
         {
