@@ -50,6 +50,8 @@ The HTTP response and hostname hinted the site was `conversor.htb`, so I added i
 echo "<IP>  conversor.htb" | sudo tee -a /etc/hosts
 ```
 
+## Initial Foothold
+
 Opening the site revealed a login page with a register flow. I registered a user and authenticated. The authenticated area allowed uploading XML and XSLT files — a strong indicator to test XSLT processing and injection.
 
 
