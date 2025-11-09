@@ -12,20 +12,19 @@ Hints: True
 > Target: `conversor.htb` (add to `/etc/hosts` with the target IP)
 
 
-### 🏁 Summary of Attack Chain
-
-| Step | User / Access | Technique Used                            | Result                                                                                                                   |   |
-| : | : | :- | :-- | - |
-| 1    | `N/A`         | **Nmap Scan**                             | Fast TCP scan revealed `22/tcp` (ssh) and `80/tcp` (http). Hostname hinted `conversor.htb`.                              |   |
-| 2    | `N/A`         | **Host mapping & Recon**                  | Added `conversor.htb` to `/etc/hosts`, browsed site — found login/register and upload functionality for XML/XSLT.        |   |
-| 3    | `www-data`    | **XSLT Injection (libxslt / EXSLT)**      | Uploaded XML/XSL that returned `libxslt`. Verified `exsl:document` write → able to create files on the filesystem.       |   |
-| 4    | `www-data`    | **Arbitrary file write via XSLT**         | Wrote files to webroot (`/var/www/conversor.htb/scripts/`) — confirmed ability to drop a Python script for cron to run.  |   |
-| 5    | `www-data`    | **Initial Shell (reverse shell)**         | Wrote a Python reverse shell to `/var/www/conversor.htb/scripts/revshell.py`. Received reverse shell as `www-data`.      |   |
-| 6    | `N/A`         | **Source code / DB discovery**            | Found application SQLite DB at `/var/www/conversor.htb/instance/users.db` containing user hashes (Raw-MD5).              |   |
-| 7    | `fismathack`  | **Hash cracking → SSH login**             | Exported Raw-MD5 hash, cracked with John (`--format=Raw-MD5`, rockyou). SSHed as `fismathack` using recovered password.  |   |
-| 8    | `fismathack`  | **Sudo misconfiguration (`needrestart`)** | `sudo -l` showed `NOPASSWD: /usr/sbin/needrestart`. Abused `needrestart -c` to run payload that set SUID on `/bin/bash`. |   |
-| 9    | `root`        | **Root shell & flag**                     | Launched `/bin/bash -p`, confirmed `whoami` → `root`, and read `/root/root.txt`.                                         |   |
-
+| Step | User / Access | Technique Used                                  | Result                                                                                                                                                                                    |
+| :--: | :-----------: | :---------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   1  |     `N/A`     | **Port Enumeration & Host Discovery**           | Fast `nmap` scan discovered `22/tcp` (SSH) and `80/tcp` (HTTP). HTTP hostname indicated `conversor.htb`.                                                                                  |
+|   2  |     `N/A`     | **Host Mapping / Web Recon**                    | Added `conversor.htb` to `/etc/hosts`, browsed site — found login/register and authenticated area with XML/XSLT upload.                                                                   |
+|   3  |  `auth user`  | **XSLT Processing Verification**                | Uploaded test XML/XSL that returned `libxslt` vendor string, confirming server-side XSLT processing and EXSLT support.                                                                    |
+|   4  |  `auth user`  | **XSLT Injection — exsl:document**              | Used `exsl:document` to write files (e.g., `/tmp/test.txt`), proving arbitrary file write via XSLT.                                                                                       |
+|   5  |   `www-data`  | **Ingress Tool Transfer (write reverse shell)** | Wrote a Python reverse shell into `/var/www/conversor.htb/scripts/revshell.py` via XSLT file write.                                                                                       |
+|   6  |   `www-data`  | **Cron Execution (Scheduled Job)**              | Found cron job executing `/var/www/conversor.htb/scripts/*.py` as `www-data` every minute; cron ran the dropped revshell.                                                                 |
+|   7  |   `attacker`  | **Reverse Shell — Initial Foothold**            | Received a reverse shell connection as `www-data`, enabling local discovery and file access.                                                                                              |
+|   8  |   `www-data`  | **Local Discovery (source/db)**                 | From webroot/source discovered SQLite DB at `/var/www/conversor.htb/instance/users.db` containing Raw-MD5 password hashes.                                                                |
+|   9  |   `attacker`  | **Hash Extraction & Offline Cracking**          | Exported Raw-MD5 hash and cracked it offline with John the Ripper (`--format=Raw-MD5`, rockyou) recovering `fismathack`'s password.                                                       |
+|  10  |  `fismathack` | **Valid Account Login (SSH)**                   | SSHed into `fismathack@conversor.htb` with cracked credentials and retrieved `/home/fismathack/user.txt` (user flag).                                                                     |
+|  11  |  `fismathack` | **Sudo Misconfiguration — needrestart**         | `sudo -l` showed `NOPASSWD: /usr/sbin/needrestart`. Used `sudo /usr/sbin/needrestart -c pwn.sh` to set SUID on `/bin/bash`, then ran `/bin/bash -p` → `root`. Retrieved `/root/root.txt`. |
 
 
 
