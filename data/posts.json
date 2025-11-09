@@ -1,6 +1,99 @@
 [
-  
+ 
 {
+  "title": "HackTheBox: Conversor",
+  "href": "posts/Conversor/",
+  "date": "2025-11-09",
+  "category": [
+    "HackTheBox",
+    "Linux",
+    "Application Security"  ],
+  "tags": [
+    "T1046 - Network Service Discovery",
+    "T1190 - Exploit Public-Facing Application (XSLT Injection)",
+    "T1105 - Ingress Tool Transfer (write reverse shell)",
+    "T1059.006 - Command and Scripting Interpreter: Python",
+    "T1053.005 - Scheduled Task/Job: cron",
+    "T1078 - Valid Accounts (SSH with cracked credentials)",
+    "T1110.003 - Password Cracking (offline hash cracking)",
+    "T1005 - Data from Local System (read user/root flags)",
+    "T1548 - Abuse Elevation Control Mechanism (sudo/needrestart)",
+    "T1543 - Create or Modify System Process (script executed by cron)"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Nmap / Port Enumeration",
+      "result": "Performed fast TCP scan (`nmap -T4 -sS --min-rate 5000 -Pn`) — discovered `22/tcp` (ssh) and `80/tcp` (http). Hostname in responses suggested `conversor.htb`.",
+      "mitigation": "Minimise exposed services to only required ports; apply host-based firewalls and network segmentation; monitor for unexpected external-facing services."
+    },
+    {
+      "step": 2,
+      "user": "N/A",
+      "technique": "Host mapping & Web App Recon",
+      "result": "Added `conversor.htb` to `/etc/hosts`, visited site — found login/register and file upload functionality for XML/XSLT in authenticated area.",
+      "mitigation": "Harden upload endpoints: enforce strict content-type validation, sanitize/validate uploaded files, and avoid processing user-supplied transformation files on the server."
+    },
+    {
+      "step": 3,
+      "user": "www-data",
+      "technique": "XSLT Injection / EXSLT `document`",
+      "result": "Uploaded test XML/XSL which returned `libxslt`. Used `exsl:document` to write an arbitrary file (`/tmp/test.txt`), proving server-side XSLT processing with filesystem write capability.",
+      "mitigation": "Disable dangerous XSLT extensions or run transformations in a strict sandbox; remove filesystem write capability from transformation engine; reject `<?xml-stylesheet?>` references or sanitize XSLT content."
+    },
+    {
+      "step": 4,
+      "user": "www-data",
+      "technique": "Arbitrary file write → Ingress Tool Transfer",
+      "result": "Used XSLT write to place a Python reverse shell into `/var/www/conversor.htb/scripts/revshell.py`.",
+      "mitigation": "Ensure web application cannot write to sensitive filesystem locations; run web processes with least privilege and restrictive filesystem ACLs; monitor and alert on unexpected file creation under webroot."
+    },
+    {
+      "step": 5,
+      "user": "www-data",
+      "technique": "Scheduled Task Execution (cron)",
+      "result": "Application source revealed cron: `* * * * * www-data for f in /var/www/conversor.htb/scripts/*.py; do python3 \"$f\"; done`. Cron executed the dropped script, producing a reverse shell back to the attacker as `www-data`.",
+      "mitigation": "Avoid executing all files in a web-writable directory; use whitelists for scripts executed by cron and restrict script ownership/permissions; run scheduled jobs under controlled service accounts."
+    },
+    {
+      "step": 6,
+      "user": "www-data",
+      "technique": "Local Discovery (source / DB discovery)",
+      "result": "From app source located SQLite DB at `/var/www/conversor.htb/instance/users.db` containing username entries and Raw-MD5 password hashes (e.g., `fismathack`).",
+      "mitigation": "Protect application instance files with proper permissions; never store passwords using unsalted MD5 — use strong salted hashing (bcrypt/Argon2); restrict access to configuration and instance folders."
+    },
+    {
+      "step": 7,
+      "user": "attacker",
+      "technique": "Password hash extraction & offline cracking",
+      "result": "Exported Raw-MD5 hash from `users.db`, cracked it offline using John the Ripper (`--format=Raw-MD5` with rockyou), recovering `fismathack`'s plaintext password.",
+      "mitigation": "Use strong, salted hashing algorithms and enforce account lockouts and monitoring; encrypt and protect DB files; treat credential material as sensitive and restrict access."
+    },
+    {
+      "step": 8,
+      "user": "fismathack",
+      "technique": "Valid Account (SSH login)",
+      "result": "Authenticated via SSH to `fismathack@conversor.htb` using the cracked password and retrieved the user flag (`/home/fismathack/user.txt`).",
+      "mitigation": "Enforce MFA for SSH where possible; monitor for unusual remote logins; disable password-based SSH for privileged accounts and use key-based and centrally managed credentials."
+    },
+    {
+      "step": 9,
+      "user": "fismathack",
+      "technique": "Abuse Elevation Control Mechanism (sudo misconfiguration — needrestart)",
+      "result": "`sudo -l` revealed: `NOPASSWD: /usr/sbin/needrestart`. Used `sudo /usr/sbin/needrestart -c pwn.sh` to execute a payload that set the SUID bit on `/bin/bash`, then ran `/bin/bash -p` to obtain a root shell and read `/root/root.txt`.",
+      "mitigation": "Avoid broad `NOPASSWD` entries for complex utilities; restrict sudo to minimal commands with explicit arguments; audit sudoers regularly and monitor for abuse of elevation mechanisms."
+    },
+    {
+      "step": 10,
+      "user": "root",
+      "technique": "Privilege Escalation → Root Shell",
+      "result": "Obtained an interactive root shell (`whoami` → `root`) and retrieved the root flag from `/root/root.txt`.",
+      "mitigation": "Harden privileged account practices, fix sudo misconfigurations, regularly audit setuid binaries and SUID bits, and apply principle of least privilege for services and accounts."
+    }
+  ]
+} 
+,{
   "title": "TryHackMe : NTLM Reflection",
   "href": "posts/NTLMRefelction/",
   "date": "2025-10-23",
