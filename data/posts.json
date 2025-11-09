@@ -306,7 +306,7 @@
       },
       {
          "step": 9,
-         "user": "mssqlsvc ",
+         "user": "mssqlsvc",
          "technique": "Enable xp_cmdshell via sp_configure / RECONFIGURE",
          "result": "Enabled `xp_cmdshell` to allow command execution from SQL Server context.",
          "mitigation": "Disable `xp_cmdshell` unless explicitly required; audit and alert on configuration changes to `sp_configure` and execution of advanced options; apply least privilege to SQL roles."
@@ -317,9 +317,17 @@
          "technique": "Execute OS command via xp_cmdshell",
          "result": "Executed `EXEC xp_cmdshell 'type C:\\Users\\mssqlsvc\\Desktop\\user.txt'` and retrieved the user flag from `mssqlsvc`'s desktop.",
          "mitigation": "Restrict and monitor use of `xp_cmdshell`; segregate service accounts from interactive access to file system data; employ endpoint protections and file-access monitoring to detect unusual reads."
+      },
+      {
+         "step": 11,
+         "user": "mssqlsvc",
+         "technique": "Read local files via OPENROWSET(BULK) / Bulk Access",
+         "result": "Used `SELECT * FROM OPENROWSET(BULK N'C:\\Users\\Administrator\\Desktop\\root.txt', SINGLE_CLOB) AS t;` to exfiltrate `root.txt` (root flag) from the domain controller's file system.",
+         "mitigation": "Harden SQL Server file access: disable/adopt strict policies for Ad Hoc Distributed Queries and OPENROWSET; restrict SQL Server service account permissions to the minimum; monitor and alert on database reads of sensitive system paths and uncommon bulk-file access patterns."
       }
    ]
-},{
+}
+,{
   "title": "HackTheBox: DarkZero",
   "href": "posts/htb_DarkZero.html",
   "date": "2025-10-11",
