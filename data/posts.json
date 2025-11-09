@@ -3042,7 +3042,7 @@
             "user": "N/A",
             "technique": "RID Brute-Forcing",
             "result": "Used **enum4linux-ng** to perform a **RID brute-force** attack, which successfully enumerated a valid username Michael.wrightson. This user, combined with the default password, was used to discover another user, david, on the system.",
-            "mitigation": "Restrict or disable anonymous access to RID lookups. Implement strong account lockout policies to prevent brute-force attacks on user accounts."
+            "mitigation": "Restrict or disable anonymous access to RID lookups. Implement strong account lockout policies to prevent brute force attacks on user accounts."
         },
         {
             "step": 3,
