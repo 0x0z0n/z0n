@@ -53,7 +53,7 @@ Opening the site revealed a login page with a register flow. I registered a user
 
 
 
-## XSLT Injection & File Write
+### XSLT Injection & File Write
 
 First I verified that XSLT is processed by the server by uploading a minimal XML that referenced an XSL file:
 
@@ -101,7 +101,7 @@ This successfully created `/tmp/test.txt` on the host — confirming arbitrary f
 
 
 
-## Initial Shell via Cron + Reverse Shell
+### Initial Shell via Cron + Reverse Shell
 
 While inspecting the application source (downloadable from an About/Download link), I found a deployment note that included a cron job configured to run every minute:
 
@@ -152,7 +152,7 @@ After waiting for the next cron run, the listener received a reverse shell as **
 ![Conversor](htb_conversor_www_data.jpg)
 
 
-## Privilege Escalation — Local DB & Cracking a User
+### Privilege Escalation — Local DB & Cracking a User
 
 From the application source I located the SQLite database used by the web app:
 
@@ -201,7 +201,8 @@ User flag obtained.
 
 
 
-## Root Flag (Privilege Escalation to root)
+## Privilege Escalation
+
 
 On the `fismathack` account I checked sudo privileges:
 
@@ -217,6 +218,8 @@ User fismathack may run the following commands on conversor:
 ```
 
 ![Conversor](htb_conversor_sudol.jpg)
+
+### Root Flag
 
 `needrestart` has an option to execute scripts or check binaries; in this environment we can abuse it to run arbitrary commands as root. I created a small script that invokes `system("chmod +s /bin/bash");` (or any command to obtain a root shell) and used `needrestart` to execute it.
 
