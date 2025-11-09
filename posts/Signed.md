@@ -25,6 +25,8 @@ Hints: True
 |  11  | mssqlsvc (sysadmin)          | **OPENROWSET(BULK 'C:\Users\Administrator\Desktop\root.txt', SINGLE_CLOB)** | Retrieved `root.txt` flag.  |
 
 
+![Signed](Pictures/htb_signed_mindmap.png)
+
 ## Nmap Recon
 
 ```

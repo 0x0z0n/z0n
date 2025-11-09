@@ -27,7 +27,7 @@ Hints: True
 |  10  |  `fismathack` | **Valid Account Login (SSH)**                   | SSHed into `fismathack@conversor.htb` with cracked credentials and retrieved `/home/fismathack/user.txt` (user flag).                                                                     |
 |  11  |  `fismathack` | **Sudo Misconfiguration — needrestart**         | `sudo -l` showed `NOPASSWD: /usr/sbin/needrestart`. Used `sudo /usr/sbin/needrestart -c pwn.sh` to set SUID on `/bin/bash`, then ran `/bin/bash -p` → `root`. Retrieved `/root/root.txt`. |
 
-
+![Conversor](htb_Conversor_mindmap.png)
 
 ## Recon
 
