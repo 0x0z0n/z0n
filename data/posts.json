@@ -1,6 +1,124 @@
 [
  
 {
+  "title": "HackTheBox: Eighteen",
+  "href": "posts/Eighteen/",
+  "date": "2025-11-23",
+  "category": [
+    "HackTheBox",
+    "Windows",
+    "Active Directory",
+    "Database"
+  ],
+  "tags": [
+    "T1046 - Network Service Discovery",
+    "T1505.003 - SQL Server (MSSQL) Abuse",
+    "T1134 - Access Token Manipulation (EXECUTE AS / Impersonation)",
+    "T1110.002 - Password Cracking (PBKDF2-SHA256)",
+    "T1087.002 - Domain User Enumeration (RID Brute Forcing)",
+    "T1110.003 - Password Spraying",
+    "T1021.006 - Remote Services: WinRM",
+    "T1098 - Account Manipulation (Delegation Configuration)",
+    "T1550.003 - Kerberos: S4U2Proxy / Impersonation",
+    "T1558.003 - Kerberos Service Ticket Request Abuse",
+    "T1059.001 - PowerShell Execution",
+    "T1105 - Ingress Tool Transfer (PowerShell / Upload)"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Network Enumeration (nmap)",
+      "result": "Scanned the target using nmap -A -Pn -sC, revealing an exposed MSSQL service and common Active Directory ports.",
+      "mitigation": "Restrict MSSQL and AD-related services behind firewalls; apply network segmentation to reduce exposure."
+    },
+    {
+      "step": 2,
+      "user": "kevin",
+      "technique": "MSSQL Authentication (impacket-mssqlclient)",
+      "result": "Authenticated to MSSQL as kevin using impacket-mssqlclient, gaining access to SQL shell and server-side enumeration.",
+      "mitigation": "Enforce strong passwords for service accounts and restrict MSSQL login exposure to trusted hosts."
+    },
+    {
+      "step": 3,
+      "user": "kevin → appdev",
+      "technique": "MSSQL Impersonation (EXECUTE AS LOGIN)",
+      "result": "Used EXECUTE AS LOGIN='appdev' to escalate privileges inside MSSQL, enabling access to additional schemas and stored data.",
+      "mitigation": "Audit MSSQL impersonation chains; remove unnecessary IMPERSONATE permissions in production environments."
+    },
+    {
+      "step": 4,
+      "user": "appdev",
+      "technique": "Database Enumeration (tables, columns, credentials)",
+      "result": "Enumerated financial_planner tables and extracted PBKDF2-SHA256 password hashes from the users table.",
+      "mitigation": "Encrypt sensitive data using stronger hashing and ensure strict least-privilege permissions on database accounts."
+    },
+    {
+      "step": 5,
+      "user": "attacker",
+      "technique": "PBKDF2-SHA256 Password Cracking",
+      "result": "Used a custom Python script to crack PBKDF2-SHA256 hash and recovered the plaintext password for further AD access.",
+      "mitigation": "Increase iteration count, enforce strong password policies, and monitor database exfiltration patterns."
+    },
+    {
+      "step": 6,
+      "user": "attacker",
+      "technique": "RID Brute Forcing (crackmapexec)",
+      "result": "Enumerated valid domain users using RID brute force against the MSSQL service account credentials.",
+      "mitigation": "Restrict anonymous and low-privileged enumeration; enable SID filtering and hardened AD configurations."
+    },
+    {
+      "step": 7,
+      "user": "attacker",
+      "technique": "Password Spraying (WinRM)",
+      "result": "Performed WinRM password spraying and discovered valid credentials for domain user adam.scott.",
+      "mitigation": "Deploy account lockout thresholds, require MFA for remote access, and monitor failed WinRM attempts."
+    },
+    {
+      "step": 8,
+      "user": "adam.scott",
+      "technique": "WinRM Access (evil-winrm)",
+      "result": "Successfully authenticated over WinRM as adam.scott and retrieved user.txt.",
+      "mitigation": "Restrict WinRM to administrative hosts only; enforce certificate-based authentication."
+    },
+    {
+      "step": 9,
+      "user": "adam.scott",
+      "technique": "Delegation Abuse (BadSuccessor.ps1)",
+      "result": "Executed BadSuccessor exploit to assign delegation allowing adam.scott to impersonate the Administrator account.",
+      "mitigation": "Audit delegation rights regularly; limit Write/GenericAll permissions on OUs; enable resource-based constrained delegation."
+    },
+    {
+      "step": 10,
+      "user": "attacker",
+      "technique": "Time Synchronization (Kerberos Requirement)",
+      "result": "Synced attacker's time with the domain controller to ensure valid ticket generation.",
+      "mitigation": "Monitor for unusual NTP or HTTP date header synchronization attempts."
+    },
+    {
+      "step": 11,
+      "user": "victim host",
+      "technique": "Delegation Configuration (script.ps1 add)",
+      "result": "Configured impersonation path on victim host to allow delegation chain targeting Administrator.",
+      "mitigation": "Harden PowerShell execution policies and enforce privileged approval flows for delegation modifications."
+    },
+    {
+      "step": 12,
+      "user": "adam.scott",
+      "technique": "Kerberos Service Ticket Request (getST.py)",
+      "result": "Requested an LDAP service ticket while impersonating the machine account, obtaining Administrator-level Kerberos ticket.",
+      "mitigation": "Enable monitoring for anomalous S4U2Proxy activity; restrict SPN abuse paths; enforce strict delegation constraints."
+    },
+    {
+      "step": 13,
+      "user": "Administrator",
+      "technique": "WinRM (Administrator Access)",
+      "result": "Authenticated using NTLM hash over Evil-WinRM and obtained full administrative shell including root.txt.",
+      "mitigation": "Implement LAPS, rotate administrative passwords frequently, and restrict NTLM authentication where possible."
+    }
+  ]
+}
+,{
   "title": "HackTheBox: NanoCorp",
   "href": "posts/NanoCorp/",
   "date": "2025-11-22",
