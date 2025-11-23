@@ -155,7 +155,6 @@ python3 poc.py
 
 Upload `exploit.zip` to **hire.nanocorp.htb**.
 
-After multiple attempts (wrong IP originally), NTLMv2 hashes were captured.
 
 ![NanoCorp](htb_nanocrop_resp_hash.jpg)
 
