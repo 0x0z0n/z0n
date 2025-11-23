@@ -4,6 +4,9 @@
 
 Eighteen is a Windows Active Directory machine involving MSSQL impersonation, PBKDF2-SHA256 password cracking, RID brute forcing, WinRM access, and domain privilege escalation through delegation abuse.
 
+
+### Summary of Attack Chain
+
 | Step | User / Access                      | Technique Used                                                | Result                                                                    |
 | :--: | :--------------------------------- | :------------------------------------------------------------ | :------------------------------------------------------------------------ |
 |   1  | (Local / Recon)                    | **nmap -A -Pn -sC 10.10.xx.xx**                               | Identified MSSQL service and AD-related ports.                            |
