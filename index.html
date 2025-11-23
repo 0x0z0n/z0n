@@ -618,6 +618,59 @@ body.mobile-device .sidebar-right {
 body.mobile-device .layout {
   display: block;
 }
+/* ================================
+   Responsive Breakpoints
+==================================*/
+
+/* Tablet Mode: collapse right panel */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 220px 1fr; /* sidebar + posts */
+  }
+
+  .sidebar-right {
+    display: none;
+  }
+}
+
+/* Mobile Large */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr; /* only posts take full width */
+    padding: 0 0.5rem;
+  }
+
+  aside {
+    display: none;  /* hide left sidebar */
+  }
+
+  .sidebar-toggle {
+    display: block;
+  }
+
+  #posts {
+    gap: 1.5rem;
+  }
+
+  .post-card {
+    padding: 1.2rem;
+  }
+}
+
+/* Mobile Small */
+@media (max-width: 480px) {
+  #posts {
+    gap: 1.2rem;
+  }
+
+  .post-card h2 {
+    font-size: 1.1rem;
+  }
+
+  .post-card {
+    padding: 1rem;
+  }
+}
 
 </style>
 
