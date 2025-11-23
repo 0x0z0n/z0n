@@ -1,350 +1,988 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="minimal-dark">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>0x0z0n — Responsive Blog</title>
-    <link rel="icon" href="assets/tab.png" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+    <meta charset="UTF-8" />
+    <title>0x0z0n Blog | Home </title>
+    <link rel="icon" type="image/png" href="assets/tab.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+   <link rel="icon" type="image/png" href="assets/tab.png" />
+<style>
+/* ========== Theme Variables ========== */
+:root {
+  /* Default 0x0z0n-dark */
+  --bg-color: #0a0a0a;
+  --card-bg: #141414;
+  --text-color: #00ff95;
+  --accent: #00d0ff;
+  --tag-bg: #0f0f0f;
+  --tag-hover: #00ffcc;
+  --border-glow: 0 0 10px #00d0ff, 0 0 20px #00d0ff33;
+  --hover-bg: #222;
+  --hover-text: #80ffff;
+  --hover-border: #00d0ff;
+  --terminal-color: #0f0; /* attack path terminal */
+}
 
-    <style>
-      /* ======================================================
-         0x0z0n — Modern Responsive Layout (single-file)
-         - Responsive grid for left sidebar | main | right panel
-         - Fluid posts grid (auto-fit) -> masonry-like
-         - Accessible mobile nav, sliding sidebars
-         - Theme engine using CSS variables
-         ====================================================== */
 
-      :root{
-        /* semantic tokens */
-        --bg: #0a0a0a;
-        --surface: #141414;
-        --surface-2: #1c1c1c;
-        --text: #dfeee9; /* neutral */
-        --muted: #9aa7a3;
-        --accent-primary: #ffd84d; /* yellow */
-        --accent-secondary: #00ff95; /* green */
-        --glass: rgba(255,255,255,0.03);
-        --radius: 12px;
-        --shadow-1: 0 6px 18px rgba(0,0,0,0.6);
-        --glass-border: 1px solid rgba(255,255,255,0.04);
-        --transition: 220ms cubic-bezier(.2,.9,.2,1);
-        --max-width: 1220px;
-      }
+/* Minimalist Dark */
+html[data-theme="minimal-dark"] {
+  --bg-color: #121212;
+  --card-bg: #1c1c1c;
+  --text-color: #dcdcdc;
+  --accent: #80cbc4;
+  --tag-bg: #202020;
+  --tag-hover: #4db6ac;
+  --border-glow: none;
+  --hover-bg: #2a2a2a;
+  --hover-text: #a0e0d0;
+  --hover-border: #4db6ac;
+  --terminal-color: #80cbc4;
+}
 
-      /* light variants (only a couple tokens) */
-      html[data-theme*="light"]{
-        --bg: #f7f9fb;
-        --surface: #ffffff;
-        --surface-2: #f3f6f8;
-        --text: #0b1220;
-        --muted: #5c6b73;
-        --glass: rgba(11,18,32,0.03);
-      }
+/* 0x0z0n-light */
+html[data-theme="0x0z0n-light"] {
+  --bg-color: #f4f7f9;
+  --card-bg: #ffffff;
+  --text-color: #1a1a1a;
+  --accent: #007acc;
+  --tag-bg: #e3eff9;
+  --tag-hover: #007acc;
+  --border-glow: 0 0 4px #007acc55;
+  --hover-bg: #e0e0e0;
+  --hover-text: #007acc;
+  --hover-border: #007acc;
+  --terminal-color: #00796b;
+}
 
-      /* -------- Base reset -------- */
-      *{box-sizing:border-box}
-      html,body{height:100%}
-      body{
-        margin:0;
-        font-family: 'Inter', 'Orbitron', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-        background:linear-gradient(180deg,var(--bg),#060606 120px);
-        color:var(--text);
-        -webkit-font-smoothing:antialiased;
-        -moz-osx-font-smoothing:grayscale;
-        display:flex;
-        justify-content:center;
-        padding:28px 20px;
-      }
 
-      /* top-level container */
-      .site{
-        width:100%;
-        max-width:var(--max-width);
-        display:grid;
-        grid-template-columns: 260px 1fr 300px;
-        gap:20px;
-        align-items:start;
-      }
 
-      /* ---------- SIDEBAR LEFT ---------- */
-      aside.sidebar-left{
-        background:linear-gradient(180deg,var(--surface),var(--surface-2));
-        padding:18px;
-        border-radius:var(--radius);
-        position:sticky;
-        top:24px;
-        height:fit-content;
-        min-height:120px;
-        box-shadow:var(--shadow-1);
-        border:var(--glass-border);
-      }
+/* Minimalist Light */
+html[data-theme="minimal-light"] {
+  --bg-color: #f7f7f7;
+  --card-bg: #ffffff;
+  --text-color: #333333;
+  --accent: #00796b;
+  --tag-bg: #e3f2f1;
+  --tag-hover: #00796b;
+  --border-glow: none;
+  --hover-bg: #e0f0ef;
+  --hover-text: #00796b;
+  --hover-border: #00796b;
+  --terminal-color: #00796b;
+}
 
-      aside.sidebar-left img{width:86px;height:86px;border-radius:999px;display:block;margin:0 auto 10px;border:2px solid var(--accent-secondary)}
-      .site-title{font-weight:700;text-align:center;font-size:1.25rem;margin-bottom:4px}
-      .site-sub{font-size:0.82rem;color:var(--muted);text-align:center;margin-bottom:12px}
-      nav.left-nav a{display:block;padding:10px;border-radius:8px;text-decoration:none;color:var(--text);margin:6px 0;font-weight:600}
-      nav.left-nav a:hover{background:var(--glass);transform:translateY(-2px)}
 
-      /* ---------- RIGHT PANEL ---------- */
-      .sidebar-right{
-        background:linear-gradient(180deg,var(--surface),rgba(255,255,255,0.01));
-        padding:18px;border-radius:var(--radius);position:sticky;top:24px;height:fit-content;box-shadow:var(--shadow-1);border:var(--glass-border)
-      }
 
-      .sidebar-right h3{margin:0 0 10px;color:var(--accent-primary)}
+/* ========== Body & General ========== */
+body {
+  margin: 0;
+  font-family: 'Orbitron', system-ui, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  position: relative;
+}
 
-      /* ---------- MAIN ---------- */
-      main{
-        background:transparent;padding:6px 0;min-width:0; /* important for collapsing */
-      }
+/* Theme Controls (Top-Right) */
+.theme-controls {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+}
 
-      /* Search bar */
-      .top-controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
-      .search-box{flex:1;display:flex}
-      .search-box input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--surface);color:var(--text);font-weight:600}
+.theme-toggle {
+  cursor: pointer;
+  font-size: 1.0rem;
+  color: var(--accent);
+  transition: transform 0.3s ease;
+}
 
-      .controls-right{display:flex;gap:8px;align-items:center}
-      .theme-toggle, .menu-toggle{background:var(--surface);border-radius:10px;padding:8px;border:var(--glass-border);cursor:pointer}
+.theme-toggle:hover {
+  transform: scale(1.2);
+}
 
-      /* POSTS grid: fluid, auto-fit columns */
-      #posts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;align-items:start}
+.theme-selector select {
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
 
-      .post-card{
-        background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.03));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 26px rgba(0,0,0,0.6);transition:transform var(--transition),box-shadow var(--transition),background var(--transition);
-      }
-      .post-card:hover{transform:translateY(-8px);box-shadow:0 18px 40px rgba(0,0,0,0.7);}
+.theme-selector select:hover {
+  background: var(--hover-bg);
+  color: var(--hover-text);
+  border-color: var(--hover-border);
+}
 
-      .post-card h2{margin:0 0 8px;font-size:1.05rem;color:var(--accent-primary)}
-      .post-meta{font-size:0.82rem;color:var(--muted);margin-bottom:8px}
-      .post-excerpt{color:var(--text);opacity:0.9;margin-bottom:10px;line-height:1.45}
+/* Sidebar */
+aside {
+  width: 250px;
+  background: var(--card-bg);
+  padding: 1.5rem 1rem;
+  height: 100vh;
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  transition: all 0.4s ease-in-out;
+  overflow: hidden;
+}
 
-      .post-categories{margin-bottom:8px}
-      .category-button{display:inline-block;padding:6px 10px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.03);font-weight:700;font-size:0.78rem;margin-right:6px}
+aside img {
+  width: 100px;
+  border-radius: 50%;
+  display: block;
+  margin: 0 auto 1rem;
+  border: 2px solid var(--accent);
+  box-shadow: var(--border-glow);
+}
 
-      .post-tags{display:flex;flex-wrap:wrap;gap:6px}
-      .tag-link{font-size:0.78rem;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);text-decoration:none;color:var(--muted)}
+.site-title {
+  text-align: center;
+  margin: 0.5rem 0 0.2rem;
+  font-size: 1.4rem;
+}
 
-      /* attack path terminal box */
-      .attack-path-terminal{background:linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.15));padding:10px;border-radius:8px;font-family:monospace;font-size:12px;color:var(--accent-secondary);max-height:280px;overflow:auto}
+.site-subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 0.8rem;
+}
 
-      /* archive list small */
-      .archive-list{font-size:0.85rem;color:var(--muted);max-height:220px;overflow:auto}
+nav a {
+  display: block;
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  margin: 0.4rem 0;
+  background: var(--card-bg);
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
 
-      /* Footer */
-      footer{margin-top:28px;color:var(--muted);text-align:center}
+nav a:hover {
+  background: var(--hover-bg);
+  color: var(--hover-text);
+  border-left: 3px solid var(--hover-border);
+}
 
-      /* ---------- Responsive rules ---------- */
-      @media (max-width:1200px){
-        .site{grid-template-columns:220px 1fr}
-        .sidebar-right{display:none}
-      }
+/* Social icons */
+.social-icons a {
+  margin: 0 0.5rem;
+  color: #999;
+  font-size: 1.4rem;
+  transition: 0.3s ease;
+}
 
-      @media (max-width:880px){
-        body{padding:18px}
-        .site{grid-template-columns:1fr;gap:14px}
-        aside.sidebar-left{display:none}
-        .top-controls{flex-direction:column;align-items:stretch;gap:10px}
-        .controls-right{justify-content:flex-end}
-        #posts{gap:14px}
-      }
+.social-icons a:hover {
+  color: var(--hover-text);
+  transform: scale(1.15);
+}
 
-      @media (max-width:520px){
-        .post-card{padding:12px}
-        .post-card h2{font-size:1rem}
-        .search-box input{padding:10px}
-      }
+/* Intro Overlay */
+#introOverlay {
+  position: fixed;
+  inset: 0;
+  background: #000; /* pure black background */
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  animation: introFadeIn 200ms ease;
+}
 
-      /* small utility classes */
-      .muted{color:var(--muted)}
-      .pill{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:700;font-size:0.78rem}
+.intro-inner {
+  text-align: center;
+  max-width: 90%;
+  padding: 2rem;
+}
 
-      /* hide native scrollbars while keeping functionality on desktop panels */
-      .attack-path-terminal::-webkit-scrollbar{height:6px;width:6px}
-      .attack-path-terminal::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:10px}
+.intro-lines {
+  font-family: 'Courier New', monospace;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: #00ff55; /* neon green */
+  text-shadow:
+    0 0 6px rgba(0,255,85,0.25),
+    0 0 20px rgba(0,255,85,0.08),
+    0 0 40px rgba(0,255,85,0.04);
+  letter-spacing: 0.6px;
+  white-space: pre-line;
+  min-height: 6.2rem; /* reserve space while typing */
+  opacity: 0;
+}
 
-    </style>
-  </head>
-  <body>
-    <div class="site" id="site">
+.access-granted {
+  margin-top: 1.25rem;
+  font-family: 'Orbitron', system-ui, sans-serif;
+  font-size: 2rem;
+  color: #00ff55;
+  text-shadow:
+    0 0 12px rgba(0,255,85,0.35),
+    0 0 30px rgba(0,255,85,0.12),
+    0 6px 24px rgba(0,0,0,0.6);
+  transform: scale(0.9);
+  opacity: 0;
+  letter-spacing: 4px;
+}
 
-      <aside class="sidebar-left" aria-label="Main sidebar">
-        <img src="assets/avatar.jpeg" alt="avatar">
-        <div class="site-title">0x0z0n</div>
-        <div class="site-sub">Cyber Security Blog</div>
-        <nav class="left-nav" aria-label="Primary">
-          <a href="index.html"><i class="fas fa-home"></i>&nbsp; Home</a>
-          <a href="posts/Cheatsheet.html"><i class="fas fa-book"></i>&nbsp; Cheatsheet</a>
-          <a href="#contact"><i class="fas fa-envelope"></i>&nbsp; Contact</a>
-        </nav>
+/* small skip button */
+.skip-intro {
+  margin-top: 1rem;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.6);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: inline-block;
+}
 
-        <div style="margin-top:12px">
-          <div style="font-weight:700;color:var(--accent-primary);margin-bottom:6px">Activity</div>
-          <div class="archive-list" id="archiveList">Loading…</div>
-        </div>
-      </aside>
+/* fade + slide out */
+.intro-hide {
+  animation: introHide 600ms ease forwards;
+}
 
-      <main>
-        <div class="top-controls">
-          <div class="search-box">
-            <input id="searchInput" type="search" placeholder="Search posts, tags, categories…" aria-label="Search posts">
-          </div>
+@keyframes introFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
-          <div class="controls-right">
-            <button id="themeBtn" class="theme-toggle" title="Toggle theme"><i class="fas fa-circle-half-stroke"></i></button>
-            <button id="sidebarToggle" class="menu-toggle" title="Toggle sidebar"><i class="fas fa-bars"></i></button>
-          </div>
-        </div>
+@keyframes introHide {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); visibility: hidden; }
+}
 
-        <section id="posts" aria-live="polite"> <!-- posts injected here -->
-        </section>
+/* small responsiveness */
+@media (max-width:480px) {
+  .intro-lines { font-size: 1rem; min-height:5rem; }
+  .access-granted { font-size: 1.4rem; }
+}
 
-        <footer>
-          <small>&copy; 2025 0x0z0n — Built with care.</small>
-        </footer>
-      </main>
 
-      <aside class="sidebar-right" aria-label="Right utilities">
-        <h3>Categories</h3>
-        <div id="categoryList">—</div>
+/* Main Content */
+main {
+  flex: 1;
+  padding: 2.5rem 1rem;
+  max-width: 1000px;
+  margin: auto;
+  transition: all 0.4s ease-in-out;
+}
 
-        <h3 style="margin-top:14px">Tags</h3>
-        <div id="tagList">—</div>
+/* Search Box */
+.search-box {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
 
-        <h3 style="margin-top:14px">Quick Links</h3>
-        <div><a href="posts/Cheatsheet.html" class="pill">Cheatsheet</a></div>
-      </aside>
+.search-box input {
+  padding: 0.7rem 1.2rem;
+  width: 280px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: var(--border-glow);
+  font-size: 0.95rem;
+}
 
+/* Tags & Category Buttons */
+.tag-link, .category-button {
+  display: inline-block;
+  background-color: var(--tag-bg);
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--accent);
+  padding: 6px 12px;
+  margin: 2px 4px 4px 0;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.2s ease-in-out;
+}
+
+.tag-link:hover, .category-button:hover {
+  background: var(--hover-bg);
+  color: var(--hover-text);
+  border-color: var(--hover-border);
+}
+
+/* ===== Terminal / Attack Path (scrollable but hidden scrollbar) ===== */
+.terminal-style,
+.attack-path-terminal {
+  font-family: monospace;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-y: auto;               /* enable vertical scrolling */
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE & Edge */
+}
+
+/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+.terminal-style::-webkit-scrollbar,
+.attack-path-terminal::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Fixed height for scrolling area */
+.terminal-style { max-height: 400px; background-color: #0a0a0a; color: #00ff95; }
+.attack-path-terminal { max-height: 320px; min-height: 80px; background-color: var(--card-bg); color: var(--terminal-color); }
+
+
+.attack-path-terminal {
+  background-color: var(--card-bg);
+  color: var(--terminal-color);
+  padding: 8px;
+  font-size: 12px;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+
+  max-height: 60vh;     /* maximum height relative to viewport */
+  min-height: 40px;     /* tiny posts still show something */
+  overflow-y: auto;     /* enable scrolling if content exceeds max-height */
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none; /* hide scrollbar in Firefox */
+  -ms-overflow-style: none; /* hide scrollbar in IE/Edge */
+}
+
+.attack-path-terminal::-webkit-scrollbar {
+  width: 0;
+  height: 0; /* hide scrollbar in Chrome/Safari */
+}
+
+
+/* ===== Attack Step Blocks ===== */
+.attack-step {
+  border-left: 4px solid var(--terminal-color);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+  border-radius: 6px;
+  color: var(--text-color);
+}
+
+.attack-step .top {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+}
+
+.attack-step .pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  background: rgba(0,0,0,0.06);
+  color: var(--hover-text);
+}
+
+.attack-step .meta-value {
+  font-weight: 600;
+  color: var(--terminal-color);
+  margin-right: 6px;
+}
+
+.attack-step .field {
+  margin: 6px 0;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.attack-step .field .label {
+  display: block;
+  font-weight: 700;
+  color: var(--hover-text);
+  margin-bottom: 4px;
+}
+
+.attack-step:hover {
+  transform: translateY(-2px);
+  transition: transform 0.12s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  color: #555;
+  font-size: 0.8rem;
+  margin-top: 4rem;
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 15px;
+  background: var(--card-bg);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 1.3rem;
+  padding: 6px 10px;
+  z-index: 1100;
+  cursor: pointer;
+  box-shadow: var(--border-glow);
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+  color: var(--hover-text);
+  border-color: var(--hover-border);
+}
+
+/* ===== Collapsed Sidebar ===== */
+body.sidebar-collapsed aside {
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  border: none;
+  transition: all 0.4s ease-in-out;
+}
+
+body.sidebar-collapsed main {
+  margin-left: 0;
+  transition: all 0.4s ease-in-out;
+}
+
+/* ===== Layout Grid: Left Sidebar | Main | Right Panel ===== */
+.layout {
+  display: grid;
+  grid-template-columns: 250px 1fr 280px; /* left sidebar | main | right panel */
+  gap: 1.5rem;
+  width: 100%;
+  padding: 0 1rem;
+  transition: all 0.4s ease-in-out;
+}
+
+main {
+  padding: 2.5rem 0;
+  max-width: none;
+}
+
+/* Right Panel */
+.sidebar-right {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 12px;
+
+  position: sticky;
+  top: 1.5rem;
+
+  max-height: 80vh;       /* Limit to viewport height */
+  overflow-y: auto;        /* Enable scroll if content exceeds */
+}
+
+
+/* ===== Posts Layout (Vertical Single Column) ===== */
+#posts {
+  display: flex;
+  flex-direction: column; /* vertical stack */
+  gap: 2rem;
+  width: 100%;
+  max-width: 1250px;
+  margin: 0 auto;
+  transition: all 0.4s ease-in-out;
+}
+
+/* Post Card */
+.post-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background: var(--card-bg);
+  backdrop-filter: blur(8px);
+  padding: 1.8rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1), var(--border-glow);
+  transition: 0.3s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+  background: var(--hover-bg);
+  box-shadow: 0 10px 20px rgba(0, 208, 255, 0.2);
+}
+
+.post-card h2 a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.post-card h2 a:hover {
+  color: var(--hover-text);
+  text-shadow: 0 0 8px var(--hover-border);
+}
+
+
+.archive-list {
+  max-height: 150px; /* compact height */
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--text-color);
+  border-top: 1px solid var(--hover-border);
+  padding-top: 6px;
+}
+
+/* Hide scrollbar */
+.archive-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.archive-list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Month heading */
+.archive-list .month {
+  font-weight: 700;
+  margin-top: 6px;
+  color: var(--accent);
+}
+
+/* Individual entry */
+.archive-list .entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.archive-list .entry a {
+  color: var(--text-color);
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.archive-list .entry a:hover {
+  color: var(--hover-text);
+}
+
+/* ===== Globally Hide All Scrollbars (keep scroll functionality) ===== */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE & Edge */
+}
+
+*::-webkit-scrollbar {
+  width: 0 !important; /* Chrome, Safari, Opera */
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* ===== Mobile-Specific Overrides ===== */
+body.mobile-device {
+  font-size: 0.95rem;
+}
+
+body.mobile-device aside.sidebar-left {
+  width:100%;
+  height: auto;
+  border-bottom: 1px solid var(--accent);
+  position: relative;
+}
+
+body.mobile-device main {
+  padding: 1rem;
+}
+
+body.mobile-device .sidebar-right {
+  display: none !important;
+}
+
+body.mobile-device .layout {
+  display: block;
+}
+/* ================================
+   Responsive Breakpoints
+==================================*/
+
+/* Tablet Mode: collapse right panel */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 220px 1fr; /* sidebar + posts */
+  }
+
+  .sidebar-right {
+    display: none;
+  }
+}
+
+/* Mobile Large */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr; /* only posts take full width */
+    padding: 0 0.5rem;
+  }
+
+  aside {
+    display: none;  /* hide left sidebar */
+  }
+
+  .sidebar-toggle {
+    display: block;
+  }
+
+  #posts {
+    gap: 1.5rem;
+  }
+
+  .post-card {
+    padding: 1.2rem;
+  }
+}
+
+/* Mobile Small */
+@media (max-width: 480px) {
+  #posts {
+    gap: 1.2rem;
+  }
+
+  .post-card h2 {
+    font-size: 1.1rem;
+  }
+
+  .post-card {
+    padding: 1rem;
+  }
+}
+
+</style>
+
+ </head>
+<body>
+  <!-- Intro Loading Overlay -->
+<div id="introOverlay" aria-hidden="true">
+  <div class="intro-inner">
+    <div id="introLines" class="intro-lines" aria-hidden="true"></div>
+    <div id="accessGranted" class="access-granted" aria-hidden="true">ACCESS GRANTED</div>
+  </div>
+</div>
+  <!-- Theme Controls (Top-Right) -->
+  <div class="theme-controls">
+    <div class="theme-toggle" title="Toggle Theme">
+      <i class="fas fa-circle-half-stroke"></i>
     </div>
+    <div class="theme-selector">
+      <select id="themeSelect" title="Select Theme">
+        <option value="minimal-dark">Minimalist Dark</option>
+        <option value="0x0z0n-dark">0x0z0n Dark</option>
+        <option value="0x0z0n-light">0x0z0n Light</option>
+        <option value="minimal-light">Minimalist Light</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Sidebar Toggle Button -->
+  <button id="sidebarToggle" class="sidebar-toggle" title="Toggle Sidebar">
+    <i class="fas fa-bars"></i>
+  </button>
+
+<!-- Layout Wrapper -->
+<div class="layout">
+  <!-- Left Sidebar -->
+  <aside class="sidebar-left">
+    <img src="assets/avatar.jpeg" alt="Profile" />
+    <div class="site-title">0x0z0n</div>
+    <div class="site-subtitle">Cyber Security Blog</div>
+
+    <nav>
+      <a href="index.html">Home</a>
+    </nav>
+
+    <!-- Archive Section (Bottom Left) -->
+<div id="archivePanel" style="margin-top:2rem;">
+  <h3 style="color: var(--accent); font-size:0.9rem; margin-bottom:0.5rem;">Activity</h3>
+  <div id="archiveList" class="archive-list"></div>
+</div>
 
 
-    <script>
-      /* ------------- Utility & State -------------- */
-      const postsContainer = document.getElementById('posts');
-      const searchInput = document.getElementById('searchInput');
-      const categoryList = document.getElementById('categoryList');
-      const tagList = document.getElementById('tagList');
-      const archiveList = document.getElementById('archiveList');
+  </aside>
 
-      let allPosts = [];
-      let categoriesCount = {};
-      let tagsCount = {};
-      let archivesGrouped = {};
+  <!-- Main Content -->
+  <main>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search posts..." />
+    </div>
+    <section id="posts"></section>
+    <footer>
+      <p>&copy; 2025 0x0z0n</p>
+    </footer>
+  </main>
 
-      const escapeHTML = str => String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  <!-- Right Panel -->
+<aside class="sidebar-right">
 
-      function buildAttackPathHTML(attack_path){
-        if(!attack_path) return '';
-        if(!Array.isArray(attack_path)) attack_path=[attack_path];
-        return attack_path.map((s,i)=>{
-          const user = s.user?`<span class="pill">User: ${escapeHTML(s.user)}</span>`:'';
-          const tech = s.technique?`<span class="pill">${escapeHTML(s.technique)}</span>`:'';
-          const result = s.result?`<div class="muted" style="margin-top:8px;font-size:0.92rem">${escapeHTML(s.result)}</div>`:'';
-          return `<div style="margin-bottom:10px">${user} ${tech}${result}</div>`;
-        }).join('');
-      }
+  <!-- 1️⃣ Categories Section -->
+  <div class="right-section categories-section">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Categories</h3>
+    <div id="categoryList"></div>
+  </div>
 
-      function renderPosts(list){
-        postsContainer.innerHTML = '';
-        if(!list.length){ postsContainer.innerHTML = '<div class="muted">No posts found.</div>'; return; }
-        list.forEach(post=>{
-          const div = document.createElement('article'); div.className='post-card';
-          const cats = (post.category||[]).map(c=>`<span class="category-button">${escapeHTML(c)}</span>`).join(' ');
-          const tags = (post.tags||[]).map(t=>`<a class="tag-link" href="#" data-tag="${escapeHTML(t)}">${escapeHTML(t)}</a>`).join(' ');
-          const attack = buildAttackPathHTML(post.attack_path);
+  <!-- 2️⃣ Quick Links Section -->
+  <div class="right-section quicklinks-section" style="margin-top:2rem;">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Quick Links</h3>
+    <div class="quick-links">
+      <a href="posts/Cheatsheet.html" class="category-button">Cheatsheet</a>
+    </div>
+  </div>
 
-          div.innerHTML = `\n            <h2><a href="${escapeHTML(post.href||'#')}">${escapeHTML(post.title||'Untitled')}</a></h2>\n            <div class="post-meta">${escapeHTML(post.date||'')}</div>\n            <div class="post-excerpt">${escapeHTML(post.excerpt||'')}</div>\n            <div class="post-categories">${cats}</div>\n            <div class="post-tags">${tags}</div>\n            ${attack?`<div class="attack-path-terminal">${attack}</div>`:''}\n          `;
+  <!-- 3️⃣ Tags Section -->
+  <div class="right-section tags-section" style="margin-top:2rem;">
+    <h3 style="color: var(--accent); margin-bottom:1rem;">Tags</h3>
+    <div id="tagList"></div>
+  </div>
 
-          postsContainer.appendChild(div);
-        });
-      }
+</aside>
 
-      function filterPosts(q){
-        const query = (q!==undefined? q : searchInput.value).trim().toLowerCase();
-        const results = allPosts.filter(p=>{
-          const inTitle = (p.title||'').toLowerCase().includes(query);
-          const inCat = (p.category||[]).some(c=>c.toLowerCase().includes(query));
-          const inTag = (p.tags||[]).some(t=>t.toLowerCase().includes(query));
-          const inDate = p.date && p.date.startsWith(query);
-          return !query || inTitle||inCat||inTag||inDate;
-        });
-        renderPosts(results);
-      }
+</div>
 
-      /* --------- Fetch posts.json (single-pass) --------- */
-      fetch('data/posts.json').then(r=>r.json()).then(posts=>{
-        allPosts = posts || [];
-        // build indexes
-        categoriesCount = {}; tagsCount = {}; archivesGrouped = {};
-        allPosts.forEach(post=>{
-          (post.category||[]).forEach(c=> categoriesCount[c] = (categoriesCount[c]||0)+1 );
-          (post.tags||[]).forEach(t=> tagsCount[t] = (tagsCount[t]||0)+1 );
 
-          const d = new Date(post.date);
-          const monthKey = d.toLocaleDateString('en-GB',{year:'numeric',month:'short'});
-          const day = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-          if(!archivesGrouped[monthKey]) archivesGrouped[monthKey]=[];
-          archivesGrouped[monthKey].push({...post,formattedDate:day});
-        });
+  <!-- Shooting Star -->
+  <div id="shooting-star"></div>
 
-        // populate sidebar lists
-        categoryList.innerHTML = Object.entries(categoriesCount).map(([k,v])=>`<div style="margin-bottom:6px"><a href="#" class="pill" data-cat="${escapeHTML(k)}">${escapeHTML(k)} (${v})</a></div>`).join('')||'<div class="muted">—</div>';
-        tagList.innerHTML = Object.entries(tagsCount).slice(0,40).map(([k,v])=>`<a href="#" class="tag-link" data-tag="${escapeHTML(k)}">${escapeHTML(k)} (${v})</a>`).join(' ')||'<div class="muted">—</div>';
+  <script>
+/* ================= Sidebar Toggle + Easter Egg ================= */
+const toggleBtn = document.getElementById("sidebarToggle");
+toggleBtn.addEventListener("click", () => {
+  document.body.classList.toggle("sidebar-collapsed");
+  const icon = toggleBtn.querySelector("i");
+  icon.classList.toggle("fa-bars");
+  icon.classList.toggle("fa-chevron-right");
+});
 
-        // archive
-        archiveList.innerHTML = Object.entries(archivesGrouped).sort((a,b)=> new Date(b[0]) - new Date(a[0])).map(([m,entries])=>{
-          const items = entries.sort((x,y)=> new Date(y.date)-new Date(x.date)).map(e=>`<div style="margin-bottom:6px;font-size:0.9rem"><a href="${escapeHTML(e.href||'#')}">${escapeHTML(e.title)}</a> <span class="muted">${escapeHTML(e.formattedDate)}</span></div>`).join('');
-          return `<div style="margin-bottom:10px"><strong style="color:var(--accent-primary)">${escapeHTML(m)}</strong>${items}</div>`;
-        }).join('')||'<div class="muted">—</div>';
+const r3S = "bG10aC5TM1IvUzNSL24wei9vaS5idWh0aWcubjB6MHgwLy86c3B0dGg=";
+const expectedSha256 = "288443d0b0661bc97b32edc09937f64aef8235ae1d83aaac8e3b54968293b681";
+let clickCount = 0, firstClickTime = 0;
+const CLICK_LIMIT = 8, WINDOW_MS = 5000;
 
-        // initial render
-        renderPosts(allPosts);
-      }).catch(err=>{ console.warn('Failed to load data/posts.json',err); postsContainer.innerHTML='<div class="muted">Unable to load posts.json</div>'; });
+function base64ToString(b64){
+  try{
+    const bin = atob(b64);
+    return new TextDecoder().decode(Uint8Array.from(bin.split('').map(c=>c.charCodeAt(0))));
+  } catch(e){ return null; }
+}
 
-      /* ------------- UI Controls ------------- */
-      // search
-      searchInput.addEventListener('input', ()=>filterPosts());
+function toHex(buffer){ return Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function sha256Hex(str){ return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))); }
+function decodeObfuscatedUrl(){ const rev=base64ToString(r3S); return rev ? rev.split('').reverse().join('') : null; }
+async function decodeVerifyAndRedirect(){ const url=decodeObfuscatedUrl(); if(!url) return; if(await sha256Hex(url)===expectedSha256) window.location.href=url; else console.warn("Easter-egg URL failed integrity check."); }
 
-      // delegated clicks for tags & categories
-      document.addEventListener('click', e=>{
-        const t = e.target;
-        if(t.matches('.tag-link') || t.closest('.tag-link')){
-          e.preventDefault(); const tag = t.dataset.tag || t.closest('.tag-link').dataset.tag; searchInput.value=tag; filterPosts(tag); return;
-        }
-        if(t.matches('.category-button') || t.closest('.pill[data-cat]')){
-          e.preventDefault(); const cat = t.dataset.cat || (t.closest('[data-cat]') && t.closest('[data-cat]').dataset.cat); if(cat){ searchInput.value=cat; filterPosts(cat);} return;
-        }
+toggleBtn.addEventListener("click", () => {
+  const now = Date.now();
+  if(!firstClickTime || (now-firstClickTime) > WINDOW_MS){ firstClickTime=now; clickCount=1; } else clickCount++;
+  if(clickCount>=CLICK_LIMIT){ clickCount=0; firstClickTime=0; decodeVerifyAndRedirect(); }
+});
+
+/* ================= Theme Toggle + Selector ================= */
+const toggle = document.querySelector(".theme-toggle");
+const icon = toggle.querySelector("i");
+const themeSelect = document.getElementById("themeSelect");
+let savedTheme = localStorage.getItem("themeStyle") || "minimal-dark";
+document.documentElement.setAttribute("data-theme", savedTheme);
+icon.className = savedTheme.includes("light") ? "fas fa-sun" : "fas fa-moon";
+themeSelect.value = savedTheme;
+
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("themeStyle", theme);
+  icon.className = theme.includes("light") ? "fas fa-sun" : "fas fa-moon";
+  themeSelect.value = theme;
+}
+
+toggle.addEventListener("click", ()=>{
+  const current = document.documentElement.getAttribute("data-theme");
+  setTheme(current.includes("dark") ? (current.includes("minimal") ? "minimal-light" : "0x0z0n-light") : (current.includes("minimal") ? "minimal-dark" : "0x0z0n-dark"));
+});
+themeSelect.addEventListener("change", ()=>setTheme(themeSelect.value));
+
+/* ================= Posts, Search, Sidebar, Archive ================= */
+const searchInput = document.getElementById("searchInput");
+const postsContainer = document.getElementById("posts");
+const categoryContainer = document.getElementById("categoryList");
+const tagContainer = document.getElementById("tagList");
+const archiveContainer = document.getElementById("archiveList");
+let allPosts = [];
+let categoriesCount = {}, tagsCount = {}, archivesGrouped = {};
+
+function escapeHTML(str){ return String(str??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function getCategories(post){ return Array.isArray(post.category)?post.category:(post.category?[post.category]:[]); }
+function getTags(post){ return Array.isArray(post.tags)?post.tags:(post.tags?[post.tags]:[]); }
+
+function buildAttackPathHTML(attack_path){
+  if(!attack_path) return "";
+  if(!Array.isArray(attack_path)) attack_path=[attack_path];
+  return attack_path.map((step,i)=>{
+    if(!step) return "";
+    const {step: stepText="", user="", technique="", result="", mitigation=""}=step;
+    return `<div class="attack-step"><div class="top"><span class="pill">Step ${i+1}</span>${user?`<span class="pill">User: ${escapeHTML(user)}</span>`:""}${technique?`<span class="pill">Technique: ${escapeHTML(technique)}</span>`:""}</div>${result?`<div class="field"><span class="label">Result:</span>${escapeHTML(result)}</div>`:""}${mitigation?`<div class="field"><span class="label">Mitigation:</span>${escapeHTML(mitigation)}</div>`:""}</div>`;
+  }).join("");
+}
+
+function renderPosts(posts){
+  postsContainer.innerHTML = posts.length===0 ? "No posts found." : "";
+  posts.forEach(post=>{
+    const div = document.createElement("div"); 
+    div.className = "post-card";
+    const categoriesHTML = getCategories(post).map(cat=>`<button class="category-button post-cat-btn" data-cat="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`).join(" ");
+    const tagsHTML = getTags(post).map(tag=>`<a href="#" class="tag-link post-tag-link" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</a>`).join(" ");
+    const attackHTML = buildAttackPathHTML(post.attack_path);
+    div.innerHTML = `<h2><a href="${escapeHTML(post.href||"#")}">${escapeHTML(post.title||"Untitled")}</a></h2>
+                     <div class="post-meta">${escapeHTML(post.date||"")}</div>
+                     <p class="post-excerpt">${escapeHTML(post.excerpt||"")}</p>
+                     <div class="post-categories">${categoriesHTML}</div>
+                     <div class="post-tags">${tagsHTML}</div>
+                     ${attackHTML?`<div class="attack-path-terminal terminal-style">${attackHTML}</div>`:""}`;
+    postsContainer.appendChild(div);
+  });
+}
+
+function filterPosts(){
+  const query = searchInput.value.trim().toLowerCase();
+  const filtered = allPosts.filter(post=>
+    (post.title||"").toLowerCase().includes(query) ||
+    getCategories(post).some(c=>c.toLowerCase().includes(query)) ||
+    getTags(post).some(t=>t.toLowerCase().includes(query)) ||
+    (post.date && post.date.startsWith(query))
+  );
+  renderPosts(filtered);
+}
+
+function populateSidebarAndArchive(){
+  // categories
+  categoryContainer.innerHTML = "";
+  Object.entries(categoriesCount).forEach(([cat,count])=>{
+    const a = document.createElement("a"); 
+    a.href="#"; a.className="category-button"; 
+    a.textContent = `${cat} (${count})`; 
+    a.dataset.cat = cat;
+    a.addEventListener("click", ev=>{ ev.preventDefault(); searchInput.value=cat; filterPosts(true); });
+    categoryContainer.appendChild(a);
+  });
+
+  // tags
+  tagContainer.innerHTML = "";
+  Object.keys(tagsCount).sort().forEach(tag=>{
+    const a = document.createElement("a"); 
+    a.href="#"; a.className="tag-link"; 
+    a.textContent = `${tag} (${tagsCount[tag]})`; 
+    a.dataset.tag = tag;
+    a.addEventListener("click", ev=>{ ev.preventDefault(); searchInput.value=tag; filterPosts(true); });
+    tagContainer.appendChild(a);
+  });
+
+  // archive (sorted chronologically)
+  archiveContainer.innerHTML = "";
+  Object.entries(archivesGrouped)
+    .sort((a, b) => {
+      const da = new Date(a[0].replace(/(\w{3}) (\d{4})/, '01 $1 $2'));
+      const db = new Date(b[0].replace(/(\w{3}) (\d{4})/, '01 $1 $2'));
+      return db - da; // newest month first
+    })
+    .forEach(([month, entries]) => {
+      entries.sort((a, b) => new Date(b.date) - new Date(a.date)); // sort days
+      const monthDiv = document.createElement("div");
+      monthDiv.className = "month";
+      monthDiv.textContent = month;
+      archiveContainer.appendChild(monthDiv);
+
+      entries.forEach(entry => {
+        const item = document.createElement("div");
+        item.className = "entry";
+        item.innerHTML = `<span>${entry.formattedDate}</span> <a href="${entry.href}">${entry.title}</a>`;
+        archiveContainer.appendChild(item);
       });
+    });
+}
 
-      // theme toggle (persist)
-      const themeBtn = document.getElementById('themeBtn');
-      themeBtn.addEventListener('click', ()=>{
-        const cur = document.documentElement.getAttribute('data-theme') || 'minimal-dark';
-        const next = cur.includes('dark') ? (cur.includes('minimal') ? 'minimal-light' : '0x0z0n-light') : (cur.includes('minimal') ? 'minimal-dark' : '0x0z0n-dark');
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('themeStyle', next);
-      });
+// single-pass fetch & process
+fetch("data/posts.json").then(res=>res.json()).then(posts=>{
+  allPosts = posts;
+  categoriesCount = {}; tagsCount = {}; archivesGrouped = {};
 
-      // load saved theme
-      (function(){ const saved = localStorage.getItem('themeStyle'); if(saved) document.documentElement.setAttribute('data-theme', saved);})();
+  posts.forEach(post=>{
+    getCategories(post).forEach(c=>categoriesCount[c]=(categoriesCount[c]||0)+1);
+    getTags(post).forEach(t=>tagsCount[t]=(tagsCount[t]||0)+1);
 
-      // sidebar toggle (mobile)
-      const sidebarToggle = document.getElementById('sidebarToggle');
-      sidebarToggle.addEventListener('click', ()=>{
-        const left = document.querySelector('.sidebar-left');
-        if(!left) return;
-        const shown = left.style.display !== 'none' && window.getComputedStyle(left).display !== 'none';
-        left.style.display = shown ? 'none' : 'block';
-        // if showing, smooth scroll to top
-        if(!shown) left.scrollIntoView({behavior:'smooth'});
-      });
+    const d = new Date(post.date); 
+    const month = d.toLocaleDateString('en-GB',{year:'numeric',month:'short'});
+    const day = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+    if(!archivesGrouped[month]) archivesGrouped[month]=[];
+    archivesGrouped[month].push({...post, formattedDate:day});
+  });
 
-      /* small accessibility: keyboard shortcut to focus search ("/") */
-      window.addEventListener('keydown', e=>{ if(e.key === '/') { const active = document.activeElement; if(active && (active.tagName==='INPUT' || active.tagName==='TEXTAREA')) return; e.preventDefault(); searchInput.focus(); }});
+  populateSidebarAndArchive();
+  renderPosts(allPosts);
 
-    </script>
-  </body>
+  // initial URL param search
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get("search")||params.get("category")||params.get("tag")||params.get("date");
+  if(query){ searchInput.value=query; filterPosts(false); searchInput.blur(); }
+
+  searchInput.addEventListener("input", ()=>filterPosts(false));
+
+  // delegated post clicks
+  postsContainer.onclick = e=>{
+    const catBtn = e.target.closest(".post-cat-btn");
+    const tagLink = e.target.closest(".post-tag-link");
+    if(catBtn){ searchInput.value = catBtn.dataset.cat; filterPosts(true); }
+    if(tagLink){ searchInput.value = tagLink.dataset.tag; filterPosts(true); }
+  };
+}).catch(err=>console.error("Error loading posts.json:", err));
+
+/* ================= Intro Overlay Animation ================= */
+(function(){
+  const overlay=document.getElementById('introOverlay'), linesEl=document.getElementById('introLines'), accessEl=document.getElementById('accessGranted');
+  const lines=["Establishing connection...","Scanning security systems...","Bypassing firewall..."];
+  const localKey="introShown_v1";
+  if(localStorage.getItem(localKey)){ overlay.style.display="none"; return; }
+
+  function typeLine(text,targetEl,speed=25){ return new Promise(resolve=>{ targetEl.style.opacity=1; let i=0; const step=()=>{ if(i<=text.length){ targetEl.textContent=text.slice(0,i); i++; setTimeout(step,speed); } else setTimeout(resolve,400); }; step(); }); }
+
+  async function playIntro(){ overlay.style.display="flex"; let buffer=""; for(let idx=0;idx<lines.length;idx++){ const line=lines[idx]; buffer+=(idx===0?"":"\n")+line; const newLineStart=buffer.lastIndexOf(line); linesEl.textContent=buffer.slice(0,newLineStart); await typeLine(line,linesEl,24); await new Promise(r=>setTimeout(r,200)); }
+    accessEl.style.opacity=1; accessEl.style.transform="scale(1.02)";
+    setTimeout(()=>accessEl.style.transform="scale(1)",50);
+    setTimeout(()=>{ overlay.classList.add('intro-hide'); try{ localStorage.setItem(localKey,'1'); }catch(e){} setTimeout(()=>overlay.style.display="none",700); },900);
+  }
+
+  requestAnimationFrame(()=>playIntro().catch(()=>overlay.style.display='none'));
+})();
+</script>
+<!-- Detect Actual Mobile Device via User-Agent -->
+<script>
+const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+if (isMobileDevice) {
+  console.log("Detected actual mobile device");
+  document.body.classList.add("mobile-device");
+}
+</script>
+
+
+</body>
+
 </html>
