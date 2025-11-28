@@ -1,13 +1,26 @@
 markdown: kramdown
 
-# Disable Liquid ONLY for posts folder
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter_opts:
+    disable: true
+
 defaults:
   - scope:
       path: "posts"
       type: "posts"
     values:
-      render_with_liquid: false
+      layout: post
+      render_with_liquid: false   # 🚀 Turn OFF Liquid for posts only
+      liquid:
+        error_mode: warn
+        strict_filters: false
 
-liquid:
-  error_mode: warn
-  strict_filters: false
+# ❌ DO NOT EXCLUDE POSTS — THIS WAS BREAKING YOUR SITE
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
