@@ -670,7 +670,7 @@ DeviceFileEvents
 
 # Technical
 
-{% file src="<https://61811173-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F5J1pjHJekUrnpmyC7p9d%2Fuploads%2FVDvtf018voZZ838i2T4Q%2FImportant%20notes%20Infosys%20(2).xlsx?alt=media&token=01131f46-c963-49f5-9f2d-32f863bf555b>" %}
+{{{% file src="<https://61811173-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F5J1pjHJekUrnpmyC7p9d%2Fuploads%2FVDvtf018voZZ838i2T4Q%2FImportant%20notes%20Infosys%20(2).xlsx?alt=media&token=01131f46-c963-49f5-9f2d-32f863bf555b>" %}}}
 
 **NIST Incident Response Lifecycle (4 Phases)**:
 
@@ -1131,7 +1131,7 @@ The following table summarizes the roles and allowed actions in Microsoft Sentin
 
 <figure><img src="https://2363832561-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FcXy5hq3eo7DEg0EEJn0D%2Fuploads%2Fna69Sts1bdmH1YzLsUTX%2Fimage.png?alt=media&#x26;token=83fd32cc-58fc-46ab-9dde-257e56a062e1" alt=""><figcaption></figcaption></figure>
 
-{% embed url="<https://learn.microsoft.com/en-us/training/modules/create-manage-azure-sentinel-workspaces/6-manage-azure-sentinel-settings>" %}
+{{{% embed url="<https://learn.microsoft.com/en-us/training/modules/create-manage-azure-sentinel-workspaces/6-manage-azure-sentinel-settings>" %}}}
 
 **Rule configuration in sentinel -** analytics -Scheduled query -Near Real time query rule -Microsoft incident creation rule
 
