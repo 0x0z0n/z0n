@@ -12,12 +12,11 @@ defaults:
       type: "posts"
     values:
       layout: post
-      render_with_liquid: false   # 🚀 Turn OFF Liquid for posts only
+      render_with_liquid: false  
       liquid:
         error_mode: warn
         strict_filters: false
 
-# ❌ DO NOT EXCLUDE POSTS — THIS WAS BREAKING YOUR SITE
 exclude:
   - README.md
   - Gemfile
