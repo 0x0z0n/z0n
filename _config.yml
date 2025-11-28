@@ -1,25 +1,9 @@
 markdown: kramdown
 
-kramdown:
-  input: GFM
-  hard_wrap: false
-  syntax_highlighter_opts:
-    disable: true
-
 defaults:
   - scope:
       path: "posts"
       type: "posts"
     values:
-      layout: post
-      render_with_liquid: false  
-      liquid:
-        error_mode: warn
-        strict_filters: false
-
-exclude:
-  - README.md
-  - Gemfile
-  - Gemfile.lock
-  - node_modules
-  - vendor
+      render_with_liquid: false
+      layout: "post"
