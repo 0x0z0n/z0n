@@ -6,4 +6,9 @@ defaults:
       type: "posts"
     values:
       render_with_liquid: false
-      layout: "post"
+
+kramdown:
+  parse_block_html: true
+
+exclude:
+  - "node_modules"
