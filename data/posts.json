@@ -169,7 +169,7 @@
       "step": 4,
       "user": "attacker",
       "technique": "Password Cracking (hashcat -m 5600)",
-      "result": "Cracked captured NTLMv2 hash: WEB_SVC:dksehdgh712!@#.",
+      "result": "Cracked captured NTLMv2 hash: WEB_SVC:dksXXXXXXXXXX.",
       "mitigation": "Enforce strong password policies, block NTLM outbound, enable SMB signing, and monitor for NTLMv2 exposure attempts."
     },
     {
