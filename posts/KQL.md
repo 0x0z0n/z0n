@@ -670,7 +670,6 @@ DeviceFileEvents
 
 # Technical
 
-{{{% file src="<https://61811173-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2F5J1pjHJekUrnpmyC7p9d%2Fuploads%2FVDvtf018voZZ838i2T4Q%2FImportant%20notes%20Infosys%20(2).xlsx?alt=media&token=01131f46-c963-49f5-9f2d-32f863bf555b>" %}}}
 
 **NIST Incident Response Lifecycle (4 Phases)**:
 
