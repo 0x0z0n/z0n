@@ -1,16 +1,13 @@
 markdown: kramdown
 
-# Disable Liquid only for files inside /posts/
+# Disable Liquid ONLY for posts folder
 defaults:
   - scope:
       path: "posts"
       type: "posts"
     values:
       render_with_liquid: false
-      liquid:
-        error_mode: warn
-        strict_filters: false
 
-# Prevent Jekyll from reading or rendering post files
-exclude:
-  - posts/**
+liquid:
+  error_mode: warn
+  strict_filters: false
