@@ -670,7 +670,7 @@ DeviceFileEvents
 
 # Technical
 
-
+{{
 
 **NIST Incident Response Lifecycle (4 Phases)**:
 
@@ -1569,3 +1569,6 @@ how to integrate windows device with defender ?
 4. Choose your deployment method
 5. Download onboarding pkg
 6. Run script manaually on device to install pkg as admin / Using Intune we can deploy automatically for large number of devices.
+
+
+}}
