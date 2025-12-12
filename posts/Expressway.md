@@ -6,16 +6,11 @@ Operating System: Linux
 Hints: True
 ```
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
-
-<!--
 
 #### 🏁 Summary of Attack Chain — **Expressway**
 
 | Step | User / Access  | Technique Used                                                                   | Result                                                                                                                  |
-| :--- | :------------- | :------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| : | :- | :- | :- |
 | 1    | (Local)        | Nmap TCP & UDP scanning (`nmap -sVC`, `nmap -sU --top-ports 100`)                | TCP showed only SSH; UDP exposed IKE/IPsec (UDP 500, 4500) and TFTP.                                                    |
 | 2    | (Remote / IKE) | IKE enumeration (`ike-scan -M --aggressive`)                                     | Captured Aggressive-Mode handshake, including `ID=ike@expressway.htb` and a verification hash / context.                |
 | 3    | (Local)        | Offline PSK cracking (`psk-crack` or `hashcat -m 530`) against the captured blob | PSK recovered (weak/human password from wordlist).                                                                      |
@@ -33,7 +28,7 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 
 ![Map](Pictures/htb_expressway_Mind_Map.png)
 
----
+
 
 # Recon
 
@@ -57,7 +52,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 > Only SSH on TCP — don’t stop here.
 
----
+
 
 ## UDP scan (nmap — top 100)
 
@@ -80,7 +75,7 @@ PORT     STATE         SERVICE
 
 **Notes:** UDP/500 and 4500 indicate IKE/IPsec. UDP/69 (TFTP) might host configs or backups — keep in mind for later.
 
----
+
 
 ## IKE enumeration (ike-scan)
 
@@ -115,7 +110,7 @@ ike-scan -M --aggressive 10.10.11.87
 * Aggressive Mode leaks enough (ID + Hash + params) to compute a verification hash that depends on the PSK.
 * With the captured handshake + correct ID, you can brute-force the PSK offline.
 
----
+
 
 # Offline PSK cracking
 
@@ -136,7 +131,7 @@ psk-crack -d /usr/share/wordlists/rockyou.txt psk.txt
 
 **Operational tip:** If the PSK cracks, try it against likely usernames found during enumeration (e.g., `ike`); password reuse is common.
 
----
+
 
 # Achieve user shell
 
@@ -145,7 +140,7 @@ psk-crack -d /usr/share/wordlists/rockyou.txt psk.txt
 
 ![User_flag](Pictures/htb_expressway_user_flag.png)
 
----
+
 
 # Privilege escalation — local (Expressway)
 
@@ -160,7 +155,7 @@ Sudo version 1.9.17
 
 **Vulnerability:** Sudo 1.9.17 is vulnerable to **CVE-2025-32463** (chroot-related privilege escalation). The vulnerable behavior allows abusing `sudo -R` chroot handling to load a malicious `libnss` style shared object that runs code as root.
 
----
+
 
 ## Exploit overview (PoC summary)
 
@@ -177,7 +172,7 @@ Sudo version 1.9.17
 4. Provide `pentest/etc/nsswitch.conf` that references `/kai_ht`.
 5. Run `sudo -R pentest pentest`. If successful, get root shell and `cat /root/root.txt`.
 
----
+
 
 ## PoC script (`exp.sh`)
 
@@ -232,7 +227,7 @@ cat /root/root.txt
 
 ![Root_Flag](Pictures/htb_expressway_Root_flag.png)
 
----
+
 
 # TL;DR & Takeaways
 
@@ -242,7 +237,7 @@ cat /root/root.txt
 * **Check local sudo versions** — old/vulnerable sudo builds (like 1.9.17 here) can be escalated with chroot/NSS abuse (CVE-2025-32463).
 * **Blue-team mitigation:** disable IKEv1 Aggressive Mode; use IKEv2 w/ certs; use long random PSKs; avoid PSK reuse; upgrade sudo and audit chroot handling; monitor `sudo -R`/chroot use and unexpected shared-library loads.
 
----
+
 
 # Suggested mitigations & detection (brief)
 
@@ -259,6 +254,3 @@ cat /root/root.txt
 * Alert on unexpected creation of `libnss_*` libraries in user-writable directories.
 * Monitor for high volumes of IKE Aggressive-mode attempts and Aggressive-mode handshakes.
 
----
-
--->

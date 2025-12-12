@@ -11,7 +11,7 @@ Hints: True
 #### 🏁 Summary of Attack Chain
 
 | Step | User / Access       | Technique Used                             | Result                                                                                                                                           |
-| :--- | :------------------ | :----------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| : | : | :-- | :-- |
 | 1    | (Local)             | Nmap service/version scan                  | Discovered services: SSH (22) and HTTP (Werkzeug on 8000) — identified *Image Gallery* web app.                                                  |
 | 2    | (Web)               | Stored XSS in bug report                   | Injected a payload in the bug report to exfiltrate the admin session cookie when the admin viewed the report.                                    |
 | 3    | (Web / Admin)       | Path traversal (LFI) on admin log endpoint | Used the stolen admin cookie to read `db.json` via the admin log endpoint and retrieve user password hashes.                                     |
@@ -24,12 +24,6 @@ Hints: True
 | 10   | (Outcome)           | —                                          | User flag captured; potential privilege escalation path identified for follow-up investigation and mitigation.                                   |
 
 ![Map](Pictures/htb_imagery_Mind_Map.png)
-
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
-
-<!--
 
 ### Recon – Nmap
 
@@ -187,13 +181,13 @@ Capture the user flag.
 
 ## Privilege Escalation — `charcol` (sudo)
 
----
+
 
 ## Summary
 
 `mark` can run `/usr/local/bin/charcol` as **root** without a password. `charcol` is a backup utility with an interactive shell and a scheduling feature (`--reset-password-to-default`, `auto add --schedule ...`). By using the shell and its scheduler we can add a recurring job (cron-style) to copy the root flag to a world-readable location.
 
----
+
 
 ## Enumeration
 
@@ -212,7 +206,7 @@ sudo -l
   * It supports an interactive shell: `charcol shell`
   * It supports adding automated scheduled tasks via an `auto add --schedule` command
 
----
+
 
 ## Exploitation
 
@@ -235,7 +229,7 @@ cat /tmp/root.txt
 ```
 ![File ](Pictures/htb_imagery_Root_flag.png)
 
----
+
 
 ## Notes
 
@@ -247,4 +241,4 @@ cat /tmp/root.txt
   * Audit binaries allowed in `sudoers` for interactive functionality and dangerous features (shells, scheduling, arbitrary command execution).
   * Use least-privilege: if a helper utility is needed, wrap it in a safe, purpose-limited script or use `sudo` restrictions that limit allowed subcommands and arguments.
 
----
+

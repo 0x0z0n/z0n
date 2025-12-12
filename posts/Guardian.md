@@ -6,16 +6,11 @@ Operating System: Linux
 Hints: True
 ```
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
-
-<!--
 
 ### 🏁 Summary of Attack Chain
 
 | Step | User / Access | Technique Used | Details |
-| :--- | :--- | :--- | :--- |
+| : | : | : | : |
 | 1 | `(Local)` | Nmap Scan, Subdomain Enumeration | The initial Nmap scan revealed ports 22 (SSH) and 80 (HTTP). Browsing the main website at `guardian.htb` led to the discovery of the `portal.guardian.htb` subdomain within the page's source code. The portal's "Help" page provided the default password `GUXXXX` for students. |
 | 2 | `GU0142023` | Credential Reuse, Portal Enumeration | A student ID from the main site (`GU0142023`) combined with the default password `GUXXXX` granted access to the student portal. Once inside, enumerating a chat feature by brute-forcing the `chat_users` parameter revealed a chat log containing Gitea credentials for the user `jamil.enockson`. |
 | 3 | `jamil.enockson` | Information Gathering (Gitea) | Logging into the Gitea instance with `jamil.enockson`'s credentials exposed the source code for the student portal. This included the `config/config.php` file, which contained the database credentials (`root:Gu4rd14nXXXXXXXXXXXXXXXX`) and the password salt (`8Sb)tXXXXXXX`). The code also revealed an admin user account. |
@@ -49,7 +44,7 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 
 ![Help](Pictures/htb_guardian_help_pass.png)
 
------
+--
 
 ### Gaining Initial Access (Jamil)
 
@@ -116,7 +111,7 @@ In accordance with HackTheBox's content policy, this writeup will be made public
 
 ![Gitea_login](Pictures/htb_guardian_gitea_login.png)
 
------
+--
 
 ### Privilege Escalation (Web)
 
@@ -568,7 +563,7 @@ After visiting this URL, a reverse shell can be triggered by sending a `POST` re
 
 As the user `jamil`, you can escalate privileges to `mark` by exploiting a misconfiguration in the `sudo` permissions and file system.
 
------
+--
 
 ### Privilege Escalation from Jamil to Mark
 
@@ -618,7 +613,7 @@ connect to [10.10.XX.XX] from (UNKNOWN) [10.10.XX.XX] 47832
 
 ![Binary](Pictures/htb_guardian_file_recieved.png)
 
------
+--
 
 ### Privilege Escalation to Root
 
@@ -685,8 +680,6 @@ After gaining access as `mark`, the final step is to escalate to `root`. Running
 
    You now have a root shell! You can read the `root.txt` file.
 
----
+
 
 **Pwned! Guradian**
-
--->
