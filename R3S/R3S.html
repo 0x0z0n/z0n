@@ -17,10 +17,19 @@
     h1 {
       color: #00ff88;
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 20px;
       font-size: 2.2rem;
       letter-spacing: 2px;
       text-shadow: 0 0 12px rgba(0,255,136,0.8);
+    }
+
+    h2 {
+      color: #ffd000;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+      margin-top: 50px;
+      margin-bottom: 30px;
+      font-size: 1.5rem;
     }
 
     .grid {
@@ -41,6 +50,9 @@
       transition: transform 0.35s ease, box-shadow 0.35s ease;
       cursor: pointer;
       perspective: 1000px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .card:hover {
@@ -55,6 +67,7 @@
       font-weight: bold;
       font-size: 1.1rem;
       display: block;
+      margin-bottom: 8px;
       transition: color 0.3s ease, text-shadow 0.3s ease;
     }
 
@@ -64,15 +77,26 @@
     }
 
     .card p {
-      margin-top: 10px;
+      margin-top: 0;
       font-size: 0.9rem;
       color: #aaa;
       line-height: 1.4em;
     }
 
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      color: #00ff88;
+      background: rgba(0, 255, 136, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+      align-self: flex-start;
+    }
+
     .footer {
       text-align: center;
-      margin-top: 50px;
+      margin-top: 80px;
       font-size: 0.9rem;
       color: #666;
       letter-spacing: 1px;
@@ -80,41 +104,125 @@
   </style>
 </head>
 <body>
-  <h1>📂 Resorces Index</h1>
+
+  <h1>📂 Resources Index</h1>
+
+  <h2>Writeups & Notes</h2>
   <div class="grid" id="links-container">
-    <!-- Sample Post -->
     <div class="card">
       <a href="CPTS.html">HackTheBox</a>
-      <p>HTB Resources
-</p>
+      <p>HTB Resources and Notes</p>
+      <span class="tag">CTF</span>
     </div>
-  </div>
 
-  <div class="card">
+    <div class="card">
       <a href="CLD-100.html">OffSec: CLD</a>
-      <p>Cloud Security.</p>
+      <p>Cloud Security Essentials</p>
+      <span class="tag">Cloud</span>
     </div>
-  </div>
 
-  <div class="card">
+    <div class="card">
       <a href="EXP-100.html">OffSec: EXP</a>
       <p>Exploit Development Essentials</p>
+      <span class="tag">Exploit Dev</span>
     </div>
-  </div>
-  
 
-  <div class="card">
+    <div class="card">
       <a href="PEN-100.html">OffSec: PEN</a>
       <p>Penetration Testing Essentials</p>
+      <span class="tag">Pentest</span>
+    </div>
+
+    <div class="card">
+      <a href="SOC-100.html">OffSec: SOC</a>
+      <p>Security Operations Essentials</p>
+      <span class="tag">Blue Team</span>
     </div>
   </div>
 
-  <div class="card">
-      <a href="SOC-100.html">OffSec: SOC</a>
-      <p>Security OPerations Essentials</p>
-    </div>
-   </div>
 
+  <h2>External Blogs & Research</h2>
+  <div class="grid">
+    
+    <div class="card">
+      <a href="https://www.microsoft.com/en-us/security/blog/" target="_blank">Microsoft Security</a>
+      <p>Official news, updates, and threat intelligence from Microsoft.</p>
+      <span class="tag">Vendor</span>
+    </div>
+
+    <div class="card">
+      <a href="https://bishopfox.com/resources/" target="_blank">Bishop Fox</a>
+      <p>Offensive security resources, tools, and research.</p>
+      <span class="tag">Red Team</span>
+    </div>
+
+    <div class="card">
+      <a href="https://threatlabz.zscaler.com/blogs" target="_blank">Zscaler ThreatLabz</a>
+      <p>Cloud security insights and malware analysis.</p>
+      <span class="tag">Cloud / Malware</span>
+    </div>
+
+    <div class="card">
+      <a href="https://xbz0n.sh/blog/" target="_blank">xbz0n</a>
+      <p>Personal security blog and writeups.</p>
+      <span class="tag">Blog</span>
+    </div>
+
+    <div class="card">
+      <a href="https://www.crowdstrike.com/en-us/blog/" target="_blank">CrowdStrike Blog</a>
+      <p>Endpoint protection and threat hunting research.</p>
+      <span class="tag">DFIR</span>
+    </div>
+
+    <div class="card">
+      <a href="https://www.wiz.io/blog" target="_blank">Wiz Blog</a>
+      <p>Cloud native security research and vulnerability news.</p>
+      <span class="tag">Cloud</span>
+    </div>
+
+    <div class="card">
+      <a href="https://ipurple.team/" target="_blank">iPurple Team</a>
+      <p>Bridging the gap between Red and Blue teams.</p>
+      <span class="tag">Purple Team</span>
+    </div>
+
+    <div class="card">
+      <a href="https://github.com/Mandiant" target="_blank">Mandiant (GitHub)</a>
+      <p>Open source tools and threat intelligence repositories.</p>
+      <span class="tag">Tools</span>
+    </div>
+
+    <div class="card">
+      <a href="https://thehackernews.com/" target="_blank">The Hacker News</a>
+      <p>Breaking news on cyber attacks and breaches.</p>
+      <span class="tag">News</span>
+    </div>
+
+    <div class="card">
+      <a href="https://unit42.paloaltonetworks.com/" target="_blank">Unit 42</a>
+      <p>Palo Alto Networks threat intelligence and malware analysis.</p>
+      <span class="tag">Threat Intel</span>
+    </div>
+
+    <div class="card">
+      <a href="https://posts.specterops.io/" target="_blank">SpecterOps</a>
+      <p>Deep dives into adversary tradecraft and C2 frameworks.</p>
+      <span class="tag">Red Team</span>
+    </div>
+
+    <div class="card">
+      <a href="https://redcanary.com/blog/" target="_blank">Red Canary</a>
+      <p>Practical threat detection and response guides.</p>
+      <span class="tag">Blue Team</span>
+    </div>
+
+    <div class="card">
+      <a href="https://www.blackhillsinfosec.com/blog/" target="_blank">Black Hills InfoSec</a>
+      <p>Penetration testing and SOC core skills.</p>
+      <span class="tag">Red/Blue</span>
+    </div>
+
+  </div>
 
   <div class="footer">
     ⚡ Powered by 0x0z0n
@@ -129,17 +237,26 @@
         const doc = parser.parseFromString(text, "text/html");
         const anchors = Array.from(doc.querySelectorAll("a"))
           .map(a => a.getAttribute("href"))
+          // Filter to only .html files, excluding index/template files
           .filter(href => href && href.endsWith(".html") && href !== "index.html" && href !== "htb_HackNet.html");
 
+        // Avoid duplicates if they are already hardcoded
+        const existingLinks = Array.from(document.querySelectorAll("#links-container a"))
+                                   .map(a => a.getAttribute("href"));
+
         const container = document.getElementById("links-container");
+        
         anchors.forEach(href => {
-          const div = document.createElement("div");
-          div.className = "card";
-          div.innerHTML = `
-            <a href="${href}">${href.replace('.html','')}</a>
-            <p>A cyber writeup post for ${href.replace('.html','')}.</p>
-          `;
-          container.appendChild(div);
+          if (!existingLinks.includes(href)) {
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+              <a href="${href}">${href.replace('.html','')}</a>
+              <p>A cyber writeup post for ${href.replace('.html','')}.</p>
+              <span class="tag">Writeup</span>
+            `;
+            container.appendChild(div);
+          }
         });
       } catch (err) {
         console.error("Error loading links:", err);
