@@ -58,7 +58,7 @@ Impacket v0.10.0 - Copyright 2022 SecureAuth Corporation
 [*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
 Administrator:500:aad3b435b51404eeaad3b435b51404ee:<REDACTED>:::
 Guest:501:aad3b435b51404eeaad3b435b51404ee:<REDACTED>:::
-...
+..
 ```
 # SPN-less RBCD
 We can perform RBCD even if the MachineAccountQuota is set to 0
