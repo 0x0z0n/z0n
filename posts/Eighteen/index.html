@@ -11,7 +11,7 @@
   <meta property="og:site_name" content="0x0z0n" />
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&family=Consolas&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
@@ -22,6 +22,7 @@
     --text: #f5f5f5;
     --card: #181818;
     --border: #333;
+    --code-bg: #161616;
   }
 
   * { box-sizing: border-box; }
@@ -34,7 +35,25 @@
     color: var(--text);
     display: flex;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* Prevent body scroll, handle in main */
+  }
+
+  /* === Progress Bar === */
+  #progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    z-index: 9999;
+  }
+  #progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.1s;
+    box-shadow: 0 0 10px var(--accent);
   }
 
   /* === Sidebar === */
@@ -44,39 +63,61 @@
     border-right: 1px solid var(--border);
     padding: 1.5rem;
     height: 100vh;
-    position: sticky;
-    top: 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+
+  .sidebar-header {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .sidebar h2 {
     color: #fff;
     font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px; /* Space for scrollbar */
   }
 
   .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
   .sidebar li { margin: 0.4rem 0; }
+  
   .sidebar a {
-    color: #ccc;
+    color: #888;
     text-decoration: none;
     display: block;
-    padding: 0.25rem 0;
-    font-size: 0.95rem;
+    padding: 0.35rem 0;
+    font-size: 0.9rem;
     border-left: 2px solid transparent;
     transition: all 0.2s ease;
+    padding-left: 0.5rem;
   }
 
   .sidebar a:hover {
     color: var(--link);
-    border-left: 2px solid var(--accent);
-    padding-left: 0.4rem;
+    border-left-color: var(--accent);
+    background: rgba(255, 255, 255, 0.03);
   }
 
-  .sidebar a.active { color: var(--accent); font-weight: bold; }
+  .sidebar a.active-toc { 
+    color: var(--accent); 
+    font-weight: bold; 
+    border-left-color: var(--accent);
+    padding-left: 0.8rem;
+  }
 
   /* === Main Content === */
   main {
@@ -84,49 +125,100 @@
     padding: 2.5rem 4rem;
     overflow-y: auto;
     height: 100vh;
+    position: relative;
+    scroll-behavior: smooth;
   }
 
   #content {
-    max-width: 1300px;
+    max-width: 1000px; /* Improved reading width */
     margin: 0 auto;
-    line-height: 1.7;
-    font-size: 1rem;
+    line-height: 1.8;
+    font-size: 1.05rem;
+    padding-bottom: 4rem;
   }
 
-  #content p { margin: 1rem 0; }
+  #content p { margin: 1.2rem 0; color: #dcdcdc; }
 
   /* === Headings === */
   h1, h2, h3 {
     color: var(--accent);
-    margin-top: 2.5rem;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
     position: relative;
+    line-height: 1.3;
+  }
+  h1 { font-size: 2.2rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+  h2 { font-size: 1.6rem; }
+  h3 { font-size: 1.3rem; color: #fff; }
+
+  h1:hover, h2:hover, h3:hover { color: #00ff99; cursor: pointer; }
+  h1:hover::after, h2:hover::after {
+    content: "#";
+    margin-left: 10px;
+    color: #555;
+    font-size: 0.8em;
   }
 
-  h1:hover, h2:hover, h3:hover {
-    color: #00ff99;
-  }
-
-  /* === Code blocks === */
+  /* === Code blocks & Copy Button === */
   pre {
-    background: var(--card);
+    background: var(--code-bg);
+    border: 1px solid #333;
     border-left: 4px solid var(--accent);
-    padding: 1rem;
+    padding: 1.2rem;
     overflow-x: auto;
-    border-radius: 6px;
+    border-radius: 8px;
     font-family: "Consolas", monospace;
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.5;
     position: relative;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   }
 
+  code {
+    font-family: "Consolas", monospace;
+    background: rgba(255,255,255,0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #ff79c6;
+  }
+  
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: #f8f8f2;
+    border-radius: 0;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #aaa;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0; 
+  }
+
+  pre:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { background: var(--accent); color: #000; }
+  .copy-btn.copied { background: var(--accent); color: #fff; content: "Copied!"; }
+
+  /* === Quotes & Images === */
   blockquote {
     border-left: 4px solid var(--accent);
-    background: #161616;
-    padding: 1rem 1.3rem;
-    border-radius: 6px;
-    color: #dcdcdc;
+    background: #111;
+    padding: 1rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+    color: #b0b0b0;
     font-style: italic;
-    margin: 1.2rem 0;
+    margin: 1.5rem 0;
   }
 
   img {
@@ -134,138 +226,335 @@
     max-width: 100%;
     height: auto;
     border-radius: 8px;
-    margin: 1.5rem auto;
-    object-fit: contain;
-    box-shadow: 0 0 10px rgba(0,0,0,0.6);
+    margin: 2rem auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     opacity: 0;
-    transform: scale(0.97);
+    transform: scale(0.98);
     transition: opacity 0.6s ease, transform 0.6s ease;
+    cursor: zoom-in;
+    border: 1px solid #222;
   }
 
-  img.loaded {
-    opacity: 1;
+  img.loaded { opacity: 1; transform: scale(1); }
+  
+  /* === Lightbox === */
+  .lightbox {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .lightbox.active { opacity: 1; pointer-events: all; }
+  .lightbox img {
+    max-height: 90vh;
+    max-width: 90vw;
+    cursor: zoom-out;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
     transform: scale(1);
+    margin: 0;
   }
 
+  /* === Links === */
   #content a {
     color: #00d0ff;
     font-weight: 600;
     text-decoration: none;
     border-bottom: 1px dashed rgba(0,208,255,0.5);
     transition: color 0.3s ease, border-color 0.3s ease;
-    word-break: break-word;
   }
-
-  #content a:hover {
-    color: #ffeb3b;
-    border-color: #ffeb3b;
-  }
+  #content a:hover { color: #ffeb3b; border-color: #ffeb3b; }
 
   #toc li ul {
     padding-left: 1rem;
-    border-left: 1px dashed #333;
+    border-left: 1px solid #333;
     margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
   }
 
-  .sidebar::-webkit-scrollbar, main::-webkit-scrollbar {
-    width: 8px;
+  /* === UI Controls === */
+  .scroll-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--accent);
+    color: #000;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    border: none;
+    z-index: 90;
+  }
+  .scroll-top.visible { opacity: 1; transform: translateY(0); }
+  .scroll-top:hover { background: #fff; transform: scale(1.1); }
+
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px; /* Swapped with scroll top when mobile */
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    z-index: 101;
+    box-shadow: 0 4px 10px black;
   }
 
-  .sidebar::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-  }
+  /* === Custom Scrollbar === */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #0c0c0c; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-@media (max-width: 992px) {
-  body {
-    display: block;
-    overflow-x: hidden;
-  }
+  /* === Media Queries === */
+  @media (max-width: 992px) {
+    body { flex-direction: column; overflow: auto; }
+    
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      width: 280px;
+      transform: translateX(-100%);
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    }
+    
+    .sidebar.open { transform: translateX(0); }
 
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    background: #111;
-    padding: 1rem;
-    position: relative;
-    top: 0;
-    z-index: 2;
-  }
+    .mobile-toggle {
+      display: block;
+      bottom: 20px;
+      right: 20px;
+      width: 50px; 
+      height: 50px;
+      font-size: 1.2rem;
+    }
+    
+    .scroll-top { bottom: 80px; right: 22px; width: 40px; height: 40px; }
 
-  main {
-    width: 100%;
-    padding: 1.5rem;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-  }
+    main {
+      width: 100%;
+      padding: 1.5rem;
+      height: auto;
+      overflow: visible;
+    }
+    
+    #content { padding-bottom: 6rem; }
 
-  /* Optional: make code blocks scrollable */
-  pre {
-    overflow-x: auto;
+    /* Overlay when sidebar is open */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .overlay.active { opacity: 1; pointer-events: all; }
   }
-
-  /* Images stay in place and scale properly */
-  img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1rem auto;
-  }
-}
-
   </style>
 </head>
 
 <body>
-  <nav class="sidebar">
-    <h2>On this page</h2>
-    <ul id="toc"></ul>
+  
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>CONTENTS</h2>
+      <span style="cursor:pointer; font-size:1.2rem;" class="close-sidebar d-lg-none" onclick="toggleSidebar()">&times;</span>
+    </div>
+    <div class="sidebar-nav">
+        <ul id="toc"></ul>
+    </div>
   </nav>
 
-  <main>
-    <a href="../../index.html" style="display:inline-block;margin-bottom:2rem;color:var(--link);font-weight:bold;">← Back to Home</a>
-    <div id="content">Loading writeup...</div>
+  <button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-list"></i>
+  </button>
+
+  <button class="scroll-top" id="scrollTopBtn" onclick="scrollToTop()">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="Full view" id="lightbox-img">
+  </div>
+
+  <main id="main-scroller">
+    <a href="../../index.html" style="display:inline-block;margin-bottom:2rem;color:var(--link);font-weight:bold;text-decoration:none;">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+    <div id="content">
+        <div style="text-align:center; margin-top: 50px; color: #555;">
+            <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Loading writeup...
+        </div>
+    </div>
   </main>
 
   <script>
   const mdFile = "Eighteen.md";
+  const mainScroller = document.getElementById('main-scroller');
   const safeId = t => t.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
 
+  // === Fetch & Render ===
   fetch(mdFile)
-    .then(res => res.text())
+    .then(res => {
+        if(!res.ok) throw new Error("Failed to load markdown");
+        return res.text();
+    })
     .then(md => {
       document.getElementById("content").innerHTML = marked.parse(md);
+      initPageFeatures();
+    })
+    .catch(err => {
+      document.getElementById("content").innerHTML = `
+        <div style="color:#ff5555; text-align:center; padding:2rem; border:1px solid #ff5555; border-radius:8px;">
+            <h3><i class="fas fa-exclamation-triangle"></i> Error Loading Writeup</h3>
+            <p>Could not load <strong>${mdFile}</strong>. Make sure the file exists.</p>
+        </div>`;
+      console.error(err);
+    });
 
-      // Assign IDs for headings
-      const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
-      headings.forEach(h => h.id = safeId(h.textContent));
+  function initPageFeatures() {
+    // 1. Assign IDs & Build TOC
+    const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
+    const toc = document.getElementById("toc");
+    const tocStack = [{ level: 0, ul: toc }];
 
-      // === Generate TOC ===
-      const toc = document.getElementById("toc");
-      const tocStack = [{ level: 0, ul: toc }];
-      headings.forEach(h => {
+    headings.forEach(h => {
+        h.id = safeId(h.textContent);
         const level = parseInt(h.tagName.replace("H", ""));
+        
         const li = document.createElement("li");
-        li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
+        li.innerHTML = `<a href="#${h.id}" class="toc-link" data-target="${h.id}">${h.textContent}</a>`;
+        
+        // TOC Hierarchical Logic
         while (tocStack.length > 1 && tocStack[tocStack.length - 1].level >= level) tocStack.pop();
         const parent = tocStack[tocStack.length - 1];
         parent.ul.appendChild(li);
+        
+        // Check if next header is deeper
         const next = headings[headings.indexOf(h) + 1];
         if (next && parseInt(next.tagName.replace("H", "")) > level) {
-          const ul = document.createElement("ul");
-          li.appendChild(ul);
-          tocStack.push({ level, ul });
+            const ul = document.createElement("ul");
+            li.appendChild(ul);
+            tocStack.push({ level, ul });
         }
-      });
+    });
 
-      // === Image Fade-in ===
-      document.querySelectorAll("#content img").forEach(img => {
+    // 2. Image Features (Fade in + Lightbox)
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightbox-img');
+
+    document.querySelectorAll("#content img").forEach(img => {
+        // Fade in
         img.addEventListener("load", () => img.classList.add("loaded"));
         if (img.complete) img.classList.add("loaded");
-      });
+
+        // Lightbox Click
+        img.addEventListener('click', () => {
+            lbImg.src = img.src;
+            lightbox.classList.add('active');
+        });
     });
+
+    // Close Lightbox
+    lightbox.addEventListener('click', () => lightbox.classList.remove('active'));
+
+    // 3. Code Copy Buttons
+    document.querySelectorAll('pre').forEach(pre => {
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+        
+        btn.addEventListener('click', () => {
+            const code = pre.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+        pre.appendChild(btn);
+    });
+
+    // 4. Scroll Spy (TOC Highlighting)
+    const observerOptions = { root: mainScroller, threshold: 0.1, rootMargin: "-20px 0px -80% 0px" };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active-toc'));
+                const id = entry.target.getAttribute('id');
+                const link = document.querySelector(`.sidebar a[href="#${id}"]`);
+                if(link) {
+                    link.classList.add('active-toc');
+                    // Optional: Scroll sidebar to active link
+                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        });
+    }, observerOptions);
+
+    headings.forEach(h => observer.observe(h));
+  }
+
+  // === Global Scroll Events (Progress & Scroll Top) ===
+  // Note: On desktop we scroll 'main', on mobile usually 'window' (due to styles). 
+  // We attach to mainScroller for desktop logic.
+  
+  mainScroller.addEventListener('scroll', handleScroll);
+  window.addEventListener('scroll', handleScroll); // For mobile fallback
+
+  function handleScroll(e) {
+    const target = e.target.scrollingElement || e.target;
+    if(!target.scrollTop) return; // simple guard
+
+    // Progress Bar
+    const scrollTotal = target.scrollHeight - target.clientHeight;
+    const progress = (target.scrollTop / scrollTotal) * 100;
+    document.getElementById('progress-bar').style.width = progress + "%";
+
+    // Scroll Top Button
+    const btn = document.getElementById('scrollTopBtn');
+    if (target.scrollTop > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  }
+
+  function scrollToTop() {
+    mainScroller.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // === Mobile Sidebar Toggle ===
+  function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('overlay');
+    sb.classList.toggle('open');
+    ov.classList.toggle('active');
+  }
+  
+  // Close sidebar when clicking overlay
+  document.getElementById('overlay').addEventListener('click', toggleSidebar);
+
   </script>
 </body>
 </html>
