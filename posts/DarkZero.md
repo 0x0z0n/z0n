@@ -270,7 +270,9 @@ type C:\Users\Administrator\Desktop\root.txt
 ![DarkZero](Pictures/htb_darkzero_Root_Flag.jpg)
 
 
-**PHASE 1: STRATEGIC OVERVIEW**
+# Short Notes
+
+## **PHASE 1: STRATEGIC OVERVIEW**
 
 | # | Item | Details |
 |---|------|---------|
@@ -278,7 +280,7 @@ type C:\Users\Administrator\Desktop\root.txt
 | **1.2** | **Operational Impact** | Grand Prize: `NT AUTHORITY\SYSTEM` on DC02 → full domain admin, access to all flags (`user.txt`, `root.txt`). |
 | **1.3** | **Scenario Narrative** | • Recon with full‑port Nmap → identified critical AD/SQL ports. <br>• SMB enumeration revealed only default shares (no useful data). <br>• Split‑horizon DNS confirmed internal IPs (`172.16.20.x`). <br>• Exploited SQL Server’s linked server to run `xp_cmdshell` on DC02, launching a web‑delivery meterpreter. <br>• Pivoted into the internal network (IP 172.16.20.2). <br>• Leveraged local exploit CVE‑2024‑30088 to reach SYSTEM. <br>• Captured Kerberos ticket via Rubeus while SQL accessed SMB share, converted to ccache, and used with `impacket‑secretsdump` → obtained Administrator hash. <br>• Final win: `evil-winrm` into DC01 → read root flag. |
 
-**PHASE 2: SYSTEM ARCHITECTURE & THEORY**
+## **PHASE 2: SYSTEM ARCHITECTURE & THEORY**
 
 | # | Item | Details |
 |---|------|---------|
@@ -286,7 +288,7 @@ type C:\Users\Administrator\Desktop\root.txt
 | **2.2** | **Key Components** |  `DC01` – Domain Controller / MSSQL host (10.10.11.89) <br>Service accounts: `darkzero\john.w`, `dc01_sql_svc` on DC02 <br>Tools: Rubeus, impacket‑secretsdump, msfconsole, Metasploit. |
 | **2.3** | **Simplified View (Analogy)** | Think of the environment as a **castle with a hidden tunnel**: the SQL server is a gate that can be opened from inside to reach the inner keep (`DC02`). Once inside, you can climb higher by using a secret key (CVE‑2024‑30088) and later pry open any door with the right password (Kerberos ticket). |
 
-**PHASE 3: THE ATTACK VECTOR (MECHANICS)**
+## **PHASE 3: THE ATTACK VECTOR (MECHANICS)**
 
  **The Core Mechanism**
 
@@ -304,7 +306,7 @@ type C:\Users\Administrator\Desktop\root.txt
 | **Connectivity** | TCP ports: 53, 88, 135, 139, 389, 445, 636, 1433, 3268/9 (all reachable from attack host). |
 | **Target State** | `xp_cmdshell` disabled on DC01 but enabled via linked server context; SQL Server service account has rights to remote SMB share. |
 
-**PHASE 4: EXECUTION & TARGETING**
+## **PHASE 4: EXECUTION & TARGETING**
 
 | Step | Command / Action | Purpose |
 |------|------------------|---------|
@@ -324,7 +326,7 @@ type C:\Users\Administrator\Desktop\root.txt
 | 5.14 | `evil-winrm -i 10.10.11.89 -u administrator -H <hash>` | Open WinRM as Admin. |
 | 5.15 | Read flags: `type C:\Users\Administrator\Desktop\user.txt`, `root.txt`. | Final objective achieved. |
 
- **PHASE 5: THE TOOLKIT & IMPLEMENTATION**
+ ## **PHASE 5: THE TOOLKIT & IMPLEMENTATION**
 
 | Tool | Purpose | Key Options |
 |------|---------|-------------|
@@ -346,7 +348,7 @@ type C:\Users\Administrator\Desktop\root.txt
 - Clean up meterpreter sessions, delete any uploaded binaries.  
 - Dump remaining domain credentials with `secretsdump` if needed for further pivoting.
 
- **PHASE 6: DEFENSIVE POSTURE (BLUE TEAM)**
+ ## **PHASE 6: DEFENSIVE POSTURE (BLUE TEAM)**
 
 | Detection Benchmark | Event ID / Log |
 |----------------------|---------------|
