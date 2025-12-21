@@ -26,7 +26,6 @@
     --text: #e0e0e0;
     --sidebar-bg: #111;
     --border: #333;
-    --tree-line: #444;
     --term-header: #2d2d2d;
   }
 
@@ -78,28 +77,34 @@
   .search-box input:focus { border-color: var(--accent); }
   .search-box i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #555; font-size: 0.8rem; }
 
-  /* Tree Listing CSS */
+  /* === Minimalist Sidebar CSS (No Lines) === */
   #toc, #toc ul { list-style: none; margin: 0; padding: 0; }
+
+  /* Root Items (H1/H2) */
   #toc > li { margin-bottom: 4px; }
   #toc > li > a {
-    font-weight: 600; color: #ddd; display: flex; align-items: center; gap: 8px;
-    padding: 6px 8px; border-radius: 4px; transition: all 0.2s; font-size: 0.95rem;
-    border-left: 3px solid transparent;
+    font-weight: 600; color: #888; display: block;
+    padding: 8px 12px; border-radius: 6px; transition: all 0.2s;
+    font-size: 0.95rem; text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
   }
-  #toc > li > a:hover { background: #1f1f1f; color: #fff; }
-  #toc > li > a.active { color: var(--accent); background: rgba(76, 175, 80, 0.1); border-left-color: var(--accent); }
+  #toc > li > a:hover { color: #fff; background: #1a1a1a; }
+  #toc > li > a.active { color: var(--accent); background: rgba(76, 175, 80, 0.1); font-weight: 700; }
 
-  #toc > li > ul { margin-left: 11px; padding-left: 11px; border-left: 1px solid var(--tree-line); margin-top: 2px; margin-bottom: 8px; }
-  #toc li ul li { position: relative; }
-  #toc li ul li::before { content: ''; position: absolute; left: -11px; top: 14px; width: 8px; height: 1px; background: var(--tree-line); }
-  
+  /* Sub Items (H3) - Indented via padding */
+  #toc > li > ul { margin-left: 0; padding-left: 0; }
+  #toc li ul li { margin-top: 2px; }
+
   #toc li ul a {
-    font-size: 0.85rem; color: #888; padding: 4px 8px; display: flex; align-items: center; gap: 8px; border-radius: 4px; transition: 0.2s;
+    font-size: 0.9rem; color: #666;
+    padding: 6px 12px 6px 32px; /* Indent */
+    display: block; border-radius: 6px; transition: 0.2s; text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
   }
-  #toc li ul a:hover { color: #fff; background: #1a1a1a; }
-  #toc li ul a.active { color: var(--accent); font-weight: 600; background: rgba(76, 175, 80, 0.05); }
-  #toc li ul a.active::before { background: var(--accent); }
+  #toc li ul a:hover { color: #ddd; background: #1a1a1a; }
+  #toc li ul a.active { color: var(--accent); background: transparent; font-weight: 600; }
 
+  /* Sidebar Scrollbar */
   #toc-container { flex: 1; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
   #toc-container::-webkit-scrollbar { width: 4px; }
   #toc-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -289,7 +294,7 @@
       contentDiv.style.display = "block";
       setTimeout(() => contentDiv.style.opacity = 1, 50);
 
-      // 3. Tree TOC & Anchors
+      // 3. TOC & Anchors
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
@@ -334,7 +339,6 @@
       const imgs = Array.from(document.querySelectorAll("#content img"));
       let curIndex = 0;
 
-      // Open Lightbox
       imgs.forEach((img, index) => {
         img.style.cursor = "zoom-in";
         img.onclick = () => openLightbox(index);
@@ -344,7 +348,7 @@
         curIndex = index;
         updateLightbox();
         lb.classList.add("active");
-        document.body.style.overflow = "hidden"; // Block background scroll
+        document.body.style.overflow = "hidden"; 
       }
 
       function closeLightbox() {
@@ -364,12 +368,10 @@
       function nextImg(e) { e.stopPropagation(); curIndex = (curIndex + 1) % imgs.length; updateLightbox(); }
       function prevImg(e) { e.stopPropagation(); curIndex = (curIndex - 1 + imgs.length) % imgs.length; updateLightbox(); }
 
-      // Controls
       document.querySelector(".lb-next").onclick = nextImg;
       document.querySelector(".lb-prev").onclick = prevImg;
       lb.onclick = (e) => { if(e.target === lb || e.target === lbImg) closeLightbox(); };
 
-      // Keyboard & Mobile Swipe
       document.addEventListener("keydown", (e) => {
         if(!lb.classList.contains("active")) return;
         if(e.key === "ArrowRight") nextImg(e);
@@ -377,13 +379,12 @@
         if(e.key === "Escape") closeLightbox();
       });
 
-      // Touch Swipe Logic
       let touchStartX = 0;
       lb.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
       lb.addEventListener('touchend', e => {
         let touchEndX = e.changedTouches[0].screenX;
-        if (touchEndX < touchStartX - 50) nextImg(e); // Swipe Left
-        if (touchEndX > touchStartX + 50) prevImg(e); // Swipe Right
+        if (touchEndX < touchStartX - 50) nextImg(e); 
+        if (touchEndX > touchStartX + 50) prevImg(e); 
       });
 
       // 6. Scroll Logic
@@ -402,7 +403,6 @@
           l.classList.remove("active");
           if(l.dataset.target === current) {
             l.classList.add("active");
-            // Auto scroll sidebar
             const container = document.getElementById("toc-container");
             const linkTop = l.offsetTop;
             if(linkTop < container.scrollTop || linkTop > container.scrollTop + container.clientHeight) {
