@@ -22,6 +22,7 @@ Hints: True
 | 10 | `auctioneer` | **SUID Binary Creation (YAML)** | Submitted second YAML payload to copy `/bin/bash` to `/opt/gavel/rootbash` and set the SUID bit (`chmod u+s`). |
 | 11 | `root` | **Privilege Escalation** | Executed `/opt/gavel/rootbash -p` to gain root access and retrieve the `/root/root.txt` flag. |
 
+
 ![Gavel](Gavel/HTB_2025-12-21_18-44MindMap.png)
 
 
