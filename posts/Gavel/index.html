@@ -9,6 +9,10 @@
   <meta property="og:title" content="HackTheBox Gavel | Writeup" />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="0x0z0n" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet" />
@@ -34,7 +38,7 @@
     color: var(--text);
     display: flex;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* Main scroll handled by children */
   }
 
   /* === Sidebar === */
@@ -44,9 +48,10 @@
     border-right: 1px solid var(--border);
     padding: 1.5rem;
     height: 100vh;
+    flex-shrink: 0;
+    overflow-y: auto;
     position: sticky;
     top: 0;
-    overflow-y: auto;
   }
 
   .sidebar h2 {
@@ -60,6 +65,7 @@
 
   .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
   .sidebar li { margin: 0.4rem 0; }
+  
   .sidebar a {
     color: #ccc;
     text-decoration: none;
@@ -68,15 +74,22 @@
     font-size: 0.95rem;
     border-left: 2px solid transparent;
     transition: all 0.2s ease;
+    padding-left: 8px; /* Added spacing for border */
   }
 
   .sidebar a:hover {
     color: var(--link);
     border-left: 2px solid var(--accent);
-    padding-left: 0.4rem;
+    padding-left: 12px;
   }
 
-  .sidebar a.active { color: var(--accent); font-weight: bold; }
+  /* Active state for Scroll Spy */
+  .sidebar a.active { 
+    color: var(--accent); 
+    font-weight: bold;
+    border-left: 2px solid var(--accent);
+    padding-left: 12px;
+  }
 
   /* === Main Content === */
   main {
@@ -84,6 +97,7 @@
     padding: 2.5rem 4rem;
     overflow-y: auto;
     height: 100vh;
+    position: relative;
   }
 
   #content {
@@ -91,6 +105,7 @@
     margin: 0 auto;
     line-height: 1.7;
     font-size: 1rem;
+    padding-bottom: 3rem;
   }
 
   #content p { margin: 1rem 0; }
@@ -100,13 +115,12 @@
     color: var(--accent);
     margin-top: 2.5rem;
     position: relative;
+    scroll-margin-top: 2rem; /* Fixes jump position */
   }
 
-  h1:hover, h2:hover, h3:hover {
-    color: #00ff99;
-  }
+  h1:hover, h2:hover, h3:hover { color: #00ff99; cursor: pointer; }
 
-  /* === Code blocks === */
+  /* === Code blocks & Copy Button === */
   pre {
     background: var(--card);
     border-left: 4px solid var(--accent);
@@ -118,6 +132,25 @@
     line-height: 1.4;
     position: relative;
   }
+  
+  /* Copy Button Style */
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ccc;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    opacity: 0; /* Hidden by default */
+  }
+  
+  pre:hover .copy-btn { opacity: 1; }
+  .copy-btn:hover { background: var(--accent); color: #000; }
 
   blockquote {
     border-left: 4px solid var(--accent);
@@ -129,6 +162,7 @@
     margin: 1.2rem 0;
   }
 
+  /* === Images & Lightbox === */
   img {
     display: block;
     max-width: 100%;
@@ -140,11 +174,40 @@
     opacity: 0;
     transform: scale(0.97);
     transition: opacity 0.6s ease, transform 0.6s ease;
+    cursor: zoom-in; /* Indicates clickable */
   }
 
   img.loaded {
     opacity: 1;
     transform: scale(1);
+  }
+
+  /* Lightbox Overlay */
+  .lightbox {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .lightbox.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  .lightbox img {
+    max-width: 90%;
+    max-height: 90%;
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+    cursor: zoom-out;
   }
 
   #content a {
@@ -160,6 +223,14 @@
     color: #ffeb3b;
     border-color: #ffeb3b;
   }
+  
+  .back-link {
+    display: inline-block;
+    margin-bottom: 2rem;
+    color: var(--link);
+    font-weight: bold;
+    text-decoration: none;
+  }
 
   #toc li ul {
     padding-left: 1rem;
@@ -167,54 +238,39 @@
     margin-top: 0.2rem;
   }
 
-  .sidebar::-webkit-scrollbar, main::-webkit-scrollbar {
-    width: 8px;
-  }
-
+  .sidebar::-webkit-scrollbar, main::-webkit-scrollbar { width: 8px; }
   .sidebar::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.1);
     border-radius: 10px;
   }
 
-@media (max-width: 992px) {
-  body {
-    display: block;
-    overflow-x: hidden;
-  }
+  @media (max-width: 992px) {
+    body { display: block; overflow-x: hidden; overflow-y: auto; }
 
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    background: #111;
-    padding: 1rem;
-    position: relative;
-    top: 0;
-    z-index: 2;
-  }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      max-height: 300px; /* Limit height on mobile */
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      background: #111;
+      padding: 1rem;
+      position: relative;
+      z-index: 2;
+    }
 
-  main {
-    width: 100%;
-    padding: 1.5rem;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-  }
+    main {
+      width: 100%;
+      padding: 1.5rem;
+      margin: 0;
+      height: auto; /* Allow natural height */
+    }
 
-  /* Optional: make code blocks scrollable */
-  pre {
-    overflow-x: auto;
+    pre { overflow-x: auto; }
+    
+    /* Ensure copy button is always visible on touch devices */
+    .copy-btn { opacity: 1; }
   }
-
-  /* Images stay in place and scale properly */
-  img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1rem auto;
-  }
-}
-
   </style>
 </head>
 
@@ -225,34 +281,51 @@
   </nav>
 
   <main>
-    <a href="../../index.html" style="display:inline-block;margin-bottom:2rem;color:var(--link);font-weight:bold;">← Back to Home</a>
-    <div id="content">Loading writeup...</div>
+    <a href="../../index.html" class="back-link">← Back to Home</a>
+    <div id="content">
+      <div style="color: #666; padding: 20px;">Loading writeup...</div>
+    </div>
   </main>
+
+  <div id="lightbox" class="lightbox"></div>
 
   <script>
   const mdFile = "Gavel.md";
   const safeId = t => t.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
 
+  // Fetch and Parse
   fetch(mdFile)
-    .then(res => res.text())
+    .then(res => {
+        if (!res.ok) throw new Error("Markdown file not found");
+        return res.text();
+    })
     .then(md => {
       document.getElementById("content").innerHTML = marked.parse(md);
 
-      // Assign IDs for headings
+      // 1. Process Headings & TOC
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
-      headings.forEach(h => h.id = safeId(h.textContent));
-
-      // === Generate TOC ===
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
-      headings.forEach(h => {
+      
+      headings.forEach((h, index) => {
+        // Assign ID
+        const rawId = safeId(h.textContent);
+        h.id = rawId || `heading-${index}`; // Fallback ID
+
+        // Build TOC Hierarchy
         const level = parseInt(h.tagName.replace("H", ""));
         const li = document.createElement("li");
-        li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
+        const a = document.createElement("a");
+        a.href = `#${h.id}`;
+        a.textContent = h.textContent;
+        a.dataset.target = h.id; // For scroll spy
+        li.appendChild(a);
+
         while (tocStack.length > 1 && tocStack[tocStack.length - 1].level >= level) tocStack.pop();
         const parent = tocStack[tocStack.length - 1];
         parent.ul.appendChild(li);
-        const next = headings[headings.indexOf(h) + 1];
+
+        const next = headings[index + 1];
         if (next && parseInt(next.tagName.replace("H", "")) > level) {
           const ul = document.createElement("ul");
           li.appendChild(ul);
@@ -260,11 +333,63 @@
         }
       });
 
-      // === Image Fade-in ===
+      // 2. Add Copy Buttons to Code Blocks
+      document.querySelectorAll("pre").forEach(pre => {
+        const btn = document.createElement("button");
+        btn.className = "copy-btn";
+        btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+        
+        btn.addEventListener("click", () => {
+          const code = pre.querySelector("code") ? pre.querySelector("code").innerText : pre.innerText;
+          navigator.clipboard.writeText(code).then(() => {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
+          });
+        });
+        pre.appendChild(btn);
+      });
+
+      // 3. Image Handling (Fade-in & Lightbox)
+      const lightbox = document.getElementById("lightbox");
+      
       document.querySelectorAll("#content img").forEach(img => {
+        // Fade in
         img.addEventListener("load", () => img.classList.add("loaded"));
         if (img.complete) img.classList.add("loaded");
+
+        // Lightbox Click
+        img.addEventListener("click", () => {
+            const clone = img.cloneNode();
+            clone.classList.remove("loaded"); // Reset anim
+            lightbox.innerHTML = "";
+            lightbox.appendChild(clone);
+            lightbox.classList.add("active");
+            setTimeout(() => clone.classList.add("loaded"), 10); // Trigger anim
+        });
       });
+
+      // Close lightbox on click
+      lightbox.addEventListener("click", () => {
+        lightbox.classList.remove("active");
+      });
+
+      // 4. Scroll Spy (Highlight TOC on scroll)
+      const mainContainer = document.querySelector("main"); // Element that scrolls
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            document.querySelectorAll(".sidebar a").forEach(link => {
+              link.classList.toggle("active", link.dataset.target === id);
+            });
+          }
+        });
+      }, { root: mainContainer, threshold: 0.1, rootMargin: "-10% 0px -80% 0px" });
+
+      headings.forEach(h => observer.observe(h));
+    })
+    .catch(err => {
+        document.getElementById("content").innerHTML = `<div style="color: #ff5555; padding: 20px;">Error loading writeup: ${err.message}</div>`;
     });
   </script>
 </body>
