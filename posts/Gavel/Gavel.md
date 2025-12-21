@@ -6,18 +6,19 @@ Operating System: Linux
 Hints: True
 ```
 
-Step,User / Access                     ,Technique Used                                               ,Result                                                                   
-   1 ,(Local / Recon)                   ,nmap -p- -sC -sV gavel.htb                               ,Revealed ports 22 (SSH) and 80 (HTTP); updated hosts file.           
-   2 ,(Local / Recon)                   ,ffuf directory fuzzing                                   ,Discovered /.git/ repository exposed on the web server.                 
-   3 ,(Local / Recon)                   ,git-dumper + Source Code Analysis                         ,Identified SQLi in inventory.php and RCE logic in admin rules.         
-   4 ,(Unauthenticated Web)             ,SQL Injection (inventory.php)                             ,Dumped auctioneer bcrypt password hash via sort parameter.           
-   5 ,(attacker)                         ,John the Ripper (rockyou.txt)                             ,Cracked auctioneer hash to reveal password midXXXXXX.                 
-   6 ,auctioneer (Web Login)             ,Admin Panel RCE (runkit)                                 ,"Injected PHP reverse shell into ""Rules"" section.                         "
-   7 ,www-data (Reverse Shell)           ,Trigger bid_handler.php                                   ,Gained shell; pivoted to user auctioneer via password reuse.           
-   8 ,auctioneer (User Access)           ,Local Enumeration (gavel-util)                           ,Discovered sudo-like binary processing YAML with root privileges.         
-   9 ,auctioneer (Priv-Esc Prep)         ,YAML Injection (php.ini overwrite)                       ,Removed open_basedir/disable_functions restrictions via gavel-util.
-  10 ,auctioneer (Priv-Esc Prep)         ,YAML Injection (SUID bash)                               ,Copied /bin/bash to /opt/rootbash and set SUID bit (chmod u+s).     
-  11 ,root (System Access)               ,/opt/rootbash -p                                         ,Executed SUID bash to gain root access and read root.txt.               
+| Step | User / Access              | Technique Used                                 | Result                                                                                          |
+| :--: | :------------------------- | :--------------------------------------------- | :---------------------------------------------------------------------------------------------- |
+|   1  | (Local / Recon)            | **nmap Port Scan & Host Discovery**            | Discovered open ports `22` (SSH) and `80` (HTTP); added `gavel.htb` to `/etc/hosts`.            |
+|   2  | (Unauthenticated Web)      | **ffuf Directory Fuzzing**                     | Identified exposed `/.git/` repository on the web server.                                       |
+|   3  | (Local / Analysis)         | **git-dumper Source Code Extraction**          | Retrieved application source; identified SQLi in `inventory.php` and RCE vector in admin rules. |
+|   4  | (Unauthenticated Web)      | **SQL Injection (inventory.php)**              | Dumped `auctioneer` bcrypt password hash via injectable parameters.                             |
+|   5  | (Attacker)                 | **Offline Password Cracking (John + rockyou)** | Cracked hash to recover valid password `midXXXXXX`.                                             |
+|   6  | auth admin (Web Panel)     | **Authenticated RCE (PHP code injection)**     | Logged into admin panel and injected PHP reverse shell via rule engine.                         |
+|   7  | www-data (Shell)           | **Reverse Shell + Credential Reuse**           | Obtained shell; reused password to switch user to `auctioneer`.                                 |
+|   8  | auctioneer (Local)         | **Privilege Enumeration**                      | Discovered `/usr/local/bin/gavel-util` running as root and processing YAML via PHP `runkit`.    |
+|   9  | auctioneer (Priv-esc prep) | **YAML PHP Config Injection**                  | Overwrote `php.ini` to disable security restrictions (`open_basedir`, `disable_functions`).     |
+|  10  | auctioneer (Priv-esc)      | **SUID Binary Creation via YAML**              | Created SUID root bash binary at `/opt/rootbash`.                                               |
+|  11  | root                       | **SUID Bash Execution**                        | Executed `/opt/rootbash -p`; gained root shell and retrieved `root.txt`.                        |
 
 
 ![Gavel](HTB_2025-12-21_18-44MindMap.png)
