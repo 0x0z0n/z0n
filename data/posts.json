@@ -1,6 +1,106 @@
 [
  
 {
+  "title": "HackTheBox: Gavel",
+  "href": "posts/Gavel/",
+  "date": "2025-12-22",
+  "category": [
+    "HackTheBox",
+    "Linux",
+    "Application Security"
+  ],
+  "tags": [
+    "T1046 - Network Service Discovery",
+    "T1083 - File and Directory Discovery",
+    "T1552.003 - Unsecured Credentials (Source Code)",
+    "T1190 - Exploit Public-Facing Application (SQL Injection)",
+    "T1110.002 - Password Cracking (Bcrypt)",
+    "T1078 - Valid Accounts (Password Reuse)",
+    "T1059.003 - Command and Scripting Interpreter: PHP",
+    "T1068 - Exploitation for Privilege Escalation",
+    "T1548.001 - Abuse Elevation Control Mechanism: Setuid and Setgid"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Network Enumeration (nmap)",
+      "result": "Scanned the target revealing OpenSSH (22) and Apache HTTP (80). Added 'gavel.htb' to hosts file.",
+      "mitigation": "Disable unused ports; restrict SSH access to trusted IPs; use a WAF to filter malicious traffic."
+    },
+    {
+      "step": 2,
+      "user": "N/A",
+      "technique": "Directory Fuzzing (ffuf)",
+      "result": "Discovered an exposed `/.git/` directory on the web server.",
+      "mitigation": "Configure web server to deny access to sensitive dot-files (like .git, .env) and directory listing."
+    },
+    {
+      "step": 3,
+      "user": "N/A",
+      "technique": "Source Code Extraction (git-dumper)",
+      "result": "Dumped the complete source code from the exposed git repository to analyze logic offline.",
+      "mitigation": "Remove version control directories from the production deployment pipeline."
+    },
+    {
+      "step": 4,
+      "user": "N/A",
+      "technique": "SQL Injection (inventory.php)",
+      "result": "Exploited unsafe `user_id` and `sort` parameters to inject SQL and dump the `auctioneer` bcrypt hash.",
+      "mitigation": "Use parameterized queries (PDO) for all database interactions; sanitize input strictly."
+    },
+    {
+      "step": 5,
+      "user": "attacker",
+      "technique": "Password Cracking (John the Ripper)",
+      "result": "Cracked the extracted bcrypt hash using `rockyou.txt` to recover the password `midXXXXXX`.",
+      "mitigation": "Enforce strong, complex password policies that resist dictionary attacks."
+    },
+    {
+      "step": 6,
+      "user": "admin",
+      "technique": "Remote Code Execution (RCE) via Admin Panel",
+      "result": "Logged in as admin and injected malicious PHP code into the 'Rules' section, processed by `runkit_function_add`.",
+      "mitigation": "Avoid using dangerous functions like `runkit_function_add` or `eval` with user input; restrict admin capabilities."
+    },
+    {
+      "step": 7,
+      "user": "www-data",
+      "technique": "Reverse Shell & Account Pivot",
+      "result": "Triggered the malicious rule via `bid_handler.php` to get a shell, then `su` to `auctioneer` using the reused password.",
+      "mitigation": "Run web services with least privilege; prohibit password reuse across service and system accounts."
+    },
+    {
+      "step": 8,
+      "user": "auctioneer",
+      "technique": "Local Enumeration",
+      "result": "Identified `/usr/local/bin/gavel-util`, a custom tool processing YAML files with root-level PHP execution.",
+      "mitigation": "Regularly audit custom internal tools for security flaws; follow least privilege for utility execution."
+    },
+    {
+      "step": 9,
+      "user": "auctioneer",
+      "technique": "Privilege Escalation (Stage 1: Config Overwrite)",
+      "result": "Submitted a YAML payload to overwrite `php.ini`, disabling `open_basedir` and `disable_functions`.",
+      "mitigation": "Make system configuration files read-only for service accounts; validate YAML input strictly."
+    },
+    {
+      "step": 10,
+      "user": "auctioneer",
+      "technique": "Privilege Escalation (Stage 2: SUID Binary)",
+      "result": "Submitted a second YAML payload to copy `/bin/bash` to `/opt/gavel/rootbash` and set the SUID bit.",
+      "mitigation": "Monitor file system for new SUID binaries; restrict file system write permissions for service utilities."
+    },
+    {
+      "step": 11,
+      "user": "root",
+      "technique": "Root Access",
+      "result": "Executed the SUID bash binary with `-p` to gain a root shell and retrieve `root.txt`.",
+      "mitigation": "Implement File Integrity Monitoring (FIM) to detect unauthorized SUID binaries or critical file changes."
+    }
+  ]
+},
+{
   "title": "HackTheBox: Eighteen",
   "href": "posts/Eighteen/",
   "date": "2025-11-23",
