@@ -80,8 +80,6 @@
 
   /* Tree Listing CSS */
   #toc, #toc ul { list-style: none; margin: 0; padding: 0; }
-  
-  /* Root Items */
   #toc > li { margin-bottom: 4px; }
   #toc > li > a {
     font-weight: 600; color: #ddd; display: flex; align-items: center; gap: 8px;
@@ -89,41 +87,19 @@
     border-left: 3px solid transparent;
   }
   #toc > li > a:hover { background: #1f1f1f; color: #fff; }
-  
-  /* Active Root State */
-  #toc > li > a.active { 
-    color: var(--accent); 
-    background: rgba(76, 175, 80, 0.1); 
-    border-left-color: var(--accent); 
-  }
+  #toc > li > a.active { color: var(--accent); background: rgba(76, 175, 80, 0.1); border-left-color: var(--accent); }
 
-  /* Sub Items */
-  #toc > li > ul {
-    margin-left: 11px; padding-left: 11px;
-    border-left: 1px solid var(--tree-line);
-    margin-top: 2px; margin-bottom: 8px;
-  }
+  #toc > li > ul { margin-left: 11px; padding-left: 11px; border-left: 1px solid var(--tree-line); margin-top: 2px; margin-bottom: 8px; }
   #toc li ul li { position: relative; }
-  #toc li ul li::before {
-    content: ''; position: absolute; left: -11px; top: 14px;
-    width: 8px; height: 1px; background: var(--tree-line);
-  }
+  #toc li ul li::before { content: ''; position: absolute; left: -11px; top: 14px; width: 8px; height: 1px; background: var(--tree-line); }
   
   #toc li ul a {
-    font-size: 0.85rem; color: #888; padding: 4px 8px;
-    display: flex; align-items: center; gap: 8px;
-    border-radius: 4px; transition: 0.2s;
+    font-size: 0.85rem; color: #888; padding: 4px 8px; display: flex; align-items: center; gap: 8px; border-radius: 4px; transition: 0.2s;
   }
   #toc li ul a:hover { color: #fff; background: #1a1a1a; }
-  
-  /* Active Sub State */
-  #toc li ul a.active {
-    color: var(--accent); font-weight: 600;
-    background: rgba(76, 175, 80, 0.05);
-  }
+  #toc li ul a.active { color: var(--accent); font-weight: 600; background: rgba(76, 175, 80, 0.05); }
   #toc li ul a.active::before { background: var(--accent); }
 
-  /* Sidebar Scrollbar */
   #toc-container { flex: 1; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
   #toc-container::-webkit-scrollbar { width: 4px; }
   #toc-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -135,44 +111,23 @@
     overflow-y: auto; height: 100vh; position: relative;
     scroll-behavior: smooth;
   }
-
-  /* Stealth Spy Scrollbar for Main Content */
   main::-webkit-scrollbar { width: 6px; }
   main::-webkit-scrollbar-track { background: transparent; }
   main::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
   main::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-  #content {
-    max-width: 950px; margin: 0 auto;
-    line-height: 1.8; font-size: 1.05rem;
-    padding-bottom: 5rem;
-  }
+  #content { max-width: 950px; margin: 0 auto; line-height: 1.8; font-size: 1.05rem; padding-bottom: 5rem; }
 
-  /* Meta & Typography */
-  .meta-info {
-    font-size: 0.85rem; color: #666; margin-bottom: 2rem;
-    display: flex; gap: 1.5rem; align-items: center;
-    border-bottom: 1px solid #222; padding-bottom: 1rem;
-  }
+  /* Typography */
+  .meta-info { font-size: 0.85rem; color: #666; margin-bottom: 2rem; display: flex; gap: 1.5rem; align-items: center; border-bottom: 1px solid #222; padding-bottom: 1rem; }
   h1, h2, h3 { color: var(--accent); margin-top: 3rem; position: relative; }
   h1 { font-size: 2.5rem; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-top: 0; }
-  
-  .anchor-link {
-    position: absolute; left: -25px; top: 0;
-    color: #444; font-size: 0.8em; opacity: 0;
-    transition: opacity 0.2s; text-decoration: none; padding: 0 5px; cursor: pointer;
-  }
+  .anchor-link { position: absolute; left: -25px; top: 0; color: #444; font-size: 0.8em; opacity: 0; transition: opacity 0.2s; text-decoration: none; padding: 0 5px; cursor: pointer; }
   h1:hover .anchor-link, h2:hover .anchor-link, h3:hover .anchor-link { opacity: 1; }
 
-  /* Terminal Code Blocks */
-  .terminal-wrapper {
-    margin: 2rem 0; background: #1e1e1e; border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; overflow: hidden;
-  }
-  .terminal-header {
-    background: var(--term-header); padding: 8px 15px;
-    display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333;
-  }
+  /* Code & Terminals */
+  .terminal-wrapper { margin: 2rem 0; background: #1e1e1e; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; overflow: hidden; }
+  .terminal-header { background: var(--term-header); padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; }
   .terminal-controls { display: flex; gap: 6px; }
   .control { width: 10px; height: 10px; border-radius: 50%; }
   .lang-badge { color: #888; font-size: 0.7rem; font-family: 'JetBrains Mono'; font-weight: bold; text-transform: uppercase;}
@@ -180,13 +135,45 @@
   .copy-btn:hover { background: #444; color: #fff; border-color: #777; }
   pre { margin: 0; padding: 1.5rem; overflow-x: auto; }
   
-  /* Images & Admonitions */
+  /* Images */
   img { max-width: 100%; border-radius: 8px; margin: 2rem auto; display: block; box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: zoom-in; }
+  
+  /* Admonitions */
   .admonition { border-left: 4px solid; background: #151b23; padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
   .admonition-title { font-weight: bold; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
   .note { border-color: #1f6feb; } .note .admonition-title { color: #1f6feb; }
   .warning { border-color: #d29922; } .warning .admonition-title { color: #d29922; }
   .danger { border-color: #f85149; } .danger .admonition-title { color: #f85149; }
+
+  /* Lightbox Gallery Styles */
+  #lightbox {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center;
+    z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    user-select: none;
+  }
+  #lightbox.active { opacity: 1; pointer-events: all; }
+  
+  #lb-img {
+    max-height: 90vh; max-width: 90vw; box-shadow: 0 0 30px var(--accent-glow);
+    transition: transform 0.2s ease;
+  }
+
+  .lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    color: #fff; font-size: 2rem; cursor: pointer; padding: 20px;
+    background: rgba(0,0,0,0.3); border-radius: 50%;
+    transition: 0.2s; z-index: 2001;
+  }
+  .lb-nav:hover { background: var(--accent); color: #000; }
+  .lb-prev { left: 20px; }
+  .lb-next { right: 20px; }
+  
+  .lb-counter {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: #888; font-family: 'JetBrains Mono'; font-size: 0.9rem;
+    background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px;
+  }
 
   /* Skeleton */
   .skeleton { animation: shimmer 2s infinite linear; background: linear-gradient(to right, #1a1a1a 4%, #222 25%, #1a1a1a 36%); background-size: 1000px 100%; }
@@ -204,8 +191,6 @@
   }
   .back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
 
-  /* Mobile */
-  .mobile-toggle { display: none; }
   @media (max-width: 992px) {
     .sidebar { position: fixed; left: -100%; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
     .sidebar.active { left: 0; }
@@ -213,6 +198,8 @@
     .mobile-toggle { display: flex; position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px; background: #222; border: 1px solid #444; border-radius: 50%; color: #fff; align-items: center; justify-content: center; z-index: 101; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99; opacity: 0; pointer-events: none; transition: 0.3s; }
     .overlay.active { opacity: 1; pointer-events: all; }
+    /* Hide nav arrows on mobile (swipe only) */
+    .lb-nav { display: none; } 
   }
   </style>
 </head>
@@ -254,8 +241,11 @@
     </div>
   </main>
 
-  <div id="lightbox" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;z-index:2000;opacity:0;pointer-events:none;transition:0.3s;">
-    <img id="lb-img" style="max-height:90vh;max-width:90vw;box-shadow:0 0 30px var(--accent-glow);">
+  <div id="lightbox">
+    <div class="lb-nav lb-prev"><i class="fa-solid fa-chevron-left"></i></div>
+    <img id="lb-img">
+    <div class="lb-nav lb-next"><i class="fa-solid fa-chevron-right"></i></div>
+    <div class="lb-counter"></div>
   </div>
 
   <script>
@@ -270,7 +260,7 @@
   fetch(mdFile)
     .then(res => res.text())
     .then(md => {
-      // 1. Configure Marked & Highlight
+      // 1. Configure Marked
       marked.setOptions({
         highlight: (code, lang) => {
           const l = highlight.getLanguage(lang) ? lang : 'plaintext';
@@ -278,7 +268,7 @@
         }
       });
 
-      // 2. Parse Content
+      // 2. Parse Content & Admonitions
       let html = marked.parse(md);
       html = html.replace(/<blockquote>\s*<p>\[!(NOTE|WARNING|DANGER)\]\s*(.*?)<\/p>\s*((.|[\r\n])*?)<\/blockquote>/gim, 
         (match, type, title, body) => {
@@ -299,21 +289,18 @@
       contentDiv.style.display = "block";
       setTimeout(() => contentDiv.style.opacity = 1, 50);
 
-      // 3. Build Tree TOC & Anchors
+      // 3. Tree TOC & Anchors
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
 
       headings.forEach((h, i) => {
         h.id = safeId(h.textContent) || `h-${i}`;
-        
-        // Anchor
         const anchor = document.createElement("a");
         anchor.className = "anchor-link"; anchor.href = `#${h.id}`;
         anchor.innerHTML = '<i class="fa-solid fa-link"></i>';
         h.appendChild(anchor);
 
-        // Tree List Item
         const level = parseInt(h.tagName.substring(1));
         const iconClass = level < 3 ? "fa-regular fa-folder" : "fa-solid fa-angle-right";
         const li = document.createElement("li");
@@ -330,7 +317,7 @@
         }
       });
 
-      // 4. Code Blocks (Terminal Style)
+      // 4. Code Blocks
       document.querySelectorAll("pre").forEach(pre => {
         const wrapper = document.createElement("div"); wrapper.className = "terminal-wrapper";
         const lang = (pre.querySelector("code").className.match(/language-(\w+)/) || [])[1] || "TEXT";
@@ -340,58 +327,94 @@
         wrapper.querySelector(".copy-btn").onclick = function() { navigator.clipboard.writeText(pre.innerText); this.textContent="Copied!"; setTimeout(()=>this.textContent="Copy",2000); };
       });
 
-      // 5. Lightbox
+      // 5. Advanced Lightbox (Gallery Mode)
       const lb = document.getElementById("lightbox");
-      document.querySelectorAll("#content img").forEach(img => img.onclick = () => { document.getElementById("lb-img").src = img.src; lb.style.opacity = 1; lb.style.pointerEvents = "all"; });
-      lb.onclick = () => { lb.style.opacity = 0; lb.style.pointerEvents = "none"; };
+      const lbImg = document.getElementById("lb-img");
+      const lbCounter = document.querySelector(".lb-counter");
+      const imgs = Array.from(document.querySelectorAll("#content img"));
+      let curIndex = 0;
 
-      // 6. Scroll Logic (Spy + Progress + Active Scroll)
+      // Open Lightbox
+      imgs.forEach((img, index) => {
+        img.style.cursor = "zoom-in";
+        img.onclick = () => openLightbox(index);
+      });
+
+      function openLightbox(index) {
+        curIndex = index;
+        updateLightbox();
+        lb.classList.add("active");
+        document.body.style.overflow = "hidden"; // Block background scroll
+      }
+
+      function closeLightbox() {
+        lb.classList.remove("active");
+        document.body.style.overflow = "";
+      }
+
+      function updateLightbox() {
+        lbImg.style.opacity = 0;
+        setTimeout(() => {
+            lbImg.src = imgs[curIndex].src;
+            lbImg.style.opacity = 1;
+            lbCounter.innerText = `${curIndex + 1} / ${imgs.length}`;
+        }, 100);
+      }
+
+      function nextImg(e) { e.stopPropagation(); curIndex = (curIndex + 1) % imgs.length; updateLightbox(); }
+      function prevImg(e) { e.stopPropagation(); curIndex = (curIndex - 1 + imgs.length) % imgs.length; updateLightbox(); }
+
+      // Controls
+      document.querySelector(".lb-next").onclick = nextImg;
+      document.querySelector(".lb-prev").onclick = prevImg;
+      lb.onclick = (e) => { if(e.target === lb || e.target === lbImg) closeLightbox(); };
+
+      // Keyboard & Mobile Swipe
+      document.addEventListener("keydown", (e) => {
+        if(!lb.classList.contains("active")) return;
+        if(e.key === "ArrowRight") nextImg(e);
+        if(e.key === "ArrowLeft") prevImg(e);
+        if(e.key === "Escape") closeLightbox();
+      });
+
+      // Touch Swipe Logic
+      let touchStartX = 0;
+      lb.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
+      lb.addEventListener('touchend', e => {
+        let touchEndX = e.changedTouches[0].screenX;
+        if (touchEndX < touchStartX - 50) nextImg(e); // Swipe Left
+        if (touchEndX > touchStartX + 50) prevImg(e); // Swipe Right
+      });
+
+      // 6. Scroll Logic
       const main = document.getElementById("main-scroll");
       const links = document.querySelectorAll(".sidebar a");
       const backBtn = document.querySelector(".back-to-top");
 
       main.addEventListener("scroll", () => {
-        // Progress Bar
         const pct = (main.scrollTop / (main.scrollHeight - main.clientHeight)) * 100;
         document.getElementById("progress-bar").style.width = pct + "%";
-        
-        // Back To Top
         backBtn.classList.toggle("visible", main.scrollTop > 500);
 
-        // Scroll Spy Logic
         let current = "";
-        // Look for the section closest to the top of viewport (100px buffer)
-        headings.forEach(h => {
-          if (h.offsetTop - main.offsetTop <= 100) {
-            current = h.id;
-          }
-        });
-
-        // Apply Active Class & Scroll Sidebar
+        headings.forEach(h => { if(h.offsetTop - main.offsetTop <= 100) current = h.id; });
         links.forEach(l => {
           l.classList.remove("active");
-          if (l.dataset.target === current) {
+          if(l.dataset.target === current) {
             l.classList.add("active");
-            // Auto-scroll the sidebar to keep active item in view
+            // Auto scroll sidebar
             const container = document.getElementById("toc-container");
             const linkTop = l.offsetTop;
-            const containerTop = container.scrollTop;
-            const containerHeight = container.clientHeight;
-            
-            // Only scroll if out of view
-            if (linkTop < containerTop || linkTop > containerTop + containerHeight) {
+            if(linkTop < container.scrollTop || linkTop > container.scrollTop + container.clientHeight) {
                 l.scrollIntoView({ behavior: "smooth", block: "center" });
             }
           }
         });
       });
 
-      // Search
       document.getElementById("toc-search").addEventListener("input", (e) => {
         const val = e.target.value.toLowerCase();
-        document.querySelectorAll("#toc li").forEach(li => {
-          li.style.display = li.innerText.toLowerCase().includes(val) ? "block" : "none";
-        });
+        document.querySelectorAll("#toc li").forEach(li => li.style.display = li.innerText.toLowerCase().includes(val) ? "block" : "none");
       });
     });
   </script>
