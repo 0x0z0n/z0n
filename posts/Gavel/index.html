@@ -11,7 +11,7 @@
 
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Consolas&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
@@ -21,14 +21,14 @@
   <style>
   :root {
     --accent: #4caf50;
+    --accent-glow: rgba(76, 175, 80, 0.4);
     --link: #ffeb3b;
     --bg: #0c0c0c;
-    --text: #f5f5f5;
-    --card: #181818;
+    --text: #e0e0e0;
+    --card: #161616;
     --border: #333;
-    --alert-note: #1f6feb;
-    --alert-warn: #d29922;
-    --alert-danger: #f85149;
+    --sidebar-w: 280px;
+    --term-header: #2d2d2d;
   }
 
   * { box-sizing: border-box; }
@@ -44,24 +44,17 @@
     overflow: hidden;
   }
 
-  /* === Progress Bar === */
-  #progress-container {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 3px;
-    background: transparent;
-    z-index: 9999;
-  }
+  /* === Scroll Progress === */
   #progress-bar {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    box-shadow: 0 0 10px var(--accent);
-    transition: width 0.1s;
+    position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+    background: linear-gradient(90deg, var(--accent), #00ff99);
+    z-index: 9999; box-shadow: 0 0 10px var(--accent-glow);
+    transition: width 0.1s linear;
   }
 
   /* === Sidebar === */
   .sidebar {
-    width: 280px;
+    width: var(--sidebar-w);
     background: #111;
     border-right: 1px solid var(--border);
     padding: 1.5rem;
@@ -69,347 +62,379 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
     z-index: 100;
-  }
-
-  /* Search Box */
-  .search-box {
-    margin-bottom: 1rem;
-    position: relative;
-  }
-  .search-box input {
-    width: 100%;
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 8px 10px 8px 30px;
-    border-radius: 4px;
-    outline: none;
-    font-size: 0.9rem;
-  }
-  .search-box input:focus { border-color: var(--accent); }
-  .search-box i {
-    position: absolute; left: 10px; top: 50%;
-    transform: translateY(-50%);
-    color: #666; font-size: 0.8rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar h2 {
-    color: #fff; font-size: 1.1rem;
-    margin: 0 0 1rem 0; text-transform: uppercase;
+    color: #fff; font-size: 0.9rem; letter-spacing: 1px;
+    margin: 0 0 1rem 0; text-transform: uppercase; opacity: 0.7;
   }
 
-  #toc-container { flex: 1; overflow-y: auto; }
+  .search-box { position: relative; margin-bottom: 1.5rem; }
+  .search-box input {
+    width: 100%; background: #1a1a1a; border: 1px solid #333;
+    color: #fff; padding: 10px 10px 10px 35px; border-radius: 6px;
+    outline: none; font-size: 0.9rem; transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+  .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.8rem; }
+
+  #toc-container { flex: 1; overflow-y: auto; padding-right: 5px; }
+  #toc-container::-webkit-scrollbar { width: 4px; }
+  #toc-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
   .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
-  .sidebar li { margin: 0.4rem 0; }
-  
+  .sidebar li { margin: 2px 0; }
   .sidebar a {
     color: #888; text-decoration: none; display: block;
-    padding: 0.25rem 0 0.25rem 8px;
-    font-size: 0.95rem; border-left: 2px solid transparent;
-    transition: all 0.2s ease;
+    padding: 6px 10px; font-size: 0.9rem; border-radius: 4px;
+    transition: all 0.2s; border-left: 2px solid transparent;
   }
-  .sidebar a:hover, .sidebar a.active {
-    color: var(--text); border-left-color: var(--accent);
-    padding-left: 12px;
-  }
-  .sidebar a.active { color: var(--accent); font-weight: 600; }
-
-  /* === Mobile Toggle === */
-  .mobile-toggle {
-    display: none;
-    position: fixed; bottom: 20px; right: 20px;
-    background: var(--accent); color: #000;
-    width: 50px; height: 50px; border-radius: 50%;
-    align-items: center; justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    z-index: 101; cursor: pointer; font-size: 1.2rem;
+  .sidebar a:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .sidebar a.active { 
+    background: rgba(76, 175, 80, 0.1); color: var(--accent); 
+    border-left-color: var(--accent); font-weight: 600; 
   }
 
   /* === Main Content === */
   main {
-    flex: 1; padding: 2.5rem 4rem;
+    flex: 1; padding: 3rem 5rem;
     overflow-y: auto; height: 100vh;
-    position: relative; scroll-behavior: smooth;
+    position: relative;
   }
 
   #content {
-    max-width: 1300px; margin: 0 auto;
-    line-height: 1.7; font-size: 1rem;
+    max-width: 1000px; margin: 0 auto;
+    line-height: 1.8; font-size: 1.05rem;
     padding-bottom: 5rem;
   }
 
-  /* Typography */
-  h1, h2, h3 {
-    color: var(--accent); margin-top: 2.5rem;
-    position: relative; scroll-margin-top: 2rem;
-  }
-  h1 { border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+  /* === Typography & Anchors === */
+  h1, h2, h3 { color: var(--accent); margin-top: 3rem; position: relative; }
+  h1 { font-size: 2.5rem; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-top: 0; }
   
-  /* Reading Stats */
-  .meta-info {
-    font-size: 0.85rem; color: #666;
-    margin-bottom: 2rem; display: flex; gap: 1rem;
-    align-items: center;
+  .anchor-link {
+    position: absolute; left: -25px; top: 0;
+    color: #444; font-size: 0.8em; opacity: 0;
+    transition: opacity 0.2s; text-decoration: none;
+    padding: 0 5px; cursor: pointer;
   }
-  .meta-info span { display: flex; align-items: center; gap: 5px; }
+  h1:hover .anchor-link, h2:hover .anchor-link, h3:hover .anchor-link { opacity: 1; }
+  .anchor-link:hover { color: var(--accent); }
 
-  /* === Enhanced Code Blocks === */
-  pre {
-    background: #1e1e1e !important; /* One Dark bg */
+  /* === Terminal Code Blocks === */
+  .terminal-wrapper {
+    margin: 2rem 0;
+    background: #1e1e1e;
     border-radius: 8px;
-    padding: 1rem;
-    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     border: 1px solid #333;
-    overflow-x: auto;
+    overflow: hidden;
   }
   
-  /* Remove default border left, using standard syntax theme now */
-  pre code {
-    font-family: "Consolas", monospace;
-    font-size: 0.9rem;
-    background: transparent;
+  .terminal-header {
+    background: var(--term-header);
+    padding: 10px 15px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #333;
+  }
+  
+  .terminal-controls { display: flex; gap: 8px; }
+  .control { width: 12px; height: 12px; border-radius: 50%; }
+  .close { background: #ff5f56; }
+  .minimize { background: #ffbd2e; }
+  .maximize { background: #27c93f; }
+  
+  .lang-badge {
+    color: #888; font-size: 0.75rem; text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 1px;
+    font-weight: bold;
   }
 
   .copy-btn {
-    position: absolute; top: 8px; right: 8px;
-    background: rgba(255,255,255,0.1);
-    border: none; color: #aaa;
-    padding: 4px 8px; border-radius: 4px;
-    cursor: pointer; font-size: 0.75rem;
-    opacity: 0; transition: 0.2s;
+    background: transparent; border: 1px solid #555;
+    color: #ccc; padding: 4px 10px; border-radius: 4px;
+    font-size: 0.75rem; cursor: pointer; transition: 0.2s;
+    display: flex; align-items: center; gap: 6px;
   }
-  pre:hover .copy-btn { opacity: 1; }
-  .copy-btn:hover { background: var(--accent); color: #000; }
+  .copy-btn:hover { background: #444; color: #fff; border-color: #777; }
 
-  /* === Admonitions (GitHub Style) === */
+  pre { margin: 0; padding: 1.5rem; overflow-x: auto; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+
+  /* === Admonitions === */
   .admonition {
-    border-left: 4px solid;
-    background: #161b22;
-    padding: 1rem;
-    margin: 1.5rem 0;
-    border-radius: 0 6px 6px 0;
-    display: flex; flex-direction: column;
+    border-left: 4px solid; background: #151b23;
+    padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0;
   }
-  .admonition-title {
-    font-weight: bold; margin-bottom: 0.5rem;
-    display: flex; align-items: center; gap: 8px;
-  }
-  
-  .admonition.note { border-color: var(--alert-note); }
-  .admonition.note .admonition-title { color: var(--alert-note); }
-  
-  .admonition.warning { border-color: var(--alert-warn); }
-  .admonition.warning .admonition-title { color: var(--alert-warn); }
-  
-  .admonition.danger { border-color: var(--alert-danger); }
-  .admonition.danger .admonition-title { color: var(--alert-danger); }
+  .admonition-title { font-weight: bold; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+  .note { border-color: #1f6feb; } .note .admonition-title { color: #1f6feb; }
+  .warning { border-color: #d29922; } .warning .admonition-title { color: #d29922; }
+  .danger { border-color: #f85149; } .danger .admonition-title { color: #f85149; }
 
   /* === Images === */
   img {
-    max-width: 100%; border-radius: 8px;
-    margin: 2rem auto; display: block;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    cursor: zoom-in; opacity: 0;
-    transform: translateY(20px);
-    transition: 0.6s ease;
+    max-width: 100%; border-radius: 8px; margin: 2rem auto; display: block;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: zoom-in;
+    transition: transform 0.3s;
   }
-  img.loaded { opacity: 1; transform: translateY(0); }
+  img:hover { transform: scale(1.01); }
 
-  /* Lightbox */
-  .lightbox {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); z-index: 2000;
-    display: flex; justify-content: center; align-items: center;
-    opacity: 0; pointer-events: none; transition: 0.3s;
+  /* === Skeleton Loader === */
+  .skeleton { animation: shimmer 2s infinite linear; background: linear-gradient(to right, #1a1a1a 4%, #222 25%, #1a1a1a 36%); background-size: 1000px 100%; }
+  .sk-title { height: 40px; margin-bottom: 20px; width: 60%; border-radius: 4px; }
+  .sk-line { height: 15px; margin-bottom: 12px; width: 100%; border-radius: 4px; }
+  .sk-block { height: 200px; margin: 20px 0; width: 100%; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+
+  /* === Floating UI === */
+  .back-to-top {
+    position: fixed; bottom: 30px; right: 30px;
+    background: var(--accent); color: #000;
+    width: 45px; height: 45px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    cursor: pointer; opacity: 0; transform: translateY(20px);
+    transition: all 0.3s; pointer-events: none; z-index: 90;
   }
-  .lightbox.active { opacity: 1; pointer-events: all; }
-  .lightbox img { max-height: 95vh; max-width: 95vw; cursor: zoom-out; transform: none; margin: 0; }
+  .back-to-top.visible { opacity: 1; transform: translateY(0); pointer-events: all; }
+  .back-to-top:hover { transform: translateY(-5px); box-shadow: 0 6px 20px var(--accent-glow); }
 
-  /* === Mobile Responsiveness === */
+  /* === Mobile === */
+  .mobile-toggle { display: none; }
   @media (max-width: 992px) {
-    .sidebar {
-      position: fixed; left: -280px; top: 0; bottom: 0;
-      box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+    .sidebar { position: fixed; left: -100%; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
+    .sidebar.active { left: 0; }
+    main { padding: 1.5rem; }
+    .mobile-toggle {
+      display: flex; position: fixed; bottom: 20px; left: 20px;
+      width: 50px; height: 50px; background: #222; border: 1px solid #444;
+      border-radius: 50%; color: #fff; align-items: center; justify-content: center;
+      z-index: 101; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
-    .sidebar.active { transform: translateX(280px); }
-    .mobile-toggle { display: flex; }
-    main { padding: 1.5rem; width: 100%; }
-    /* Overlay when sidebar open */
-    .sidebar-overlay {
+    .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7); z-index: 99;
-      display: none;
+      background: rgba(0,0,0,0.8); z-index: 99; opacity: 0; pointer-events: none; transition: 0.3s;
     }
-    .sidebar-overlay.active { display: block; }
+    .overlay.active { opacity: 1; pointer-events: all; }
   }
-  
-  #content a { color: #00d0ff; text-decoration: none; border-bottom: 1px dashed rgba(0,208,255,0.4); }
-  #content a:hover { color: var(--link); border-color: var(--link); }
+
+  /* === Print === */
+  @media print {
+    .sidebar, .mobile-toggle, .back-to-top, #progress-bar, .copy-btn { display: none !important; }
+    main { padding: 0; height: auto; overflow: visible; }
+    body, main { background: #fff; color: #000; }
+    pre, .terminal-wrapper { border: 1px solid #ccc; box-shadow: none; }
+    .terminal-header { background: #f0f0f0; border-bottom: 1px solid #ccc; }
+    .lang-badge { color: #000; }
+    a { text-decoration: underline; color: #000; }
+    h1, h2, h3 { color: #000; border-bottom: 1px solid #000; }
+  }
   </style>
 </head>
 
 <body>
-  <div id="progress-container"><div id="progress-bar"></div></div>
-
-  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-  <div class="mobile-toggle" onclick="toggleSidebar()">
-    <i class="fa-solid fa-bars"></i>
-  </div>
+  <div id="progress-bar"></div>
+  
+  <div class="overlay" onclick="toggleSidebar()"></div>
+  <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
 
   <nav class="sidebar">
     <div class="search-box">
       <i class="fa-solid fa-search"></i>
-      <input type="text" id="toc-search" placeholder="Filter sections..." autocomplete="off">
+      <input type="text" id="toc-search" placeholder="Filter..." autocomplete="off">
     </div>
-    <h2>Table of Contents</h2>
-    <div id="toc-container">
-      <ul id="toc"></ul>
+    <h2>Outline</h2>
+    <div id="toc-container"><ul id="toc"></ul></div>
+    <div style="margin-top:auto; font-size:0.8rem; color:#555; text-align:center; padding-top:20px;">
+      &copy; 2025 0x0z0n
     </div>
   </nav>
 
   <main id="main-scroll">
-    <a href="../../index.html" style="color:var(--link);font-weight:bold;display:inline-block;margin-bottom:1rem">← Back to Home</a>
+    <a href="../../index.html" style="color:var(--link);font-weight:bold;text-decoration:none;">← Return Home</a>
     
-    <div id="meta" class="meta-info"></div>
-    <div id="content">Loading writeup...</div>
+    <div id="skeleton-ui" style="margin-top:2rem;">
+      <div class="skeleton sk-title"></div>
+      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-line" style="width:80%"></div>
+      <div class="skeleton sk-block"></div>
+      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-line"></div>
+    </div>
+
+    <div id="content" style="display:none; opacity:0; transition: opacity 0.5s ease;"></div>
+    
+    <div class="back-to-top" onclick="document.getElementById('main-scroll').scrollTo(0,0)">
+      <i class="fa-solid fa-arrow-up"></i>
+    </div>
   </main>
 
-  <div id="lightbox" class="lightbox"></div>
+  <div id="lightbox" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);display:flex;justify-content:center;align-items:center;z-index:2000;opacity:0;pointer-events:none;transition:0.3s;">
+    <img id="lb-img" style="max-height:90vh;max-width:90vw;box-shadow:0 0 30px var(--accent-glow);">
+  </div>
 
   <script>
   const mdFile = "Gavel.md";
-  const safeId = t => t.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
   
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('active');
-    document.querySelector('.sidebar-overlay').classList.toggle('active');
+    document.querySelector('.overlay').classList.toggle('active');
   }
 
   fetch(mdFile)
     .then(res => res.text())
     .then(md => {
-      // 1. Setup Marked with Syntax Highlighting
+      // 1. Configure Marked
       marked.setOptions({
-        highlight: function(code, lang) {
+        highlight: (code, lang) => {
           const language = highlight.getLanguage(lang) ? lang : 'plaintext';
           return highlight.highlight(code, { language }).value;
         }
       });
 
       // 2. Parse Markdown
-      const rawHtml = marked.parse(md);
-      const contentDiv = document.getElementById("content");
-      
-      // 3. Post-Process: Custom Admonitions
-      // Convert > [!NOTE] to custom divs
-      const processedHtml = rawHtml.replace(
-        /<blockquote>\s*<p>\[!(NOTE|WARNING|DANGER)\]\s*(.*?)<\/p>\s*((.|[\r\n])*?)<\/blockquote>/gim, 
+      let html = marked.parse(md);
+
+      // 3. Transform Admonitions
+      html = html.replace(/<blockquote>\s*<p>\[!(NOTE|WARNING|DANGER)\]\s*(.*?)<\/p>\s*((.|[\r\n])*?)<\/blockquote>/gim, 
         (match, type, title, body) => {
-           const lowerType = type.toLowerCase();
-           const icon = lowerType === 'note' ? 'fa-info-circle' : 
-                        lowerType === 'warning' ? 'fa-exclamation-triangle' : 'fa-skull';
-           const displayTitle = title || type;
-           return `<div class="admonition ${lowerType}">
-             <div class="admonition-title"><i class="fa-solid ${icon}"></i> ${displayTitle}</div>
-             <div>${body}</div>
-           </div>`;
-        }
-      );
+           const t = type.toLowerCase();
+           const icon = t==='note'?'fa-info-circle':t==='warning'?'fa-exclamation-triangle':'fa-skull';
+           return `<div class="admonition ${t}"><div class="admonition-title"><i class="fa-solid ${icon}"></i> ${title||type}</div><div>${body}</div></div>`;
+        });
+
+      // 4. Inject Content & Remove Skeleton
+      const contentDiv = document.getElementById("content");
+      contentDiv.innerHTML = html;
+      document.getElementById("skeleton-ui").style.display = "none";
+      contentDiv.style.display = "block";
+      setTimeout(() => contentDiv.style.opacity = 1, 50);
+
+      // 5. Enhance Content (The Magic)
       
-      contentDiv.innerHTML = processedHtml;
+      // A. Terminal Windows for Code
+      document.querySelectorAll("pre").forEach(pre => {
+        const codeClass = pre.querySelector("code").className;
+        const lang = codeClass.replace("language-", "").toUpperCase() || "TEXT";
+        
+        const wrapper = document.createElement("div");
+        wrapper.className = "terminal-wrapper";
+        
+        const header = document.createElement("div");
+        header.className = "terminal-header";
+        header.innerHTML = `
+          <div class="terminal-controls">
+            <div class="control close"></div>
+            <div class="control minimize"></div>
+            <div class="control maximize"></div>
+          </div>
+          <div class="lang-badge">${lang}</div>
+          <button class="copy-btn"><i class="fa-regular fa-copy"></i> Copy</button>
+        `;
+        
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(header);
+        wrapper.appendChild(pre);
+        
+        // Copy Logic
+        const btn = header.querySelector(".copy-btn");
+        btn.onclick = () => {
+          navigator.clipboard.writeText(pre.innerText);
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+          setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
+        };
+      });
 
-      // 4. Reading Time Calculation
-      const wordCount = contentDiv.innerText.split(/\s+/).length;
-      const readTime = Math.ceil(wordCount / 200);
-      document.getElementById("meta").innerHTML = `
-        <span><i class="fa-regular fa-clock"></i> ${readTime} min read</span>
-        <span><i class="fa-solid fa-pen-nib"></i> ${wordCount} words</span>
-      `;
-
-      // 5. Build TOC & Headings
+      // B. Anchor Links & TOC
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
-      
+
       headings.forEach((h, i) => {
-        h.id = safeId(h.textContent) || `h-${i}`;
+        // ID generation
+        const id = h.textContent.trim().toLowerCase().replace(/[^\w]+/g, "-");
+        h.id = id;
+
+        // Anchor Link
+        const anchor = document.createElement("a");
+        anchor.className = "anchor-link";
+        anchor.href = `#${id}`;
+        anchor.innerHTML = '<i class="fa-solid fa-link"></i>';
+        anchor.onclick = (e) => {
+            e.preventDefault();
+            navigator.clipboard.writeText(window.location.origin + window.location.pathname + `#${id}`);
+            // Optional: Show toast
+        };
+        h.appendChild(anchor);
+
+        // TOC Building
         const level = parseInt(h.tagName.substring(1));
-        
         const li = document.createElement("li");
-        li.innerHTML = `<a href="#${h.id}" data-target="${h.id}">${h.textContent}</a>`;
+        li.innerHTML = `<a href="#${id}" data-target="${id}">${h.childNodes[0].textContent}</a>`;
         
         while (tocStack.length > 1 && tocStack[tocStack.length - 1].level >= level) tocStack.pop();
-        
-        const parent = tocStack[tocStack.length - 1].ul;
-        parent.appendChild(li);
+        tocStack[tocStack.length - 1].ul.appendChild(li);
         
         const next = headings[i+1];
         if(next && parseInt(next.tagName.substring(1)) > level) {
           const ul = document.createElement("ul");
           li.appendChild(ul);
-          tocStack.push({ level, ul: ul });
+          tocStack.push({ level, ul });
         }
       });
 
-      // 6. Interactive Features
-      
-      // Copy Buttons
-      document.querySelectorAll("pre").forEach(pre => {
-        const btn = document.createElement("button");
-        btn.className = "copy-btn";
-        btn.innerHTML = '<i class="fa-regular fa-copy"></i>';
-        btn.onclick = () => {
-          navigator.clipboard.writeText(pre.innerText);
-          btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-          setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 2000);
-        }
-        pre.appendChild(btn);
-      });
-
-      // Images & Lightbox
+      // C. Image Lightbox
       const lb = document.getElementById("lightbox");
+      const lbImg = document.getElementById("lb-img");
       document.querySelectorAll("#content img").forEach(img => {
-        img.onload = () => img.classList.add("loaded");
-        if(img.complete) img.classList.add("loaded");
         img.onclick = () => {
-          lb.innerHTML = "";
-          lb.appendChild(img.cloneNode());
-          lb.classList.add("active");
+          lbImg.src = img.src;
+          lb.style.opacity = "1";
+          lb.style.pointerEvents = "all";
         };
       });
-      lb.onclick = () => lb.classList.remove("active");
+      lb.onclick = () => {
+        lb.style.opacity = "0";
+        lb.style.pointerEvents = "none";
+      };
 
-      // TOC Search
-      const searchInput = document.getElementById("toc-search");
-      searchInput.addEventListener("input", (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll(".sidebar li").forEach(li => {
-          const text = li.innerText.toLowerCase();
-          li.style.display = text.includes(term) ? "block" : "none";
-        });
-      });
-
-      // Scroll Spy & Progress Bar
-      const main = document.querySelector("main");
+      // D. Scroll Logic (Progress + BackToTop + Spy)
+      const main = document.getElementById("main-scroll");
       const links = document.querySelectorAll(".sidebar a");
-      
+      const backBtn = document.querySelector(".back-to-top");
+
       main.addEventListener("scroll", () => {
-        // Progress Bar
-        const scrollTop = main.scrollTop;
-        const scrollHeight = main.scrollHeight - main.clientHeight;
-        const width = (scrollTop / scrollHeight) * 100;
-        document.getElementById("progress-bar").style.width = width + "%";
+        // Progress
+        const percent = (main.scrollTop / (main.scrollHeight - main.clientHeight)) * 100;
+        document.getElementById("progress-bar").style.width = percent + "%";
+        
+        // Back To Top
+        if(main.scrollTop > 500) backBtn.classList.add("visible");
+        else backBtn.classList.remove("visible");
 
         // Spy
         let current = "";
         headings.forEach(h => {
-          if (h.offsetTop - main.offsetTop <= 100) current = h.id;
+          if(h.offsetTop - main.offsetTop <= 150) current = h.id;
         });
         links.forEach(l => {
           l.classList.remove("active");
-          if(l.dataset.target === current) l.classList.add("active");
+          if(l.dataset.target === current) {
+              l.classList.add("active");
+              // Auto-scroll sidebar
+              l.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        });
+      });
+
+      // Search Filter
+      document.getElementById("toc-search").addEventListener("input", (e) => {
+        const val = e.target.value.toLowerCase();
+        document.querySelectorAll("#toc li").forEach(li => {
+          const text = li.textContent.toLowerCase();
+          li.style.display = text.includes(val) ? "block" : "none";
         });
       });
     });
