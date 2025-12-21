@@ -5,18 +5,18 @@
   <title>HackTheBox Gavel | Writeup</title>
   <link rel="icon" type="image/png" href="assets/tab.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="HackTheBox Gavel | Writeup" />
-  <meta property="og:title" content="HackTheBox Gavel | Writeup" />
-  <meta property="og:type" content="article" />
-  <meta property="og:site_name" content="0x0z0n" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link rel="stylesheet" href="../style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Consolas&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <style>
   :root {
@@ -26,6 +26,9 @@
     --text: #f5f5f5;
     --card: #181818;
     --border: #333;
+    --alert-note: #1f6feb;
+    --alert-warn: #d29922;
+    --alert-danger: #f85149;
   }
 
   * { box-sizing: border-box; }
@@ -38,7 +41,22 @@
     color: var(--text);
     display: flex;
     min-height: 100vh;
-    overflow: hidden; /* Main scroll handled by children */
+    overflow: hidden;
+  }
+
+  /* === Progress Bar === */
+  #progress-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 3px;
+    background: transparent;
+    z-index: 9999;
+  }
+  #progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    box-shadow: 0 0 10px var(--accent);
+    transition: width 0.1s;
   }
 
   /* === Sidebar === */
@@ -49,242 +67,213 @@
     padding: 1.5rem;
     height: 100vh;
     flex-shrink: 0;
-    overflow-y: auto;
-    position: sticky;
-    top: 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+
+  /* Search Box */
+  .search-box {
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px 10px 8px 30px;
+    border-radius: 4px;
+    outline: none;
+    font-size: 0.9rem;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box i {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: #666; font-size: 0.8rem;
   }
 
   .sidebar h2 {
-    color: #fff;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #fff; font-size: 1.1rem;
+    margin: 0 0 1rem 0; text-transform: uppercase;
   }
 
+  #toc-container { flex: 1; overflow-y: auto; }
   .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
   .sidebar li { margin: 0.4rem 0; }
   
   .sidebar a {
-    color: #ccc;
-    text-decoration: none;
-    display: block;
-    padding: 0.25rem 0;
-    font-size: 0.95rem;
-    border-left: 2px solid transparent;
+    color: #888; text-decoration: none; display: block;
+    padding: 0.25rem 0 0.25rem 8px;
+    font-size: 0.95rem; border-left: 2px solid transparent;
     transition: all 0.2s ease;
-    padding-left: 8px; /* Added spacing for border */
   }
-
-  .sidebar a:hover {
-    color: var(--link);
-    border-left: 2px solid var(--accent);
+  .sidebar a:hover, .sidebar a.active {
+    color: var(--text); border-left-color: var(--accent);
     padding-left: 12px;
   }
+  .sidebar a.active { color: var(--accent); font-weight: 600; }
 
-  /* Active state for Scroll Spy */
-  .sidebar a.active { 
-    color: var(--accent); 
-    font-weight: bold;
-    border-left: 2px solid var(--accent);
-    padding-left: 12px;
+  /* === Mobile Toggle === */
+  .mobile-toggle {
+    display: none;
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: #000;
+    width: 50px; height: 50px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    z-index: 101; cursor: pointer; font-size: 1.2rem;
   }
 
   /* === Main Content === */
   main {
-    flex: 1;
-    padding: 2.5rem 4rem;
-    overflow-y: auto;
-    height: 100vh;
-    position: relative;
+    flex: 1; padding: 2.5rem 4rem;
+    overflow-y: auto; height: 100vh;
+    position: relative; scroll-behavior: smooth;
   }
 
   #content {
-    max-width: 1300px;
-    margin: 0 auto;
-    line-height: 1.7;
-    font-size: 1rem;
-    padding-bottom: 3rem;
+    max-width: 1300px; margin: 0 auto;
+    line-height: 1.7; font-size: 1rem;
+    padding-bottom: 5rem;
   }
 
-  #content p { margin: 1rem 0; }
-
-  /* === Headings === */
+  /* Typography */
   h1, h2, h3 {
-    color: var(--accent);
-    margin-top: 2.5rem;
-    position: relative;
-    scroll-margin-top: 2rem; /* Fixes jump position */
+    color: var(--accent); margin-top: 2.5rem;
+    position: relative; scroll-margin-top: 2rem;
   }
+  h1 { border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+  
+  /* Reading Stats */
+  .meta-info {
+    font-size: 0.85rem; color: #666;
+    margin-bottom: 2rem; display: flex; gap: 1rem;
+    align-items: center;
+  }
+  .meta-info span { display: flex; align-items: center; gap: 5px; }
 
-  h1:hover, h2:hover, h3:hover { color: #00ff99; cursor: pointer; }
-
-  /* === Code blocks & Copy Button === */
+  /* === Enhanced Code Blocks === */
   pre {
-    background: var(--card);
-    border-left: 4px solid var(--accent);
+    background: #1e1e1e !important; /* One Dark bg */
+    border-radius: 8px;
     padding: 1rem;
-    overflow-x: auto;
-    border-radius: 6px;
-    font-family: "Consolas", monospace;
-    font-size: 0.95rem;
-    line-height: 1.4;
     position: relative;
+    border: 1px solid #333;
+    overflow-x: auto;
   }
   
-  /* Copy Button Style */
+  /* Remove default border left, using standard syntax theme now */
+  pre code {
+    font-family: "Consolas", monospace;
+    font-size: 0.9rem;
+    background: transparent;
+  }
+
   .copy-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #ccc;
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    opacity: 0; /* Hidden by default */
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,0.1);
+    border: none; color: #aaa;
+    padding: 4px 8px; border-radius: 4px;
+    cursor: pointer; font-size: 0.75rem;
+    opacity: 0; transition: 0.2s;
   }
-  
   pre:hover .copy-btn { opacity: 1; }
   .copy-btn:hover { background: var(--accent); color: #000; }
 
-  blockquote {
-    border-left: 4px solid var(--accent);
-    background: #161616;
-    padding: 1rem 1.3rem;
-    border-radius: 6px;
-    color: #dcdcdc;
-    font-style: italic;
-    margin: 1.2rem 0;
+  /* === Admonitions (GitHub Style) === */
+  .admonition {
+    border-left: 4px solid;
+    background: #161b22;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 0 6px 6px 0;
+    display: flex; flex-direction: column;
   }
+  .admonition-title {
+    font-weight: bold; margin-bottom: 0.5rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  
+  .admonition.note { border-color: var(--alert-note); }
+  .admonition.note .admonition-title { color: var(--alert-note); }
+  
+  .admonition.warning { border-color: var(--alert-warn); }
+  .admonition.warning .admonition-title { color: var(--alert-warn); }
+  
+  .admonition.danger { border-color: var(--alert-danger); }
+  .admonition.danger .admonition-title { color: var(--alert-danger); }
 
-  /* === Images & Lightbox === */
+  /* === Images === */
   img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    margin: 1.5rem auto;
-    object-fit: contain;
-    box-shadow: 0 0 10px rgba(0,0,0,0.6);
-    opacity: 0;
-    transform: scale(0.97);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-    cursor: zoom-in; /* Indicates clickable */
+    max-width: 100%; border-radius: 8px;
+    margin: 2rem auto; display: block;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    cursor: zoom-in; opacity: 0;
+    transform: translateY(20px);
+    transition: 0.6s ease;
   }
+  img.loaded { opacity: 1; transform: translateY(0); }
 
-  img.loaded {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  /* Lightbox Overlay */
+  /* Lightbox */
   .lightbox {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); z-index: 2000;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none; transition: 0.3s;
   }
-  
-  .lightbox.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-  
-  .lightbox img {
-    max-width: 90%;
-    max-height: 90%;
-    transform: scale(1);
-    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
-    cursor: zoom-out;
-  }
+  .lightbox.active { opacity: 1; pointer-events: all; }
+  .lightbox img { max-height: 95vh; max-width: 95vw; cursor: zoom-out; transform: none; margin: 0; }
 
-  #content a {
-    color: #00d0ff;
-    font-weight: 600;
-    text-decoration: none;
-    border-bottom: 1px dashed rgba(0,208,255,0.5);
-    transition: color 0.3s ease, border-color 0.3s ease;
-    word-break: break-word;
-  }
-
-  #content a:hover {
-    color: #ffeb3b;
-    border-color: #ffeb3b;
-  }
-  
-  .back-link {
-    display: inline-block;
-    margin-bottom: 2rem;
-    color: var(--link);
-    font-weight: bold;
-    text-decoration: none;
-  }
-
-  #toc li ul {
-    padding-left: 1rem;
-    border-left: 1px dashed #333;
-    margin-top: 0.2rem;
-  }
-
-  .sidebar::-webkit-scrollbar, main::-webkit-scrollbar { width: 8px; }
-  .sidebar::-webkit-scrollbar-thumb, main::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-  }
-
+  /* === Mobile Responsiveness === */
   @media (max-width: 992px) {
-    body { display: block; overflow-x: hidden; overflow-y: auto; }
-
     .sidebar {
-      width: 100%;
-      height: auto;
-      max-height: 300px; /* Limit height on mobile */
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      background: #111;
-      padding: 1rem;
-      position: relative;
-      z-index: 2;
+      position: fixed; left: -280px; top: 0; bottom: 0;
+      box-shadow: 5px 0 20px rgba(0,0,0,0.5);
     }
-
-    main {
-      width: 100%;
-      padding: 1.5rem;
-      margin: 0;
-      height: auto; /* Allow natural height */
+    .sidebar.active { transform: translateX(280px); }
+    .mobile-toggle { display: flex; }
+    main { padding: 1.5rem; width: 100%; }
+    /* Overlay when sidebar open */
+    .sidebar-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); z-index: 99;
+      display: none;
     }
-
-    pre { overflow-x: auto; }
-    
-    /* Ensure copy button is always visible on touch devices */
-    .copy-btn { opacity: 1; }
+    .sidebar-overlay.active { display: block; }
   }
+  
+  #content a { color: #00d0ff; text-decoration: none; border-bottom: 1px dashed rgba(0,208,255,0.4); }
+  #content a:hover { color: var(--link); border-color: var(--link); }
   </style>
 </head>
 
 <body>
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+  <div class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fa-solid fa-bars"></i>
+  </div>
+
   <nav class="sidebar">
-    <h2>On this page</h2>
-    <ul id="toc"></ul>
+    <div class="search-box">
+      <i class="fa-solid fa-search"></i>
+      <input type="text" id="toc-search" placeholder="Filter sections..." autocomplete="off">
+    </div>
+    <h2>Table of Contents</h2>
+    <div id="toc-container">
+      <ul id="toc"></ul>
+    </div>
   </nav>
 
-  <main>
-    <a href="../../index.html" class="back-link">← Back to Home</a>
-    <div id="content">
-      <div style="color: #666; padding: 20px;">Loading writeup...</div>
-    </div>
+  <main id="main-scroll">
+    <a href="../../index.html" style="color:var(--link);font-weight:bold;display:inline-block;margin-bottom:1rem">← Back to Home</a>
+    
+    <div id="meta" class="meta-info"></div>
+    <div id="content">Loading writeup...</div>
   </main>
 
   <div id="lightbox" class="lightbox"></div>
@@ -292,104 +281,137 @@
   <script>
   const mdFile = "Gavel.md";
   const safeId = t => t.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "");
+  
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('active');
+    document.querySelector('.sidebar-overlay').classList.toggle('active');
+  }
 
-  // Fetch and Parse
   fetch(mdFile)
-    .then(res => {
-        if (!res.ok) throw new Error("Markdown file not found");
-        return res.text();
-    })
+    .then(res => res.text())
     .then(md => {
-      document.getElementById("content").innerHTML = marked.parse(md);
+      // 1. Setup Marked with Syntax Highlighting
+      marked.setOptions({
+        highlight: function(code, lang) {
+          const language = highlight.getLanguage(lang) ? lang : 'plaintext';
+          return highlight.highlight(code, { language }).value;
+        }
+      });
 
-      // 1. Process Headings & TOC
+      // 2. Parse Markdown
+      const rawHtml = marked.parse(md);
+      const contentDiv = document.getElementById("content");
+      
+      // 3. Post-Process: Custom Admonitions
+      // Convert > [!NOTE] to custom divs
+      const processedHtml = rawHtml.replace(
+        /<blockquote>\s*<p>\[!(NOTE|WARNING|DANGER)\]\s*(.*?)<\/p>\s*((.|[\r\n])*?)<\/blockquote>/gim, 
+        (match, type, title, body) => {
+           const lowerType = type.toLowerCase();
+           const icon = lowerType === 'note' ? 'fa-info-circle' : 
+                        lowerType === 'warning' ? 'fa-exclamation-triangle' : 'fa-skull';
+           const displayTitle = title || type;
+           return `<div class="admonition ${lowerType}">
+             <div class="admonition-title"><i class="fa-solid ${icon}"></i> ${displayTitle}</div>
+             <div>${body}</div>
+           </div>`;
+        }
+      );
+      
+      contentDiv.innerHTML = processedHtml;
+
+      // 4. Reading Time Calculation
+      const wordCount = contentDiv.innerText.split(/\s+/).length;
+      const readTime = Math.ceil(wordCount / 200);
+      document.getElementById("meta").innerHTML = `
+        <span><i class="fa-regular fa-clock"></i> ${readTime} min read</span>
+        <span><i class="fa-solid fa-pen-nib"></i> ${wordCount} words</span>
+      `;
+
+      // 5. Build TOC & Headings
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
       
-      headings.forEach((h, index) => {
-        // Assign ID
-        const rawId = safeId(h.textContent);
-        h.id = rawId || `heading-${index}`; // Fallback ID
-
-        // Build TOC Hierarchy
-        const level = parseInt(h.tagName.replace("H", ""));
+      headings.forEach((h, i) => {
+        h.id = safeId(h.textContent) || `h-${i}`;
+        const level = parseInt(h.tagName.substring(1));
+        
         const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = `#${h.id}`;
-        a.textContent = h.textContent;
-        a.dataset.target = h.id; // For scroll spy
-        li.appendChild(a);
-
+        li.innerHTML = `<a href="#${h.id}" data-target="${h.id}">${h.textContent}</a>`;
+        
         while (tocStack.length > 1 && tocStack[tocStack.length - 1].level >= level) tocStack.pop();
-        const parent = tocStack[tocStack.length - 1];
-        parent.ul.appendChild(li);
-
-        const next = headings[index + 1];
-        if (next && parseInt(next.tagName.replace("H", "")) > level) {
+        
+        const parent = tocStack[tocStack.length - 1].ul;
+        parent.appendChild(li);
+        
+        const next = headings[i+1];
+        if(next && parseInt(next.tagName.substring(1)) > level) {
           const ul = document.createElement("ul");
           li.appendChild(ul);
-          tocStack.push({ level, ul });
+          tocStack.push({ level, ul: ul });
         }
       });
 
-      // 2. Add Copy Buttons to Code Blocks
+      // 6. Interactive Features
+      
+      // Copy Buttons
       document.querySelectorAll("pre").forEach(pre => {
         const btn = document.createElement("button");
         btn.className = "copy-btn";
-        btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
-        
-        btn.addEventListener("click", () => {
-          const code = pre.querySelector("code") ? pre.querySelector("code").innerText : pre.innerText;
-          navigator.clipboard.writeText(code).then(() => {
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-            setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy', 2000);
-          });
-        });
+        btn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+        btn.onclick = () => {
+          navigator.clipboard.writeText(pre.innerText);
+          btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+          setTimeout(() => btn.innerHTML = '<i class="fa-regular fa-copy"></i>', 2000);
+        }
         pre.appendChild(btn);
       });
 
-      // 3. Image Handling (Fade-in & Lightbox)
-      const lightbox = document.getElementById("lightbox");
-      
+      // Images & Lightbox
+      const lb = document.getElementById("lightbox");
       document.querySelectorAll("#content img").forEach(img => {
-        // Fade in
-        img.addEventListener("load", () => img.classList.add("loaded"));
-        if (img.complete) img.classList.add("loaded");
+        img.onload = () => img.classList.add("loaded");
+        if(img.complete) img.classList.add("loaded");
+        img.onclick = () => {
+          lb.innerHTML = "";
+          lb.appendChild(img.cloneNode());
+          lb.classList.add("active");
+        };
+      });
+      lb.onclick = () => lb.classList.remove("active");
 
-        // Lightbox Click
-        img.addEventListener("click", () => {
-            const clone = img.cloneNode();
-            clone.classList.remove("loaded"); // Reset anim
-            lightbox.innerHTML = "";
-            lightbox.appendChild(clone);
-            lightbox.classList.add("active");
-            setTimeout(() => clone.classList.add("loaded"), 10); // Trigger anim
+      // TOC Search
+      const searchInput = document.getElementById("toc-search");
+      searchInput.addEventListener("input", (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll(".sidebar li").forEach(li => {
+          const text = li.innerText.toLowerCase();
+          li.style.display = text.includes(term) ? "block" : "none";
         });
       });
 
-      // Close lightbox on click
-      lightbox.addEventListener("click", () => {
-        lightbox.classList.remove("active");
-      });
+      // Scroll Spy & Progress Bar
+      const main = document.querySelector("main");
+      const links = document.querySelectorAll(".sidebar a");
+      
+      main.addEventListener("scroll", () => {
+        // Progress Bar
+        const scrollTop = main.scrollTop;
+        const scrollHeight = main.scrollHeight - main.clientHeight;
+        const width = (scrollTop / scrollHeight) * 100;
+        document.getElementById("progress-bar").style.width = width + "%";
 
-      // 4. Scroll Spy (Highlight TOC on scroll)
-      const mainContainer = document.querySelector("main"); // Element that scrolls
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const id = entry.target.id;
-            document.querySelectorAll(".sidebar a").forEach(link => {
-              link.classList.toggle("active", link.dataset.target === id);
-            });
-          }
+        // Spy
+        let current = "";
+        headings.forEach(h => {
+          if (h.offsetTop - main.offsetTop <= 100) current = h.id;
         });
-      }, { root: mainContainer, threshold: 0.1, rootMargin: "-10% 0px -80% 0px" });
-
-      headings.forEach(h => observer.observe(h));
-    })
-    .catch(err => {
-        document.getElementById("content").innerHTML = `<div style="color: #ff5555; padding: 20px;">Error loading writeup: ${err.message}</div>`;
+        links.forEach(l => {
+          l.classList.remove("active");
+          if(l.dataset.target === current) l.classList.add("active");
+        });
+      });
     });
   </script>
 </body>
