@@ -6,21 +6,18 @@ Operating System: Linux
 Hints: True
 ```
 
-## Summary of Attack Chain
-
-| Step | User / Access | Technique Used | Result |
-|  |  |  |  |
-| 1 | `N/A` | **Port Scan & Host Discovery** | `nmap` revealed ports `22` (SSH) and `80` (HTTP). Added `gavel.htb` to `/etc/hosts`. |
-| 2 | `N/A` | **Directory Fuzzing** | `ffuf` discovered `/.git/` repository exposed on the web server. |
-| 3 | `N/A` | **Source Code Analysis** | Used `git-dumper` to extract source code. Identified SQLi vulnerability in `inventory.php` and RCE potential in admin rules. |
-| 4 | `N/A` | **SQL Injection** | Exploited SQLi in `inventory.php` (via `user_id`/`sort` params) to dump the `auctioneer` bcrypt password hash. |
-| 5 | `Attacker` | **Password Cracking** | Cracked the `auctioneer` hash offline using John the Ripper (`rockyou.txt`) to reveal password `midXXXXXX`. |
-| 6 | `auth admin` | **Remote Code Execution (RCE)** | Logged into admin panel; injected PHP reverse shell code into the "Rules" section (processed via `runkit_function_add`). |
-| 7 | `www-data` | **Reverse Shell & Pivot** | Triggered rule execution via `bid_handler.php` to get a shell. Stabilized shell and used password reuse (`midXXXXXX`) to `su auctioneer`. |
-| 8 | `auctioneer` | **Local Enumeration** | Discovered `/usr/local/bin/gavel-util` which processes YAML files using PHP `runkit` with root privileges. |
-| 9 | `auctioneer` | **PHP Config Injection (YAML)** | Submitted malicious YAML via `gavel-util` to overwrite `php.ini` and remove `open_basedir`/`disable_functions`. |
-| 10 | `auctioneer` | **SUID Binary Creation (YAML)** | Submitted second YAML payload to copy `/bin/bash` to `/opt/rootbash` and set the SUID bit (`chmod u+s`). |
-| 11 | `root` | **Privilege Escalation** | Executed `/opt/rootbash -p` to gain root access and retrieve the `/root/root.txt` flag. |
+Step,User / Access                     ,Technique Used                                               ,Result                                                                   
+   1 ,(Local / Recon)                   ,nmap -p- -sC -sV gavel.htb                               ,Revealed ports 22 (SSH) and 80 (HTTP); updated hosts file.           
+   2 ,(Local / Recon)                   ,ffuf directory fuzzing                                   ,Discovered /.git/ repository exposed on the web server.                 
+   3 ,(Local / Recon)                   ,git-dumper + Source Code Analysis                         ,Identified SQLi in inventory.php and RCE logic in admin rules.         
+   4 ,(Unauthenticated Web)             ,SQL Injection (inventory.php)                             ,Dumped auctioneer bcrypt password hash via sort parameter.           
+   5 ,(attacker)                         ,John the Ripper (rockyou.txt)                             ,Cracked auctioneer hash to reveal password midXXXXXX.                 
+   6 ,auctioneer (Web Login)             ,Admin Panel RCE (runkit)                                 ,"Injected PHP reverse shell into ""Rules"" section.                         "
+   7 ,www-data (Reverse Shell)           ,Trigger bid_handler.php                                   ,Gained shell; pivoted to user auctioneer via password reuse.           
+   8 ,auctioneer (User Access)           ,Local Enumeration (gavel-util)                           ,Discovered sudo-like binary processing YAML with root privileges.         
+   9 ,auctioneer (Priv-Esc Prep)         ,YAML Injection (php.ini overwrite)                       ,Removed open_basedir/disable_functions restrictions via gavel-util.
+  10 ,auctioneer (Priv-Esc Prep)         ,YAML Injection (SUID bash)                               ,Copied /bin/bash to /opt/rootbash and set SUID bit (chmod u+s).     
+  11 ,root (System Access)               ,/opt/rootbash -p                                         ,Executed SUID bash to gain root access and read root.txt.               
 
 
 ![Gavel](HTB_2025-12-21_18-44MindMap.png)
@@ -76,10 +73,6 @@ We're presented with a fantasy-themed auction web platform offering various virt
 
 
 Obviously, for further exploration, we need to register — most functionality is hidden behind authentication, and without an account, we won't be able to interact with the bidding and auction system. Let's create a test account and log in.
-
-
-
-
 
 
 As mentioned earlier, this application implements auction lot mechanics and subsequent purchasing. The very fact that there's a form through which users place bids should immediately suggest that the key interaction happens with the values transmitted within this form. This means the server processes most of the logic based on data sent by the client in requests.
