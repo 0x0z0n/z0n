@@ -1,5 +1,52 @@
 [
- 
+{
+    "title": "TryHackMe: Advent of Cyber 2025",
+    "href": "posts/AoC_2025",
+    "date": "2025-12-23",
+    "category": [
+      "TryHackMe",
+      "Analysis"
+    ],
+    "tags": [
+      "Exiftool",
+      "C2Server",
+      "PowerShellScript",
+      "GitHubAnalysis",
+      "LogAnalysis",
+      "FailedLogins",
+      "IPAddress",
+      "ElasticStack",
+      "ELK",
+      "WebShell",
+      "FileUploadVulnerability",
+      "BurpSuite",
+      "AtomicRedTeam",
+      "MITREATTACK",
+      "RansomwareSimulation",
+      "CloudTrail",
+      "AWSLogs",
+      "IAM",
+      "S3Bucket",
+      "JQL",
+      "ReverseShell",
+      "Metasploit",
+      "MacroMalware",
+      "Phishing",
+      "WPA2Cracking",
+      "Airodump-ng",
+      "Aireplay-ng",
+      "Aircrack-ng",
+      "RaceCondition",
+      "InsecureDirectObjectReference",
+      "IDOR",
+      "WirelessSecurity",
+      "NetworkAttacks",
+      "DigitalForensics",
+      "IncidentResponse",
+      "VulnerabilityAssessment"
+    ],
+    "attack_path": []
+  }, 
 {
   "title": "HackTheBox: Gavel",
   "href": "posts/Gavel/",

@@ -386,7 +386,7 @@ level: high
   *Bypass:* Adversary could rename `Rubeus.exe` to avoid the filename filter.  
   *Sub‑Rule Countermeasure:* Add a hash‑based detection and monitor for any process that opens Kerberos APIs (`KDC_REQ_TGS`) while on a non‑trusted domain controller.
 
- 
+nano 
 
 ## PHASE 6: TOOLKIT & IMPLEMENTATION
 
