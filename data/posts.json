@@ -1,5 +1,83 @@
 [
 {
+  "title": "HackTheBox: MonitorsFour",
+  "href": "posts/MonitorsFour/",
+  "date": "2025-12-23",
+  "category": [
+    "HackTheBox",
+    "Windows",
+    "DevSecOps",
+    "Application Security"
+  ],
+  "tags": [
+    "T1046 - Network Service Discovery",
+    "T1595 - Active Scanning",
+    "T1190 - Exploit Public-Facing Application (Type Juggling)",
+    "T1552 - Unsecured Credentials",
+    "T1078 - Valid Accounts (Credential Reuse)",
+    "T1210 - Exploitation of Remote Services (Cacti RCE)",
+    "T1609 - Container Administration Command",
+    "T1611 - Escape to Host"
+  ],
+  "attack_path": [
+    {
+      "step": 1,
+      "user": "N/A",
+      "technique": "Network Enumeration (nmap)",
+      "result": "Scanned target revealing Nginx (80) and WinRM (5985), confirming a Windows host environment.",
+      "mitigation": "Restrict management ports (WinRM) to VPN/internal subnets; use firewalls to block unnecessary ports."
+    },
+    {
+      "step": 2,
+      "user": "N/A",
+      "technique": "API Fuzzing & Parameter Analysis",
+      "result": "Discovered the `/user` endpoint responding with 'Missing token' errors, indicating an attack surface for authentication.",
+      "mitigation": "Implement standard authentication headers (Bearer/Basic) instead of GET parameters; genericize error messages."
+    },
+    {
+      "step": 3,
+      "user": "N/A",
+      "technique": "Authentication Bypass (PHP Type Juggling)",
+      "result": "Exploited loose PHP comparisons (`==`) using magic hashes (e.g., `0e123...`) to bypass token validation and dump the user database.",
+      "mitigation": "Use strict comparison operators (`===`) in PHP; ensure tokens are treated as strings, not numbers."
+    },
+    {
+      "step": 4,
+      "user": "admin",
+      "technique": "Credential Reuse",
+      "result": "Extracted admin credentials from the JSON leak and successfully reused them to authenticate into the Cacti instance.",
+      "mitigation": "Enforce unique passwords for different services; implement Multi-Factor Authentication (MFA)."
+    },
+    {
+      "step": 5,
+      "user": "admin",
+      "technique": "Exploitation for Client Execution (CVE-2025–24367)",
+      "result": "Utilized a PoC for Cacti Log Poisoning to execute arbitrary commands and gain a reverse shell inside a Docker container.",
+      "mitigation": "Keep software dependencies patched; restrict application permissions to write to logs or execute system commands."
+    },
+    {
+      "step": 6,
+      "user": "www-data",
+      "technique": "Internal Enumeration (Docker)",
+      "result": "Identified the environment as a Docker container and discovered the Docker Engine API exposed internally (CVE-2025–9074).",
+      "mitigation": "Do not expose the Docker socket/API without TLS authentication; audit container network isolation."
+    },
+    {
+      "step": 7,
+      "user": "www-data",
+      "technique": "Container Escape (API Abuse)",
+      "result": "Sent a POST request to the Docker API to spawn a privileged container mounting the host's root filesystem (`/`) to `/mnt/host`.",
+      "mitigation": "Run Docker in Rootless mode; use authorization plugins to restrict API actions; enable AppArmor/SELinux profiles."
+    },
+    {
+      "step": 8,
+      "user": "root",
+      "technique": "Host Filesystem Access",
+      "result": "Accessed the Windows host C: drive via the mount point and retrieved the root flag from the Administrator's desktop.",
+      "mitigation": "Prevent containers from mounting sensitive host directories; use hypervisor-based isolation for critical workloads."
+    }
+  ]
+},{
     "title": "TryHackMe: Advent of Cyber 2025",
     "href": "posts/AoC_2025",
     "date": "2025-12-23",

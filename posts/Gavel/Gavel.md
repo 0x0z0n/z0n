@@ -31,7 +31,7 @@ Hints: True
 Traditionally, we begin with an Nmap scan and discover two open TCP ports: port `22` with SSH service OpenSSH 8.9p1 (Ubuntu) and port `80` with Apache httpd 2.4.52 web server.
 
 ```bash
-nmap  -sC -sV -oN nmap_scan.txt 10.129.4.66
+nmap  -sC -sV -oN nmap_scan.txt 10.XX.XX.XX
 ```
 
 ![Gavel](HTB_2025-12-21_18-44_nmap_scan.png)
@@ -50,7 +50,7 @@ SSH is unlikely to be useful at this stage without credentials, so we'll focus o
 We add an entry to `/etc/hosts` for local domain name resolution. This is critically important because the Apache web server is configured to use virtual hosts and processes requests based on the HTTP `Host` header value. Without the proper hosts entry, we won't be able to access the full functionality of the web application.
 
 ```bash
-echo "10.129.4.176 gavel.htb" | sudo tee -a /etc/hosts
+echo "10.XX.XX.XX gavel.htb" | sudo tee -a /etc/hosts
 ```
 
 
