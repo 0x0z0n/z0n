@@ -22,6 +22,10 @@
 |  12  |     `Administrator`    | **Host File System Access**                      | Navigated to the Windows Administrator desktop and retrieved `root.txt` (root flag).                                          |
 
 
+
+![MonitorFour](HTB_2025-12-23_11-43_Mindmap.png)
+
+
 ## 1. Reconnaissance
 
 We begin with an Nmap scan to identify open ports and services.
@@ -46,9 +50,6 @@ nmap -sC -sV -A 10.10.11.98 -oN nmap_scan.txt
 * *Security Headers:* Missing `X-Frame-Options` and `X-Content-Type-Options`.
 * *Cookies:* `PHPSESSID` lacks the `HttpOnly` flag.
 
-![MonitorFour](HTB_2025-12-23_11-43_env.png)
-
-
 * **Port 5985 (WinRM):** Windows Remote Management. This confirms the underlying host is likely Windows.
 
 ![MonitorFour](HTB_2025-12-23_11-43_env.png)
@@ -67,7 +68,6 @@ Querying this endpoint returns token errors:
 * `curl http://monitorsfour.htb/user`  `{"error":"Missing token parameter"}`
 * `curl http://monitorsfour.htb/user?token=AAAA`  `{"error":"Invalid or missing token"}`
 
-![MonitorFour](HTB_2025-12-23_11-43_contenttype.png)
 
 ## 2. Vulnerability Analysis: PHP Type Juggling
 
