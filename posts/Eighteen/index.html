@@ -27,10 +27,11 @@
     --sidebar-bg: #111;
     --border: #333;
     --term-header: #2d2d2d;
+    --external-link: #f1c40f; /* Yellow accent for external links */
   }
 
   * { box-sizing: border-box; }
-  html { height: 100%; }
+  html { height: 100%; scroll-behavior: smooth; }
 
   body {
     margin: 0;
@@ -40,6 +41,17 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
+  }
+
+  /* === External Link Styling === */
+  #content a.ext-link {
+    color: var(--external-link) !important;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+  }
+  #content a.ext-link:hover {
+    filter: brightness(1.2);
   }
 
   /* === Top Progress Bar === */
@@ -77,10 +89,8 @@
   .search-box input:focus { border-color: var(--accent); }
   .search-box i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #555; font-size: 0.8rem; }
 
-  /* === Minimalist Sidebar CSS (No Lines) === */
+  /* === Minimalist Sidebar CSS === */
   #toc, #toc ul { list-style: none; margin: 0; padding: 0; }
-
-  /* Root Items (H1/H2) */
   #toc > li { margin-bottom: 4px; }
   #toc > li > a {
     font-weight: 600; color: #888; display: block;
@@ -91,46 +101,38 @@
   #toc > li > a:hover { color: #fff; background: #1a1a1a; }
   #toc > li > a.active { color: var(--accent); background: rgba(76, 175, 80, 0.1); font-weight: 700; }
 
-  /* Sub Items (H3) - Indented via padding */
   #toc > li > ul { margin-left: 0; padding-left: 0; }
-  #toc li ul li { margin-top: 2px; }
-
   #toc li ul a {
     font-size: 0.9rem; color: #666;
-    padding: 6px 12px 6px 32px; /* Indent */
+    padding: 6px 12px 6px 32px;
     display: block; border-radius: 6px; transition: 0.2s; text-decoration: none;
     display: flex; align-items: center; gap: 8px;
   }
   #toc li ul a:hover { color: #ddd; background: #1a1a1a; }
   #toc li ul a.active { color: var(--accent); background: transparent; font-weight: 600; }
 
-  /* Sidebar Scrollbar */
   #toc-container { flex: 1; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
   #toc-container::-webkit-scrollbar { width: 4px; }
   #toc-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-  #toc-container::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-  /* === Main Content (Right) === */
+  /* === Main Content === */
   main {
     flex: 1; padding: 3rem 5rem;
     overflow-y: auto; height: 100vh; position: relative;
     scroll-behavior: smooth;
   }
   main::-webkit-scrollbar { width: 6px; }
-  main::-webkit-scrollbar-track { background: transparent; }
   main::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-  main::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
   #content { max-width: 950px; margin: 0 auto; line-height: 1.8; font-size: 1.05rem; padding-bottom: 5rem; }
 
-  /* Typography */
   .meta-info { font-size: 0.85rem; color: #666; margin-bottom: 2rem; display: flex; gap: 1.5rem; align-items: center; border-bottom: 1px solid #222; padding-bottom: 1rem; }
-  h1, h2, h3 { color: var(--accent); margin-top: 3rem; position: relative; }
+  h1, h2, h3 { color: var(--accent); margin-top: 3rem; position: relative; scroll-margin-top: 2rem; }
   h1 { font-size: 2.5rem; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-top: 0; }
   .anchor-link { position: absolute; left: -25px; top: 0; color: #444; font-size: 0.8em; opacity: 0; transition: opacity 0.2s; text-decoration: none; padding: 0 5px; cursor: pointer; }
   h1:hover .anchor-link, h2:hover .anchor-link, h3:hover .anchor-link { opacity: 1; }
 
-  /* Code & Terminals */
+  /* Terminal & UI elements */
   .terminal-wrapper { margin: 2rem 0; background: #1e1e1e; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; overflow: hidden; }
   .terminal-header { background: var(--term-header); padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; }
   .terminal-controls { display: flex; gap: 6px; }
@@ -140,29 +142,21 @@
   .copy-btn:hover { background: #444; color: #fff; border-color: #777; }
   pre { margin: 0; padding: 1.5rem; overflow-x: auto; }
   
-  /* Images */
   img { max-width: 100%; border-radius: 8px; margin: 2rem auto; display: block; box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: zoom-in; }
   
-  /* Admonitions */
   .admonition { border-left: 4px solid; background: #151b23; padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
   .admonition-title { font-weight: bold; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
   .note { border-color: #1f6feb; } .note .admonition-title { color: #1f6feb; }
   .warning { border-color: #d29922; } .warning .admonition-title { color: #d29922; }
   .danger { border-color: #f85149; } .danger .admonition-title { color: #f85149; }
 
-  /* Lightbox Gallery Styles */
   #lightbox {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center;
     z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    user-select: none;
   }
   #lightbox.active { opacity: 1; pointer-events: all; }
-  
-  #lb-img {
-    max-height: 90vh; max-width: 90vw; box-shadow: 0 0 30px var(--accent-glow);
-    transition: transform 0.2s ease;
-  }
+  #lb-img { max-height: 90vh; max-width: 90vw; box-shadow: 0 0 30px var(--accent-glow); transition: transform 0.2s ease; }
 
   .lb-nav {
     position: absolute; top: 50%; transform: translateY(-50%);
@@ -180,14 +174,12 @@
     background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px;
   }
 
-  /* Skeleton */
   .skeleton { animation: shimmer 2s infinite linear; background: linear-gradient(to right, #1a1a1a 4%, #222 25%, #1a1a1a 36%); background-size: 1000px 100%; }
   .sk-title { height: 40px; margin-bottom: 20px; width: 60%; border-radius: 4px; }
   .sk-line { height: 15px; margin-bottom: 12px; width: 100%; border-radius: 4px; }
   .sk-block { height: 200px; margin: 20px 0; width: 100%; border-radius: 8px; }
   @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
 
-  /* Back to Top */
   .back-to-top {
     position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #000;
     width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -200,10 +192,9 @@
     .sidebar { position: fixed; left: -100%; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
     .sidebar.active { left: 0; }
     main { padding: 1.5rem; }
-    .mobile-toggle { display: flex; position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px; background: #222; border: 1px solid #444; border-radius: 50%; color: #fff; align-items: center; justify-content: center; z-index: 101; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .mobile-toggle { display: flex; position: fixed; bottom: 20px; left: 20px; width: 50px; height: 50px; background: #222; border: 1px solid #444; border-radius: 50%; color: #fff; align-items: center; justify-content: center; z-index: 101; }
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99; opacity: 0; pointer-events: none; transition: 0.3s; }
     .overlay.active { opacity: 1; pointer-events: all; }
-    /* Hide nav arrows on mobile (swipe only) */
     .lb-nav { display: none; } 
   }
   </style>
@@ -227,21 +218,18 @@
   </nav>
 
   <main id="main-scroll">
-    <a href="../../index.html" style="color:var(--link);font-weight:bold;text-decoration:none;">← Return Home</a>
+    <a href="../../index.html" style="color:var(--accent);font-weight:bold;text-decoration:none;">← Return Home</a>
     
     <div id="skeleton-ui" style="margin-top:2rem;">
       <div class="skeleton sk-title"></div>
       <div class="skeleton sk-line"></div>
-      <div class="skeleton sk-line" style="width:80%"></div>
       <div class="skeleton sk-block"></div>
-      <div class="skeleton sk-line"></div>
-      <div class="skeleton sk-line"></div>
     </div>
 
     <div id="meta-info" class="meta-info" style="display:none;"></div>
     <div id="content" style="display:none; opacity:0; transition: opacity 0.5s ease;"></div>
     
-    <div class="back-to-top" onclick="document.getElementById('main-scroll').scrollTo(0,0)">
+    <div class="back-to-top" onclick="document.getElementById('main-scroll').scrollTo({top:0, behavior:'smooth'})">
       <i class="fa-solid fa-arrow-up"></i>
     </div>
   </main>
@@ -265,7 +253,6 @@
   fetch(mdFile)
     .then(res => res.text())
     .then(md => {
-      // 1. Configure Marked
       marked.setOptions({
         highlight: (code, lang) => {
           const l = highlight.getLanguage(lang) ? lang : 'plaintext';
@@ -273,8 +260,10 @@
         }
       });
 
-      // 2. Parse Content & Admonitions
+      // Render Markdown
       let html = marked.parse(md);
+      
+      // Admonitions
       html = html.replace(/<blockquote>\s*<p>\[!(NOTE|WARNING|DANGER)\]\s*(.*?)<\/p>\s*((.|[\r\n])*?)<\/blockquote>/gim, 
         (match, type, title, body) => {
            const t = type.toLowerCase();
@@ -284,6 +273,16 @@
 
       const contentDiv = document.getElementById("content");
       contentDiv.innerHTML = html;
+
+      // === YELLOW HIGHLIGHT FOR EXTERNAL LINKS ===
+      document.querySelectorAll('#content a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+          link.classList.add('ext-link');
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
       
       // Meta Info
       const wordCount = contentDiv.innerText.split(/\s+/).length;
@@ -294,7 +293,7 @@
       contentDiv.style.display = "block";
       setTimeout(() => contentDiv.style.opacity = 1, 50);
 
-      // 3. TOC & Anchors
+      // TOC & Anchors
       const headings = Array.from(document.querySelectorAll("#content h1, #content h2, #content h3"));
       const toc = document.getElementById("toc");
       const tocStack = [{ level: 0, ul: toc }];
@@ -322,7 +321,7 @@
         }
       });
 
-      // 4. Code Blocks
+      // Code Blocks
       document.querySelectorAll("pre").forEach(pre => {
         const wrapper = document.createElement("div"); wrapper.className = "terminal-wrapper";
         const lang = (pre.querySelector("code").className.match(/language-(\w+)/) || [])[1] || "TEXT";
@@ -332,7 +331,7 @@
         wrapper.querySelector(".copy-btn").onclick = function() { navigator.clipboard.writeText(pre.innerText); this.textContent="Copied!"; setTimeout(()=>this.textContent="Copy",2000); };
       });
 
-      // 5. Advanced Lightbox (Gallery Mode)
+      // Gallery / Lightbox logic
       const lb = document.getElementById("lightbox");
       const lbImg = document.getElementById("lb-img");
       const lbCounter = document.querySelector(".lb-counter");
@@ -340,78 +339,72 @@
       let curIndex = 0;
 
       imgs.forEach((img, index) => {
-        img.style.cursor = "zoom-in";
-        img.onclick = () => openLightbox(index);
+        img.onclick = () => {
+          curIndex = index;
+          updateLightbox();
+          lb.classList.add("active");
+          document.body.style.overflow = "hidden";
+        };
       });
-
-      function openLightbox(index) {
-        curIndex = index;
-        updateLightbox();
-        lb.classList.add("active");
-        document.body.style.overflow = "hidden"; 
-      }
-
-      function closeLightbox() {
-        lb.classList.remove("active");
-        document.body.style.overflow = "";
-      }
 
       function updateLightbox() {
         lbImg.style.opacity = 0;
         setTimeout(() => {
-            lbImg.src = imgs[curIndex].src;
-            lbImg.style.opacity = 1;
-            lbCounter.innerText = `${curIndex + 1} / ${imgs.length}`;
+          lbImg.src = imgs[curIndex].src;
+          lbImg.style.opacity = 1;
+          lbCounter.innerText = `${curIndex + 1} / ${imgs.length}`;
         }, 100);
       }
 
-      function nextImg(e) { e.stopPropagation(); curIndex = (curIndex + 1) % imgs.length; updateLightbox(); }
-      function prevImg(e) { e.stopPropagation(); curIndex = (curIndex - 1 + imgs.length) % imgs.length; updateLightbox(); }
+      const nextImg = (e) => { if(e) e.stopPropagation(); curIndex = (curIndex + 1) % imgs.length; updateLightbox(); };
+      const prevImg = (e) => { if(e) e.stopPropagation(); curIndex = (curIndex - 1 + imgs.length) % imgs.length; updateLightbox(); };
 
       document.querySelector(".lb-next").onclick = nextImg;
       document.querySelector(".lb-prev").onclick = prevImg;
-      lb.onclick = (e) => { if(e.target === lb || e.target === lbImg) closeLightbox(); };
+      lb.onclick = () => { lb.classList.remove("active"); document.body.style.overflow = ""; };
 
-      document.addEventListener("keydown", (e) => {
-        if(!lb.classList.contains("active")) return;
-        if(e.key === "ArrowRight") nextImg(e);
-        if(e.key === "ArrowLeft") prevImg(e);
-        if(e.key === "Escape") closeLightbox();
-      });
-
-      let touchStartX = 0;
-      lb.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX);
-      lb.addEventListener('touchend', e => {
-        let touchEndX = e.changedTouches[0].screenX;
-        if (touchEndX < touchStartX - 50) nextImg(e); 
-        if (touchEndX > touchStartX + 50) prevImg(e); 
-      });
-
-      // 6. Scroll Logic
+      // === SCROLL SPY LOGIC ===
       const main = document.getElementById("main-scroll");
-      const links = document.querySelectorAll(".sidebar a");
+      const sidebarLinks = document.querySelectorAll("#toc a");
       const backBtn = document.querySelector(".back-to-top");
 
       main.addEventListener("scroll", () => {
+        // Progress bar
         const pct = (main.scrollTop / (main.scrollHeight - main.clientHeight)) * 100;
         document.getElementById("progress-bar").style.width = pct + "%";
+        
+        // Back to top
         backBtn.classList.toggle("visible", main.scrollTop > 500);
 
+        // Heading detection
         let current = "";
-        headings.forEach(h => { if(h.offsetTop - main.offsetTop <= 100) current = h.id; });
-        links.forEach(l => {
+        const scrollPos = main.scrollTop + 100; // Offset for better detection
+        
+        headings.forEach(h => {
+          if (scrollPos >= h.offsetTop) {
+            current = h.id;
+          }
+        });
+
+        // Sidebar Sync
+        sidebarLinks.forEach(l => {
           l.classList.remove("active");
-          if(l.dataset.target === current) {
+          if(l.getAttribute("data-target") === current) {
             l.classList.add("active");
+            
+            // Auto-scroll the sidebar container if the active link is hidden
             const container = document.getElementById("toc-container");
-            const linkTop = l.offsetTop;
-            if(linkTop < container.scrollTop || linkTop > container.scrollTop + container.clientHeight) {
-                l.scrollIntoView({ behavior: "smooth", block: "center" });
+            const linkRect = l.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            if (linkRect.top < containerRect.top || linkRect.bottom > containerRect.bottom) {
+                l.scrollIntoView({ behavior: "smooth", block: "nearest" });
             }
           }
         });
       });
 
+      // Filter
       document.getElementById("toc-search").addEventListener("input", (e) => {
         const val = e.target.value.toLowerCase();
         document.querySelectorAll("#toc li").forEach(li => li.style.display = li.innerText.toLowerCase().includes(val) ? "block" : "none");
