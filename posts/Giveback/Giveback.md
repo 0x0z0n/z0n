@@ -946,7 +946,7 @@ EOF
 
 
 babywyrm@giveback Password: Hv74gMREZwEVUBbYhXOE0tHoA5azXwk
-Administrator Password: 
+Administrator Password: sW5sp4spa3u7RLyetrekE4oS
 
 ```config.json
 cat > config.json << 'EOF'
@@ -1024,7 +1024,7 @@ cat > config.json << 'EOF'
 EOF
 ```
 
-![GiveBack](htb_Giveback_controllermanger masterpass.png)
+![GiveBack](htb_Giveback_controllermanger_masterpass.png)
 
 ### Decoding Credentials
 
