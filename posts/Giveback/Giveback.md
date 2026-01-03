@@ -180,7 +180,7 @@ cat wordpress-password
 
 **Pass MariaDB**
 
-bash```
+```bash
 <ess-698f59878d-62l76:/secrets$ cat mariadb-password              
 sW5sp4spa3u7RLyetrekE4oSI have no name!@beta-vino-wp-wordpress-698f59878d-62l76:/secrets$ cat mariadb-password
 <ess-698f59878d-62l76:/secrets$ cat mariadb-password              
