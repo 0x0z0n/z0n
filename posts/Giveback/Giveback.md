@@ -1243,10 +1243,10 @@ sudo /opt/debug run errur
 **Thanks for a Read!!**
 
 
-## Notes
+# Notes
 
 
-# GIVEBACK HTB WRITEUP: TACTICAL OPERATIONS BRIEFING  
+## GIVEBACK HTB WRITEUP: TACTICAL OPERATIONS BRIEFING  
 
 
 
@@ -1371,4 +1371,3 @@ SecurityEvent
 | **08** | Decode secret | `echo 'dkNQV0FKRE5qY1NsTW9mc1RRcTg3dDZyVmszYnFWY3E=' | base64 -d` |
 | **09** | SSH into host | `ssh babywyrm@10.10.11.94` |
 | **10** | Escalate to root | `sudo /opt/debug run <malicious_config>` |
-	
