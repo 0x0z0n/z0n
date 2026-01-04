@@ -1,0 +1,33 @@
+/* Template CSS file that must be included by every page */
+
+/* Default styling start */
+html{
+    font-family: 'Inter', sans-serif;
+}
+
+body{
+    background-color: #111827 !important;
+    color:white;
+    font-family: 'Inter', sans-serif;
+}
+
+.logo-font{
+    font-family: 'Quicksand', sans-serif;
+}
+
+
+/* invalid feedback */
+.invalid-feedback{
+    color: #EE4B2B;
+}
+
+input,label {
+    font-weight: 100;
+}
+
+/* This is specifically for the module's menu bar */
+.expand {
+    transition-property: width, padding;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+}
