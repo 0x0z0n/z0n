@@ -1058,9 +1058,6 @@ sudo /opt/debug run errur
 ![GiveBack](htb_Giveback_Root_flag.png)
 
 
-**Thanks for a Read!!**
-
-
 # Notes
 
 
@@ -1189,3 +1186,7 @@ SecurityEvent
 | **08** | Decode secret | `echo 'dkNQV0FKRE5qY1NsTW9mc1RRcTg3dDZyVmszYnFWY3E=' | base64 -d` |
 | **09** | SSH into host | `ssh babywyrm@10.10.11.94` |
 | **10** | Escalate to root | `sudo /opt/debug run <malicious_config>` |
+
+
+
+**Thanks for a Read!!**
