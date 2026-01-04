@@ -1048,7 +1048,7 @@ EOF
 
 ### Execution
 
-Run the debug tool to trigger the container and read the root flag:
+Run the debug tool to trigger the container and read the root flag :
 
 ```bash
 sudo /opt/debug run errur
