@@ -941,8 +941,9 @@ sda
 
 Use the decoded password to SSH into the host machine:
 
-babywyrm@giveback: Hv74gMREZwEVUBbYhXOE0tHoA5azXwk
-Administrator Passwprd: sW5sp4spa3u7RLyetrekE4oS
+**babywyrm@giveback: Hv74gMREZwEVUBbYhXOE0tHoA5azXwk**
+
+**Administrator Passwprd: sW5sp4spa3u7RLyetrekE4oS**
 
 After gaining access as the `babywyrm` user, the final goal is to escalate to **root**.
 
