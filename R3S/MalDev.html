@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTB Hosted</title>
+<style>
+  body { background:#0b0f13; color:#d7e6ef; font-family:Inter,sans-serif; padding:20px; }
+  h1 { color:#ffd24a; }
+  ul { list-style:none; padding-left:20px; }
+  li { margin:4px 0; }
+  li.dir > span { color:#00ff8a; cursor:pointer; }
+  li.file > span { color:#ffd24a; cursor:pointer; text-decoration:underline; }
+  li span { user-select:none; }
+  li ul { display:none; margin-left:12px; }
+</style>
+</head>
+<body>
+<h1>HTB Hosted</h1>
+<div id="tree">Loading...</div>
+
+<script>
+const owner = '0x0z0n';       // GitHub username
+const repo = 'z0n';            // repository name
+const rootPath = 'R3S/MalDev';    // folder to index
+const baseURL = 'https://0x0z0n.github.io/z0n/'; // GitHub Pages base
+
+async function fetchContents(path='') {
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+  const res = await fetch(url);
+  if(!res.ok) return [];
+  return await res.json();
+}
+
+async function buildTree(container, path='') {
+  const items = await fetchContents(path);
+  const ul = document.createElement('ul');
+
+  for(const item of items) {
+    const li = document.createElement('li');
+    li.className = item.type;
+    const span = document.createElement('span');
+    span.textContent = item.name;
+    li.appendChild(span);
+
+    if(item.type==='dir') {
+      span.onclick = async () => {
+        let sub = li.querySelector('ul');
+        if(sub) {
+          sub.style.display = sub.style.display==='none'?'block':'none';
+        } else {
+          await buildTree(li, item.path);
+          sub = li.querySelector('ul');
+          sub.style.display = 'block';
+        }
+      };
+    } else if(item.type==='file') {
+      span.onclick = () => {
+        const hostedURL = baseURL + encodeURIComponent(item.path).replace(/%2F/g,'/');
+        window.location.href = hostedURL;
+      };
+    }
+
+    ul.appendChild(li);
+  }
+
+  container.appendChild(ul);
+}
+
+// Initialize
+document.getElementById('tree').textContent = '';
+buildTree(document.getElementById('tree'), rootPath);
+</script>
+</body>
+</html>
