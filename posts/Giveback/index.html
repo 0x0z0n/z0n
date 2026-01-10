@@ -13,21 +13,48 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
   <style>
   :root {
+    /* === Dark Theme (Default) === */
     --accent: #4caf50;
     --accent-glow: rgba(76, 175, 80, 0.4);
     --bg: #0c0c0c;
     --text: #e0e0e0;
+    --text-muted: #888;
     --sidebar-bg: #111;
     --border: #333;
     --term-header: #2d2d2d;
-    --external-link: #f1c40f; /* Yellow accent for external links */
+    --code-bg: #1e1e1e;
+    --input-bg: #1a1a1a;
+    --admonition-bg: #151b23;
+    --external-link: #f1c40f;
+    --hover-bg: #1a1a1a;
+    --scrollbar-thumb: #333;
+    --shadow: rgba(0,0,0,0.5);
+  }
+
+  /* === Light Theme Overrides === */
+  [data-theme="light"] {
+    --accent: #2e7d32; /* Slightly darker green for contrast on white */
+    --accent-glow: rgba(46, 125, 50, 0.3);
+    --bg: #ffffff;
+    --text: #24292f;
+    --text-muted: #57606a;
+    --sidebar-bg: #f6f8fa;
+    --border: #d0d7de;
+    --term-header: #e1e4e8;
+    --code-bg: #ffffff;
+    --input-bg: #ffffff;
+    --admonition-bg: #f6f8fa;
+    --external-link: #d32f2f; /* Red/Orange for better visibility on light */
+    --hover-bg: #eaeef2;
+    --scrollbar-thumb: #bbb;
+    --shadow: rgba(0,0,0,0.15);
   }
 
   * { box-sizing: border-box; }
@@ -41,6 +68,7 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
+    transition: background 0.3s, color 0.3s;
   }
 
   /* === External Link Styling === */
@@ -72,48 +100,68 @@
     flex-shrink: 0;
     display: flex; flex-direction: column;
     z-index: 100;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s, border-color 0.3s;
+  }
+
+  .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
   }
 
   .sidebar h2 {
-    color: #fff; font-size: 0.85rem; letter-spacing: 1.5px;
-    margin: 0 0 1.5rem 0; text-transform: uppercase; opacity: 0.6; font-weight: 700;
+    color: var(--text); font-size: 0.85rem; letter-spacing: 1.5px;
+    margin: 0; text-transform: uppercase; opacity: 0.6; font-weight: 700;
   }
+
+  /* === Theme Toggle Button === */
+  .theme-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 35px; height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+  }
+  .theme-btn:hover { background: var(--hover-bg); border-color: var(--accent); color: var(--accent); }
 
   .search-box { position: relative; margin-bottom: 1.5rem; }
   .search-box input {
-    width: 100%; background: #1a1a1a; border: 1px solid #333;
-    color: #fff; padding: 8px 10px 8px 30px; border-radius: 6px;
-    outline: none; font-size: 0.85rem; transition: border-color 0.2s;
+    width: 100%; background: var(--input-bg); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 10px 8px 30px; border-radius: 6px;
+    outline: none; font-size: 0.85rem; transition: border-color 0.2s, background 0.3s;
   }
   .search-box input:focus { border-color: var(--accent); }
-  .search-box i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #555; font-size: 0.8rem; }
+  .search-box i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; }
 
   /* === Minimalist Sidebar CSS === */
   #toc, #toc ul { list-style: none; margin: 0; padding: 0; }
   #toc > li { margin-bottom: 4px; }
   #toc > li > a {
-    font-weight: 600; color: #888; display: block;
+    font-weight: 600; color: var(--text-muted); display: block;
     padding: 8px 12px; border-radius: 6px; transition: all 0.2s;
     font-size: 0.95rem; text-decoration: none;
     display: flex; align-items: center; gap: 8px;
   }
-  #toc > li > a:hover { color: #fff; background: #1a1a1a; }
+  #toc > li > a:hover { color: var(--text); background: var(--hover-bg); }
   #toc > li > a.active { color: var(--accent); background: rgba(76, 175, 80, 0.1); font-weight: 700; }
 
   #toc > li > ul { margin-left: 0; padding-left: 0; }
   #toc li ul a {
-    font-size: 0.9rem; color: #666;
+    font-size: 0.9rem; color: var(--text-muted); opacity: 0.8;
     padding: 6px 12px 6px 32px;
     display: block; border-radius: 6px; transition: 0.2s; text-decoration: none;
     display: flex; align-items: center; gap: 8px;
   }
-  #toc li ul a:hover { color: #ddd; background: #1a1a1a; }
-  #toc li ul a.active { color: var(--accent); background: transparent; font-weight: 600; }
+  #toc li ul a:hover { color: var(--text); background: var(--hover-bg); opacity: 1; }
+  #toc li ul a.active { color: var(--accent); background: transparent; font-weight: 600; opacity: 1; }
 
   #toc-container { flex: 1; overflow-y: auto; padding-right: 5px; scroll-behavior: smooth; }
   #toc-container::-webkit-scrollbar { width: 4px; }
-  #toc-container::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+  #toc-container::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
 
   /* === Main Content === */
   main {
@@ -122,29 +170,29 @@
     scroll-behavior: smooth;
   }
   main::-webkit-scrollbar { width: 6px; }
-  main::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  main::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 
   #content { max-width: 950px; margin: 0 auto; line-height: 1.8; font-size: 1.05rem; padding-bottom: 5rem; }
 
-  .meta-info { font-size: 0.85rem; color: #666; margin-bottom: 2rem; display: flex; gap: 1.5rem; align-items: center; border-bottom: 1px solid #222; padding-bottom: 1rem; }
+  .meta-info { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; display: flex; gap: 1.5rem; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
   h1, h2, h3 { color: var(--accent); margin-top: 3rem; position: relative; scroll-margin-top: 2rem; }
-  h1 { font-size: 2.5rem; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-top: 0; }
-  .anchor-link { position: absolute; left: -25px; top: 0; color: #444; font-size: 0.8em; opacity: 0; transition: opacity 0.2s; text-decoration: none; padding: 0 5px; cursor: pointer; }
+  h1 { font-size: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-top: 0; }
+  .anchor-link { position: absolute; left: -25px; top: 0; color: var(--text-muted); font-size: 0.8em; opacity: 0; transition: opacity 0.2s; text-decoration: none; padding: 0 5px; cursor: pointer; }
   h1:hover .anchor-link, h2:hover .anchor-link, h3:hover .anchor-link { opacity: 1; }
 
   /* Terminal & UI elements */
-  .terminal-wrapper { margin: 2rem 0; background: #1e1e1e; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; overflow: hidden; }
-  .terminal-header { background: var(--term-header); padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; }
+  .terminal-wrapper { margin: 2rem 0; background: var(--code-bg); border-radius: 8px; box-shadow: 0 10px 30px var(--shadow); border: 1px solid var(--border); overflow: hidden; transition: background 0.3s, border-color 0.3s; }
+  .terminal-header { background: var(--term-header); padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); transition: background 0.3s; }
   .terminal-controls { display: flex; gap: 6px; }
   .control { width: 10px; height: 10px; border-radius: 50%; }
-  .lang-badge { color: #888; font-size: 0.7rem; font-family: 'JetBrains Mono'; font-weight: bold; text-transform: uppercase;}
-  .copy-btn { background: transparent; border: 1px solid #555; color: #ccc; padding: 2px 8px; border-radius: 3px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
-  .copy-btn:hover { background: #444; color: #fff; border-color: #777; }
-  pre { margin: 0; padding: 1.5rem; overflow-x: auto; }
+  .lang-badge { color: var(--text-muted); font-size: 0.7rem; font-family: 'JetBrains Mono'; font-weight: bold; text-transform: uppercase;}
+  .copy-btn { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 2px 8px; border-radius: 3px; font-size: 0.7rem; cursor: pointer; transition: 0.2s; }
+  .copy-btn:hover { background: var(--border); color: var(--text); border-color: var(--text); }
+  pre { margin: 0; padding: 1.5rem; overflow-x: auto; color: var(--text); }
   
-  img { max-width: 100%; border-radius: 8px; margin: 2rem auto; display: block; box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: zoom-in; }
+  img { max-width: 100%; border-radius: 8px; margin: 2rem auto; display: block; box-shadow: 0 5px 20px var(--shadow); cursor: zoom-in; }
   
-  .admonition { border-left: 4px solid; background: #151b23; padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
+  .admonition { border-left: 4px solid; background: var(--admonition-bg); padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); transition: background 0.3s; }
   .admonition-title { font-weight: bold; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
   .note { border-color: #1f6feb; } .note .admonition-title { color: #1f6feb; }
   .warning { border-color: #d29922; } .warning .admonition-title { color: #d29922; }
@@ -174,7 +222,7 @@
     background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px;
   }
 
-  .skeleton { animation: shimmer 2s infinite linear; background: linear-gradient(to right, #1a1a1a 4%, #222 25%, #1a1a1a 36%); background-size: 1000px 100%; }
+  .skeleton { animation: shimmer 2s infinite linear; background: linear-gradient(to right, var(--sidebar-bg) 4%, var(--border) 25%, var(--sidebar-bg) 36%); background-size: 1000px 100%; }
   .sk-title { height: 40px; margin-bottom: 20px; width: 60%; border-radius: 4px; }
   .sk-line { height: 15px; margin-bottom: 12px; width: 100%; border-radius: 4px; }
   .sk-block { height: 200px; margin: 20px 0; width: 100%; border-radius: 8px; }
@@ -206,13 +254,20 @@
   <div class="mobile-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
 
   <nav class="sidebar">
+    <div class="sidebar-header">
+        <h2>Structure</h2>
+        <button class="theme-btn" onclick="toggleTheme()" title="Switch Theme">
+            <i class="fa-solid fa-sun" id="theme-icon"></i>
+        </button>
+    </div>
+
     <div class="search-box">
       <i class="fa-solid fa-search"></i>
       <input type="text" id="toc-search" placeholder="Filter..." autocomplete="off">
     </div>
-    <h2>Structure</h2>
+    
     <div id="toc-container"><ul id="toc"></ul></div>
-    <div style="margin-top:auto; font-size:0.8rem; color:#555; text-align:center; padding-top:20px;">
+    <div style="margin-top:auto; font-size:0.8rem; color:var(--text-muted); text-align:center; padding-top:20px;">
       &copy; 2026 0x0z0n
     </div>
   </nav>
@@ -242,6 +297,36 @@
   </div>
 
   <script>
+  // === Theme Logic ===
+  const themeBtn = document.getElementById('theme-icon');
+  const hljsLink = document.getElementById('hljs-theme');
+  
+  // 1. Check LocalStorage on load
+  const savedTheme = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeUI(savedTheme);
+
+  function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeUI(next);
+  }
+
+  function updateThemeUI(theme) {
+      // Icon
+      themeBtn.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      
+      // Syntax Highlighting Swap (Atom One Dark <-> Atom One Light)
+      const lightCss = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css";
+      const darkCss = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css";
+      hljsLink.href = theme === 'dark' ? darkCss : lightCss;
+  }
+
+  // === Existing Logic ===
   const mdFile = "Giveback.md";
   const safeId = t => t.trim().toLowerCase().replace(/[^\w]+/g, "-");
 
@@ -274,7 +359,7 @@
       const contentDiv = document.getElementById("content");
       contentDiv.innerHTML = html;
 
-      // === YELLOW HIGHLIGHT FOR EXTERNAL LINKS ===
+      // === YELLOW/RED HIGHLIGHT FOR EXTERNAL LINKS ===
       document.querySelectorAll('#content a').forEach(link => {
         const href = link.getAttribute('href');
         if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
