@@ -162,7 +162,7 @@
     "date": "2025-12-23",
     "category": [
       "TryHackMe",
-      "Analysis"
+      "Incident Analysis"
     ],
     "tags": [
     "ExploitationWithCurl",
@@ -1554,7 +1554,7 @@
       "Cyber Threat Intelligence",
       "Security Opearations",
       "Sherlock",
-      "Analysis"
+      "Incident Analysis"
     ],
     "tags": [
       "Credential Dumping from LSASS Memory (T1003.001)",
@@ -2157,7 +2157,7 @@
     "date": "2025-07-20",
     "category": [
       "TryHackMe",
-      "Analysis"
+      "Incident Analysis"
     ],
     "tags": [
       "Exiftool",
@@ -2205,7 +2205,7 @@
     "date": "2025-07-20",
     "category": [
       "TryHackMe",
-      "Analysis"
+      "Incident Analysis"
     ],
     "tags": [
       "PromptInjection",
