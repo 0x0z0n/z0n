@@ -375,7 +375,7 @@ main { padding: 40px 0; }
                 <a href="#"><i class="fas fa-bug"></i> CVE Analysis</a>
                 <a href="#"><i class="fas fa-user-secret"></i> Red Teaming</a>
                 <a href="#"><i class="fas fa-terminal"></i> CTF Writeups</a>
-                <a href="assets/Kshitij_Raut.html"><i class="far fa-file-alt"></i> Resume</a>
+                <a href="https://0x0z0n.github.io/Portfolio/assets/Kshitij_Raut.html"><i class="far fa-file-alt"></i> Resume</a>
                 <a href="https://github.com/0x0z0n" target="_blank"><i class="fab fa-github"></i> GitHub</a>
             </nav>
 
@@ -448,7 +448,13 @@ async function decodeVerifyAndRedirect(){
         // Success Animation
         document.body.style.transition = "1s";
         document.body.style.opacity = "0";
-        setTimeout(() => window.location.href=url, 1000);
+        
+        // CHANGED: Open in new tab ('_blank') instead of current window
+        setTimeout(() => {
+            window.open(url, '_blank');
+            // Optional: Bring opacity back if user returns to this tab
+            setTimeout(() => document.body.style.opacity = "1", 500); 
+        }, 1000);
     } else {
         console.warn("Easter-egg URL failed integrity check."); 
     }
