@@ -398,7 +398,7 @@ main { padding: 40px 0; }
             </div>
 
             <footer style="margin-top: 50px; text-align: center; color: var(--text-main); font-size: 13px; font-family: var(--font-mono);">
-                &copy; 2025 - 2026 0x0z0n Security.
+                &copy; 2026 0x0z0n Security Research.
             </footer>
         </main>
 
@@ -426,7 +426,7 @@ main { padding: 40px 0; }
    R3S ENCRYPTION / EASTER EGG LOGIC
    ========================================= */
 const r3S = "bG10aC5TM1IvUzNSL2dvbEIvb2kuYnVodGlnLm4wejB4MC8vOnNwdHRo"; 
-// Decodes to: https://0x0z0n.github.io/Blog/R3S/R3S.html (based on reversed string)
+// Decodes to: https://0x0z0n.github.io/Blog/R3S/R3S.html
 
 let clickCount = 0;
 let firstClickTime = 0;
@@ -598,7 +598,16 @@ function processData(data) {
             ${archive[month].map(p => `<a href="${p.href}" class="archive-entry"><span>${p.title.substring(0,25)}${p.title.length>25?'...':''}</span> <span class="count">${new Date(p.date).getDate()}</span></a>`).join('')}
         </div>
     `).join('');
-    render(allPosts);
+
+    // --- CHECK URL FOR SEARCH PARAMETER ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialQuery = urlParams.get('search');
+    
+    if(initialQuery) {
+        filter(initialQuery);
+    } else {
+        render(allPosts);
+    }
 }
 
 // 5. Search Logic
@@ -608,7 +617,8 @@ window.filter = (term) => {
     const q = term.toLowerCase();
     const filtered = allPosts.filter(p => JSON.stringify(p).toLowerCase().includes(q));
     render(filtered);
-    window.scrollTo({top:0, behavior:'smooth'});
+    // Only scroll if called via user interaction or initial load with param
+    if(term) window.scrollTo({top:0, behavior:'smooth'});
 };
 const sInput = document.getElementById('searchInput');
 if(sInput) {
