@@ -425,56 +425,65 @@ main { padding: 40px 0; }
 /* =========================================
    R3S ENCRYPTION / EASTER EGG LOGIC
    ========================================= */
-const r3S = "bG10aC5TM1IvUzNSL2dvbEIvb2kuYnVodGlnLm4wejB4MC8vOnNwdHRo";
-const expectedSha256 = "288443d0b0661bc97b32edc09937f64aef8235ae1d83aaac8e3b54968293b681";
-let clickCount = 0, firstClickTime = 0;
-const CLICK_LIMIT = 8, WINDOW_MS = 5000;
+const r3S = "bG10aC5TM1IvUzNSL2dvbEIvb2kuYnVodGlnLm4wejB4MC8vOnNwdHRo"; 
+// Decodes to: https://0x0z0n.github.io/Blog/R3S/R3S.html (based on reversed string)
+
+let clickCount = 0;
+let firstClickTime = 0;
+const CLICK_LIMIT = 8;
+const WINDOW_MS = 5000;
 
 function base64ToString(b64){
-  try{
+  try {
     const bin = atob(b64);
     return new TextDecoder().decode(Uint8Array.from(bin.split('').map(c=>c.charCodeAt(0))));
   } catch(e){ return null; }
 }
 
-function toHex(buffer){ return Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
-async function sha256Hex(str){ return toHex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str))); }
-function decodeObfuscatedUrl(){ const rev=base64ToString(r3S); return rev ? rev.split('').reverse().join('') : null; }
-
-async function decodeVerifyAndRedirect(){ 
-    const url=decodeObfuscatedUrl(); 
-    if(!url) return; 
-    if(await sha256Hex(url)===expectedSha256) {
-        // Success Animation
-        document.body.style.transition = "1s";
-        document.body.style.opacity = "0";
+function triggerEasterEgg(){ 
+    // 1. Decode the hidden URL
+    const rev = base64ToString(r3S);
+    const url = rev ? rev.split('').reverse().join('') : null;
+    
+    if(url) {
+        console.log("Easter Egg Triggered: Opening " + url);
         
-        // CHANGED: Open in new tab ('_blank') instead of current window
-        setTimeout(() => {
-            window.open(url, '_blank');
-            // Optional: Bring opacity back if user returns to this tab
-            setTimeout(() => document.body.style.opacity = "1", 500); 
-        }, 1000);
-    } else {
-        console.warn("Easter-egg URL failed integrity check."); 
+        // 2. Open IMMEDIATELY to bypass popup blockers
+        window.open(url, '_blank');
+
+        // 3. Visual Cue (Fade out current page)
+        document.body.style.transition = "0.5s";
+        document.body.style.opacity = "0.3";
+
+        // 4. Reset opacity if they come back
+        setTimeout(() => { document.body.style.opacity = "1"; }, 2000);
     }
 }
 
 // Attach logic to Brand Logo
 const brandBtn = document.getElementById("brandLogo");
-brandBtn.addEventListener("click", () => {
-  const now = Date.now();
-  if(!firstClickTime || (now-firstClickTime) > WINDOW_MS){ firstClickTime=now; clickCount=1; } else clickCount++;
-  
-  // Visual Feedback for clicks (Subtle flicker)
-  brandBtn.style.opacity = (clickCount % 2 === 0) ? "0.5" : "1";
+if(brandBtn){
+    brandBtn.addEventListener("click", (e) => {
+      e.preventDefault(); 
+      
+      const now = Date.now();
+      // Reset if too much time has passed
+      if(!firstClickTime || (now - firstClickTime) > WINDOW_MS){ 
+          firstClickTime = now; 
+          clickCount = 0; 
+      }
+      
+      clickCount++;
+      // Visual Feedback (Text color flicker)
+      brandBtn.style.color = (clickCount % 2 === 0) ? "#ff5f56" : "var(--accent)";
 
-  if(clickCount>=CLICK_LIMIT){ 
-      clickCount=0; 
-      firstClickTime=0; 
-      decodeVerifyAndRedirect(); 
-  }
-});
+      if(clickCount >= CLICK_LIMIT){ 
+          clickCount = 0; 
+          firstClickTime = 0; 
+          triggerEasterEgg(); 
+      }
+    });
+}
 
 
 /* =========================================
@@ -495,14 +504,18 @@ function cycleTheme() {
 
 // 2. Mobile Menu
 function toggleSidebar() {
-    document.querySelector('.sidebar-left').classList.toggle('active');
+    const sb = document.querySelector('.sidebar-left');
+    if(sb) sb.classList.toggle('active');
 }
 
 // 3. Render Terminal
 function renderTerminal(path) {
     if(!path) return '';
     const steps = Array.isArray(path) ? path : [path];
-    const logs = steps.map((s, i) => `
+    
+    if(steps.length === 0) return '';
+
+    const logs = steps.map((s) => `
         <div class="log-entry">
             <div class="arrow">➜</div>
             <div class="log-content">
@@ -536,6 +549,7 @@ function safe(str) {
 }
 
 function render(posts) {
+    if(!feedEl) return;
     if(posts.length === 0) {
         feedEl.innerHTML = `<div style="text-align:center; padding:40px; font-family:var(--font-mono); color:var(--text-main);">No signals found matching query.</div>`;
         return;
@@ -576,9 +590,9 @@ function processData(data) {
         }
     });
 
-    catEl.innerHTML = Object.keys(cats).map(c => `<li><a href="#" onclick="filter('${c}'); return false;">${c} <span class="count">[${cats[c]}]</span></a></li>`).join('');
-    tagEl.innerHTML = Object.keys(tags).map(t => `<span class="tag-pill" onclick="filter('${t}')">${t}</span>`).join('');
-    arcEl.innerHTML = Object.keys(archive).sort((a,b)=>new Date(b)-new Date(a)).map(month => `
+    if(catEl) catEl.innerHTML = Object.keys(cats).map(c => `<li><a href="#" onclick="filter('${c}'); return false;">${c} <span class="count">[${cats[c]}]</span></a></li>`).join('');
+    if(tagEl) tagEl.innerHTML = Object.keys(tags).map(t => `<span class="tag-pill" onclick="filter('${t}')">${t}</span>`).join('');
+    if(arcEl) arcEl.innerHTML = Object.keys(archive).sort((a,b)=>new Date(b)-new Date(a)).map(month => `
         <div style="margin-bottom:15px;">
             <div style="font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-bottom:5px;">${month}</div>
             ${archive[month].map(p => `<a href="${p.href}" class="archive-entry"><span>${p.title.substring(0,25)}${p.title.length>25?'...':''}</span> <span class="count">${new Date(p.date).getDate()}</span></a>`).join('')}
@@ -589,35 +603,43 @@ function processData(data) {
 
 // 5. Search Logic
 window.filter = (term) => {
-    document.getElementById('searchInput').value = term;
+    const sInput = document.getElementById('searchInput');
+    if(sInput) sInput.value = term;
     const q = term.toLowerCase();
     const filtered = allPosts.filter(p => JSON.stringify(p).toLowerCase().includes(q));
     render(filtered);
     window.scrollTo({top:0, behavior:'smooth'});
 };
-document.getElementById('searchInput').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    const filtered = allPosts.filter(p => JSON.stringify(p).toLowerCase().includes(q));
-    render(filtered);
-});
+const sInput = document.getElementById('searchInput');
+if(sInput) {
+    sInput.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = allPosts.filter(p => JSON.stringify(p).toLowerCase().includes(q));
+        render(filtered);
+    });
+}
 
 // 6. Init
 fetch("data/posts.json")
     .then(r => r.json())
     .then(processData)
     .catch(e => {
-        feedEl.innerHTML = `<div style="text-align:center; color:#ff5f56;">Error: Connection to data feed failed.</div>`;
+        if(feedEl) feedEl.innerHTML = `<div style="text-align:center; color:#ff5f56;">Error: Connection to data feed failed.</div>`;
     });
 
 window.addEventListener('load', () => {
     if(!sessionStorage.getItem('intro_v5')) {
         setTimeout(() => {
-            document.getElementById('introOverlay').classList.add('intro-hide');
-            setTimeout(()=>document.getElementById('introOverlay').style.display='none', 500);
+            const ov = document.getElementById('introOverlay');
+            if(ov) {
+                ov.classList.add('intro-hide');
+                setTimeout(()=>ov.style.display='none', 500);
+            }
             sessionStorage.setItem('intro_v5', 'true');
         }, 1200);
     } else {
-        document.getElementById('introOverlay').style.display='none';
+        const ov = document.getElementById('introOverlay');
+        if(ov) ov.style.display='none';
     }
 });
 </script>
