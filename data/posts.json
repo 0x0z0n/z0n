@@ -1,5 +1,13 @@
 [
 {
+  "title": "Windows Internal Notes",
+  "href": "posts/Genrated Notes/internal.html",
+  "date": "2026-01-03",
+  "category": [],
+  "tags": ["Notes"
+  ],
+  "attack_path": [ ]
+},{
   "title": "HackTheBox: Giveback",
   "href": "posts/Giveback/",
   "date": "2026-01-03",
