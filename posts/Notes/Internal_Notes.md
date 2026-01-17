@@ -1927,7 +1927,7 @@ These are the industry-standard references you should bookmark or print.
 ## Phase 1: Setup & Architecture (Day 1-3)
 
 | Command / Concept | Description |
-| --- | --- |
+|  |  |
 | **Debug Mode** | `bcdedit /debug on` <br>
 
 <br> `bcdedit /dbgsettings net hostip:X.X.X.X port:55000` |
@@ -1989,13 +1989,13 @@ These are the industry-standard references you should bookmark or print.
 ## Phase 4: Security (Day 13)
 
 | Component | Command / usage |
-| --- | --- |
+|  |  |
 | **Access Token** | `!token <Token_Addr>` (View User SID, Groups, Privileges) |
 | **Privileges** | Look for `SeDebugPrivilege`, `SeTcbPrivilege` in token output. |
 | **Security Descriptor** | `!sd <Object_Addr>` (View Owner, DACL, SACL) |
 | **SIDs** | `!sid <SID_String>` (Resolve S-1-5-18 to "Local System") |
 
----
+
 
 # Bonus: "Pro" Commands 
 
@@ -2155,7 +2155,7 @@ The Registry is not a single large file. It is a collection of database files ca
 On disk, the registry is split into specific files (Hives) that are loaded (mounted) at boot.
 
 | Logical Path (Regedit) | File Path (On Disk) | Purpose |
-| --- | --- | --- |
+|  |  |  |
 | `HKLM\SYSTEM` | `C:\Windows\System32\config\SYSTEM` | Boot config, Drivers, Services. |
 | `HKLM\SAM` | `C:\Windows\System32\config\SAM` | Local user accounts & NTLM hashes. |
 | `HKLM\SOFTWARE` | `C:\Windows\System32\config\SOFTWARE` | Installed software settings. |
@@ -2296,7 +2296,7 @@ Drivers are stacked like pancakes. This is how antivirus and EDRs work.
 The `_DRIVER_OBJECT` contains a table of function pointers called `MajorFunction`. These correspond to user-mode actions.
 
 | User Mode API | Kernel Mode IRP Major Code |
-| --- | --- |
+|  |  |
 | `CreateFile` | `IRP_MJ_CREATE` |
 | `ReadFile` | `IRP_MJ_READ` |
 | `WriteFile` | `IRP_MJ_WRITE` |
@@ -2677,7 +2677,7 @@ You are investigating a compromised server. The SIEM alerts you to suspicious ne
 2. Why did `!process 0 0` fail to find it?
 3. What command would you run next to prove this process exists using the Global Handle Table?
 
----
+
 
 ## Scenario 2: The "Impossible" Crash
 
@@ -2695,7 +2695,7 @@ You are writing a kernel driver (or analyzing a rootkit driver). The driver work
 2. Why is it illegal to access `PagedPool` memory at this level?
 3. How do you fix the code?
 
----
+
 
 ## Scenario 3: The "Clean" Injection
 
@@ -2718,9 +2718,9 @@ You are analyzing a suspicious instance of `explorer.exe`. You suspect it contai
 2. Why is `EXECUTE_READWRITE` (RWX) a major red flag in a standard Windows process?
 3. If you dump this memory range (`db`), what 2 bytes at the very beginning would confirm it is a PE file/DLL?
 
----
 
-# 🔐 The Answer Key
+
+# The Answer Key
 
 **Scroll down only after you have answered!**
 
@@ -2750,7 +2750,7 @@ You are analyzing a suspicious instance of `explorer.exe`. You suspect it contai
 2. **Red Flag:** Legitimate Windows applications almost *never* use `RWX` memory (it violates W^X security principles). They use `Read-Execute` for code and `Read-Write` for data. `RWX` + Private Memory = 99% probability of Shellcode.
 3. **Confirmation:** **`MZ`** (0x4D 0x5A). If the injected code is a reflective DLL, it will start with the DOS Header magic bytes.
 
----
+
 
 **Congratulations.** You have completed the Windows Internals Study Path.
 
