@@ -14,85 +14,85 @@
       ]
    },
    {
-      "title":"HackTheBox: Giveback",
-      "href":"posts/Giveback/",
-      "date":"2026-01-03",
-      "category":[
-         "HackTheBox",
-         "Linux",
-         "Kubernetes",
-         "DevSecOps",
-         "Application Security"
-      ],
-      "tags":[
-         "T1595 - Active Scanning",
-         "T1190 - Exploit Public-Facing Application (GiveWP)",
-         "T1059.006 - Command and Scripting Interpreter: PHP",
-         "T1552 - Unsecured Credentials (wp-config)",
-         "T1106 - Native API (Kubernetes API)",
-         "T1021.004 - Remote Services: SSH",
-         "T1611 - Escape to Host (runc/OCI Abuse)",
-         "T1068 - Exploitation for Privilege Escalation"
-      ],
-      "attack_path":[
-         {
-            "step":1,
-            "user":"N/A",
-            "technique":"Network Enumeration (nmap)",
-            "result":"Identified HTTP (80) and SSH (22) on a Linux host, confirming a WordPress installation.",
-            "mitigation":"Disable unused services; implement Rate Limiting on web headers to prevent aggressive scanning."
-         },
-         {
-            "step":2,
-            "user":"N/A",
-            "technique":"Vulnerability Research (GiveWP)",
-            "result":"Discovered GiveWP v3.14.0 vulnerable to CVE-2024-5932 (PHP Object Injection) allowing unauthenticated RCE.",
-            "mitigation":"Update WordPress plugins regularly; use a Web Application Firewall (WAF) to filter serialized PHP objects."
-         },
-         {
-            "step":3,
-            "user":"www-data",
-            "technique":"Exploitation of Public-Facing Application",
-            "result":"Executed a Python PoC to trigger a reverse shell, gaining initial access to a WordPress Docker container.",
-            "mitigation":"Run web services as non-privileged users; use container security contexts to restrict syscalls."
-         },
-         {
-            "step":4,
-            "user":"www-data",
-            "technique":"Internal Pivoting (PHP-CGI)",
-            "result":"Identified an internal service (legacy-intranet-service:5000) vulnerable to PHP-CGI RCE via query string injection.",
-            "mitigation":"Isolate internal legacy services via Network Policies; disable 'allow_url_include' in PHP configurations."
-         },
-         {
-            "step":5,
-            "user":"www-data",
-            "technique":"Kubernetes Enumeration",
-            "result":"Accessed ServiceAccount tokens to query the Kubernetes API, leaking the 'user-secret-babywyrm' secret.",
-            "mitigation":"Implement RBAC with the Principle of Least Privilege; disable AutomountServiceAccountToken where not needed."
-         },
-         {
-            "step":6,
-            "user":"babywyrm",
-            "technique":"Credential Access (Base64 Decoding)",
-            "result":"Decoded the K8s secret to obtain SSH credentials and successfully logged into the host machine.",
-            "mitigation":"Rotate secrets frequently; avoid storing plaintext credentials in Kubernetes Secret objects without encryption at rest."
-         },
-         {
-            "step":7,
-            "user":"babywyrm",
-            "technique":"Sudo Abuse & OCI Exploit",
-            "result":"Leveraged sudo access to `/opt/debug` (runc) to execute a custom OCI bundle with path traversal via `/etc`.",
-            "mitigation":"Restrict sudoers to specific flags; audit OCI configurations to prevent host-path mounts."
-         },
-         {
-            "step":8,
-            "user":"root",
-            "technique":"Container Escape to Host",
-            "result":"Successfully mounted the host's root filesystem inside the debug container to read `/root/root.txt`.",
-            "mitigation":"Use AppArmor or SELinux to block sensitive directory mounts; monitor for unauthorized runc execution."
-         }
-      ]
-   },
+   "title":"HackTheBox: Giveback",
+   "href":"posts/Giveback/",
+   "date":"2026-01-03",
+   "category":[
+      "HackTheBox",
+      "Linux",
+      "Kubernetes",
+      "DevSecOps",
+      "Application Security"
+   ],
+   "tags":[
+      "T1595 - Active Scanning",
+      "T1190 - Exploit Public-Facing Application (GiveWP)",
+      "T1059.006 - Command and Scripting Interpreter: PHP",
+      "T1552 - Unsecured Credentials (wp-config)",
+      "T1106 - Native API (Kubernetes API)",
+      "T1021.004 - Remote Services: SSH",
+      "T1611 - Escape to Host (runc/OCI Abuse)",
+      "T1548.002 - Abuse Elevation Control Mechanism: SUID"
+   ],
+   "attack_path":[
+      {
+         "step":1,
+         "user":"N/A",
+         "technique":"Network Enumeration (nmap)",
+         "result":"Identified HTTP (80) and SSH (22) on a Linux host, confirming a WordPress installation.",
+         "mitigation":"Disable unused services; implement Rate Limiting on web headers to prevent aggressive scanning."
+      },
+      {
+         "step":2,
+         "user":"N/A",
+         "technique":"Vulnerability Research (GiveWP)",
+         "result":"Discovered GiveWP v3.14.0 vulnerable to CVE-2024-5932 (PHP Object Injection) allowing unauthenticated RCE.",
+         "mitigation":"Update WordPress plugins regularly; use a Web Application Firewall (WAF) to filter serialized PHP objects."
+      },
+      {
+         "step":3,
+         "user":"www-data",
+         "technique":"Exploitation of Public-Facing Application",
+         "result":"Executed a Python PoC to trigger a reverse shell, gaining initial access to a WordPress Docker container.",
+         "mitigation":"Run web services as non-privileged users; use container security contexts to restrict syscalls."
+      },
+      {
+         "step":4,
+         "user":"www-data",
+         "technique":"Internal Pivoting (PHP-CGI)",
+         "result":"Identified an internal service (legacy-intranet-service:5000) vulnerable to PHP-CGI RCE via query string injection.",
+         "mitigation":"Isolate internal legacy services via Network Policies; disable 'allow_url_include' in PHP configurations."
+      },
+      {
+         "step":5,
+         "user":"www-data",
+         "technique":"Kubernetes Enumeration",
+         "result":"Accessed ServiceAccount tokens to query the Kubernetes API, leaking the 'user-secret-babywyrm' secret.",
+         "mitigation":"Implement RBAC with the Principle of Least Privilege; disable AutomountServiceAccountToken where not needed."
+      },
+      {
+         "step":6,
+         "user":"babywyrm",
+         "technique":"Credential Access (Base64 Decoding)",
+         "result":"Decoded the K8s secret to obtain SSH credentials and successfully logged into the host machine.",
+         "mitigation":"Rotate secrets frequently; avoid storing plaintext credentials in Kubernetes Secret objects without encryption at rest."
+      },
+      {
+         "step":7,
+         "user":"babywyrm",
+         "technique":"Sudo Abuse & OCI Prestart Hook Injection",
+         "result":"Leveraged sudo access to `/opt/debug` (runc) to execute a custom OCI bundle with a `prestart` hook that creates a SUID binary on the host.",
+         "mitigation":"Restrict sudoers to specific flags; enforce `noNewPrivileges: true` in OCI specifications to block SUID transitions."
+      },
+      {
+         "step":8,
+         "user":"root",
+         "technique":"Privilege Escalation via SUID",
+         "result":"Executed the created SUID backdoor (`/tmp/poc`) with preserved privileges (`-p`) to gain a full root shell.",
+         "mitigation":"Monitor for unauthorized SUID file creation in temporary directories; implement File Integrity Monitoring (FIM)."
+      }
+   ]
+},
    {
       "title":"HackTheBox: MonitorsFour",
       "href":"posts/MonitorsFour/",
