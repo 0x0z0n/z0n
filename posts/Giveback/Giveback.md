@@ -1054,6 +1054,9 @@ sudo /opt/debug run errur
 
 ```
 
+![GiveBack](htb_Giveback_Root_flag.png)
+
+
 **2. Access Root:**
 Check `/tmp` for the malicious binary and execute it with `-p` (preserve privileges) to gain a root shell.
 
@@ -1074,9 +1077,6 @@ id
 cat /root/root.txt
 
 ```
-
-![GiveBack](htb_Giveback_Root_flag.png)
-
 
 ![GiveBack](htb_Giveback_Root_flag2.png)
 
